@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-import { Check, ArrowRight, Zap, Monitor, RefreshCcw, Terminal, ChevronDown, Activity, Plug, RotateCcw } from 'lucide-react';
+import { Check, ArrowRight, Zap, Monitor, RefreshCcw, Terminal, ChevronDown, Activity, Plug, RotateCcw, Lightbulb } from 'lucide-react';
 
 
 
@@ -34,11 +34,50 @@ const ALL_AVAILABLE_PIEZAS = Object.values(PIEZAS);
 
 
 
+const ARDUINO_COLORS = {
+  types: '#4dd0e1',       // Cyan
+  numbers: '#4dd0e1',     // Cyan
+  functions: '#fac863',   // Naranja
+  classes: '#fac863',    // Naranja
+  constants: '#ffffff',       // Blanco
+  directives: '#d85c8b',   // Rosa
+  library: '#4dd0e1',      // Cyan
+  comments: '#475569',    // Gris pizarra
+  string: '#4dd0e1',      // Cyan
+  general: '#94a3b8',     // Slate-400
+};
+
+const VALID_ARDUINO_FUNCTIONS = ['setup', 'loop', 'pinMode', 'digitalWrite', 'digitalRead', 'analogRead', 'analogWrite', 'delay', 'delayMicroseconds', 'millis', 'micros', 'begin', 'print', 'println', 'available', 'read', 'write', 'attach'];
+const VALID_ARDUINO_CLASSES = ['Serial', 'Servo', 'LiquidCrystal', 'Wire', 'Ethernet', 'SD', 'String', 'SoftwareSerial'];
+const STRICT_LOWERCASE = ['void', 'int', 'float', 'char', 'long', 'bool', 'if', 'else', 'for', 'while', 'switch', 'return', 'break'];
+
+const HighlightedCode = ({ code }) => {
+  if (!code || typeof code !== 'string') return null;
+  const parts = code.split(/(\/\/.*|".*?"|#\w+|<[^>]+>|\w+\.|\.\w+|[(){}[\];,]|\d+|\w+)/g);
+  return (
+    <div style={{ pointerEvents: 'none', whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'monospace', fontSize: '13px', lineHeight: '24px' }}>
+      {parts.map((part, j) => {
+        if (!part) return null;
+        if (part.startsWith('//')) return <span key={j} style={{ color: ARDUINO_COLORS.comments }}>{part}</span>;
+        if (part.startsWith('"') && part.endsWith('"')) return <span key={j} style={{ color: ARDUINO_COLORS.string }}>{part}</span>;
+        if (part.startsWith('#')) return <span key={j} style={{ color: ARDUINO_COLORS.directives }}>{part}</span>;
+        if (part.startsWith('<') && part.endsWith('>')) return <span key={j} style={{ color: ARDUINO_COLORS.library }}>{part}</span>;
+        if (VALID_ARDUINO_CLASSES.includes(part)) return <span key={j} style={{ color: ARDUINO_COLORS.classes }}>{part}</span>;
+        if (VALID_ARDUINO_FUNCTIONS.includes(part)) return <span key={j} style={{ color: ARDUINO_COLORS.functions }}>{part}</span>;
+        if (STRICT_LOWERCASE.includes(part)) return <span key={j} style={{ color: ARDUINO_COLORS.types }}>{part}</span>;
+        if (/^\d+$/.test(part)) return <span key={j} style={{ color: ARDUINO_COLORS.numbers }}>{part}</span>;
+        if (/^(HIGH|LOW|OUTPUT|INPUT)$/.test(part) || /^[(){}[\];,]$/.test(part)) return <span key={j} style={{ color: ARDUINO_COLORS.constants }}>{part}</span>;
+        return <span key={j} style={{ color: ARDUINO_COLORS.general }}>{part}</span>;
+      })}
+    </div>
+  );
+};
+
 const challenges = [
 
   {
 
-    title: 'Misión 1: Prender LED (Arrastrar)',
+    title: 'Misión 1: Prender LED',
 
     type: 'drag',
 
@@ -60,12 +99,12 @@ const challenges = [
 
   {
 
-    title: 'Misión 2: Prender LED (Escribir)',
+    title: 'Misión 2: Código LED',
 
     type: 'write',
 
-    goal: 'Escribe el código para configurar el pin 13 como salida y enviar señal HIGH para prender el LED.',
-
+    goal: 'Configura el pin 13 como salida para que el LED pueda recibir energía.',
+    hint: 'Usa pinMode(numeroPin, MODO); dentro del bloque setup.',
     expected: {
 
       setup: 'pinMode(13, OUTPUT);',
@@ -80,7 +119,7 @@ const challenges = [
 
   {
 
-    title: 'Misión 3: Parpadeo LED (Arrastrar)',
+    title: 'Misión 3: Parpadeo',
 
     type: 'drag',
 
@@ -102,12 +141,12 @@ const challenges = [
 
   {
 
-    title: 'Misión 4: Parpadeo LED (Escribir)',
+    title: 'Misión 4: Código Parpadeo',
 
     type: 'write',
 
-    goal: 'Escribe el código para hacer parpadear el LED cada 1 segundo.',
-
+    goal: 'Haz que el LED del pin 13 parpadee con intervalos de 1 segundo.',
+    hint: 'Necesitas prender el LED, esperar, apagarlo y volver a esperar.',
     expected: {
 
       setup: 'pinMode(13, OUTPUT);',
@@ -122,7 +161,7 @@ const challenges = [
 
   {
 
-    title: 'Misión 5: Sirena Policial (Arrastrar)',
+    title: 'Misión 5: Sirena Policial',
 
     type: 'drag',
 
@@ -144,12 +183,12 @@ const challenges = [
 
   {
 
-    title: 'Misión 6: Sirena Policial (Escribir)',
+    title: 'Misión 6: Código Sirena',
 
     type: 'write',
 
-    goal: 'Escribe el código para la sirena policial con LEDs alternando cada 300ms.',
-
+    goal: 'Crea una sirena policial alternando los pines 13 (rojo) y 12 (azul).',
+    hint: 'Mientras uno está en HIGH, el otro debe estar en LOW.',
     expected: {
 
       setup: 'pinMode(13, OUTPUT); pinMode(12, OUTPUT);',
@@ -247,14 +286,16 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
   const [led12On, setLed12On] = useState(false);
 
   const [showHint, setShowHint] = useState(false);
-
+  const [showHintSidebar, setShowHintSidebar] = useState(false);
   const terminalRef = useRef(null);
+  const setupTextAreaRef = useRef(null);
+  const loopTextAreaRef = useRef(null);
 
 
 
   const simInterval = useRef(null);
 
-  const challenge = challenges[currentId];
+  const challenge = challenges[currentId] || challenges[0];
 
 
 
@@ -269,6 +310,42 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
     }
 
   }, [logs]);
+
+  // Auto-resize textareas based on content
+  const adjustHeight = (ref) => {
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = `${ref.current.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustHeight(setupTextAreaRef);
+  }, [userCode.setup]);
+
+  useEffect(() => {
+    adjustHeight(loopTextAreaRef);
+  }, [userCode.loop]);
+
+  // Handle Tab key in code editor
+  const handleKeyDown = (e, field) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+      const value = e.target.value;
+      const newValue = value.substring(0, start) + '  ' + value.substring(end);
+
+      setUserCode(prev => ({ ...prev, [field]: newValue }));
+
+      // Reset cursor position after state update
+      setTimeout(() => {
+        if (e.target) {
+          e.target.selectionStart = e.target.selectionEnd = start + 2;
+        }
+      }, 0);
+    }
+  };
 
 
 
@@ -287,44 +364,37 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
 
   const loadChallenge = useCallback((id) => {
+    const newChallenge = challenges[id];
+    if (!newChallenge) return;
 
     stopSim();
-
-    const newChallenge = challenges[id];
-
     setCurrentId(id);
 
     if (newChallenge.type === 'drag') {
-
-      setSetupSlots(new Array(newChallenge.expected?.setup?.length || 1).fill(null));
-
-      setLoopSlots(new Array(newChallenge.expected?.loop?.length || 1).fill(null));
-
+      setSetupSlots(new Array(newChallenge.expected?.setup?.length || 0).fill(null));
+      setLoopSlots(new Array(newChallenge.expected?.loop?.length || 0).fill(null));
     } else {
-
       setSetupSlots([]);
-
       setLoopSlots([]);
-
       setUserCode({ setup: '', loop: '' });
-
     }
 
-    setLogs(['> Sistema reiniciado.', '> Listo para programar.']);
-
+    setLogs(['> Sistema reiniciado.', `> Reto: ${newChallenge.title}`]);
     setShowHint(false);
-
+    setShowHintSidebar(false);
   }, [stopSim]);
 
 
 
-  useEffect(() => { loadChallenge(initialChallengeId) }, []);
+  useEffect(() => {
+    loadChallenge(initialChallengeId);
+  }, [initialChallengeId, loadChallenge]);
 
 
 
   const handleDrop = (e, area, index) => {
 
-    if (challenge.type !== 'drag') return;
+    if (challenge?.type !== 'drag') return;
 
     const piece = JSON.parse(e.dataTransfer.getData('piece'));
 
@@ -462,7 +532,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
     setTimeout(() => {
 
-      const success = challenge.type === 'drag' ? verifyDragCode() : verifyWriteCode();
+      const success = challenge?.type === 'drag' ? verifyDragCode() : verifyWriteCode();
 
       if (success) {
 
@@ -488,13 +558,13 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
     setTimeout(() => {
 
-      const success = challenge.type === 'drag' ? verifyDragCode() : verifyWriteCode();
+      const success = challenge?.type === 'drag' ? verifyDragCode() : verifyWriteCode();
 
       if (success) {
 
         let simLoopInstructions = [];
 
-        if (challenge.type === 'drag') {
+        if (challenge?.type === 'drag') {
 
           simLoopInstructions = (challenge.expected.loop || []).map(id => PIEZAS[id]?.text);
 
@@ -526,7 +596,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
   return (
 
-    <div style={{ width: '100%', height: '100%', background: '#161625', borderRadius: '8px', border: '2px solid #334155', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+    <div style={{ width: '100%', height: '100%', background: '#161625', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       <div style={{ flex: 1, display: 'flex', gap: '20px', padding: '20px', overflow: 'hidden' }}>
 
@@ -537,23 +607,44 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
         <div style={{ width: '24%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           <div style={{ background: '#1c1c2e', borderRadius: '12px', border: '2px solid #334155', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
 
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-              <Zap size={14} color="#818cf8" />
-
-              <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#818cf8' }}>Objetivo</span>
-
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                <Zap size={14} color="#818cf8" />
+                <span style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#818cf8' }}>Objetivo</span>
+              </div>
+              <div
+                onClick={() => setShowHintSidebar(!showHintSidebar)}
+                title="Ver Clave"
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: showHintSidebar ? 'rgba(250, 200, 99, 0.4)' : 'rgba(250, 200, 99, 0.15)',
+                  border: '1px solid #fac863',
+                  boxShadow: showHintSidebar ? '0 0 15px rgba(250, 200, 99, 0.3)' : '0 0 10px rgba(250, 200, 99, 0.1)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <Lightbulb size={16} color={showHintSidebar ? '#fff' : '#fac863'} fill={showHintSidebar ? '#fac863' : 'transparent'} />
+              </div>
             </div>
 
-            <div style={{ padding: '16px', background: 'rgba(0,0,0,0.4)' }}>
-
+            <div style={{ padding: '16px', background: 'rgba(0,0,0,0.4)', position: 'relative' }}>
               <p style={{ fontSize: '11px', fontStyle: 'italic', lineHeight: 1.6, color: '#94a3b8', borderLeft: '2px solid #6366f1', paddingLeft: '12px' }}>
-
-                "{challenge.goal}"
-
+                "{challenge?.goal}"
               </p>
 
+              {showHintSidebar && challenge?.hint && (
+                <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(250, 200, 99, 0.05)', border: '1px dotted #fac863', borderRadius: '4px' }}>
+                  <p style={{ fontSize: '10px', color: '#fac863', fontWeight: 'bold', marginBottom: '4px' }}>💡 CLAVE:</p>
+                  <p style={{ fontSize: '10px', color: '#cbd5e1', lineHeight: '1.4' }}>{challenge?.hint}</p>
+                </div>
+              )}
             </div>
 
           </div>
@@ -561,8 +652,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
 
           <div style={{ background: '#1c1c2e', borderRadius: '12px', border: '2px solid #334155', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #334155', display: 'flex', alignItems: 'center', gap: '8px', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
 
               <Monitor size={14} color="#34d399" />
 
@@ -576,7 +666,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
               <LED color="red" isOn={led13On} label="LED ROJO - PIN 13" />
 
-              {challenge.ledCount > 1 && (
+              {challenge?.ledCount > 1 && (
 
                 <>
 
@@ -599,8 +689,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
         {/* Center - Editor */}
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#0a0a0f', borderRadius: '12px', border: '2px solid #334155', position: 'relative', overflow: 'hidden' }}>
-
-          <div style={{ padding: '12px 16px', background: '#1c1c2e', display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid #334155' }}>
+          <div style={{ padding: '12px 16px', background: '#1c1c2e', display: 'flex', alignItems: 'center', gap: '16px', borderBottom: '1px solid #334155', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
 
             <div style={{ display: 'flex', gap: '8px' }}>
 
@@ -635,213 +724,121 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
             <div style={{ width: '48px', background: '#0d0d1a', borderRight: '1px solid #1e293b', paddingTop: '16px', fontSize: '11px', fontFamily: 'monospace', color: '#475569', display: 'flex', flexDirection: 'column', userSelect: 'none' }}>
-
-              {Array.from({ length: 24 }, (_, i) => i + 1).map(num => (
-
-                <div key={num} style={{ height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{num}</div>
-
+              {Array.from({ length: 100 }, (_, i) => i + 1).map(num => (
+                <div key={num} style={{ height: '24px', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', lineHeight: '24px', fontSize: '13px' }}>{num}</div>
               ))}
-
             </div>
-
-
 
             <div style={{ flex: 1, padding: '16px', fontFamily: 'monospace', fontSize: '13px', overflowY: 'auto', background: 'url(https://www.transparenttextures.com/patterns/carbon-fibre.png)', backgroundSize: 'cover', position: 'relative' }}>
-
               <div style={{ position: 'absolute', inset: 0, opacity: 0.95 }}></div>
 
-
-
-              {challenge.type === 'drag' ? (
-
+              {challenge?.type === 'drag' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Configuración inicial</span></div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>setup</span>() {'{'}</div>
-
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Configuración inicial</span></div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>setup</span>() {'{'}</div>
                   {setupSlots.map((slot, i) => (
-
-                    <div key={`setup-${i}`} style={{ height: '32px', display: 'flex', alignItems: 'center', paddingLeft: '32px' }}>
-
-                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'setup', i)} style={{ height: '28px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '12px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic' }}>
-
+                    <div key={`setup-${i}`} style={{ height: '24px', display: 'flex', alignItems: 'flex-start', paddingTop: '2px', paddingLeft: '32px' }}>
+                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'setup', i)} style={{ height: '20px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '11px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic' }}>
                         {slot ? PIEZAS[slot]?.text : `Inserta pieza aquí`}
-
                       </div>
-
                     </div>
-
                   ))}
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}>{'}'}</div>
-
-                  <div style={{ height: '32px' }}></div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Bucle principal</span></div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>loop</span>() {'{'}</div>
-
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}>{'}'}</div>
+                  <div style={{ height: '24px' }}></div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Bucle principal</span></div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>loop</span>() {'{'}</div>
                   {loopSlots.map((slot, i) => (
-
-                    <div key={`loop-${i}`} style={{ height: '32px', display: 'flex', alignItems: 'center', paddingLeft: '32px' }}>
-
-                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'loop', i)} style={{ height: '28px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '12px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic' }}>
-
+                    <div key={`loop-${i}`} style={{ height: '24px', display: 'flex', alignItems: 'flex-start', paddingTop: '2px', paddingLeft: '32px' }}>
+                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'loop', i)} style={{ height: '20px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '11px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic' }}>
                         {slot ? PIEZAS[slot]?.text : `Inserta pieza aquí`}
-
                       </div>
-
                     </div>
-
                   ))}
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}>{'}'}</div>
-
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}>{'}'}</div>
                 </div>
-
               ) : (
-
                 <div style={{ display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Configuración inicial</span></div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>setup</span>() {'{'}</div>
-
-                  <div style={{ minHeight: '60px', display: 'flex', alignItems: 'center', paddingLeft: '32px' }}>
-
-                    <textarea
-
-                      value={userCode.setup}
-
-                      onChange={(e) => setUserCode({ ...userCode, setup: e.target.value })}
-
-                      placeholder="pinMode(13, OUTPUT)"
-
-                      spellCheck={false}
-
-                      rows={2}
-
-                      style={{
-
-                        width: '100%',
-
-                        minHeight: '50px',
-
-                        background: 'transparent',
-
-                        border: 'none',
-
-                        color: '#4dd0e1',
-
-                        fontSize: '12px',
-
-                        fontFamily: 'monospace',
-
-                        resize: 'none',
-
-                        outline: 'none',
-
-                        whiteSpace: 'pre-wrap',
-
-                        wordWrap: 'break-word'
-
-                      }}
-
-                    />
-
-                  </div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}>{'}'}</div>
-
-                  <div style={{ height: '32px' }}></div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Bucle principal</span></div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>loop</span>() {'{'}</div>
-
-                  <div style={{ minHeight: '150px', display: 'flex', alignItems: 'flex-start', paddingLeft: '32px' }}>
-
-                    <textarea
-
-                      value={userCode.loop}
-
-                      onChange={(e) => setUserCode({ ...userCode, loop: e.target.value })}
-
-                      placeholder="digitalWrite(13, HIGH);"
-
-                      spellCheck={false}
-
-                      style={{
-
-                        width: '100%',
-
-                        minHeight: '120px',
-
-                        background: 'transparent',
-
-                        border: 'none',
-
-                        color: '#4dd0e1',
-
-                        fontSize: '12px',
-
-                        fontFamily: 'monospace',
-
-                        resize: 'none',
-
-                        outline: 'none',
-
-                        whiteSpace: 'pre-wrap',
-
-                        wordWrap: 'break-word'
-
-                      }}
-
-                    />
-
-                  </div>
-
-                  <div style={{ height: '32px', display: 'flex', alignItems: 'center' }}>{'}'}</div>
-
-
-
-                  {challenge.type === 'write' && (
-
-                    <div style={{ marginTop: '20px' }}>
-
-                      <button onClick={() => setShowHint(!showHint)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '10px', cursor: 'pointer', textDecoration: 'underline' }}>
-
-                        {showHint ? 'Ocultar pistas' : '¿Necesitas ayuda?'}
-
-                      </button>
-
-                      {showHint && (
-
-                        <div style={{ marginTop: '8px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', border: '1px solid #334155' }}>
-
-                          <p style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>Setup:</p>
-
-                          <code style={{ fontSize: '10px', color: '#4dd0e1' }}>{challenge.expected.setup}</code>
-
-                          <p style={{ fontSize: '10px', color: '#94a3b8', marginTop: '8px', marginBottom: '4px' }}>Loop:</p>
-
-                          <code style={{ fontSize: '10px', color: '#4dd0e1' }}>{challenge.expected.loop}</code>
-
-                        </div>
-
-                      )}
-
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Configuración inicial</span></div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>setup</span>() {'{'}</div>
+                  <div style={{ minHeight: '24px', position: 'relative', paddingLeft: '32px' }}>
+                    <div style={{ position: 'absolute', top: 0, left: '32px', right: 0, bottom: 0, zIndex: 1 }}>
+                      <HighlightedCode code={userCode.setup} />
                     </div>
+                    <textarea
+                      ref={setupTextAreaRef}
+                      value={userCode.setup}
+                      onChange={(e) => setUserCode({ ...userCode, setup: e.target.value })}
+                      onKeyDown={(e) => handleKeyDown(e, 'setup')}
+                      placeholder="// Escribe la configuración de pines aquí..."
+                      spellCheck={false}
+                      rows={1}
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'transparent',
+                        caretColor: '#fff',
+                        fontSize: '13px',
+                        fontFamily: 'monospace',
+                        resize: 'none',
+                        outline: 'none',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word',
+                        overflow: 'hidden',
+                        padding: '0',
+                        lineHeight: '24px',
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    />
+                  </div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}>{'}'}</div>
+                  <div style={{ height: '24px' }}></div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#94a3b8', fontStyle: 'italic', opacity: 0.4 }}>Bucle principal</span></div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>loop</span>() {'{'}</div>
+                  <div style={{ minHeight: '24px', position: 'relative', paddingLeft: '32px' }}>
+                    <div style={{ position: 'absolute', top: 0, left: '32px', right: 0, bottom: 0, zIndex: 1 }}>
+                      <HighlightedCode code={userCode.loop} />
+                    </div>
+                    <textarea
+                      ref={loopTextAreaRef}
+                      value={userCode.loop}
+                      onChange={(e) => setUserCode({ ...userCode, loop: e.target.value })}
+                      onKeyDown={(e) => handleKeyDown(e, 'loop')}
+                      placeholder="// Escribe el comportamiento repetitivo aquí..."
+                      spellCheck={false}
+                      rows={1}
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'transparent',
+                        caretColor: '#fff',
+                        fontSize: '13px',
+                        fontFamily: 'monospace',
+                        resize: 'none',
+                        outline: 'none',
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word',
+                        overflow: 'hidden',
+                        padding: '0',
+                        lineHeight: '24px',
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    />
+                  </div>
+                  <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}>{'}'}</div>
 
+
+
+                  {challenge?.type === 'write' && (
+                    <div style={{ marginTop: '20px' }}>
+                    </div>
                   )}
-
                 </div>
-
               )}
-
             </div>
-
           </div>
 
 
@@ -880,7 +877,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
         {/* Right Sidebar - Piezas (Solo para modo drag) */}
 
-        {challenge.type === 'drag' && (
+        {challenge?.type === 'drag' && (
 
           <div style={{ width: '26%', display: 'flex', flexDirection: 'column', background: '#1c1c2e', borderRadius: '12px', border: '2px solid #334155', overflow: 'hidden' }}>
 
@@ -894,7 +891,7 @@ const ArduinoExercisesSimulator = ({ initialChallengeId = 0, onClose }) => {
 
             <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', flex: 1 }}>
 
-              {challenge.piezas.map(piece => (
+              {challenge?.piezas?.map(piece => (
 
                 <div key={piece.id} draggable onDragStart={(e) => e.dataTransfer.setData('piece', JSON.stringify(piece))} style={{ padding: '12px', background: '#1c1c2e', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', color: '#cbd5e1', cursor: 'grab', borderLeft: '4px solid #818cf8', transition: 'all 0.2s' }}>
 

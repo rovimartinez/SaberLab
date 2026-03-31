@@ -27,12 +27,12 @@ const ChallengeRoadmap = () => {
   }, []);
 
   const rutaRetos = [
-    { id: 1, title: "Misión 1", icon: <Zap size={24} />, xp: 50 },
-    { id: 2, title: "Misión 2", icon: <Code2 size={24} />, xp: 80 },
-    { id: 3, title: "Misión 3", icon: <Settings size={24} />, xp: 100 },
-    { id: 4, title: "Misión 4", icon: <List size={24} />, xp: 120 },
-    { id: 5, title: "Misión 5", icon: <Box size={24} />, xp: 150 },
-    { id: 6, title: "Misión 6", icon: <CircleDot size={24} />, xp: 200 }
+    { id: 1, title: "Misión 1", desc: "Prender LED", type: "BLOQUE", icon: <Zap size={24} />, xp: 50 },
+    { id: 2, title: "Misión 2", desc: "Código LED", type: "CÓDIGO", icon: <Code2 size={24} />, xp: 80 },
+    { id: 3, title: "Misión 3", desc: "Parpadeo", type: "BLOQUE", icon: <Settings size={24} />, xp: 100 },
+    { id: 4, title: "Misión 4", desc: "Código Parpadeo", type: "CÓDIGO", icon: <List size={24} />, xp: 120 },
+    { id: 5, title: "Misión 5", desc: "Sirena Policial", type: "BLOQUE", icon: <Box size={24} />, xp: 150 },
+    { id: 6, title: "Misión 6", desc: "Código Sirena", type: "CÓDIGO", icon: <CircleDot size={24} />, xp: 200 }
   ];
 
   const handleNodeClick = (retoId) => {
@@ -55,8 +55,7 @@ const ChallengeRoadmap = () => {
       justifyContent: 'center', 
       position: 'relative', 
       borderRadius: '16px', 
-      padding: '2.5rem 1rem 1.5rem', 
-      overflow: 'hidden',
+      padding: '2.5rem 1rem 6rem', // Más padding abajo para el texto
       marginTop: '1rem',
       background: 'rgba(30, 41, 59, 0.5)',
       border: '1px solid rgba(255,255,255,0.1)'
@@ -91,15 +90,15 @@ const ChallengeRoadmap = () => {
         flexDirection: 'column', 
         alignItems: 'center', 
         width: '100%', 
-        maxWidth: '900px', 
+        maxWidth: '1000px', 
         marginTop: '1rem'
       }}>
         
         {/* Connection System - Ahora dentro del contenedor de nodos para mejor alineación */}
         <div style={{ 
           position: 'absolute', 
-          left: '24px', /* Mitad del ancho del nodo (48px / 2) */
-          right: '24px', /* Mitad del ancho del último nodo */
+          left: '24px', /* Mitad del ancho del contenedor (48px / 2) */
+          right: '24px', 
           height: '6px', 
           top: '24px', /* Centro del nodo de 48px */
           pointerEvents: 'none',
@@ -161,13 +160,14 @@ const ChallengeRoadmap = () => {
             const isLocked = index + 1 > progreso;
 
             return (
-              <div key={reto.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div key={reto.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px', position: 'relative' }}>
                 <div 
                   style={{ 
                     position: 'relative', 
                     display: 'flex', 
                     flexDirection: 'column', 
                     alignItems: 'center',
+                    width: '48px', // Forzar ancho del nodo para el centrado
                     cursor: !isLocked ? 'pointer' : 'not-allowed'
                   }}
                   onMouseEnter={() => setHoveredId(reto.id)}
@@ -179,55 +179,58 @@ const ChallengeRoadmap = () => {
                   {isCurrent && (
                     <div style={{ 
                       position: 'absolute', 
-                      top: '-38px', 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      alignItems: 'center', 
-                      zIndex: 30,
-                      animation: 'float 3s ease-in-out infinite'
+                      top: '40%', // Subido un poquito para no tapar tanto el nodo
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)', 
+                      width: '40px',
+                      height: '40px',
+                      zIndex: 100,
+                      pointerEvents: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}>
                       <div style={{ 
-                        position: 'relative', 
-                        padding: '2px', 
-                        borderRadius: '50%', 
-                        background: 'linear-gradient(to bottom, rgba(168, 85, 247, 0.7), #a855f7)',
-                        boxShadow: '0 0 15px rgba(168, 85, 247, 0.5)'
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        animation: 'float 3s ease-in-out infinite' // Animación aparte
                       }}>
                         <div style={{ 
-                          width: '32px', 
-                          height: '32px', 
+                          position: 'relative', 
+                          padding: '2px', 
                           borderRadius: '50%', 
-                          background: '#1e293b', 
-                          border: '2px solid #0f172a',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 'bold',
-                          fontSize: '14px',
-                          color: 'white',
-                          overflow: 'hidden'
+                          background: 'linear-gradient(to bottom, rgba(168, 85, 247, 0.7), #a855f7)',
+                          border: '2px solid rgba(255,255,255,0.2)',
+                          boxShadow: '0 0 15px rgba(168, 85, 247, 0.5)'
                         }}>
-                           {userAvatar.startsWith('http') ? <img src={userAvatar} alt="Avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : userAvatar}
+                          <div style={{ 
+                            width: '32px', 
+                            height: '32px', 
+                            borderRadius: '50%', 
+                            background: '#1e293b', 
+                            border: '2px solid #ffffff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            color: 'white',
+                            overflow: 'hidden',
+                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), inset 0 0 8px rgba(59, 130, 246, 0.4)'
+                          }}>
+                             {userAvatar.startsWith('http') ? <img src={userAvatar} alt="Avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : userAvatar}
+                          </div>
                         </div>
                         <div style={{ 
-                          position: 'absolute', 
-                          bottom: 0, 
-                          right: 0, 
-                          width: '10px', 
-                          height: '10px', 
-                          background: '#10b981', 
-                          border: '2px solid #0f172a', 
-                          borderRadius: '50%'
+                          width: 0, 
+                          height: 0, 
+                          borderLeft: '4px solid transparent', 
+                          borderRight: '4px solid transparent', 
+                          borderTop: '5px solid #a855f7', 
+                          marginTop: '2px'
                         }}></div>
                       </div>
-                      <div style={{ 
-                        width: 0, 
-                        height: 0, 
-                        borderLeft: '6px solid transparent', 
-                        borderRight: '6px solid transparent', 
-                        borderTop: '6px solid #a855f7', 
-                        marginTop: '4px'
-                      }}></div>
                     </div>
                   )}
 
@@ -248,6 +251,7 @@ const ChallengeRoadmap = () => {
                       opacity: 1,
                       transform: isCurrent ? 'scale(1)' : 'scale(1)',
                       boxShadow: isCurrent ? '0 0 20px rgba(168, 85, 247, 0.4)' : isCompleted ? '0 0 15px rgba(16, 185, 129, 0.3)' : 'none',
+                      zIndex: 10 // Bajo el avatar
                     }}
                   >
                     {isCurrent && (
@@ -301,20 +305,40 @@ const ChallengeRoadmap = () => {
 
                   {/* Challenge Info */}
                   <div style={{ 
-                    marginTop: '1rem', 
+                    position: 'absolute',
+                    top: '64px', // Por debajo del nodo (48px + margen)
+                    left: '50%',
+                    transform: hoveredId === reto.id ? 'translate(-50%, 4px)' : 'translate(-50%, 0)',
                     textAlign: 'center', 
-                    transform: hoveredId === reto.id ? 'translateY(4px)' : 'translateY(0)',
-                    transition: 'all 0.3s ease'
+                    width: '120px', 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    transition: 'all 0.3s ease',
+                    pointerEvents: 'none' // Que no moleste al hacer click
                   }}>
                     <p style={{ 
-                      fontSize: '10px', 
+                      fontSize: '9px', 
                       fontWeight: 900, 
-                      letterSpacing: '0.25em', 
+                      letterSpacing: '0.1em', 
                       textTransform: 'uppercase',
                       color: isLocked ? 'rgba(148, 163, 184, 0.4)' : isCurrent ? '#a855f7' : isCompleted ? 'rgba(16, 185, 129, 0.8)' : '#94a3b8',
-                      marginBottom: '0.25rem'
+                      marginBottom: '0',
+                      lineHeight: '1.2'
                     }}>
                       {reto.title}
+                    </p>
+                    <p style={{ 
+                      fontSize: '8px', 
+                      fontWeight: 400, 
+                      color: isLocked ? 'rgba(148, 163, 184, 0.2)' : '#cbd5e1',
+                      marginBottom: '0.5rem',
+                      maxWidth: '100px',
+                      whiteSpace: 'normal',
+                      wordWrap: 'break-word',
+                      lineHeight: '1.4'
+                    }}>
+                      {reto.desc}
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: isLocked ? 0.3 : 0.8 }}>
                       <Star 
@@ -375,7 +399,7 @@ const ChallengeRoadmap = () => {
         >
           <div style={{
             background: '#0f172a',
-            borderRadius: '24px',
+            borderRadius: '12px',
             border: '1px solid rgba(168, 85, 247, 0.3)',
             width: '100%',
             maxWidth: '1400px',
@@ -388,12 +412,13 @@ const ChallengeRoadmap = () => {
           onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div style={{ padding: '1rem', borderBottom: '1px solid rgba(168, 85, 247, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(168, 85, 247, 0.1)' }}>
-               <div>
-                 <h3 style={{ color: '#a855f7', fontSize: '1.25rem', fontWeight: 800 }}>{selectedChallenge.title}</h3>
+            <div style={{ padding: '0.6rem 1.2rem', borderBottom: '1px solid rgba(168, 85, 247, 0.2)', display: 'flex', alignItems: 'center', background: 'rgba(168, 85, 247, 0.1)', position: 'relative' }}>
+               <div style={{ width: '40px' }}></div> {/* Espaciador para equilibrar la X */}
+               <div style={{ flex: 1, textAlign: 'center' }}>
+                 <h3 style={{ color: '#a855f7', fontSize: '1rem', fontWeight: 800, margin: 0 }}>{selectedChallenge.title}</h3>
                </div>
-               <button onClick={() => setSelectedChallengeId(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#a855f7', cursor: 'pointer', padding: '0.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                 <X size={24} />
+               <button onClick={() => setSelectedChallengeId(null)} style={{ background: 'transparent', border: 'none', color: '#a855f7', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <X size={20} />
                </button>
             </div>
             
