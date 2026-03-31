@@ -1,251 +1,411 @@
-import React, { useState } from 'react';
-import { Zap, Box, Code2, Settings, ListChecks, CircleDot, Lock, CheckCircle, Trophy, ArrowLeft } from 'lucide-react';
-import CodeEditor from './CodeEditor';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/useAuth';
+import { Lock, Zap, Box, Code2, List, Settings, CircleDot, Star, X } from 'lucide-react';
+import ArduinoExercisesSimulator from './MisionLeccion';
+
+const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 const ChallengeRoadmap = () => {
-    const [activeChallenge, setActiveChallenge] = useState(0);
-    const [showEditor, setShowEditor] = useState(false);
+  const { user } = useAuth();
+  const [progreso, setProgreso] = useState(6); // Habilitado para probar las 6 misiones
+  const [mounted, setMounted] = useState(false);
+  const [hoveredId, setHoveredId] = useState(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [selectedChallengeId, setSelectedChallengeId] = useState(null);
 
-    const challenges = [
-        {
-            id: 1,
-            title: "Mi Primer LED",
-            xp: 50,
-            icon: <Zap size={24} />,
-            status: "completed",
-            description: "Controla el LED integrado (Pin 13) para que parpadee.",
-            code: "void setup() {\n  pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(13, HIGH);\n  delay(500);\n  digitalWrite(13, LOW);\n  delay(500);\n}"
-        },
-        {
-            id: 2,
-            title: "Semáforo Básico",
-            xp: 80,
-            icon: <ListChecks size={24} />,
-            status: "current",
-            description: "Crea un semáforo con LED Rojo, Amarillo y Verde.",
-            code: "// Define los pines\nconst int red = 10;\nconst int yellow = 9;\nconst int green = 8;\n\nvoid setup() {\n  pinMode(red, OUTPUT);\n  pinMode(yellow, OUTPUT);\n  pinMode(green, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(red, HIGH);\n  delay(3000);\n  digitalWrite(red, LOW);\n  \n  digitalWrite(green, HIGH);\n  delay(3000);\n  digitalWrite(green, LOW);\n}"
-        },
-        {
-            id: 3,
-            title: "Secuencia de Luces",
-            xp: 100,
-            icon: <Code2 size={24} />,
-            status: "locked",
-            description: "Programa una secuencia de luces tipo 'caballo' (Knight Rider).",
-            code: "// Define los pines (pines 2 a 5)\nvoid setup() {\n  for(int i=2; i<=5; i++) {\n    pinMode(i, OUTPUT);\n  }\n}\n\nvoid loop() {\n  // Código de secuenciación\n}"
-        },
-        {
-            id: 4,
-            title: "Control de Brillo",
-            xp: 120,
-            icon: <Settings size={24} />,
-            status: "locked",
-            description: "Usa PWM para variar el brillo de un LED con analogWrite().",
-            code: "void loop() {\n  // Aumentar brillo\n  for(int i=0; i<255; i++) {\n    analogWrite(9, i);\n    delay(10);\n  }\n}"
-        },
-        {
-            id: 5,
-            title: "Patrones Rítmicos",
-            xp: 150,
-            icon: <Box size={24} />,
-            status: "locked",
-            description: "Crea patrones de parpadeo con diferentes intervalos usando millis().",
-            code: "unsigned long anterior = 0;\n\nvoid loop() {\n  unsigned long ahora = millis();\n  if (ahora - anterior >= 1000) {\n    // Toggle LED\n    anterior = ahora;\n  }\n}"
-        },
-        {
-            id: 6,
-            title: "Proyecto Final",
-            xp: 200,
-            icon: <CircleDot size={24} />,
-            status: "locked",
-            description: "Diseña tu propio proyecto integrando todo lo aprendido.",
-            code: "// ¡Es tu momento de crear!\n// Implementa tu propio diseño aquí"
-        }
-    ];
+  const userAvatar = user?.user_metadata?.avatar_url || user?.email?.charAt(0)?.toUpperCase() || "U";
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'completed': return '#10b981';
-            case 'current': return '#a855f7';
-            case 'locked': return '#64748b';
-            default: return '#64748b';
-        }
+  useEffect(() => {
+    setMounted(true);
+    const handleMouseMove = (e) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
     };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
-    return (
-        <div style={{ padding: '1rem' }}>
-            {showEditor ? (
-                <div>
-                    <button 
-                        onClick={() => setShowEditor(false)}
-                        style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '0.5rem', 
-                            color: '#a855f7', 
-                            background: 'none', 
-                            border: 'none', 
-                            fontWeight: 700, 
-                            cursor: 'pointer',
-                            marginBottom: '1.5rem',
-                            fontSize: '1rem'
-                        }}
-                    >
-                        <ArrowLeft size={20} />
-                        Volver al Roadmap
-                    </button>
-                    <CodeEditor initialCode={challenges[activeChallenge].code} />
-                </div>
-            ) : (
-                <>
-            <h3 style={{ color: '#a855f7', fontSize: '1.5rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Trophy size={28} className="text-yellow-500" style={{ color: '#fbbf24' }} />
-                Roadmap de Desafíos
-            </h3>
+  const rutaRetos = [
+    { id: 1, title: "Misión 1", icon: <Zap size={24} />, xp: 50 },
+    { id: 2, title: "Misión 2", icon: <Code2 size={24} />, xp: 80 },
+    { id: 3, title: "Misión 3", icon: <Settings size={24} />, xp: 100 },
+    { id: 4, title: "Misión 4", icon: <List size={24} />, xp: 120 },
+    { id: 5, title: "Misión 5", icon: <Box size={24} />, xp: 150 },
+    { id: 6, title: "Misión 6", icon: <CircleDot size={24} />, xp: 200 }
+  ];
 
-            {/* Roadmap Display */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3rem', padding: '0 1rem', position: 'relative' }}>
-                {/* Progress Line Background */}
-                <div style={{ 
-                    position: 'absolute', 
-                    top: '50%', 
-                    left: '40px', 
-                    right: '40px', 
-                    height: '4px', 
-                    background: '#334155', 
-                    zIndex: 0,
-                    transform: 'translateY(-50%)',
-                    borderRadius: '4px'
-                }} />
+  const handleNodeClick = (retoId) => {
+    const isLocked = retoId > progreso;
+    if (!isLocked) {
+      setSelectedChallengeId(retoId);
+    }
+  };
 
-                {/* Active Progress Line */}
-                <div style={{ 
-                    position: 'absolute', 
-                    top: '50%', 
-                    left: '40px', 
-                    width: '40%', 
-                    height: '4px', 
-                    background: 'linear-gradient(90deg, #10b981, #a855f7)', 
-                    zIndex: 1,
-                    transform: 'translateY(-50%)',
-                    borderRadius: '4px'
-                }} />
+  const totalRetos = rutaRetos.length;
+  const progressPercentage = ((progreso - 1) / (totalRetos - 1)) * 100;
+  
+  const selectedChallenge = rutaRetos.find(r => r.id === selectedChallengeId);
 
-                {challenges.map((challenge, index) => {
-                    const isActive = challenge.status === 'current';
-                    const isCompleted = challenge.status === 'completed';
-                    
-                    return (
-                        <div key={challenge.id} style={{ zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} onClick={() => setActiveChallenge(index)}>
-                            <div style={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '50%',
-                                background: isActive ? '#a855f7' : (isCompleted ? '#10b981' : '#1e293b'),
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: `3px solid ${getStatusColor(challenge.status)}`,
-                                boxShadow: isActive ? '0 0 20px rgba(168, 85, 247, 0.5)' : 'none',
-                                transition: 'all 0.3s ease',
-                                marginBottom: '0.5rem'
-                            }}>
-                                {isCompleted ? <CheckCircle size={24} color="white" /> : 
-                                 challenge.status === 'locked' ? <Lock size={20} color="#94a3b8" /> : 
-                                 challenge.icon}
-                            </div>
-                            <span style={{ 
-                                fontSize: '0.75rem', 
-                                fontWeight: 700, 
-                                color: isActive ? '#a855f7' : '#94a3b8',
-                                textAlign: 'center'
-                            }}>{challenge.xp} XP</span>
-                        </div>
-                    );
-                })}
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      position: 'relative', 
+      borderRadius: '16px', 
+      padding: '2.5rem 1rem 1.5rem', 
+      overflow: 'hidden',
+      marginTop: '1rem',
+      background: 'rgba(30, 41, 59, 0.5)',
+      border: '1px solid rgba(255,255,255,0.1)'
+    }}>
+      
+      {/* Dynamic Lighting Layer */}
+      <div 
+        style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          pointerEvents: 'none',
+          transition: 'opacity 1s',
+          opacity: 0.6,
+          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, hsla(262, 83%, 58%, 0.15), transparent 80%)`,
+        }}
+      />
+
+      {/* Decorative Background */}
+      <div style={{ 
+        position: 'absolute', 
+        inset: 0, 
+        opacity: 0.1, 
+        pointerEvents: 'none', 
+        backgroundImage: 'radial-gradient(#a855f7 0.5px, transparent 0.5px)', 
+        backgroundSize: '32px 32px' 
+      }}></div>
+
+      {/* Main Container */}
+      <div style={{ 
+        position: 'relative', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        width: '100%', 
+        maxWidth: '900px', 
+        marginTop: '1rem'
+      }}>
+        
+        {/* Connection System - Ahora dentro del contenedor de nodos para mejor alineación */}
+        <div style={{ 
+          position: 'absolute', 
+          left: '24px', /* Mitad del ancho del nodo (48px / 2) */
+          right: '24px', /* Mitad del ancho del último nodo */
+          height: '6px', 
+          top: '24px', /* Centro del nodo de 48px */
+          pointerEvents: 'none',
+          zIndex: 1
+        }}>
+          <div style={{ 
+            position: 'absolute', 
+            height: '100%', 
+            width: '100%', 
+            background: 'rgba(255,255,255,0.1)', 
+            borderRadius: '4px'
+          }}></div>
+          
+          <div 
+            style={{ 
+              position: 'absolute', 
+              height: '100%', 
+              background: 'linear-gradient(90deg, #10b981, #a855f6, #6366f1)', 
+              borderRadius: '4px', 
+              transition: 'all 1s ease-out',
+              boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
+              left: 0, 
+              width: mounted ? `${progressPercentage}%` : '0%' 
+            }}
+          ></div>
+
+          {/* Energy flow particle */}
+          {progreso > 1 && (
+            <div 
+              style={{ 
+                position: 'absolute', 
+                height: '100%', 
+                overflow: 'hidden',
+                left: `${((progreso - 2) / (totalRetos - 1)) * 100}%`,
+                width: `${(1 / (totalRetos - 1)) * 100}%`
+              }}
+            >
+              <div style={{ 
+                width: '33%', 
+                height: '100%', 
+                background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent)',
+                animation: 'energy-flow 1.5s linear infinite'
+              }}></div>
             </div>
-
-            {/* Challenge Details Card */}
-            <div style={{ 
-                background: 'rgba(30, 41, 59, 0.6)', 
-                borderRadius: '24px', 
-                border: '1px solid rgba(255,255,255,0.1)',
-                padding: '2rem',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                    <div>
-                        <h4 style={{ color: 'white', fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                            {challenges[activeChallenge].id}. {challenges[activeChallenge].title}
-                        </h4>
-                        <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
-                            {challenges[activeChallenge].description}
-                        </p>
-                    </div>
-                    <div style={{ 
-                        background: 'rgba(168, 85, 247, 0.1)', 
-                        padding: '0.5rem 1rem', 
-                        borderRadius: '12px',
-                        border: '1px solid rgba(168, 85, 247, 0.2)'
-                    }}>
-                        <span style={{ color: '#a855f7', fontWeight: 900, fontSize: '1.1rem' }}>
-                            +{challenges[activeChallenge].xp} XP
-                        </span>
-                    </div>
-                </div>
-
-                <div style={{ 
-                    background: '#0f172a', 
-                    borderRadius: '16px', 
-                    padding: '1.5rem',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: '0.85rem',
-                    color: '#e2e8f0',
-                    overflowX: 'auto'
-                }}>
-                    <pre style={{ margin: 0 }}>
-                        <code style={{ color: '#e2e8f0' }}>
-                            {challenges[activeChallenge].code}
-                        </code>
-                    </pre>
-                </div>
-
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
-                    <button 
-                        onClick={() => setShowEditor(true)}
-                        style={{ 
-                        background: '#a855f7', 
-                        color: 'white', 
-                        border: 'none', 
-                        padding: '0.8rem 1.5rem', 
-                        borderRadius: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                    }}>
-                        <Code2 size={18} />
-                        Abrir en Simulador
-                    </button>
-                    <button style={{ 
-                        background: 'rgba(255,255,255,0.05)', 
-                        color: 'white', 
-                        border: '1px solid rgba(255,255,255,0.1)', 
-                        padding: '0.8rem 1.5rem', 
-                        borderRadius: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                    }}>
-                        Ver Hint
-                    </button>
-                </div>
-            </div>
-                </>
-            )}
+          )}
         </div>
-    );
+
+        {/* Challenge Nodes */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          width: '100%', 
+          position: 'relative', 
+          zIndex: 10 
+        }}>
+          {rutaRetos.map((reto, index) => {
+            const isCompleted = index + 1 < progreso;
+            const isCurrent = index + 1 === progreso;
+            const isLocked = index + 1 > progreso;
+
+            return (
+              <div key={reto.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div 
+                  style={{ 
+                    position: 'relative', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center',
+                    cursor: !isLocked ? 'pointer' : 'not-allowed'
+                  }}
+                  onMouseEnter={() => setHoveredId(reto.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  onClick={() => handleNodeClick(reto.id)}
+                >
+                  
+                  {/* User Avatar for current challenge */}
+                  {isCurrent && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      top: '-38px', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      zIndex: 30,
+                      animation: 'float 3s ease-in-out infinite'
+                    }}>
+                      <div style={{ 
+                        position: 'relative', 
+                        padding: '2px', 
+                        borderRadius: '50%', 
+                        background: 'linear-gradient(to bottom, rgba(168, 85, 247, 0.7), #a855f7)',
+                        boxShadow: '0 0 15px rgba(168, 85, 247, 0.5)'
+                      }}>
+                        <div style={{ 
+                          width: '32px', 
+                          height: '32px', 
+                          borderRadius: '50%', 
+                          background: '#1e293b', 
+                          border: '2px solid #0f172a',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold',
+                          fontSize: '14px',
+                          color: 'white',
+                          overflow: 'hidden'
+                        }}>
+                           {userAvatar.startsWith('http') ? <img src={userAvatar} alt="Avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : userAvatar}
+                        </div>
+                        <div style={{ 
+                          position: 'absolute', 
+                          bottom: 0, 
+                          right: 0, 
+                          width: '10px', 
+                          height: '10px', 
+                          background: '#10b981', 
+                          border: '2px solid #0f172a', 
+                          borderRadius: '50%'
+                        }}></div>
+                      </div>
+                      <div style={{ 
+                        width: 0, 
+                        height: 0, 
+                        borderLeft: '6px solid transparent', 
+                        borderRight: '6px solid transparent', 
+                        borderTop: '6px solid #a855f7', 
+                        marginTop: '4px'
+                      }}></div>
+                    </div>
+                  )}
+
+                  {/* Rectangular Node */}
+                  <div
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      border: '2px solid',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.5s ease',
+                      position: 'relative',
+                      background: isCompleted ? '#1e293b' : isCurrent ? '#a855f7' : isLocked ? '#334155' : 'rgba(15, 23, 42, 0.8)',
+                      borderColor: isCompleted ? '#10b981' : isCurrent ? '#ffffff' : isLocked ? '#64748b' : 'rgba(255,255,255,0.05)',
+                      opacity: 1,
+                      transform: isCurrent ? 'scale(1)' : 'scale(1)',
+                      boxShadow: isCurrent ? '0 0 20px rgba(168, 85, 247, 0.4)' : isCompleted ? '0 0 15px rgba(16, 185, 129, 0.3)' : 'none',
+                    }}
+                  >
+                    {isCurrent && (
+                      <div style={{ 
+                        position: 'absolute', 
+                        inset: '-3px', 
+                        borderRadius: '18px', 
+                        border: '2px solid rgba(168, 85, 247, 0.8)',
+                        animation: 'rect-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        opacity: 0
+                      }}></div>
+                    )}
+
+                    <div style={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      transition: 'opacity 0.3s', 
+                      opacity: hoveredId === reto.id ? 1 : 0,
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), transparent)'
+                    }}></div>
+
+                    <div style={{ 
+                      transition: 'all 0.3s ease', 
+                      transform: hoveredId === reto.id ? 'scale(1.05)' : 'scale(1)',
+                      color: isLocked ? '#94a3b8' : isCompleted ? '#10b981' : 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%'
+                    }}>
+                      {isLocked ? (
+                        <Lock size={20} />
+                      ) : isCompleted ? (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      ) : (
+                        <div style={{ 
+                          color: isCurrent ? 'white' : '#94a3b8',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {React.cloneElement(reto.icon, { size: 20 })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Challenge Info */}
+                  <div style={{ 
+                    marginTop: '1rem', 
+                    textAlign: 'center', 
+                    transform: hoveredId === reto.id ? 'translateY(4px)' : 'translateY(0)',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <p style={{ 
+                      fontSize: '10px', 
+                      fontWeight: 900, 
+                      letterSpacing: '0.25em', 
+                      textTransform: 'uppercase',
+                      color: isLocked ? 'rgba(148, 163, 184, 0.4)' : isCurrent ? '#a855f7' : isCompleted ? 'rgba(16, 185, 129, 0.8)' : '#94a3b8',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {reto.title}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', opacity: isLocked ? 0.3 : 0.8 }}>
+                      <Star 
+                        size={12} 
+                        style={{
+                          color: isLocked ? 'rgba(148, 163, 184, 0.2)' : '#fbbf24',
+                          fill: !isLocked ? '#fbbf24' : 'none',
+                          filter: !isLocked ? 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.8))' : 'none'
+                        }}
+                      />
+                      <span style={{ 
+                        fontSize: '10px', 
+                        fontWeight: 'bold', 
+                        color: isLocked ? 'rgba(148, 163, 184, 0.2)' : '#fde047',
+                        textShadow: !isLocked ? '0 0 5px rgba(250, 204, 21, 0.3)' : 'none'
+                      }}>
+                        {reto.xp} XP
+                      </span>
+                    </div>
+                  </div>
+
+                  {isCurrent && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      width: '48px', 
+                      height: '48px', 
+                      borderRadius: '12px', 
+                      background: 'rgba(168, 85, 247, 0.1)', 
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      transform: 'scale(1.3)', 
+                      zIndex: -10,
+                      filter: 'blur(15px)'
+                    }}></div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Challenge Detail Modal (Inline) */}
+      {selectedChallenge && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: 'rgba(15, 23, 42, 0.95)',
+          backdropFilter: 'blur(12px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          animation: 'fadeIn 0.3s ease-out',
+          padding: '2rem'
+        }}
+        onClick={() => setSelectedChallengeId(null)}
+        >
+          <div style={{
+            background: '#0f172a',
+            borderRadius: '24px',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+            width: '100%',
+            maxWidth: '1400px',
+            height: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(168, 85, 247, 0.2)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ padding: '1rem', borderBottom: '1px solid rgba(168, 85, 247, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(168, 85, 247, 0.1)' }}>
+               <div>
+                 <h3 style={{ color: '#a855f7', fontSize: '1.25rem', fontWeight: 800 }}>{selectedChallenge.title}</h3>
+               </div>
+               <button onClick={() => setSelectedChallengeId(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#a855f7', cursor: 'pointer', padding: '0.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <X size={24} />
+               </button>
+            </div>
+            
+            {/* Content */}
+            <div style={{ flex: 1, overflow: 'hidden', padding: '0' }}>
+               <ArduinoExercisesSimulator initialChallengeId={selectedChallengeId - 1} onClose={() => setSelectedChallengeId(null)} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default ChallengeRoadmap;

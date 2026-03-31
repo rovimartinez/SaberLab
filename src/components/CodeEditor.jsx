@@ -1,20 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, RotateCw, Download, Upload, Save, Code } from 'lucide-react';
 
-const CodeEditor = () => {
-    const [code, setCode] = useState(`void setup() {
-  // Configura los pines como salida
+const CodeEditor = ({ onRun, compact = false, initialCode }) => {
+    const [code, setCode] = useState(initialCode || `void setup() {
   pinMode(13, OUTPUT);
   Serial.begin(9600);
 }
 
 void loop() {
-  // Enciende el LED
   digitalWrite(13, HIGH);
   Serial.println("LED ON");
   delay(1000);
   
-  // Apaga el LED
   digitalWrite(13, LOW);
   Serial.println("LED OFF");
   delay(1000);
@@ -26,10 +23,40 @@ void loop() {
         setIsSimulating(true);
         setOutput(['> Compilando código...', '> Compilación exitosa!', '> Subiendo a Arduino...', '> Simulación iniciada...']);
         
+        const logs = [];
+        const codeLines = code.split('\n');
+        let delayMs = 0;
+        
+        codeLines.forEach(line => {
+            if (line.includes('digitalWrite')) {
+                const match = line.match(/digitalWrite\((\d+),\s*(HIGH|LOW)\)/);
+                if (match) {
+                    const pin = match[1];
+                    const val = match[2];
+                    logs.push(`> Pin ${pin}: ${val}`);
+                    logs.push(`> LED ${val === 'HIGH' ? 'ENCENDIDO' : 'APAGADO'}`);
+                }
+            }
+            if (line.includes('delay')) {
+                const match = line.match(/delay\((\d+)\)/);
+                if (match) {
+                    delayMs = parseInt(match[1]);
+                    logs.push(`> Esperando ${delayMs}ms...`);
+                }
+            }
+            if (line.includes('Serial.println')) {
+                const match = line.match(/Serial\.println\("([^"]+)"\)/);
+                if (match) {
+                    logs.push(`> [Serial] ${match[1]}`);
+                }
+            }
+        });
+        
         setTimeout(() => {
-            setOutput(prev => [...prev, '> LED integrado: ON', '> Esperando 1000ms...', '> LED integrado: OFF', '> Esperando 1000ms...']);
+            setOutput(prev => [...prev, ...logs]);
             setIsSimulating(false);
-        }, 2000);
+            if (onRun) onRun(logs);
+        }, 1000);
     };
 
     const handleReset = () => {
@@ -47,7 +74,7 @@ void loop() {
     };
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', height: '600px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : '1.2fr 1fr', gap: '1.5rem', height: compact ? '100%' : '600px' }}>
             {/* Editor Section */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
                 <div style={{ 

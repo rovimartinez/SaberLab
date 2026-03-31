@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
     ArrowLeft, 
@@ -13,7 +13,11 @@ import {
     Monitor, 
     ChevronRight,
     Search,
-    X
+    X,
+    Clock,
+    Trophy,
+    AlertCircle,
+    Check
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/useAuth';
@@ -282,70 +286,8 @@ void loop() {
         id: 'repaso', label: 'Repaso', icon: <RefreshCw size={18} />, content: 'repaso-interactivo'
     },
     {
-        id: 'practica', label: 'Práctica', icon: <Wrench size={18} />, content: `
-        <h3 style="color: #a855f7; margin-bottom: 1.5rem;">Práctica: Mi Primer Parpadeo</h3>
-        
-        <div style="display: flex; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;">
-            <div style="flex: 1; min-width: 300px;">
-                <h4 style="color: #60a5fa; margin: 0 0 1rem;">Paso 1: Montar el Circuito</h4>
-                <div style="background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);">
-                    <ul style="line-height: 2.2; padding-left: 1.2rem; color: #cbd5e1;">
-                        <li>Abre <strong>Tinkercad Circuits</strong> y crea un nuevo proyecto.</li>
-                        <li>Arrastra un <strong>Arduino Uno R3</strong> al espacio de trabajo.</li>
-                        <li>Busca un <strong>LED</strong> y colócalo en el protoboard (o conéctalo directo).</li>
-                        <li>Conecta el <strong>Ánodo (+)</strong> al <strong>Pin 13</strong> de tu Arduino.</li>
-                        <li>Conecta el <strong>Cátodo (-)</strong> a una <strong>Resistencia 220Ω</strong>.</li>
-                        <li>Conecta el otro extremo de la resistencia a <strong>GND</strong>.</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div style="flex: 0.8; min-width: 280px;">
-                <div style="background: rgba(168, 85, 247, 0.05); padding: 1.5rem; border-radius: 20px; border: 1px dashed rgba(168, 85, 247, 0.3); text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-                    <strong style="color: #a855f7; display: block; margin-bottom: 0.5rem;">Diagrama de Conexión</strong>
-                    <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5;">Arduino Pin 13 ➜ Ánodo LED<br>Cátodo LED ➜ Resistencia ➜ Arduino GND</p>
-                    <div style="margin-top: 1rem; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 10px; font-family: monospace; font-size: 0.8rem; color: #10b981;">
-                        PIN 13 [---(LED)---[RES]---] GND
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <h4 style="color: #60a5fa; margin: 1.5rem 0 1rem;">Paso 2: Programar</h4>
-        <pre style="background: rgba(15, 23, 42, 0.9); padding: 1.5rem; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"><code style="color: #e2e8f0;"><span style="color: #a855f7;">void</span> <span style="color: #60a5fa;">setup</span>() {
-  <span style="color: #10b981;">pinMode</span>(13, <span style="color: #f59e0b;">OUTPUT</span>); <span style="color: #64748b;">// Pin 13 como salida</span>
-}
-
-<span style="color: #a855f7;">void</span> <span style="color: #60a5fa;">loop</span>() {
-  <span style="color: #10b981;">digitalWrite</span>(13, <span style="color: #f59e0b;">HIGH</span>); <span style="color: #64748b;">// Encender LED</span>
-  <span style="color: #10b981;">delay</span>(1000);            <span style="color: #64748b;">// Esperar 1 seg</span>
-  <span style="color: #10b981;">digitalWrite</span>(13, <span style="color: #f59e0b;">LOW</span>);  <span style="color: #64748b;">// Apagar LED</span>
-  <span style="color: #10b981;">delay</span>(1000);            <span style="color: #64748b;">// Esperar 1 seg</span>
-}</code></pre>
-        
-        <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(16, 185, 129, 0.1); border-radius: 15px; border-left: 4px solid #10b981;">
-            <strong style="color: #10b981;">✅ Resultado Esperado:</strong>
-            <p style="margin-top: 0.5rem; color: #cbd5e1;">Si todo está bien conectado, verás que el LED parpadea rítmicamente cada segundo. ¡Has creado tu primer sistema de control automático!</p>
-        </div>
-    `},
-    {
-        id: 'simulador', label: 'Simulador', icon: <Monitor size={18} />, content: `
-        <h3 style="color: #a855f7; margin-bottom: 1rem;">Simulador Integrado</h3>
-        
-        <div style="text-align: center; padding: 3rem; background: rgba(168, 85, 247, 0.1); border-radius: 20px; margin-bottom: 1rem;">
-            <p style="font-size: 4rem; margin-bottom: 1rem;">🔌</p>
-            <h4 style="color: #a855f7; margin-bottom: 0.5rem;">Simulador en Desarrollo</h4>
-            <p style="color: var(--text-secondary);">Próximamente podrás programar y simular directamente aquí.</p>
-        </div>
-        
-        <h4 style="color: #60a5fa; margin-bottom: 1rem;">Mientras tanto...</h4>
-        <p>Usa <strong>Tinkercad Circuits</strong> para realizar las prácticas:</p>
-        <ul style="line-height: 2;">
-            <li>🔗 <a href="https://www.tinkercad.com/" target="_blank" style="color: #a855f7;">Ir a Tinkercad</a></li>
-            <li>📚 <a href="https://www.tinkercad.com/learn/circuits" target="_blank" style="color: #a855f7;">Tutoriales de Tinkercad</a></li>
-        </ul>
-    `},
+        id: 'simulador', label: 'Práctica', icon: <Monitor size={18} />, content: 'simulator' 
+    },
     {
         id: 'prueba', label: 'Prueba', icon: <ClipboardList size={18} />, content: 'quiz'
     }
@@ -661,10 +603,62 @@ const Lesson = () => {
     const { courseId, moduleId, lessonId } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('contenido');
-    const [answers, setAnswers] = useState({});
-    const [showResults, setShowResults] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [showGuide, setShowGuide] = useState(false);
+    const [quizMode, setQuizMode] = useState('intro'); // intro, question, result
+    const [currentQ, setCurrentQ] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(30);
+    const [quizScore, setQuizScore] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const timerRef = useRef(null);
+
+    const startQuiz = () => {
+        setQuizMode('question');
+        setCurrentQ(0);
+        setQuizScore(0);
+        setTimeLeft(30);
+        setSelectedAnswer(null);
+    };
+
+    const handleQuizAnswer = (optionIndex) => {
+        if (selectedAnswer !== null) return;
+        
+        setSelectedAnswer(optionIndex);
+        
+        if (optionIndex !== -1 && optionIndex === quizQuestions[currentQ].correct) {
+            setQuizScore(prev => prev + 1);
+        }
+
+        setTimeout(() => {
+            if (currentQ < quizQuestions.length - 1) {
+                setCurrentQ(prev => prev + 1);
+                setTimeLeft(30);
+                setSelectedAnswer(null);
+            } else {
+                setQuizMode('result');
+            }
+        }, 1500);
+    };
+
+    useEffect(() => {
+        if (quizMode === 'question' && timeLeft > 0) {
+            timerRef.current = setTimeout(() => {
+                setTimeLeft(prev => prev - 1);
+            }, 1000);
+        } else if (quizMode === 'question' && timeLeft === 0) {
+            setSelectedAnswer(-1);
+            setTimeout(() => {
+                if (currentQ < quizQuestions.length - 1) {
+                    setCurrentQ(prev => prev + 1);
+                    setTimeLeft(30);
+                    setSelectedAnswer(null);
+                } else {
+                    setQuizMode('result');
+                }
+            }, 1500);
+        }
+        return () => clearTimeout(timerRef.current);
+    }, [timeLeft, quizMode, currentQ]);
 
     const handleScroll = () => {
         const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -699,6 +693,48 @@ const Lesson = () => {
             id: 'q3',
             question: '¿Por qué necesitamos una resistencia conectada al LED?',
             options: ['Para que brille con más fuerza', 'Para evitar que se queme por exceso de corriente', 'Para que el color sea más intenso'],
+            correct: 1
+        },
+        {
+            id: 'q4',
+            question: '¿Cuál es la pata más larga de un LED y a qué se conecta?',
+            options: ['Cátodo, al negativo', 'Ánodo, al positivo', 'No importa cuál se use'],
+            correct: 1
+        },
+        {
+            id: 'q5',
+            question: '¿Qué función enciende un LED en un pin específico?',
+            options: ['digitalWrite(pin, HIGH)', 'pinMode(pin, OUTPUT)', 'delay(1000)'],
+            correct: 0
+        },
+        {
+            id: 'q6',
+            question: '¿Cuántas veces se ejecuta la función setup() en un Arduino?',
+            options: ['Infinitas veces', 'Una vez al iniciar', 'Solo cuando hay un error'],
+            correct: 1
+        },
+        {
+            id: 'q7',
+            question: '¿Qué valor tiene una resistencia Rojo-Rojo-Marrón?',
+            options: ['220 Ω', '1000 Ω', '22 Ω'],
+            correct: 0
+        },
+        {
+            id: 'q8',
+            question: '¿Por qué el LED se destruye si no usamos resistencia?',
+            options: ['Porque atrae demasiada corriente y se quema', 'Porque el código falla', 'Porque el LED necesita más voltaje'],
+            correct: 0
+        },
+        {
+            id: 'q9',
+            question: '¿Qué hace la instrucción delay(1000)?',
+            options: ['Detiene el programa por 1 segundo', 'Reduce el brillo del LED', 'Avanza al siguiente código'],
+            correct: 0
+        },
+        {
+            id: 'q10',
+            question: 'Si queremos que el LED parpadee, ¿qué debemos repetir en el loop?',
+            options: ['Solo delay()', 'digitalWrite(HIGH) y digitalWrite(LOW)', 'Solo pinMode()'],
             correct: 1
         }
     ];
@@ -864,86 +900,143 @@ const Lesson = () => {
                     {activeTab === 'repaso' ? (
                         <ReviewSection user={user} lessonKey={lessonKey} />
                     ) : activeTab === 'prueba' ? (
-                        <div className="quiz-container">
-                            <h3 style={{ color: subject.color, fontSize: '1.8rem', fontWeight: 800, marginBottom: '2rem' }}>
-                                Test de Evaluación
-                            </h3>
-                            {!showResults ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                                    {quizQuestions.map((q, idx) => (
-                                        <div key={q.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <p style={{ fontWeight: 700, marginBottom: '1.5rem', fontSize: '1.2rem', color: 'white' }}>
-                                                {idx + 1}. {q.question}
-                                            </p>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                {q.options.map((option, optIdx) => {
-                                                    const isSelected = answers[q.id] === optIdx;
-                                                    return (
-                                                        <label
-                                                            key={optIdx}
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '1rem',
-                                                                padding: '1.2rem 1.5rem',
-                                                                background: isSelected ? `${subject.color}10` : 'rgba(0,0,0,0.2)',
-                                                                borderRadius: '16px',
-                                                                cursor: 'pointer',
-                                                                border: isSelected ? `2px solid ${subject.color}` : '2px solid transparent',
-                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                                transform: isSelected ? 'scale(1.02)' : 'scale(1)'
-                                                            }}
-                                                        >
-                                                            <input
-                                                                type="radio"
-                                                                name={q.id}
-                                                                checked={isSelected}
-                                                                onChange={() => handleAnswerChange(q.id, optIdx)}
-                                                                style={{ accentColor: subject.color, width: '18px', height: '18px' }}
-                                                            />
-                                                            <span style={{ fontSize: '1rem', fontWeight: 500, color: isSelected ? 'white' : 'var(--text-secondary)' }}>
-                                                                {option}
-                                                            </span>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button
-                                        onClick={() => setShowResults(true)}
-                                        disabled={Object.keys(answers).length < quizQuestions.length}
+                        <div className="quiz-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            {quizMode === 'intro' && (
+                                <div style={{ textAlign: 'center', padding: '3rem 2rem', background: 'rgba(255,255,255,0.03)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ width: '80px', height: '80px', background: `${subject.color}20`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                        <Clock size={40} color={subject.color} />
+                                    </div>
+                                    <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 800, marginBottom: '1rem' }}>
+                                        Evaluación: {subject.name}
+                                    </h3>
+                                    <p style={{ color: '#94a3b8', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                                        Demuestra lo que has aprendido en este capítulo. responderás <strong>10 preguntas</strong> en <strong>30 segundos</strong> cada una.
+                                    </p>
+                                    <ul style={{ textAlign: 'left', color: '#cbd5e1', marginBottom: '2.5rem', display: 'inline-block', listStyle: 'none', padding: 0 }}>
+                                        <li style={{ marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
+                                            10 preguntas de opción múltiple
+                                        </li>
+                                        <li style={{ marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: subject.color }}></div>
+                                            30 segundos por pregunta
+                                        </li>
+                                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></div>
+                                            Necesitas 70% para aprobar
+                                        </li>
+                                    </ul>
+                                    <button 
+                                        onClick={startQuiz}
                                         className="nav-btn nav-btn-complete"
-                                        style={{ background: subject.color, width: '100%', border: 'none', color: 'white', marginTop: '1rem', opacity: Object.keys(answers).length < quizQuestions.length ? 0.5 : 1 }}
+                                        style={{ background: subject.color, border: 'none', color: 'white', padding: '1rem 3rem', fontSize: '1.2rem', fontWeight: 700, boxShadow: `0 10px 25px ${subject.color}40` }}
                                     >
-                                        Finalizar y Revisar Test
+                                        Iniciar Evaluación
                                     </button>
                                 </div>
-                            ) : (
-                                <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-                                    <div style={{ fontSize: '5rem', marginBottom: '1.5rem' }}>
-                                        {calculateScore() === quizQuestions.length ? '🏆' : '🔥'}
+                            )}
+
+                            {quizMode === 'question' && (
+                                <div style={{ animation: 'fadeIn 0.5s ease-out' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                        <span style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600 }}>
+                                            Pregunta {currentQ + 1} de {quizQuestions.length}
+                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: timeLeft < 10 ? '#ef4444' : '#10b981', fontWeight: 700, fontSize: '1.1rem' }}>
+                                            <Clock size={20} />
+                                            {timeLeft}s
+                                        </div>
                                     </div>
-                                    <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>
-                                        ¡Test Completado!
-                                    </h4>
-                                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '2.5rem' }}>
-                                        Has acertado <strong>{calculateScore()} de {quizQuestions.length}</strong> preguntas correctamente.
+
+                                    <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden', marginBottom: '2.5rem' }}>
+                                        <div style={{ 
+                                            height: '100%', 
+                                            background: timeLeft < 10 ? '#ef4444' : subject.color, 
+                                            width: `${(timeLeft / 30) * 100}%`,
+                                            transition: 'width 1s linear, background 0.3s',
+                                            borderRadius: '10px'
+                                        }}></div>
+                                    </div>
+
+                                    <h3 style={{ color: 'white', fontSize: '1.4rem', fontWeight: 700, marginBottom: '2rem', lineHeight: 1.5 }}>
+                                        {quizQuestions[currentQ].question}
+                                    </h3>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        {quizQuestions[currentQ].options.map((option, optIdx) => {
+                                            const isSelected = selectedAnswer === optIdx;
+                                            const isCorrect = quizQuestions[currentQ].correct === optIdx;
+                                            let bg = 'rgba(30, 41, 59, 0.4)';
+                                            let border = '1px solid rgba(255,255,255,0.08)';
+                                            
+                                            if (selectedAnswer !== null) {
+                                                if (isCorrect) {
+                                                    bg = 'rgba(16, 185, 129, 0.2)';
+                                                    border = '2px solid #10b981';
+                                                } else if (isSelected) {
+                                                    bg = 'rgba(239, 68, 68, 0.2)';
+                                                    border = '2px solid #ef4444';
+                                                }
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={optIdx}
+                                                    onClick={() => handleQuizAnswer(optIdx)}
+                                                    disabled={selectedAnswer !== null}
+                                                    style={{
+                                                        padding: '1.25rem 1.5rem',
+                                                        background: bg,
+                                                        border: border,
+                                                        borderRadius: '16px',
+                                                        textAlign: 'left',
+                                                        cursor: selectedAnswer !== null ? 'default' : 'pointer',
+                                                        transition: 'all 0.3s ease',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        color: 'white',
+                                                        fontSize: '1.05rem',
+                                                        fontWeight: 500
+                                                    }}
+                                                >
+                                                    <span>{option}</span>
+                                                    {selectedAnswer !== null && isCorrect && <Check size={20} color="#10b981" />}
+                                                    {selectedAnswer !== null && isSelected && !isCorrect && <X size={20} color="#ef4444" />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {quizMode === 'result' && (
+                                <div style={{ textAlign: 'center', padding: '3rem 2rem', background: 'rgba(255,255,255,0.03)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ width: '100px', height: '100px', background: quizScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                                        {quizScore >= 7 ? <Trophy size={50} color="#10b981" /> : <AlertCircle size={50} color="#ef4444" />}
+                                    </div>
+                                    
+                                    <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+                                        {quizScore >= 7 ? '¡Felicidades! Aprobaste' : 'Necesitas mejorar'}
+                                    </h3>
+                                    
+                                    <p style={{ color: '#94a3b8', fontSize: '1.1rem', marginBottom: '2rem' }}>
+                                        Has acertado <strong style={{ color: quizScore >= 7 ? '#10b981' : '#ef4444', fontSize: '1.5rem' }}>{quizScore}</strong> de {quizQuestions.length} preguntas.
                                     </p>
+
                                     <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
-                                        <button
-                                            onClick={() => { setShowResults(false); setAnswers({}); }}
+                                        <button 
+                                            onClick={() => setQuizMode('intro')}
                                             className="nav-btn nav-btn-prev"
-                                            style={{ minWidth: '200px' }}
                                         >
-                                            Reintentar Test
+                                            Repetir Evaluación
                                         </button>
-                                        <button
-                                            onClick={() => setActiveTab('repaso')}
+                                        <button 
+                                            onClick={() => setActiveTab('contenido')}
                                             className="nav-btn nav-btn-complete"
-                                            style={{ background: subject.color, minWidth: '200px', border: 'none', color: 'white' }}
+                                            style={{ background: subject.color, border: 'none', color: 'white' }}
                                         >
-                                            Repasar Contenido
+                                            Volver al contenido
                                         </button>
                                     </div>
                                 </div>
@@ -982,10 +1075,8 @@ const Lesson = () => {
 
                             <div dangerouslySetInnerHTML={{ __html: tabs.find(t => t.id === 'contenido').content.split('</code></pre>')[1] }} />
                         </>
-                    ) : activeTab === 'practica' ? (
-                        <ChallengeRoadmap />
                     ) : activeTab === 'simulador' ? (
-                        <ArduinoSimulatorV2 />
+                        <ChallengeRoadmap />
                     ) : (
                         <div
                             dangerouslySetInnerHTML={{ __html: tabs.find(t => t.id === activeTab)?.content || '' }}
