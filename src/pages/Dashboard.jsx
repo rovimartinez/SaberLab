@@ -1,87 +1,245 @@
-import { Zap, Bot, ArrowRight, TrendingUp, Clock, Target } from 'lucide-react';
+import React from 'react';
+import { Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, Zap, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/useAuth';
 import './Dashboard.css';
 
-const subjects = [
-    { id: 'electronica', name: 'Electricidad y Electrónica Básica', icon: <Zap size={32} />, color: 'var(--accent-blue)', progress: 15 },
-    { id: 'robotica', name: 'Robótica Educativa', icon: <Bot size={32} />, color: 'var(--accent-purple)', progress: 5 }
-];
-
 const Dashboard = () => {
+    const { user } = useAuth();
+    
+    const fullName = user?.user_metadata?.full_name?.split(' ')[0] || 'Estudiante';
+
+    const upcomingActivities = [
+        {
+            id: 1,
+            date: 'Hoy',
+            type: 'EVALUACIÓN',
+            badgeClass: 'badge-eval',
+            title: 'Módulo 1 - Examen 1',
+            course: 'Robótica Educativa',
+            points: 150
+        },
+        {
+            id: 2,
+            date: 'Mañana',
+            type: 'TAREA',
+            badgeClass: 'badge-task',
+            title: 'Practica de Circuitos',
+            course: 'Electricidad',
+            points: 50
+        }
+    ];
+
+    const enrolledCourses = [
+        { 
+            id: 5, 
+            name: 'Robótica Educativa', 
+            icon: <Bot size={24} />, 
+            color: '#a855f7', 
+            progress: 85,
+            lessons: 16,
+            lastLesson: 'Sensor Ultrasonido'
+        },
+        { 
+            id: 1, 
+            name: 'Electricidad y Electrónica', 
+            icon: <Zap size={24} />, 
+            color: '#f59e0b', 
+            progress: 45,
+            lessons: 12,
+            lastLesson: 'Resistencia eléctrica'
+        }
+    ];
+
+    const lastCourse = enrolledCourses[0];
+
     return (
-        <div className="dashboard-container">
-            <div className="welcome-banner glass-panel">
+        <div className="dashboard-grid">
+            {/* Banner de Bienvenida */}
+            <div className="welcome-banner glass-panel" style={{ padding: '2rem' }}>
                 <div className="banner-content">
-                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-                        Bienvenido de nuevo, <span className="text-gradient">Estudiante</span>! 👋
+                    <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', marginTop: 0 }}>
+                        ¡Hola, <span className="text-gradient" style={{ fontWeight: 800 }}>{fullName}</span>! 👋
                     </h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-                        ¡Has completado 4 lecciones esta semana. Sigue así!
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', margin: 0 }}>
+                        ¿Qué aprenderemos hoy?
                     </p>
                 </div>
                 <div className="banner-stats">
                     <div className="stat-item">
-                        <TrendingUp className="text-gradient" size={24} />
+                        <Target className="text-gradient" size={24} color="#10b981" />
                         <div>
-                            <div className="stat-value">85%</div>
-                            <div className="stat-label">Puntuación Promedio</div>
+                            <div className="stat-value">65%</div>
+                            <div className="stat-label">Progreso General</div>
                         </div>
                     </div>
                     <div className="stat-item">
-                        <Clock className="text-gradient" size={24} />
+                        <Clock className="text-gradient" size={24} color="#a855f7" />
                         <div>
-                            <div className="stat-value">12h</div>
-                            <div className="stat-label">Tiempo de Estudio</div>
+                            <div className="stat-value">7</div>
+                            <div className="stat-label">Días de Racha</div>
                         </div>
                     </div>
                     <div className="stat-item">
-                        <Target className="text-gradient" size={24} />
+                        <BookOpen className="text-gradient" size={24} color="#3b82f6" />
                         <div>
-                            <div className="stat-value">4/5</div>
-                            <div className="stat-label">Metas Alcanzadas</div>
+                            <div className="stat-value">2</div>
+                            <div className="stat-label">Cursos</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="section-header">
-                <h2>Tus Cursos</h2>
-                <button className="btn" style={{ background: 'rgba(255,255,255,0.05)' }}>Ver Todos</button>
-            </div>
-
-            <div className="subjects-grid">
-                {subjects.map(subject => (
-                    <Link to={`/dashboard/subject/${subject.id}`} key={subject.id} className="subject-card glass-panel">
-                        <div className="subject-icon-wrapper" style={{ boxShadow: `0 0 20px ${subject.color}40` }}>
-                            <div className="subject-icon" style={{ color: subject.color }}>
-                                {subject.icon}
-                            </div>
-                        </div>
-                        <h3>{subject.name}</h3>
-
-                        <div className="progress-container">
-                            <div className="progress-header">
-                                <span className="progress-label">Progreso</span>
-                                <span className="progress-percentage">{subject.progress}%</span>
-                            </div>
-                            <div className="progress-bar-bg">
-                                <div
-                                    className="progress-bar-fill"
-                                    style={{
-                                        width: `${subject.progress}%`,
-                                        background: subject.color,
-                                        boxShadow: `0 0 10px ${subject.color}80`
-                                    }}
+            {/* Continuar donde quedaste */}
+            <div className="glass-panel continue-section" style={{ padding: '1.5rem' }}>
+                <div className="continue-header">
+                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>
+                        Continuar aprendiendo
+                    </h2>
+                    <Link to="/dashboard/progress" style={{ 
+                        color: 'var(--accent-blue)', 
+                        fontSize: '0.9rem',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem'
+                    }}>
+                        Ver progreso <ArrowRight size={16} />
+                    </Link>
+                </div>
+                <div className="continue-card">
+                    <div className="continue-icon" style={{ background: `${lastCourse.color}20`, color: lastCourse.color }}>
+                        {lastCourse.icon}
+                    </div>
+                    <div className="continue-info">
+                        <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '1.2rem' }}>
+                            {lastCourse.name}
+                        </h3>
+                        <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                            Última lección: <strong style={{ color: 'white' }}>{lastCourse.lastLesson}</strong>
+                        </p>
+                        <div className="continue-progress" style={{ marginTop: '1rem' }}>
+                            <div className="progress-bar-bg" style={{ height: '6px' }}>
+                                <div 
+                                    className="progress-bar-fill" 
+                                    style={{ width: `${lastCourse.progress}%`, background: lastCourse.color }}
                                 />
                             </div>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                                {lastCourse.progress}% completado
+                            </span>
+                        </div>
+                    </div>
+                    <Link 
+                        to={`/dashboard/course/${lastCourse.id}`}
+                        className="btn btn-primary continue-btn"
+                        style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            padding: '0.75rem 1.5rem'
+                        }}
+                    >
+                        <Play size={18} />
+                        Continuar
+                    </Link>
+                </div>
+            </div>
+
+            {/* Fila: Próximas actividades + Cursos */}
+            <div className="content-columns">
+                {/* Próximas actividades */}
+                <div className="activities-column">
+                    <div className="glass-panel activities-widget" style={{ padding: '1.5rem', height: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                            <div style={{ background: 'rgba(244,63,94,0.1)', padding: '6px', borderRadius: '8px' }}>
+                                <AlarmClock size={20} color="#f43f5e" />
+                            </div>
+                            <h2 style={{ fontSize: '1.1rem', margin: 0, color: 'white', fontWeight: 600 }}>
+                                Próximas actividades
+                            </h2>
                         </div>
 
-                        <div className="card-footer">
-                            <span className="continue-text">Continuar Aprendiendo</span>
-                            <ArrowRight size={16} />
+                        <div>
+                            {upcomingActivities.map((activity) => (
+                                <div key={activity.id} className="activity-item">
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: activity.date === 'Hoy' ? '#10b981' : 'var(--text-secondary)' }}>
+                                                {activity.date}
+                                            </span>
+                                            <span className={`activity-badge ${activity.badgeClass}`}>
+                                                {activity.type}
+                                            </span>
+                                        </div>
+                                        <div className="activity-title">{activity.title}</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                                            {activity.course}
+                                        </div>
+                                    </div>
+                                    <div className="activity-points">
+                                        <div className="points-value">{activity.points}</div>
+                                        <div className="points-label">pts</div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    </Link>
-                ))}
+                    </div>
+                </div>
+
+                {/* Mis Cursos Rápido */}
+                <div className="subjects-column">
+                    <div className="section-header">
+                        <h2>Mis Cursos</h2>
+                        <Link to="/dashboard/my-courses" style={{ 
+                            color: 'var(--accent-blue)', 
+                            fontSize: '0.85rem',
+                            textDecoration: 'none'
+                        }}>
+                            Ver todos
+                        </Link>
+                    </div>
+
+                    <div className="subjects-grid">
+                        {enrolledCourses.map(course => (
+                            <Link 
+                                to={`/dashboard/course/${course.id}`} 
+                                key={course.id} 
+                                className="subject-card glass-panel"
+                                style={{ padding: '1.25rem', textDecoration: 'none' }}
+                            >
+                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <div style={{ 
+                                        background: `${course.color}20`, 
+                                        color: course.color,
+                                        padding: '10px',
+                                        borderRadius: '12px',
+                                        flexShrink: 0
+                                    }}>
+                                        {course.icon}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', color: 'white' }}>
+                                            {course.name}
+                                        </h3>
+                                        <div className="progress-bar-bg" style={{ height: '6px' }}>
+                                            <div 
+                                                className="progress-bar-fill" 
+                                                style={{ 
+                                                    width: `${course.progress}%`, 
+                                                    background: course.color 
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: course.color }}>
+                                        {course.progress}%
+                                    </span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );

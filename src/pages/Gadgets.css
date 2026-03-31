@@ -1,0 +1,639 @@
+.gadgets-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    min-height: 500px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-title h1 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+/* Grid de íconos estilo apps */
+.gadgets-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.gadget-icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 100px;
+}
+
+.gadget-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.gadget-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.gadget-icon-btn:hover .gadget-icon {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px var(--gadget-color, rgba(168, 85, 247, 0.4));
+}
+
+.gadget-icon-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+
+.gadget-icon-btn:hover .gadget-icon-name {
+    color: white;
+}
+
+/* Ventanas flotantes */
+.floating-gadget {
+    position: fixed;
+    background: var(--bg-primary);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    z-index: 999998;
+    min-width: 320px;
+    overflow: hidden;
+    animation: gadgetOpen 0.3s ease;
+}
+
+.floating-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: move;
+}
+
+.floating-header span {
+    flex: 1;
+}
+
+.floating-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.floating-actions button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.floating-actions button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.floating-content {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+@keyframes gadgetOpen {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Calculator Widget */
+.calculator-widget {
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.calc-display {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: right;
+}
+
+.calc-expression {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-height: 1.2em;
+    margin-bottom: 0.25rem;
+}
+
+.calc-result {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+}
+
+.calc-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.calc-btn {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.calc-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.calc-btn.operator {
+    background: rgba(139, 92, 246, 0.3);
+    color: #a78bfa;
+}
+
+.calc-btn.function {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    font-size: 0.75rem;
+}
+
+/* Converter Widget */
+.converter-widget {
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.category-selector {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.category-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.category-btn.active {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+}
+
+.converter-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.converter-input-group {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.converter-input {
+    flex: 1;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.converter-select {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.85rem;
+    min-width: 100px;
+}
+
+.converter-arrow {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+/* Timer Widget Full */
+.timer-widget-full {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 16px;
+    transition: background 0.3s;
+}
+
+.timer-modes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.timer-mode-btn {
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.timer-mode-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.timer-mode-btn.active {
+    background: rgba(var(--mode-color), 0.2);
+    border-color: var(--mode-color);
+    color: var(--mode-color);
+}
+
+.timer-custom-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.timer-custom-input input {
+    width: 60px;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.timer-custom-input input::-webkit-inner-spin-button,
+.timer-custom-input input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+.timer-circle {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.timer-circle.alarm {
+    animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.timer-progress {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.timer-progress-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 4;
+}
+
+.timer-progress-fill {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.5s ease;
+}
+
+.timer-display-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+}
+
+.timer-time {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.timer-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+.timer-alarm-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 50%;
+    animation: fadeIn 0.3s;
+}
+
+.timer-alarm-overlay p {
+    color: white;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+@keyframes bellRing {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(15deg); }
+    75% { transform: rotate(-15deg); }
+}
+
+.timer-controls-full {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.timer-control-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.timer-control-btn.play {
+    background: #a855f7;
+    color: white;
+}
+
+.timer-control-btn.pause {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.timer-control-btn.reset,
+.timer-control-btn.sound {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    padding: 0.75rem;
+}
+
+.timer-control-btn.reset:hover,
+.timer-control-btn.sound:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.timer-stop-alarm {
+    background: transparent;
+    border: 1px solid currentColor;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.timer-stop-alarm:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.timer-btn.start {
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+    color: white;
+}
+
+.timer-btn.reset {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ohms Widget */
+.ohms-widget {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.ohms-formula {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+.formula-item {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.formula-item strong {
+    color: #a78bfa;
+}
+
+.ohms-variables {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    justify-content: center;
+}
+
+.var-btn {
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.var-btn:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+    color: white;
+}
+
+.var-btn.active {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: #8b5cf6;
+    color: #a78bfa;
+}
+
+.ohms-inputs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.ohms-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    position: relative;
+}
+
+.ohms-input-group label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.ohms-input-group input {
+    padding: 0.6rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.result-badge {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #10b981;
+    color: white;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Whiteboard Widget Container */
+.whiteboard-widget-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gadgets-grid {
+        justify-content: center;
+    }
+
+    .floating-gadget {
+        width: calc(100vw - 2rem) !important;
+        left: 1rem !important;
+        min-width: auto;
+    }
+
+    .calculator-widget,
+    .converter-widget,
+    .timer-widget,
+    .ohms-widget {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .gadget-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .gadget-icon-btn {
+        min-width: 80px;
+        padding: 1rem;
+    }
+
+    .timer-time {
+        font-size: 2.5rem;
+    }
+}

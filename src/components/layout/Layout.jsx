@@ -1,13 +1,11 @@
-import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import Whiteboard from '../Whiteboard';
+import { WhiteboardProvider } from '../../context/WhiteboardContext';
 import './Layout.css';
 
-const Layout = () => {
+const LayoutContent = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
@@ -18,9 +16,7 @@ const Layout = () => {
             <Sidebar 
                 isOpen={isSidebarOpen} 
                 closeSidebar={() => setIsSidebarOpen(false)} 
-                toggleWhiteboard={() => setIsWhiteboardOpen(prev => !prev)}
             />
-            {/* Overlay for mobile when sidebar is open */}
             {isSidebarOpen && (
                 <div className="mobile-overlay" onClick={() => setIsSidebarOpen(false)}></div>
             )}
@@ -30,11 +26,17 @@ const Layout = () => {
                     <Outlet />
                 </main>
             </div>
-            
-            {isWhiteboardOpen && (
-                <Whiteboard onClose={() => setIsWhiteboardOpen(false)} />
-            )}
         </div>
+    );
+};
+
+import { useState } from 'react';
+
+const Layout = () => {
+    return (
+        <WhiteboardProvider>
+            <LayoutContent />
+        </WhiteboardProvider>
     );
 };
 

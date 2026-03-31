@@ -28,6 +28,10 @@
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+html, body {
+  scrollbar-gutter: stable;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -45,6 +49,25 @@ body {
   min-height: 100vh;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Unified Global Overflow */
+
+::-webkit-scrollbar {
+  width: 2px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a855f7, #4c1d95);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #c084fc, #6d28d9);
 }
 
 /* Base App Layout */
@@ -55,9 +78,7 @@ body {
 
 /* Glass Panel Utility */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: rgba(30, 41, 59, 0.7);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: 16px;
@@ -80,6 +101,12 @@ h6 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Lesson images */
+.lesson-container img {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Common Interactive Elements */

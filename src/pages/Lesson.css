@@ -1,0 +1,205 @@
+.lesson-view-container {
+    padding: 0 1rem 4rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Header Premium */
+.lesson-header-premium {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1rem 1.75rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.lesson-header-bg-icon {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    font-size: 8rem;
+    opacity: 0.02;
+    pointer-events: none;
+    transform: rotate(-15deg);
+}
+
+.lesson-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.breadcrumb-sep {
+    opacity: 0.5;
+}
+
+.lesson-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.lesson-header-info h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.btn-back-course {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1.15rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-back-course:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(-5px);
+}
+
+/* Tabs System Premium */
+.lesson-tabs-wrapper {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 0.35rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 0.35rem;
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.lesson-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    min-height: 40px;
+}
+
+.lesson-tab-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.lesson-tab-btn.active {
+    color: white;
+}
+
+.active-tab-indicator {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    z-index: -1;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Content Area */
+.lesson-content-card {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 1.25rem;
+    min-height: 500px;
+}
+
+.content-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+/* Navigation Footer */
+.lesson-nav-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-btn {
+    padding: 0.75rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.nav-btn-prev {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+}
+
+.nav-btn-prev:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-btn-complete {
+    background: #a855f7;
+    color: white;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn:hover {
+    transform: translateY(-3px);
+}
+/* Memory Cards Interactive */
+.memory-card {
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.memory-card.is-flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

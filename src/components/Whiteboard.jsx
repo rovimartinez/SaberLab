@@ -98,7 +98,6 @@ const Whiteboard = ({ onClose }) => {
     const magicText = true; // Texto Mágico (suavizado) siempre activo
     const [isMaximized, setIsMaximized] = useState(false); // Default false para mejor UX
     const [isMinimized, setIsMinimized] = useState(false);
-    const [hoveredShapeId, setHoveredShapeId] = useState(null); // Definir variable faltante para evitar crash
     const [isInvisible, setIsInvisible] = useState(false); // Transparente
     const [insertShape, setInsertShape] = useState(null); // 'rect', 'circle', 'triangle'
     const [activeMenu, setActiveMenu] = useState(null);
@@ -125,7 +124,6 @@ const Whiteboard = ({ onClose }) => {
     };
 
     const customCursorRef = useRef(null);
-    const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
 
     // Referencias para Auto-Forma y Suavizado
     const currentStroke = useRef([]);
@@ -134,39 +132,45 @@ const Whiteboard = ({ onClose }) => {
     // Arrastro y posición
     const [position, setPosition] = useState({ x: Math.max(0, window.innerWidth / 2 - 400), y: Math.max(0, window.innerHeight / 2 - 300) });
     const [isDraggingHeader, setIsDraggingHeader] = useState(false);
-    const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
-
-    const handleHeaderMouseDown = (e) => {
-        if (isMaximized) return;
-        if (e.target.closest('button') || e.target.closest('input')) return;
-        setIsDraggingHeader(true);
-        dragRef.current = {
-            startX: e.clientX,
-            startY: e.clientY,
-            initialX: position.x,
-            initialY: position.y
-        };
-    };
+    const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0, isDragging: false });
 
     useEffect(() => {
         const handleMouseMove = (e) => {
-            if (!isDraggingHeader) return;
+            if (!dragRef.current.isDragging) return;
             setPosition({
                 x: dragRef.current.initialX + (e.clientX - dragRef.current.startX),
                 y: dragRef.current.initialY + (e.clientY - dragRef.current.startY)
             });
         };
-        const handleMouseUp = () => setIsDraggingHeader(false);
 
-        if (isDraggingHeader) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
+        const handleMouseUp = () => {
+            if (dragRef.current.isDragging) {
+                dragRef.current.isDragging = false;
+                setIsDraggingHeader(false);
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDraggingHeader]);
+    }, []);
+
+    const handleHeaderMouseDown = (e) => {
+        if (isMaximized) return;
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        e.preventDefault();
+        setIsDraggingHeader(true);
+        dragRef.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            initialX: position.x,
+            initialY: position.y,
+            isDragging: true
+        };
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -210,6 +214,7 @@ const Whiteboard = ({ onClose }) => {
         
         // Sincronizar estilo si hay una figura seleccionada
         if (selectedShapeId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setShapes(prev => prev.map(s => s.id === selectedShapeId ? { ...s, color, brushSize } : s));
         }
     }, [color, brushSize, isEraser, selectedShapeId]);
@@ -358,15 +363,6 @@ const Whiteboard = ({ onClose }) => {
         // Dibujo normal sin suavizado
         ctx.lineTo(offsetX, offsetY);
         ctx.stroke();
-    };
-
-    const handleCanvasMouseMove = (e) => {
-        const { offsetX, offsetY } = getCoordinates(e);
-        if (customCursorRef.current && !isTextMode) {
-            customCursorRef.current.style.left = `${offsetX}px`;
-            customCursorRef.current.style.top = `${offsetY}px`;
-        }
-        draw(e);
     };
 
     const stopDrawing = () => {
@@ -836,7 +832,6 @@ const Whiteboard = ({ onClose }) => {
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
                     {shapes.map((shape) => {
                         const isSelected = selectedShapeId === shape.id;
-                        const isHovered = hoveredShapeId === shape.id;
                         const minX = Math.min(shape.x, shape.x + shape.width);
                         const minY = Math.min(shape.y, shape.y + shape.height);
                         const w = Math.abs(shape.width);
@@ -859,8 +854,6 @@ const Whiteboard = ({ onClose }) => {
                                     pointerEvents: 'auto'
                                 }}
                                 
-                                onMouseEnter={() => setHoveredShapeId(shape.id)}
-                                onMouseLeave={() => setHoveredShapeId(null)}
                                 onDoubleClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedShapeId(shape.id);
@@ -1010,7 +1003,7 @@ const Whiteboard = ({ onClose }) => {
                     }}
                 />
                 
-                {!isTextMode && isHoveringCanvas && (
+                {!isTextMode && (
                     <div 
                         ref={customCursorRef}
                         className="custom-brush-cursor"
