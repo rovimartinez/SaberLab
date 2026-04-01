@@ -79,16 +79,16 @@ const SettingsPage = () => {
                                     <div className="form-row">
                                         <div className="form-group">
                                             <label>Nombre completo</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 defaultValue={user?.user_metadata?.full_name || ''}
                                                 placeholder="Tu nombre"
                                             />
                                         </div>
                                         <div className="form-group">
                                             <label>Correo electrónico</label>
-                                            <input 
-                                                type="email" 
+                                            <input
+                                                type="email"
                                                 defaultValue={user?.email || ''}
                                                 placeholder="tu@correo.com"
                                                 disabled
@@ -98,8 +98,8 @@ const SettingsPage = () => {
                                     <div className="form-row three-cols">
                                         <div className="form-group">
                                             <label>Rol</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 defaultValue="Estudiante"
                                                 disabled
                                             />
@@ -141,8 +141,8 @@ const SettingsPage = () => {
                                     </div>
                                 </div>
                                 <label className="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={notifications.email}
                                         onChange={() => handleNotificationChange('email')}
                                     />
@@ -158,8 +158,8 @@ const SettingsPage = () => {
                                     </div>
                                 </div>
                                 <label className="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={notifications.push}
                                         onChange={() => handleNotificationChange('push')}
                                     />
@@ -175,8 +175,8 @@ const SettingsPage = () => {
                                     </div>
                                 </div>
                                 <label className="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={notifications.activities}
                                         onChange={() => handleNotificationChange('activities')}
                                     />
@@ -192,8 +192,8 @@ const SettingsPage = () => {
                                     </div>
                                 </div>
                                 <label className="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={notifications.grades}
                                         onChange={() => handleNotificationChange('grades')}
                                     />
@@ -209,8 +209,8 @@ const SettingsPage = () => {
                                     </div>
                                 </div>
                                 <label className="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={notifications.announcements}
                                         onChange={() => handleNotificationChange('announcements')}
                                     />
@@ -231,21 +231,21 @@ const SettingsPage = () => {
                             <div className="option-group">
                                 <label>Tema de color</label>
                                 <div className="theme-selector">
-                                    <button 
+                                    <button
                                         className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
                                         onClick={() => setTheme('dark')}
                                     >
                                         <Moon size={20} />
                                         <span>Oscuro</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
                                         onClick={() => setTheme('light')}
                                     >
                                         <Sun size={20} />
                                         <span>Claro</span>
                                     </button>
-                                    <button 
+                                    <button
                                         className={`theme-btn ${theme === 'system' ? 'active' : ''}`}
                                         onClick={() => setTheme('system')}
                                     >

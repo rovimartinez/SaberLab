@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Calculator, Clock, Ruler, Zap, PenLine, X, RotateCcw, Play, Pause, Bell, Volume2, VolumeX, Cpu, Lightbulb, AlarmClock, Timer, StopCircle, GraduationCap, CheckCircle2, Settings, ChevronDown, ArrowRightLeft, Thermometer, Weight, Maximize2, Minimize2, Activity, Box, Gauge, Flame, Wind, RefreshCw, Trophy, AlertCircle, Target, BookOpen, Info, ChevronRight, Wrench, Circle, Trash2, Plus, Copy, Layers } from 'lucide-react';
 import ArduinoIDE from '../components/ArduinoIDE';
+import RuletaWidget from '../components/Ruleta';
+import Whiteboard from '../components/Whiteboard';
 import './Gadgets.css';
 
-const FloatingGadget = ({ gadget, children, onClose, width = 360, height = 450 }) => {
-    const [position, setPosition] = useState({ 
-        x: Math.max(0, (window.innerWidth - width) / 2), 
-        y: Math.max(0, (window.innerHeight - height) / 2) 
+const FloatingGadget = ({ gadget, children, onClose, width = 360, height = 450, defaultMaximized = false }) => {
+    const [position, setPosition] = useState({
+        x: Math.max(0, (window.innerWidth - width) / 2),
+        y: Math.max(0, (window.innerHeight - height) / 2)
     });
     const [isDragging, setIsDragging] = useState(false);
-    const [isMaximized, setIsMaximized] = useState(false);
+    const [isMaximized, setIsMaximized] = useState(defaultMaximized);
     const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
     useEffect(() => {
@@ -48,8 +50,8 @@ const FloatingGadget = ({ gadget, children, onClose, width = 360, height = 450 }
     };
 
     return (
-        <div 
-            className="floating-gadget" 
+        <div
+            className="floating-gadget"
             style={isMaximized
                 ? { left: '1rem', top: '1rem', width: 'calc(100vw - 2rem)', height: 'calc(100vh - 2rem)' }
                 : { left: position.x, top: position.y, width: width + 'px', height: height + 'px' }}
@@ -75,7 +77,7 @@ export const gadgetsCatalog = [
     { id: 'calculator', name: 'Calculadora', icon: <Calculator size={18} />, color: '#a855f7' },
     { id: 'converter', name: 'Conversor', icon: <Ruler size={18} />, color: '#3b82f6' },
     { id: 'timer', name: 'Reloj', icon: <Clock size={18} />, color: '#f97316' },
-    { id: 'roulette', name: 'Ruleta', icon: <Target size={18} />, color: '#f43f5e' },
+    { id: 'roulette', name: 'Ruleta Pro', icon: <Target size={18} />, color: '#f43f5e' },
     { id: 'traffic', name: 'Semáforo', icon: <Circle size={18} />, color: '#f59e0b' },
     { id: 'ohms', name: 'Ley de Ohm', icon: <Zap size={18} />, color: '#10b981' },
     { id: 'whiteboard', name: 'Pizarra', icon: <PenLine size={18} />, color: '#ec4899' },
@@ -152,448 +154,39 @@ export const GadgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
         )}
 
         {openGadgets.roulette && (
-            <FloatingGadget gadget={gadgetsCatalog[3]} onClose={closeGadget} width={760} height={560}>
-                <RouletteWidgetModern />
+            <FloatingGadget gadget={gadgetsCatalog[3]} onClose={closeGadget} width={500} height={750} defaultMaximized={true}>
+                <RuletaWidget />
             </FloatingGadget>
         )}
 
         {openGadgets.traffic && (
-            <FloatingGadget gadget={gadgetsCatalog[4]} onClose={closeGadget} width={370} height={500}>
+            <FloatingGadget gadget={gadgetsCatalog[5]} onClose={closeGadget} width={370} height={500}>
                 <TrafficLightWidget />
             </FloatingGadget>
         )}
 
         {openGadgets.ohms && (
-            <FloatingGadget gadget={gadgetsCatalog[5]} onClose={closeGadget} width={500} height={500}>
+            <FloatingGadget gadget={gadgetsCatalog[6]} onClose={closeGadget} width={500} height={500}>
                 <OhmsLawCalculator />
             </FloatingGadget>
         )}
 
+        {openGadgets.whiteboard && (
+            <FloatingGadget gadget={gadgetsCatalog[7]} onClose={closeGadget} width={1100} height={700} defaultMaximized={true}>
+                <Whiteboard />
+            </FloatingGadget>
+        )}
+
         {openGadgets.arduino && (
-            <FloatingGadget gadget={gadgetsCatalog[7]} onClose={closeGadget} width={800} height={600}>
+            <FloatingGadget gadget={gadgetsCatalog[8]} onClose={closeGadget} width={800} height={600}>
                 <ArduinoIDE />
             </FloatingGadget>
         )}
+
     </>
 );
 
-const rouletteCourseLists = [
-    {
-        id: 'robotica',
-        name: 'Robótica Educativa',
-        students: ['Diego Fernández', 'Lucía Morales', 'Miguel Torres', 'Elena Castro', 'Andrés Vargas']
-    },
-    {
-        id: 'electricidad',
-        name: 'Electricidad y Electrónica Básica',
-        students: ['María García', 'Carlos López', 'Ana Martínez', 'Juan Rodríguez', 'Laura Sánchez']
-    },
-    {
-        id: 'programacion',
-        name: 'Fundamentos de Programación',
-        students: ['Pedro Gómez', 'Sofía Ruiz']
-    },
-    {
-        id: 'quimica',
-        name: 'Mediaciones Tecnológicas en la Química',
-        students: ['Valentina Rojas', 'Mateo Herrera']
-    }
-];
 
-const RouletteWidget = () => {
-    const [sourceMode, setSourceMode] = useState('curso');
-    const [selectedCourseId, setSelectedCourseId] = useState(rouletteCourseLists[0].id);
-    const [manualNames, setManualNames] = useState('Ana\nLuis\nCamila\nDavid');
-    const [winner, setWinner] = useState('');
-    const [previewName, setPreviewName] = useState('');
-    const [isSpinning, setIsSpinning] = useState(false);
-    const [wheelRotation, setWheelRotation] = useState(0);
-
-    const selectedCourse = rouletteCourseLists.find((course) => course.id === selectedCourseId) || rouletteCourseLists[0];
-    const participants = (sourceMode === 'curso' ? selectedCourse.students : manualNames.split('\n'))
-        .map((name) => name.trim())
-        .filter(Boolean);
-    const visibleParticipants = participants.slice(0, 12);
-    const wheelParticipants = visibleParticipants.length > 1 ? visibleParticipants : ['Sin lista', 'Sin lista'];
-    const segmentAngle = 360 / wheelParticipants.length;
-
-    const spinRoulette = () => {
-        if (participants.length === 0 || isSpinning) return;
-
-        setIsSpinning(true);
-        const finalIndex = Math.floor(Math.random() * wheelParticipants.length);
-        const finalName = wheelParticipants[finalIndex];
-        const turns = 1800 + Math.floor(Math.random() * 720);
-        const target = wheelRotation + turns + (360 - ((finalIndex + 0.5) * segmentAngle));
-
-        const interval = window.setInterval(() => {
-            const randomName = wheelParticipants[Math.floor(Math.random() * wheelParticipants.length)];
-            setPreviewName(randomName);
-        }, 95);
-
-        setWheelRotation(target);
-        window.setTimeout(() => {
-            window.clearInterval(interval);
-            setPreviewName(finalName);
-            setWinner(finalName);
-            setIsSpinning(false);
-        }, 3200);
-    };
-
-    return (
-        <div className="roulette-widget">
-            <div className="roulette-source-toggle">
-                <button type="button" className={sourceMode === 'curso' ? 'active' : ''} onClick={() => setSourceMode('curso')}>Curso</button>
-                <button type="button" className={sourceMode === 'manual' ? 'active' : ''} onClick={() => setSourceMode('manual')}>Manual</button>
-            </div>
-
-            {sourceMode === 'curso' ? (
-                <div className="roulette-course-box">
-                    <label>Lista de estudiantes por curso</label>
-                    <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}>
-                        {rouletteCourseLists.map((course) => (
-                            <option key={course.id} value={course.id}>{course.name}</option>
-                        ))}
-                    </select>
-                </div>
-            ) : (
-                <div className="roulette-course-box">
-                    <label>Escribe un nombre por línea</label>
-                    <textarea
-                        value={manualNames}
-                        onChange={(e) => setManualNames(e.target.value)}
-                        placeholder="Escribe un nombre por línea"
-                    />
-                </div>
-            )}
-
-            <div className="roulette-display wheel-mode">
-                <span className="roulette-label">Ruleta</span>
-                <div className="roulette-wheel-shell">
-                    <div className="roulette-pointer" />
-                    <div
-                        className={`roulette-wheel ${isSpinning ? 'spinning' : ''}`}
-                        style={{
-                            transform: `rotate(${wheelRotation}deg)`,
-                            background: `conic-gradient(${wheelParticipants.map((_, index) => {
-                                const start = index * segmentAngle;
-                                const end = start + segmentAngle;
-                                const palette = ['#f43f5e', '#fb7185', '#f59e0b', '#facc15', '#10b981', '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#ef4444', '#22c55e', '#06b6d4'];
-                                return `${palette[index % palette.length]} ${start}deg ${end}deg`;
-                            }).join(', ')})`
-                        }}
-                    >
-                        <div className="roulette-wheel-center">
-                            <strong>{previewName || winner || 'Gira'}</strong>
-                        </div>
-                    </div>
-                </div>
-                <p>{participants.length} participante{participants.length === 1 ? '' : 's'}</p>
-            </div>
-
-            <div className="roulette-actions">
-                <button type="button" className="roulette-spin-btn" onClick={spinRoulette} disabled={participants.length === 0 || isSpinning}>
-                    <Play size={16} />
-                    <span>{isSpinning ? 'Girando...' : 'Girar ruleta'}</span>
-                </button>
-                <button type="button" className="roulette-reset-btn" onClick={() => { setWinner(''); setPreviewName(''); setWheelRotation(0); }}>
-                    <RotateCcw size={15} />
-                </button>
-            </div>
-
-            <div className="roulette-chip-list">
-                {participants.slice(0, 12).map((name) => (
-                    <span key={name} className={`roulette-chip ${winner === name ? 'winner' : ''}`}>{name}</span>
-                ))}
-            </div>
-        </div>
-    );
-};
-
-const RouletteWidgetModern = () => {
-    const [sourceMode, setSourceMode] = useState('curso');
-    const [selectedCourseId, setSelectedCourseId] = useState(rouletteCourseLists[0].id);
-    const [names, setNames] = useState(rouletteCourseLists[0].students);
-    const [manualNames, setManualNames] = useState(rouletteCourseLists[0].students.join('\n'));
-    const [newName, setNewName] = useState('');
-    const [winner, setWinner] = useState('');
-    const [showWinnerModal, setShowWinnerModal] = useState(false);
-    const [isSpinning, setIsSpinning] = useState(false);
-    const [wheelRotation, setWheelRotation] = useState(0);
-    const [isPanelOpen, setIsPanelOpen] = useState(false);
-
-    const palette = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa07a', '#98d8c8', '#f7dc6f', '#bb8fce', '#82e0aa', '#f1948a', '#85c1e9'];
-    const participants = names.map((name) => name.trim()).filter(Boolean);
-    const wheelParticipants = participants.length > 1 ? participants : ['Sin lista', 'Sin lista'];
-    const segmentAngle = 360 / wheelParticipants.length;
-
-    useEffect(() => {
-        if (sourceMode !== 'manual') {
-            setManualNames(names.join('\n'));
-        }
-    }, [names, sourceMode]);
-
-    const loadCourse = (courseId) => {
-        const course = rouletteCourseLists.find((item) => item.id === courseId) || rouletteCourseLists[0];
-        setSelectedCourseId(course.id);
-        setNames(course.students);
-        setManualNames(course.students.join('\n'));
-        setWinner('');
-        setShowWinnerModal(false);
-    };
-
-    const applyManualNames = () => {
-        const parsed = manualNames
-            .split('\n')
-            .map((name) => name.trim())
-            .filter(Boolean);
-
-        if (parsed.length >= 2) {
-            setNames(parsed);
-            setWinner('');
-            setShowWinnerModal(false);
-            setSourceMode('manual');
-        }
-    };
-
-    const addName = (e) => {
-        e.preventDefault();
-        if (!newName.trim() || isSpinning) return;
-        const updated = [...participants, newName.trim()];
-        setNames(updated);
-        setManualNames(updated.join('\n'));
-        setNewName('');
-        setSourceMode('manual');
-    };
-
-    const removeName = (index) => {
-        if (participants.length <= 2 || isSpinning) return;
-        const updated = participants.filter((_, itemIndex) => itemIndex !== index);
-        setNames(updated);
-        setManualNames(updated.join('\n'));
-    };
-
-    const duplicateNames = (factor) => {
-        if (participants.length === 0 || isSpinning) return;
-        const updated = Array.from({ length: factor }).flatMap(() => participants);
-        setNames(updated);
-        setManualNames(updated.join('\n'));
-        setSourceMode('manual');
-    };
-
-    const spinRoulette = () => {
-        if (participants.length < 2 || isSpinning) return;
-
-        setWinner('');
-        setShowWinnerModal(false);
-        setIsSpinning(true);
-
-        const finalIndex = Math.floor(Math.random() * participants.length);
-        const finalName = participants[finalIndex];
-        const targetRotation = wheelRotation + (360 * 8) + (360 - ((finalIndex + 0.5) * segmentAngle));
-
-        setWheelRotation(targetRotation);
-
-        window.setTimeout(() => {
-            setWinner(finalName);
-            setShowWinnerModal(true);
-            setIsSpinning(false);
-        }, 4000);
-    };
-
-    return (
-        <div className="roulette-widget roulette-widget-modern">
-            {showWinnerModal && (
-                <div className="roulette-winner-modal">
-                    <div className="roulette-winner-card">
-                        <button type="button" className="roulette-winner-close" onClick={() => setShowWinnerModal(false)}>
-                            <X size={18} />
-                        </button>
-                        <div className="roulette-winner-badge">
-                            <Trophy size={28} />
-                        </div>
-                        <span>Ganador</span>
-                        <strong>{winner}</strong>
-                        <button type="button" className="roulette-winner-action" onClick={() => setShowWinnerModal(false)}>
-                            Cerrar
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            <div className="roulette-main">
-                <div className="roulette-stage">
-                    <button type="button" className="roulette-settings-button" onClick={() => setIsPanelOpen(true)}>
-                        <Settings size={16} />
-                        <span>Configuracion</span>
-                    </button>
-
-                    <div className="roulette-title-block">
-                        <h3>Ruleta</h3>
-                        <div />
-                    </div>
-
-                    <div className="roulette-wheel-shell modern">
-                        <div className="roulette-pointer modern" />
-                        <div className="roulette-wheel-frame">
-                            <svg
-                                className={`roulette-wheel-svg ${isSpinning ? 'spinning' : ''}`}
-                                viewBox="0 0 100 100"
-                                style={{ transform: `rotate(${wheelRotation}deg)` }}
-                            >
-                                {wheelParticipants.map((name, index) => {
-                                    const startAngle = (index * segmentAngle) - 90;
-                                    const endAngle = ((index + 1) * segmentAngle) - 90;
-                                    const x1 = 50 + 50 * Math.cos((Math.PI * startAngle) / 180);
-                                    const y1 = 50 + 50 * Math.sin((Math.PI * startAngle) / 180);
-                                    const x2 = 50 + 50 * Math.cos((Math.PI * endAngle) / 180);
-                                    const y2 = 50 + 50 * Math.sin((Math.PI * endAngle) / 180);
-                                    const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-                                    const centerAngle = startAngle + (segmentAngle / 2);
-                                    const label = name.length > 12 ? `${name.slice(0, 10)}..` : name;
-
-                                    return (
-                                        <g key={`${name}-${index}`}>
-                                            <path
-                                                d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
-                                                fill={palette[index % palette.length]}
-                                                stroke="rgba(255,255,255,0.22)"
-                                                strokeWidth="0.45"
-                                            />
-                                            <text
-                                                x="77"
-                                                y="50"
-                                                fill="white"
-                                                fontSize={wheelParticipants.length > 12 ? '2.1' : wheelParticipants.length > 8 ? '2.7' : '3.3'}
-                                                fontWeight="800"
-                                                textAnchor="middle"
-                                                dominantBaseline="middle"
-                                                transform={`rotate(${centerAngle}, 50, 50)`}
-                                            >
-                                                {label}
-                                            </text>
-                                        </g>
-                                    );
-                                })}
-                            </svg>
-
-                            <div className="roulette-wheel-center modern">
-                                <button type="button" onClick={spinRoulette} disabled={participants.length < 2 || isSpinning}>
-                                    {isSpinning ? 'Girando' : 'Gira'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="roulette-stage-footer">
-                        <span>{participants.length} participante{participants.length === 1 ? '' : 's'}</span>
-                        <strong>{winner || 'Sin ganador aun'}</strong>
-                    </div>
-
-                    <div className="roulette-actions modern">
-                        <button type="button" className="roulette-spin-btn" onClick={spinRoulette} disabled={participants.length < 2 || isSpinning}>
-                            <Play size={16} />
-                            <span>{isSpinning ? 'Girando...' : 'Girar'}</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="roulette-reset-btn"
-                            onClick={() => {
-                                setWinner('');
-                                setShowWinnerModal(false);
-                                setWheelRotation(0);
-                            }}
-                        >
-                            <RotateCcw size={15} />
-                        </button>
-                    </div>
-                </div>
-
-                <aside className={`roulette-panel ${isPanelOpen ? 'open' : ''}`}>
-                    <div className="roulette-panel-header">
-                        <h4>
-                            <Settings size={16} />
-                            <span>Ajustes</span>
-                        </h4>
-                        <button type="button" onClick={() => setIsPanelOpen(false)}>
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-
-                    <div className="roulette-panel-body">
-                        <div className="roulette-source-toggle">
-                            <button type="button" className={sourceMode === 'curso' ? 'active' : ''} onClick={() => setSourceMode('curso')}>Curso</button>
-                            <button type="button" className={sourceMode === 'manual' ? 'active' : ''} onClick={() => setSourceMode('manual')}>Manual</button>
-                        </div>
-
-                        {sourceMode === 'curso' ? (
-                            <div className="roulette-course-box">
-                                <label>Lista por curso</label>
-                                <div className="roulette-select-wrap">
-                                    <select value={selectedCourseId} onChange={(e) => loadCourse(e.target.value)}>
-                                        {rouletteCourseLists.map((course) => (
-                                            <option key={course.id} value={course.id}>{course.name}</option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown size={16} />
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="roulette-course-box">
-                                <label>Escribe un nombre por linea</label>
-                                <textarea
-                                    value={manualNames}
-                                    onChange={(e) => setManualNames(e.target.value)}
-                                    placeholder={'Ana\nLuis\nCamila'}
-                                />
-                                <button type="button" className="roulette-apply-btn" onClick={applyManualNames}>
-                                    Aplicar lista
-                                </button>
-                            </div>
-                        )}
-
-                        <div className="roulette-panel-actions">
-                            <button type="button" onClick={() => duplicateNames(2)}>
-                                <Copy size={14} />
-                                <span>x2</span>
-                            </button>
-                            <button type="button" onClick={() => duplicateNames(3)}>
-                                <Layers size={14} />
-                                <span>x3</span>
-                            </button>
-                        </div>
-
-                        <form className="roulette-add-form" onSubmit={addName}>
-                            <input
-                                type="text"
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                placeholder="Anadir participante"
-                            />
-                            <button type="submit">
-                                <Plus size={16} />
-                            </button>
-                        </form>
-
-                        <div className="roulette-list">
-                            {participants.map((name, index) => (
-                                <div key={`${name}-${index}`} className={`roulette-list-item ${winner === name ? 'winner' : ''}`}>
-                                    <div className="roulette-list-dot" style={{ background: palette[index % palette.length] }} />
-                                    <span>{name}</span>
-                                    <button type="button" onClick={() => removeName(index)} disabled={participants.length <= 2}>
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </aside>
-
-                {isPanelOpen && <button type="button" className="roulette-panel-backdrop" onClick={() => setIsPanelOpen(false)} aria-label="Cerrar panel" />}
-            </div>
-        </div>
-    );
-};
 
 const TrafficLightWidget = () => {
     const [activeLight, setActiveLight] = useState('green');
@@ -640,8 +233,8 @@ const ScientificCalculator = () => {
     const expressionLabel = expressionPreview;
     const resultSizeClass =
         display.length > 16 ? 'compact' :
-        display.length > 11 ? 'medium' :
-        '';
+            display.length > 11 ? 'medium' :
+                '';
 
     const formatResult = (value, mode = displayMode) => {
         if (value === null || Number.isNaN(value) || !Number.isFinite(value)) {

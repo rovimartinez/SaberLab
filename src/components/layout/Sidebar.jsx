@@ -9,7 +9,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     const { openLauncher } = useGadgets();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
-    
+
     // Datos de usuario
     const userMetadata = user?.user_metadata || {};
     const avatarUrl = userMetadata.avatar_url;
@@ -55,9 +55,9 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         <aside className={`sidebar glass-panel ${isOpen ? 'open' : ''}`}>
             <div className="sidebar-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <img 
-                        src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" 
-                        alt="SaberLab Logo" 
+                    <img
+                        src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png"
+                        alt="SaberLab Logo"
                         style={{ height: '40px', width: 'auto' }}
                     />
                     <h2 className="text-gradient" style={{ fontSize: '1.5rem', margin: 0 }}>SaberLab</h2>
@@ -107,9 +107,9 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                                             key={item.name}
                                             onClick={() => { item.action(); closeSidebar(); }}
                                             className="nav-item"
-                                            style={{ 
-                                                padding: '0.75rem 1rem', 
-                                                fontSize: '0.9rem', 
+                                            style={{
+                                                padding: '0.75rem 1rem',
+                                                fontSize: '0.9rem',
                                                 background: 'transparent',
                                                 border: 'none',
                                                 textAlign: 'left',
@@ -161,13 +161,13 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
             <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
                 <div className="sidebar-user-container" ref={menuRef} style={{ position: 'relative' }}>
-                    <div 
-                        className="user-profile" 
+                    <div
+                        className="user-profile"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        style={{ 
-                            width: '100%', 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
                             padding: '0.5rem',
                             borderRadius: '12px',
                             cursor: 'pointer',
@@ -177,9 +177,9 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                     >
                         {avatarUrl ? (
                             <div className="avatar" style={{ padding: 0, overflow: 'hidden', width: '36px', height: '36px', flexShrink: 0 }}>
-                                <img 
-                                    src={avatarUrl} 
-                                    alt={fullName} 
+                                <img
+                                    src={avatarUrl}
+                                    alt={fullName}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                             </div>

@@ -6,7 +6,7 @@ import './Dashboard.css';
 
 const Dashboard = () => {
     const { user } = useAuth();
-    
+
     const fullName = user?.user_metadata?.full_name?.split(' ')[0] || 'Estudiante';
 
     const upcomingActivities = [
@@ -31,20 +31,20 @@ const Dashboard = () => {
     ];
 
     const enrolledCourses = [
-        { 
-            id: 5, 
-            name: 'Robótica Educativa', 
-            icon: <Bot size={24} />, 
-            color: '#a855f7', 
+        {
+            id: 5,
+            name: 'Robótica Educativa',
+            icon: <Bot size={24} />,
+            color: '#a855f7',
             progress: 85,
             lessons: 16,
             lastLesson: 'Sensor Ultrasonido'
         },
-        { 
-            id: 1, 
-            name: 'Electricidad y Electrónica', 
-            icon: <Zap size={24} />, 
-            color: '#f59e0b', 
+        {
+            id: 1,
+            name: 'Electricidad y Electrónica',
+            icon: <Zap size={24} />,
+            color: '#f59e0b',
             progress: 45,
             lessons: 12,
             lastLesson: 'Resistencia eléctrica'
@@ -96,8 +96,8 @@ const Dashboard = () => {
                     <h2 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>
                         Continuar aprendiendo
                     </h2>
-                    <Link to="/dashboard/progress" style={{ 
-                        color: 'var(--accent-blue)', 
+                    <Link to="/dashboard/progress" style={{
+                        color: 'var(--accent-blue)',
                         fontSize: '0.9rem',
                         textDecoration: 'none',
                         display: 'flex',
@@ -120,8 +120,8 @@ const Dashboard = () => {
                         </p>
                         <div className="continue-progress" style={{ marginTop: '1rem' }}>
                             <div className="progress-bar-bg" style={{ height: '6px' }}>
-                                <div 
-                                    className="progress-bar-fill" 
+                                <div
+                                    className="progress-bar-fill"
                                     style={{ width: `${lastCourse.progress}%`, background: lastCourse.color }}
                                 />
                             </div>
@@ -130,12 +130,12 @@ const Dashboard = () => {
                             </span>
                         </div>
                     </div>
-                    <Link 
+                    <Link
                         to={`/dashboard/course/${lastCourse.id}`}
                         className="btn btn-primary continue-btn"
-                        style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
                             gap: '0.5rem',
                             padding: '0.75rem 1.5rem'
                         }}
@@ -191,8 +191,8 @@ const Dashboard = () => {
                 <div className="subjects-column">
                     <div className="section-header">
                         <h2>Mis Cursos</h2>
-                        <Link to="/dashboard/my-courses" style={{ 
-                            color: 'var(--accent-blue)', 
+                        <Link to="/dashboard/my-courses" style={{
+                            color: 'var(--accent-blue)',
                             fontSize: '0.85rem',
                             textDecoration: 'none'
                         }}>
@@ -202,15 +202,15 @@ const Dashboard = () => {
 
                     <div className="subjects-grid">
                         {enrolledCourses.map(course => (
-                            <Link 
-                                to={`/dashboard/course/${course.id}`} 
-                                key={course.id} 
+                            <Link
+                                to={`/dashboard/course/${course.id}`}
+                                key={course.id}
                                 className="subject-card glass-panel"
                                 style={{ padding: '1.25rem', textDecoration: 'none' }}
                             >
                                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                    <div style={{ 
-                                        background: `${course.color}20`, 
+                                    <div style={{
+                                        background: `${course.color}20`,
                                         color: course.color,
                                         padding: '10px',
                                         borderRadius: '12px',
@@ -223,11 +223,11 @@ const Dashboard = () => {
                                             {course.name}
                                         </h3>
                                         <div className="progress-bar-bg" style={{ height: '6px' }}>
-                                            <div 
-                                                className="progress-bar-fill" 
-                                                style={{ 
-                                                    width: `${course.progress}%`, 
-                                                    background: course.color 
+                                            <div
+                                                className="progress-bar-fill"
+                                                style={{
+                                                    width: `${course.progress}%`,
+                                                    background: course.color
                                                 }}
                                             />
                                         </div>

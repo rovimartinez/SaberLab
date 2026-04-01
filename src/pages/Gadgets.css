@@ -216,8 +216,53 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     z-index: 999998;
     min-width: 320px;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
     overflow: hidden;
     animation: gadgetOpen 0.3s ease;
+}
+
+.roulette-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.roulette-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.roulette-list-item:hover {
+    background: #f1f5f9;
+}
+
+.roulette-list-item.winner {
+    background: #eef2ff;
+    border-color: #4f46e5;
+}
+
+.roulette-list-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.roulette-list-item span {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .floating-header {
@@ -262,8 +307,15 @@
     flex: 1;
     min-height: 0;
     padding: 1rem;
-    max-height: 400px;
     overflow-y: auto;
+}
+
+.floating-content-roulette {
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .floating-content-arduino {
@@ -325,11 +377,97 @@
     justify-content: space-between;
 }
 
-.roulette-widget {
-    height: 100%;
+.roulette-winner-modal {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.3s ease;
+}
+
+.roulette-winner-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 32px;
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+    animation: winnerPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    min-width: 280px;
+    overflow: hidden;
+}
+
+.roulette-winner-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.1), transparent 50%);
+    animation: rotate 4s linear infinite;
+}
+
+@keyframes winnerPop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.roulette-winner-badge {
+    width: 80px;
+    height: 80px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 10px 20px rgba(217, 119, 6, 0.3);
+}
+
+.roulette-winner-card span {
+    color: #64748b;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.roulette-winner-card strong {
+    color: #1e293b;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.roulette-winner-action {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 16px;
+    background: #1e293b;
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.roulette-winner-action:hover {
+    transform: translateY(-2px);
+    background: #0f172a;
 }
 
 .roulette-source-toggle {
@@ -540,22 +678,27 @@
 .roulette-widget-modern .roulette-main {
     position: relative;
     height: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
 }
 
 .roulette-stage {
     position: relative;
+    flex: 3;
+    min-width: 320px;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
-    padding: 0.35rem 1rem 0.9rem;
-    background: linear-gradient(180deg, #0f1729 0%, #121a2f 100%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 0.5rem;
+    padding: 0.35rem;
+    background: linear-gradient(180deg, #0b0f1a 0%, #0c1220 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 24px;
+    overflow: hidden;
 }
 
 .roulette-settings-button {
@@ -598,10 +741,16 @@
 }
 
 .roulette-wheel-shell.modern {
-    width: 100%;
-    max-width: 360px;
-    height: 360px;
-    margin-top: 0.2rem;
+    width: 95%;
+    max-width: 600px;
+    max-height: 70vh;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .roulette-pointer.modern {
@@ -644,11 +793,11 @@
     position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 999px;
+    border-radius: 50%;
     overflow: hidden;
     background: #0c1220;
-    border: 14px solid #ffffff;
-    box-shadow: 0 26px 60px -18px rgba(0, 0, 0, 0.45);
+    border: 10px solid #ffffff;
+    box-shadow: 0 26px 80px -15px rgba(0, 0, 0, 0.5);
 }
 
 .roulette-wheel-svg {
@@ -722,23 +871,197 @@
 }
 
 .roulette-panel {
-    position: absolute;
-    inset: 0 0 0 auto;
     width: 320px;
     height: 100%;
     display: flex;
     flex-direction: column;
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
     color: #0f172a;
-    border-left: 1px solid #e2e8f0;
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
-    transform: translateX(100%);
-    transition: transform 0.45s ease;
-    z-index: 8;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+}
+
+/* On wide screens, show panel alongside the wheel if desired, 
+   but for the "floating widget" feel, we stick to flex-wrap. 
+   If it's too small for the panel, it will wrap below.
+   However, user says "it doesn't let see everything".
+   I will make the panel ALWAYS visible if the window is wide enough.
+*/
+
+@media (max-width: 700px) {
+    .roulette-panel:not(.open) {
+        display: none;
+    }
+    .roulette-panel.open {
+        position: absolute;
+        inset: 0 0 0 auto;
+        transform: translateX(0);
+        width: 100%;
+        max-width: 320px;
+    }
+}
+
+@media (min-width: 701px) {
+    .roulette-panel {
+        display: flex !important;
+        transform: none !important;
+        position: relative !important;
+    }
+    .roulette-settings-button, 
+    .roulette-panel-backdrop {
+        display: none !important;
+    }
 }
 
 .roulette-panel.open {
     transform: translateX(0);
+}
+
+@media (max-width: 600px) {
+    .roulette-panel {
+        width: 100%;
+    }
+    .roulette-wheel-shell.modern {
+        max-width: 250px;
+    }
+}
+
+.roulette-history-panel {
+    width: 200px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.winners-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.winner-log-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #eef2f6;
+    animation: slideInLeft 0.3s ease;
+}
+
+@keyframes slideInLeft {
+    from { transform: translateX(-10px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.log-index {
+    font-size: 0.65rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    background: #e2e8f0;
+    color: #64748b;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.log-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty-log {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.roulette-side-controls {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+.roulette-side-controls.left {
+    left: 0.75rem;
+}
+
+.side-toggle {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.side-toggle:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: scale(1.05);
+}
+
+.side-toggle.active {
+    background: #4f46e5;
+    border-color: #6366f1;
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+}
+
+.roulette-auto-remove {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #f1f5f9;
+    border-radius: 14px;
+    margin-bottom: 0.4rem;
+}
+
+.roulette-auto-remove span {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #475569;
+    line-height: 1.25;
+}
+
+.launcher-switch.mini {
+    width: 34px;
+    height: 18px;
+    padding: 2px;
+}
+
+.launcher-switch.mini .launcher-switch-thumb {
+    width: 14px;
+    height: 14px;
+}
+
+.launcher-switch.mini.active .launcher-switch-thumb {
+    transform: translateX(16px);
 }
 
 .roulette-panel-header {
@@ -771,10 +1094,10 @@
 .roulette-panel-body {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.65rem;
 }
 
 .roulette-panel-body::-webkit-scrollbar {
