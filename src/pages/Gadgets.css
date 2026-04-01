@@ -2861,11 +2861,14 @@
 .node-i.active,
 .node-r.active { transform: scale(1.06); }
 
-.node-v,
 .node-v.active,
-.ohms-triangle-node.node-v,
 .ohms-triangle-node.node-v.active,
 .ohms-accent-v { color: #facc15; }
+
+.node-v,
+.ohms-triangle-node.node-v {
+    color: #475569;
+}
 
 .node-i.active,
 .ohms-accent-i { color: #60a5fa; }

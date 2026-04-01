@@ -38,8 +38,8 @@ const SubjectDetail = () => {
             id: 'm1', 
             name: 'Módulo 1: Fundamentos y Lógica Digital', 
             lessons: [
-                { id: 'l1', title: 'Mi primer parpadeo (Entorno y Salidas Digitales)', type: 'content', duration: '15 min', status: 'current' },
-                { id: 'l2', title: 'Semáforos y Variables', type: 'content', duration: '20 min', status: 'locked' },
+                { id: 'l1', title: 'Mi primer parpadeo (Entorno y Salidas Digitales)', type: 'content', duration: '15 min', status: 'completed' },
+                { id: 'l2', title: 'Variables y Comentarios', type: 'content', duration: '20 min', status: 'current' },
                 { id: 'l3', title: 'El Robot decide (Condicionales y Botones)', type: 'content', duration: '25 min', status: 'locked' },
                 { id: 'l4', title: 'Monitor Serial y el Bucle while', type: 'content', duration: '18 min', status: 'locked' },
                 { id: 'l5', title: 'Entradas Analógicas y Resolución', type: 'quiz', duration: '20 min', status: 'locked' }

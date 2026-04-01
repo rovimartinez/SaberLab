@@ -136,49 +136,49 @@ export const GadgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
         )}
 
         {openGadgets.calculator && (
-            <FloatingGadget gadget={gadgetsCatalog[0]} onClose={closeGadget} width={360} height={540}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'calculator')} onClose={closeGadget} width={360} height={540}>
                 <ScientificCalculator />
             </FloatingGadget>
         )}
 
         {openGadgets.converter && (
-            <FloatingGadget gadget={gadgetsCatalog[1]} onClose={closeGadget} width={560} height={520}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'converter')} onClose={closeGadget} width={560} height={520}>
                 <UnitConverter />
             </FloatingGadget>
         )}
 
         {openGadgets.timer && (
-            <FloatingGadget gadget={gadgetsCatalog[2]} onClose={closeGadget} width={420} height={600}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'timer')} onClose={closeGadget} width={420} height={600}>
                 <StudyClockWidget />
             </FloatingGadget>
         )}
 
         {openGadgets.roulette && (
-            <FloatingGadget gadget={gadgetsCatalog[3]} onClose={closeGadget} width={500} height={750} defaultMaximized={true}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'roulette')} onClose={closeGadget} width={500} height={750} defaultMaximized={true}>
                 <RuletaWidget />
             </FloatingGadget>
         )}
 
         {openGadgets.traffic && (
-            <FloatingGadget gadget={gadgetsCatalog[5]} onClose={closeGadget} width={370} height={500}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'traffic')} onClose={closeGadget} width={370} height={500}>
                 <TrafficLightWidget />
             </FloatingGadget>
         )}
 
         {openGadgets.ohms && (
-            <FloatingGadget gadget={gadgetsCatalog[6]} onClose={closeGadget} width={500} height={500}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'ohms')} onClose={closeGadget} width={500} height={500}>
                 <OhmsLawCalculator />
             </FloatingGadget>
         )}
 
         {openGadgets.whiteboard && (
-            <FloatingGadget gadget={gadgetsCatalog[7]} onClose={closeGadget} width={1100} height={700} defaultMaximized={true}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'whiteboard')} onClose={closeGadget} width={1100} height={700} defaultMaximized={true}>
                 <Whiteboard />
             </FloatingGadget>
         )}
 
         {openGadgets.arduino && (
-            <FloatingGadget gadget={gadgetsCatalog[8]} onClose={closeGadget} width={800} height={600}>
+            <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'arduino')} onClose={closeGadget} width={1100} height={700} defaultMaximized={false}>
                 <ArduinoIDE />
             </FloatingGadget>
         )}
@@ -539,9 +539,10 @@ const UnitConverter = () => {
         }
     }, [category]);
 
-    const convert = () => {
+    const convert = useCallback(() => {
         const numericValue = parseFloat(inputValue.replace(',', '.')) || 0;
         const categoryUnits = unitsByCategory[category];
+        if (!categoryUnits) return '0';
 
         const toBase = (value, unitId) => {
             if (category === 'temperature') {
@@ -563,21 +564,30 @@ const UnitConverter = () => {
             return baseValue * (unit?.factor || 1);
         };
 
-        const baseValue = toBase(numericValue, fromUnit);
-        const converted = fromBase(baseValue, toUnit);
+        // Safety check: ensure units belong to current category
+        const safeFromUnit = categoryUnits.some(u => u.id === fromUnit) ? fromUnit : categoryUnits[0].id;
+        const safeToUnit = categoryUnits.some(u => u.id === toUnit) ? toUnit : (categoryUnits[1]?.id || categoryUnits[0].id);
+
+        const baseValue = toBase(numericValue, safeFromUnit);
+        const converted = fromBase(baseValue, safeToUnit);
 
         return converted.toLocaleString('es-ES', {
             maximumFractionDigits: 8,
             minimumFractionDigits: 0
         });
-    };
+    }, [inputValue, category, fromUnit, toUnit]);
 
     const swapUnits = () => {
         setFromUnit(toUnit);
         setToUnit(fromUnit);
     };
 
-    const getUnitName = (unitId) => unitsByCategory[category]?.find(unit => unit.id === unitId)?.name || '';
+    const getUnitName = (unitId) => {
+        const categoryUnits = unitsByCategory[category];
+        if (!categoryUnits) return '';
+        return categoryUnits.find(unit => unit.id === unitId)?.name || '';
+    };
+    
     const result = convert();
 
     return (

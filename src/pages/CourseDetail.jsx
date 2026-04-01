@@ -239,7 +239,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                             <p className="panel-description">Controla qué contenido ven los estudiantes</p>
                         </div>
                         <div className="modules-list">
-                            {(courseModules[course.id] || []).map((module, idx) => (
+                            {courseModules.map((module, idx) => (
                                 <div key={module.id} className="module-card">
                                     <div className="module-card-header" onClick={() => toggleExpandModule(module.id)}>
                                         <div className="module-card-info">

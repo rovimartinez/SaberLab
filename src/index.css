@@ -55,7 +55,7 @@ body {
 /* Unified Global Overflow */
 
 ::-webkit-scrollbar {
-  width: 2px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -101,6 +101,42 @@ h6 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Lesson Content Typography */
+.lesson-content-container {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.theory-section-main p {
+  margin-bottom: 1.25rem;
+  color: #cbd5e1;
+}
+
+.theory-section-main h3 {
+  font-size: 1.3rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.theory-section-main h4 {
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: white;
+}
+
+.theory-section-main ul, .theory-section-main ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+
+.theory-section-main li {
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
 }
 
 /* Lesson images */
