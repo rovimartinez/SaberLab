@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Calculator, Clock, Ruler, Zap, PenLine, X, RotateCcw, Play, Pause, Bell, Volume2, VolumeX } from 'lucide-react';
-import { useWhiteboard } from '../context/useWhiteboard';
+import { Navigate } from 'react-router-dom';
+import { Calculator, Clock, Ruler, Zap, PenLine, X, RotateCcw, Play, Pause, Bell, Volume2, VolumeX, Cpu, Lightbulb, AlarmClock, Timer, StopCircle, GraduationCap, CheckCircle2, Settings, ChevronDown, ArrowRightLeft, Thermometer, Weight, Maximize2, Minimize2, Activity, Box, Gauge, Flame, Wind, RefreshCw, Trophy, AlertCircle, Target, BookOpen, Info, ChevronRight, Wrench, Circle, Trash2, Plus, Copy, Layers } from 'lucide-react';
+import ArduinoIDE from '../components/ArduinoIDE';
 import './Gadgets.css';
 
-const FloatingGadget = ({ gadget, children, onClose }) => {
+const FloatingGadget = ({ gadget, children, onClose, width = 360, height = 450 }) => {
     const [position, setPosition] = useState({ 
-        x: (window.innerWidth - 360) / 2, 
-        y: (window.innerHeight - 450) / 2 
+        x: Math.max(0, (window.innerWidth - width) / 2), 
+        y: Math.max(0, (window.innerHeight - height) / 2) 
     });
     const [isDragging, setIsDragging] = useState(false);
+    const [isMaximized, setIsMaximized] = useState(false);
     const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
     useEffect(() => {
@@ -34,6 +36,7 @@ const FloatingGadget = ({ gadget, children, onClose }) => {
     }, [isDragging]);
 
     const handleDragStart = (e) => {
+        if (isMaximized) return;
         e.preventDefault();
         setIsDragging(true);
         dragRef.current = {
@@ -47,183 +50,783 @@ const FloatingGadget = ({ gadget, children, onClose }) => {
     return (
         <div 
             className="floating-gadget" 
-            style={{ left: position.x, top: position.y }}
+            style={isMaximized
+                ? { left: '1rem', top: '1rem', width: 'calc(100vw - 2rem)', height: 'calc(100vh - 2rem)' }
+                : { left: position.x, top: position.y, width: width + 'px', height: height + 'px' }}
         >
-            <div className="floating-header" style={{ background: gadget.color }} onMouseDown={handleDragStart}>
+            <div className="floating-header" style={{ background: gadget.id === 'arduino' ? '#2b313a' : gadget.color }} onMouseDown={handleDragStart}>
                 {gadget.icon}
                 <span>{gadget.name}</span>
                 <div className="floating-actions">
+                    <button onClick={() => setIsMaximized((prev) => !prev)}>
+                        {isMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                    </button>
                     <button onClick={() => onClose(gadget.id)}><X size={14} /></button>
                 </div>
             </div>
-            <div className="floating-content">
+            <div className={`floating-content ${gadget.id === 'mis-apps' ? 'floating-content-launcher' : ''} ${gadget.id === 'arduino' ? 'floating-content-arduino' : ''} ${gadget.id === 'calculator' ? 'floating-content-calculator' : ''} ${gadget.id === 'converter' ? 'floating-content-converter' : ''} ${gadget.id === 'timer' ? 'floating-content-clock' : ''} ${gadget.id === 'roulette' ? 'floating-content-roulette' : ''} ${gadget.id === 'traffic' ? 'floating-content-traffic' : ''} ${gadget.id === 'ohms' ? 'floating-content-ohms' : ''}`}>
                 {children}
             </div>
         </div>
     );
 };
 
-const Gadgets = () => {
-    const { openWhiteboard } = useWhiteboard();
-    const [openGadgets, setOpenGadgets] = useState({});
+export const gadgetsCatalog = [
+    { id: 'calculator', name: 'Calculadora', icon: <Calculator size={18} />, color: '#a855f7' },
+    { id: 'converter', name: 'Conversor', icon: <Ruler size={18} />, color: '#3b82f6' },
+    { id: 'timer', name: 'Reloj', icon: <Clock size={18} />, color: '#f97316' },
+    { id: 'roulette', name: 'Ruleta', icon: <Target size={18} />, color: '#f43f5e' },
+    { id: 'traffic', name: 'Semáforo', icon: <Circle size={18} />, color: '#f59e0b' },
+    { id: 'ohms', name: 'Ley de Ohm', icon: <Zap size={18} />, color: '#10b981' },
+    { id: 'whiteboard', name: 'Pizarra', icon: <PenLine size={18} />, color: '#ec4899' },
+    { id: 'arduino', name: 'Arduino IDE', icon: <Cpu size={18} />, color: '#22c55e' }
+];
 
-    const gadgets = [
-        { id: 'calculator', name: 'Calculadora', icon: <Calculator size={18} />, color: '#a855f7' },
-        { id: 'converter', name: 'Conversor', icon: <Ruler size={18} />, color: '#3b82f6' },
-        { id: 'timer', name: 'Temporizador', icon: <Clock size={18} />, color: '#f97316' },
-        { id: 'ohms', name: 'Ley de Ohm', icon: <Zap size={18} />, color: '#10b981' },
-        { id: 'whiteboard', name: 'Pizarra', icon: <PenLine size={18} />, color: '#ec4899' }
-    ];
+const GadgetsLauncherPanel = ({ openGadget, autoCloseLauncher, setAutoCloseLauncher }) => (
+    <div className="gadgets-launcher">
+        <div className="gadgets-grid gadgets-grid-launcher">
+            {gadgetsCatalog.map(gadget => (
+                <button
+                    key={gadget.id}
+                    className="gadget-icon-btn"
+                    onClick={() => openGadget(gadget.id)}
+                    style={{ '--gadget-color': gadget.color }}
+                >
+                    <div className="gadget-icon" style={{ '--gadget-tint': `${gadget.color}22`, color: gadget.color }}>
+                        {gadget.icon}
+                    </div>
+                    <span className="gadget-icon-name">{gadget.name}</span>
+                </button>
+            ))}
+        </div>
+        <div className="gadgets-launcher-footer">
+            <span className="gadgets-launcher-footer-label">
+                Cerrar al abrir: <strong>{autoCloseLauncher ? 'Auto' : 'Manual'}</strong>
+            </span>
+            <button
+                type="button"
+                className={`launcher-switch ${autoCloseLauncher ? 'active' : ''}`}
+                onClick={() => setAutoCloseLauncher((prev) => !prev)}
+                aria-pressed={autoCloseLauncher}
+                aria-label="Cambiar cierre automático del launcher"
+            >
+                <span className="launcher-switch-thumb" />
+            </button>
+        </div>
+    </div>
+);
 
-    const openGadget = (id) => {
-        if (id === 'whiteboard') {
-            openWhiteboard();
-        } else {
-            setOpenGadgets(prev => ({ ...prev, [id]: true }));
-        }
-    };
+export const GadgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, openGadgets, closeGadget, autoCloseLauncher, setAutoCloseLauncher }) => (
+    <>
+        {isLauncherOpen && (
+            <FloatingGadget
+                gadget={{ id: 'mis-apps', name: 'Mis APPs', icon: <Wrench size={18} />, color: '#24344d' }}
+                onClose={() => closeLauncher('mis-apps')}
+                width={470}
+                height={390}
+            >
+                <GadgetsLauncherPanel
+                    openGadget={openGadget}
+                    autoCloseLauncher={autoCloseLauncher}
+                    setAutoCloseLauncher={setAutoCloseLauncher}
+                />
+            </FloatingGadget>
+        )}
 
-    const closeGadget = (id) => {
-        setOpenGadgets(prev => {
-            const newState = { ...prev };
-            delete newState[id];
-            return newState;
-        });
+        {openGadgets.calculator && (
+            <FloatingGadget gadget={gadgetsCatalog[0]} onClose={closeGadget} width={360} height={540}>
+                <ScientificCalculator />
+            </FloatingGadget>
+        )}
+
+        {openGadgets.converter && (
+            <FloatingGadget gadget={gadgetsCatalog[1]} onClose={closeGadget} width={560} height={520}>
+                <UnitConverter />
+            </FloatingGadget>
+        )}
+
+        {openGadgets.timer && (
+            <FloatingGadget gadget={gadgetsCatalog[2]} onClose={closeGadget} width={420} height={600}>
+                <StudyClockWidget />
+            </FloatingGadget>
+        )}
+
+        {openGadgets.roulette && (
+            <FloatingGadget gadget={gadgetsCatalog[3]} onClose={closeGadget} width={760} height={560}>
+                <RouletteWidgetModern />
+            </FloatingGadget>
+        )}
+
+        {openGadgets.traffic && (
+            <FloatingGadget gadget={gadgetsCatalog[4]} onClose={closeGadget} width={370} height={500}>
+                <TrafficLightWidget />
+            </FloatingGadget>
+        )}
+
+        {openGadgets.ohms && (
+            <FloatingGadget gadget={gadgetsCatalog[5]} onClose={closeGadget} width={500} height={500}>
+                <OhmsLawCalculator />
+            </FloatingGadget>
+        )}
+
+        {openGadgets.arduino && (
+            <FloatingGadget gadget={gadgetsCatalog[7]} onClose={closeGadget} width={800} height={600}>
+                <ArduinoIDE />
+            </FloatingGadget>
+        )}
+    </>
+);
+
+const rouletteCourseLists = [
+    {
+        id: 'robotica',
+        name: 'Robótica Educativa',
+        students: ['Diego Fernández', 'Lucía Morales', 'Miguel Torres', 'Elena Castro', 'Andrés Vargas']
+    },
+    {
+        id: 'electricidad',
+        name: 'Electricidad y Electrónica Básica',
+        students: ['María García', 'Carlos López', 'Ana Martínez', 'Juan Rodríguez', 'Laura Sánchez']
+    },
+    {
+        id: 'programacion',
+        name: 'Fundamentos de Programación',
+        students: ['Pedro Gómez', 'Sofía Ruiz']
+    },
+    {
+        id: 'quimica',
+        name: 'Mediaciones Tecnológicas en la Química',
+        students: ['Valentina Rojas', 'Mateo Herrera']
+    }
+];
+
+const RouletteWidget = () => {
+    const [sourceMode, setSourceMode] = useState('curso');
+    const [selectedCourseId, setSelectedCourseId] = useState(rouletteCourseLists[0].id);
+    const [manualNames, setManualNames] = useState('Ana\nLuis\nCamila\nDavid');
+    const [winner, setWinner] = useState('');
+    const [previewName, setPreviewName] = useState('');
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [wheelRotation, setWheelRotation] = useState(0);
+
+    const selectedCourse = rouletteCourseLists.find((course) => course.id === selectedCourseId) || rouletteCourseLists[0];
+    const participants = (sourceMode === 'curso' ? selectedCourse.students : manualNames.split('\n'))
+        .map((name) => name.trim())
+        .filter(Boolean);
+    const visibleParticipants = participants.slice(0, 12);
+    const wheelParticipants = visibleParticipants.length > 1 ? visibleParticipants : ['Sin lista', 'Sin lista'];
+    const segmentAngle = 360 / wheelParticipants.length;
+
+    const spinRoulette = () => {
+        if (participants.length === 0 || isSpinning) return;
+
+        setIsSpinning(true);
+        const finalIndex = Math.floor(Math.random() * wheelParticipants.length);
+        const finalName = wheelParticipants[finalIndex];
+        const turns = 1800 + Math.floor(Math.random() * 720);
+        const target = wheelRotation + turns + (360 - ((finalIndex + 0.5) * segmentAngle));
+
+        const interval = window.setInterval(() => {
+            const randomName = wheelParticipants[Math.floor(Math.random() * wheelParticipants.length)];
+            setPreviewName(randomName);
+        }, 95);
+
+        setWheelRotation(target);
+        window.setTimeout(() => {
+            window.clearInterval(interval);
+            setPreviewName(finalName);
+            setWinner(finalName);
+            setIsSpinning(false);
+        }, 3200);
     };
 
     return (
-        <div className="gadgets-page">
-            <div className="page-header">
-                <div className="header-title">
-                    <Calculator size={28} color="#60a5fa" />
-                    <h1>Herramientas</h1>
-                </div>
+        <div className="roulette-widget">
+            <div className="roulette-source-toggle">
+                <button type="button" className={sourceMode === 'curso' ? 'active' : ''} onClick={() => setSourceMode('curso')}>Curso</button>
+                <button type="button" className={sourceMode === 'manual' ? 'active' : ''} onClick={() => setSourceMode('manual')}>Manual</button>
             </div>
 
-            <div className="gadgets-grid">
-                {gadgets.map(gadget => (
-                    <button
-                        key={gadget.id}
-                        className="gadget-icon-btn"
-                        onClick={() => openGadget(gadget.id)}
-                        style={{ '--gadget-color': gadget.color }}
+            {sourceMode === 'curso' ? (
+                <div className="roulette-course-box">
+                    <label>Lista de estudiantes por curso</label>
+                    <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}>
+                        {rouletteCourseLists.map((course) => (
+                            <option key={course.id} value={course.id}>{course.name}</option>
+                        ))}
+                    </select>
+                </div>
+            ) : (
+                <div className="roulette-course-box">
+                    <label>Escribe un nombre por línea</label>
+                    <textarea
+                        value={manualNames}
+                        onChange={(e) => setManualNames(e.target.value)}
+                        placeholder="Escribe un nombre por línea"
+                    />
+                </div>
+            )}
+
+            <div className="roulette-display wheel-mode">
+                <span className="roulette-label">Ruleta</span>
+                <div className="roulette-wheel-shell">
+                    <div className="roulette-pointer" />
+                    <div
+                        className={`roulette-wheel ${isSpinning ? 'spinning' : ''}`}
+                        style={{
+                            transform: `rotate(${wheelRotation}deg)`,
+                            background: `conic-gradient(${wheelParticipants.map((_, index) => {
+                                const start = index * segmentAngle;
+                                const end = start + segmentAngle;
+                                const palette = ['#f43f5e', '#fb7185', '#f59e0b', '#facc15', '#10b981', '#14b8a6', '#3b82f6', '#8b5cf6', '#ec4899', '#ef4444', '#22c55e', '#06b6d4'];
+                                return `${palette[index % palette.length]} ${start}deg ${end}deg`;
+                            }).join(', ')})`
+                        }}
                     >
-                        <div className="gadget-icon" style={{ background: `${gadget.color}20`, color: gadget.color }}>
-                            {gadget.icon}
+                        <div className="roulette-wheel-center">
+                            <strong>{previewName || winner || 'Gira'}</strong>
                         </div>
-                        <span className="gadget-icon-name">{gadget.name}</span>
-                    </button>
+                    </div>
+                </div>
+                <p>{participants.length} participante{participants.length === 1 ? '' : 's'}</p>
+            </div>
+
+            <div className="roulette-actions">
+                <button type="button" className="roulette-spin-btn" onClick={spinRoulette} disabled={participants.length === 0 || isSpinning}>
+                    <Play size={16} />
+                    <span>{isSpinning ? 'Girando...' : 'Girar ruleta'}</span>
+                </button>
+                <button type="button" className="roulette-reset-btn" onClick={() => { setWinner(''); setPreviewName(''); setWheelRotation(0); }}>
+                    <RotateCcw size={15} />
+                </button>
+            </div>
+
+            <div className="roulette-chip-list">
+                {participants.slice(0, 12).map((name) => (
+                    <span key={name} className={`roulette-chip ${winner === name ? 'winner' : ''}`}>{name}</span>
                 ))}
             </div>
+        </div>
+    );
+};
 
-            {/* Floating Gadget Windows */}
-            {openGadgets.calculator && (
-                <FloatingGadget gadget={gadgets[0]} onClose={closeGadget}>
-                    <ScientificCalculator />
-                </FloatingGadget>
+const RouletteWidgetModern = () => {
+    const [sourceMode, setSourceMode] = useState('curso');
+    const [selectedCourseId, setSelectedCourseId] = useState(rouletteCourseLists[0].id);
+    const [names, setNames] = useState(rouletteCourseLists[0].students);
+    const [manualNames, setManualNames] = useState(rouletteCourseLists[0].students.join('\n'));
+    const [newName, setNewName] = useState('');
+    const [winner, setWinner] = useState('');
+    const [showWinnerModal, setShowWinnerModal] = useState(false);
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [wheelRotation, setWheelRotation] = useState(0);
+    const [isPanelOpen, setIsPanelOpen] = useState(false);
+
+    const palette = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffa07a', '#98d8c8', '#f7dc6f', '#bb8fce', '#82e0aa', '#f1948a', '#85c1e9'];
+    const participants = names.map((name) => name.trim()).filter(Boolean);
+    const wheelParticipants = participants.length > 1 ? participants : ['Sin lista', 'Sin lista'];
+    const segmentAngle = 360 / wheelParticipants.length;
+
+    useEffect(() => {
+        if (sourceMode !== 'manual') {
+            setManualNames(names.join('\n'));
+        }
+    }, [names, sourceMode]);
+
+    const loadCourse = (courseId) => {
+        const course = rouletteCourseLists.find((item) => item.id === courseId) || rouletteCourseLists[0];
+        setSelectedCourseId(course.id);
+        setNames(course.students);
+        setManualNames(course.students.join('\n'));
+        setWinner('');
+        setShowWinnerModal(false);
+    };
+
+    const applyManualNames = () => {
+        const parsed = manualNames
+            .split('\n')
+            .map((name) => name.trim())
+            .filter(Boolean);
+
+        if (parsed.length >= 2) {
+            setNames(parsed);
+            setWinner('');
+            setShowWinnerModal(false);
+            setSourceMode('manual');
+        }
+    };
+
+    const addName = (e) => {
+        e.preventDefault();
+        if (!newName.trim() || isSpinning) return;
+        const updated = [...participants, newName.trim()];
+        setNames(updated);
+        setManualNames(updated.join('\n'));
+        setNewName('');
+        setSourceMode('manual');
+    };
+
+    const removeName = (index) => {
+        if (participants.length <= 2 || isSpinning) return;
+        const updated = participants.filter((_, itemIndex) => itemIndex !== index);
+        setNames(updated);
+        setManualNames(updated.join('\n'));
+    };
+
+    const duplicateNames = (factor) => {
+        if (participants.length === 0 || isSpinning) return;
+        const updated = Array.from({ length: factor }).flatMap(() => participants);
+        setNames(updated);
+        setManualNames(updated.join('\n'));
+        setSourceMode('manual');
+    };
+
+    const spinRoulette = () => {
+        if (participants.length < 2 || isSpinning) return;
+
+        setWinner('');
+        setShowWinnerModal(false);
+        setIsSpinning(true);
+
+        const finalIndex = Math.floor(Math.random() * participants.length);
+        const finalName = participants[finalIndex];
+        const targetRotation = wheelRotation + (360 * 8) + (360 - ((finalIndex + 0.5) * segmentAngle));
+
+        setWheelRotation(targetRotation);
+
+        window.setTimeout(() => {
+            setWinner(finalName);
+            setShowWinnerModal(true);
+            setIsSpinning(false);
+        }, 4000);
+    };
+
+    return (
+        <div className="roulette-widget roulette-widget-modern">
+            {showWinnerModal && (
+                <div className="roulette-winner-modal">
+                    <div className="roulette-winner-card">
+                        <button type="button" className="roulette-winner-close" onClick={() => setShowWinnerModal(false)}>
+                            <X size={18} />
+                        </button>
+                        <div className="roulette-winner-badge">
+                            <Trophy size={28} />
+                        </div>
+                        <span>Ganador</span>
+                        <strong>{winner}</strong>
+                        <button type="button" className="roulette-winner-action" onClick={() => setShowWinnerModal(false)}>
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
             )}
 
-            {openGadgets.converter && (
-                <FloatingGadget gadget={gadgets[1]} onClose={closeGadget}>
-                    <UnitConverter />
-                </FloatingGadget>
-            )}
+            <div className="roulette-main">
+                <div className="roulette-stage">
+                    <button type="button" className="roulette-settings-button" onClick={() => setIsPanelOpen(true)}>
+                        <Settings size={16} />
+                        <span>Configuracion</span>
+                    </button>
 
-            {openGadgets.timer && (
-                <FloatingGadget gadget={gadgets[2]} onClose={closeGadget}>
-                    <PomodoroTimer />
-                </FloatingGadget>
-            )}
+                    <div className="roulette-title-block">
+                        <h3>Ruleta</h3>
+                        <div />
+                    </div>
 
-            {openGadgets.ohms && (
-                <FloatingGadget gadget={gadgets[3]} onClose={closeGadget}>
-                    <OhmsLawCalculator />
-                </FloatingGadget>
-            )}
+                    <div className="roulette-wheel-shell modern">
+                        <div className="roulette-pointer modern" />
+                        <div className="roulette-wheel-frame">
+                            <svg
+                                className={`roulette-wheel-svg ${isSpinning ? 'spinning' : ''}`}
+                                viewBox="0 0 100 100"
+                                style={{ transform: `rotate(${wheelRotation}deg)` }}
+                            >
+                                {wheelParticipants.map((name, index) => {
+                                    const startAngle = (index * segmentAngle) - 90;
+                                    const endAngle = ((index + 1) * segmentAngle) - 90;
+                                    const x1 = 50 + 50 * Math.cos((Math.PI * startAngle) / 180);
+                                    const y1 = 50 + 50 * Math.sin((Math.PI * startAngle) / 180);
+                                    const x2 = 50 + 50 * Math.cos((Math.PI * endAngle) / 180);
+                                    const y2 = 50 + 50 * Math.sin((Math.PI * endAngle) / 180);
+                                    const largeArcFlag = segmentAngle > 180 ? 1 : 0;
+                                    const centerAngle = startAngle + (segmentAngle / 2);
+                                    const label = name.length > 12 ? `${name.slice(0, 10)}..` : name;
+
+                                    return (
+                                        <g key={`${name}-${index}`}>
+                                            <path
+                                                d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
+                                                fill={palette[index % palette.length]}
+                                                stroke="rgba(255,255,255,0.22)"
+                                                strokeWidth="0.45"
+                                            />
+                                            <text
+                                                x="77"
+                                                y="50"
+                                                fill="white"
+                                                fontSize={wheelParticipants.length > 12 ? '2.1' : wheelParticipants.length > 8 ? '2.7' : '3.3'}
+                                                fontWeight="800"
+                                                textAnchor="middle"
+                                                dominantBaseline="middle"
+                                                transform={`rotate(${centerAngle}, 50, 50)`}
+                                            >
+                                                {label}
+                                            </text>
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+
+                            <div className="roulette-wheel-center modern">
+                                <button type="button" onClick={spinRoulette} disabled={participants.length < 2 || isSpinning}>
+                                    {isSpinning ? 'Girando' : 'Gira'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="roulette-stage-footer">
+                        <span>{participants.length} participante{participants.length === 1 ? '' : 's'}</span>
+                        <strong>{winner || 'Sin ganador aun'}</strong>
+                    </div>
+
+                    <div className="roulette-actions modern">
+                        <button type="button" className="roulette-spin-btn" onClick={spinRoulette} disabled={participants.length < 2 || isSpinning}>
+                            <Play size={16} />
+                            <span>{isSpinning ? 'Girando...' : 'Girar'}</span>
+                        </button>
+                        <button
+                            type="button"
+                            className="roulette-reset-btn"
+                            onClick={() => {
+                                setWinner('');
+                                setShowWinnerModal(false);
+                                setWheelRotation(0);
+                            }}
+                        >
+                            <RotateCcw size={15} />
+                        </button>
+                    </div>
+                </div>
+
+                <aside className={`roulette-panel ${isPanelOpen ? 'open' : ''}`}>
+                    <div className="roulette-panel-header">
+                        <h4>
+                            <Settings size={16} />
+                            <span>Ajustes</span>
+                        </h4>
+                        <button type="button" onClick={() => setIsPanelOpen(false)}>
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+
+                    <div className="roulette-panel-body">
+                        <div className="roulette-source-toggle">
+                            <button type="button" className={sourceMode === 'curso' ? 'active' : ''} onClick={() => setSourceMode('curso')}>Curso</button>
+                            <button type="button" className={sourceMode === 'manual' ? 'active' : ''} onClick={() => setSourceMode('manual')}>Manual</button>
+                        </div>
+
+                        {sourceMode === 'curso' ? (
+                            <div className="roulette-course-box">
+                                <label>Lista por curso</label>
+                                <div className="roulette-select-wrap">
+                                    <select value={selectedCourseId} onChange={(e) => loadCourse(e.target.value)}>
+                                        {rouletteCourseLists.map((course) => (
+                                            <option key={course.id} value={course.id}>{course.name}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown size={16} />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="roulette-course-box">
+                                <label>Escribe un nombre por linea</label>
+                                <textarea
+                                    value={manualNames}
+                                    onChange={(e) => setManualNames(e.target.value)}
+                                    placeholder={'Ana\nLuis\nCamila'}
+                                />
+                                <button type="button" className="roulette-apply-btn" onClick={applyManualNames}>
+                                    Aplicar lista
+                                </button>
+                            </div>
+                        )}
+
+                        <div className="roulette-panel-actions">
+                            <button type="button" onClick={() => duplicateNames(2)}>
+                                <Copy size={14} />
+                                <span>x2</span>
+                            </button>
+                            <button type="button" onClick={() => duplicateNames(3)}>
+                                <Layers size={14} />
+                                <span>x3</span>
+                            </button>
+                        </div>
+
+                        <form className="roulette-add-form" onSubmit={addName}>
+                            <input
+                                type="text"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                placeholder="Anadir participante"
+                            />
+                            <button type="submit">
+                                <Plus size={16} />
+                            </button>
+                        </form>
+
+                        <div className="roulette-list">
+                            {participants.map((name, index) => (
+                                <div key={`${name}-${index}`} className={`roulette-list-item ${winner === name ? 'winner' : ''}`}>
+                                    <div className="roulette-list-dot" style={{ background: palette[index % palette.length] }} />
+                                    <span>{name}</span>
+                                    <button type="button" onClick={() => removeName(index)} disabled={participants.length <= 2}>
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </aside>
+
+                {isPanelOpen && <button type="button" className="roulette-panel-backdrop" onClick={() => setIsPanelOpen(false)} aria-label="Cerrar panel" />}
+            </div>
+        </div>
+    );
+};
+
+const TrafficLightWidget = () => {
+    const [activeLight, setActiveLight] = useState('green');
+
+    const stateMeta = {
+        red: { title: 'Silencio', text: 'Momento de escuchar o evaluar.', className: 'red' },
+        yellow: { title: 'Atención', text: 'Prepárense, observen instrucciones.', className: 'yellow' },
+        green: { title: 'Participación', text: 'Pueden hablar, colaborar o avanzar.', className: 'green' }
+    };
+
+    const current = stateMeta[activeLight];
+
+    return (
+        <div className="traffic-widget">
+            <div className="traffic-body">
+                <button type="button" className={`traffic-light red ${activeLight === 'red' ? 'active' : ''}`} onClick={() => setActiveLight('red')} />
+                <button type="button" className={`traffic-light yellow ${activeLight === 'yellow' ? 'active' : ''}`} onClick={() => setActiveLight('yellow')} />
+                <button type="button" className={`traffic-light green ${activeLight === 'green' ? 'active' : ''}`} onClick={() => setActiveLight('green')} />
+            </div>
+
+            <div className={`traffic-status ${current.className}`}>
+                <strong>{current.title}</strong>
+                <p>{current.text}</p>
+            </div>
+
+            <div className="traffic-actions">
+                <button type="button" onClick={() => setActiveLight('red')}>Rojo</button>
+                <button type="button" onClick={() => setActiveLight('yellow')}>Amarillo</button>
+                <button type="button" onClick={() => setActiveLight('green')}>Verde</button>
+            </div>
         </div>
     );
 };
 
 const ScientificCalculator = () => {
     const [display, setDisplay] = useState('0');
-    const [expression, setExpression] = useState('');
+    const [storedValue, setStoredValue] = useState(null);
+    const [operator, setOperator] = useState(null);
+    const [waitingForOperand, setWaitingForOperand] = useState(false);
+    const [displayMode, setDisplayMode] = useState('auto');
+    const [lastNumericResult, setLastNumericResult] = useState(null);
+    const [expressionPreview, setExpressionPreview] = useState('');
+
+    const expressionLabel = expressionPreview;
+    const resultSizeClass =
+        display.length > 16 ? 'compact' :
+        display.length > 11 ? 'medium' :
+        '';
+
+    const formatResult = (value, mode = displayMode) => {
+        if (value === null || Number.isNaN(value) || !Number.isFinite(value)) {
+            return 'Error';
+        }
+
+        if (value === 0) return '0';
+
+        const absValue = Math.abs(value);
+        if (mode === 'decimal') {
+            return value.toLocaleString('en-US', {
+                useGrouping: false,
+                maximumFractionDigits: 20
+            });
+        }
+
+        if (mode === 'scientific') {
+            return value.toExponential(6).replace(/\.?0+e/, 'e');
+        }
+
+        if (absValue >= 1e9 || absValue < 1e-6) {
+            return value.toExponential(6).replace(/\.?0+e/, 'e');
+        }
+
+        return Number(value.toPrecision(12)).toString();
+    };
 
     const handleNumber = (num) => {
+        if (waitingForOperand) {
+            setDisplay(num === '.' ? '0.' : num);
+            setWaitingForOperand(false);
+            if (storedValue !== null && operator) {
+                setExpressionPreview(`${storedValue} ${operator} ${num === '.' ? '0.' : num}`);
+            }
+            return;
+        }
+
+        if (num === '.' && display.includes('.')) return;
+
+        let nextDisplay = '';
         if (display === '0' && num !== '.') {
-            setDisplay(num);
+            nextDisplay = num;
         } else {
-            setDisplay(display + num);
+            nextDisplay = display + num;
+        }
+        setDisplay(nextDisplay);
+        if (storedValue !== null && operator) {
+            setExpressionPreview(`${storedValue} ${operator} ${nextDisplay}`);
         }
     };
 
-    const handleOperator = (op) => {
-        setExpression(display + ' ' + op + ' ');
-        setDisplay('0');
+    const calculateResult = (left, right, currentOperator) => {
+        switch (currentOperator) {
+            case '+': return left + right;
+            case '-': return left - right;
+            case 'x': return left * right;
+            case '/': return right === 0 ? null : left / right;
+            default: return right;
+        }
+    };
+
+    const handleOperator = (nextOperator) => {
+        const currentValue = parseFloat(display);
+
+        if (storedValue === null) {
+            setStoredValue(currentValue);
+            setExpressionPreview(`${display} ${nextOperator}`);
+        } else if (operator && !waitingForOperand) {
+            const result = calculateResult(storedValue, currentValue, operator);
+
+            if (result === null) {
+                setDisplay('Error');
+                setStoredValue(null);
+                setOperator(null);
+                setWaitingForOperand(true);
+                setExpressionPreview('');
+                return;
+            }
+
+            setStoredValue(result);
+            setDisplay(formatResult(result));
+            setLastNumericResult(result);
+            setExpressionPreview(`${storedValue} ${operator} ${currentValue}`);
+        } else if (operator) {
+            setExpressionPreview(`${storedValue} ${nextOperator}`);
+        }
+
+        setOperator(nextOperator);
+        setWaitingForOperand(true);
     };
 
     const handleEqual = () => {
-        try {
-            const fullExpression = expression + display;
-            const result = Function('"use strict"; return (' + fullExpression.replace(/×/g, '*').replace(/÷/g, '/') + ')')();
-            setDisplay(String(result));
-            setExpression('');
-        } catch {
+        if (!operator || storedValue === null) return;
+
+        const result = calculateResult(storedValue, parseFloat(display), operator);
+
+        if (result === null) {
             setDisplay('Error');
+            setExpressionPreview('');
+        } else {
+            setDisplay(formatResult(result));
+            setLastNumericResult(result);
+            setExpressionPreview(`${storedValue} ${operator} ${parseFloat(display)}`);
         }
+
+        setStoredValue(null);
+        setOperator(null);
+        setWaitingForOperand(true);
     };
 
     const handleClear = () => {
         setDisplay('0');
-        setExpression('');
+        setStoredValue(null);
+        setOperator(null);
+        setWaitingForOperand(false);
+        setLastNumericResult(null);
+        setExpressionPreview('');
     };
 
-    const handleFunction = (func) => {
-        try {
-            const num = parseFloat(display);
-            let result;
-            switch (func) {
-                case 'sqrt': result = Math.sqrt(num); break;
-                case 'pow': result = Math.pow(num, 2); break;
-                case 'sin': result = Math.sin(num * Math.PI / 180); break;
-                case 'cos': result = Math.cos(num * Math.PI / 180); break;
-                case 'tan': result = Math.tan(num * Math.PI / 180); break;
-                case 'log': result = Math.log10(num); break;
-                case 'ln': result = Math.log(num); break;
-                case 'pi': result = Math.PI; break;
-                default: result = num;
-            }
-            setDisplay(String(result));
-        } catch {
-            setDisplay('Error');
+    const handleBackspace = () => {
+        if (waitingForOperand || display === 'Error') {
+            setDisplay('0');
+            setWaitingForOperand(false);
+            return;
+        }
+
+        const nextDisplay = display.length <= 1 ? '0' : display.slice(0, -1);
+        setDisplay(nextDisplay);
+        if (storedValue !== null && operator) {
+            setExpressionPreview(nextDisplay === '0' ? `${storedValue} ${operator}` : `${storedValue} ${operator} ${nextDisplay}`);
         }
     };
 
+    const toggleSign = () => {
+        if (display === '0' || display === 'Error') return;
+        const nextDisplay = display.startsWith('-') ? display.slice(1) : `-${display}`;
+        setDisplay(nextDisplay);
+        if (storedValue !== null && operator) {
+            setExpressionPreview(`${storedValue} ${operator} ${nextDisplay}`);
+        }
+    };
+
+    const toggleDisplayMode = () => {
+        if (lastNumericResult === null) return;
+        const nextMode = displayMode === 'decimal'
+            ? 'scientific'
+            : display.includes('e')
+                ? 'decimal'
+                : 'scientific';
+        setDisplayMode(nextMode);
+        setDisplay(formatResult(lastNumericResult, nextMode));
+    };
+
     const buttons = [
-        ['sin', 'cos', 'tan', 'log'],
-        ['ln', 'sqrt', 'pow', 'pi'],
-        ['7', '8', '9', '÷'],
-        ['4', '5', '6', '×'],
-        ['1', '2', '3', '-'],
-        ['0', '.', 'C', '+'],
-        ['(', ')', '=']
+        ['C', 'DEL', '+/-', '/'],
+        ['7', '8', '9', 'x'],
+        ['4', '5', '6', '-'],
+        ['1', '2', '3', '+'],
+        ['0', '.', '=']
     ];
 
     return (
         <div className="calculator-widget">
             <div className="calc-display">
-                <div className="calc-expression">{expression}</div>
-                <div className="calc-result">{display}</div>
+                <div className="calc-expression">
+                    <span>{expressionLabel}</span>
+                    {lastNumericResult !== null && (
+                        <button className="calc-mode-toggle" onClick={toggleDisplayMode}>
+                            {displayMode === 'scientific' ? 'Decimal' : 'Cientifica'}
+                        </button>
+                    )}
+                </div>
+                <div className={`calc-result ${resultSizeClass}`}>{display}</div>
             </div>
             <div className="calc-buttons">
                 {buttons.flat().map((btn, i) => (
                     <button
                         key={i}
-                        className={`calc-btn ${['+', '-', '×', '÷', '='].includes(btn) ? 'operator' : ''} ${['C', 'sin', 'cos', 'tan', 'log', 'ln', 'sqrt', 'pow', 'pi'].includes(btn) ? 'function' : ''}`}
+                        className={`calc-btn ${['+', '-', 'x', '/', '='].includes(btn) ? 'operator' : ''} ${['C', 'DEL', '+/-'].includes(btn) ? 'function' : ''} ${btn === '0' ? 'zero' : ''}`}
                         onClick={() => {
                             if (btn === 'C') handleClear();
+                            else if (btn === 'DEL') handleBackspace();
+                            else if (btn === '+/-') toggleSign();
                             else if (btn === '=') handleEqual();
-                            else if (['÷', '×', '+', '-'].includes(btn)) handleOperator(btn);
-                            else if (['sin', 'cos', 'tan', 'log', 'ln', 'sqrt', 'pow', 'pi'].includes(btn)) handleFunction(btn);
+                            else if (['/', 'x', '+', '-'].includes(btn)) handleOperator(btn);
                             else handleNumber(btn);
                         }}
                     >
@@ -236,387 +839,972 @@ const ScientificCalculator = () => {
 };
 
 const UnitConverter = () => {
-    const [category, setCategory] = useState('length');
-    const [value, setValue] = useState('1');
-    const [fromUnit, setFromUnit] = useState('m');
-    const [toUnit, setToUnit] = useState('cm');
+    const categories = [
+        { id: 'temperature', name: 'Temperatura', short: 'TEMPERATURA', icon: <Thermometer size={16} /> },
+        { id: 'current', name: 'Corriente', short: 'CORRIENTE', icon: <Zap size={16} /> },
+        { id: 'voltage', name: 'Voltaje', short: 'VOLTAJE', icon: <Activity size={16} /> },
+        { id: 'resistance', name: 'Resistencia', short: 'RESISTENCIA', icon: <Box size={16} /> },
+        { id: 'length', name: 'Longitud', short: 'LONGITUD', icon: <Maximize size={16} /> },
+        { id: 'weight', name: 'Peso', short: 'PESO', icon: <Weight size={16} /> },
+        { id: 'capacitance', name: 'Capacitancia', short: 'CAPAC.', icon: <Cpu size={16} /> },
+        { id: 'pressure', name: 'Presion', short: 'PRESION', icon: <Gauge size={16} /> },
+        { id: 'time', name: 'Tiempo', short: 'TIEMPO', icon: <Clock size={16} /> },
+        { id: 'energy', name: 'Energia', short: 'ENERGIA', icon: <Flame size={16} /> },
+        { id: 'speed', name: 'Velocidad', short: 'VELOCIDAD', icon: <Wind size={16} /> }
+    ];
 
-    const units = {
-        length: { name: 'Longitud', units: { m: 'Metros', cm: 'Centímetros', mm: 'Milímetros', km: 'Kilómetros', in: 'Pulgadas', ft: 'Pies' } },
-        weight: { name: 'Peso', units: { kg: 'Kilogramos', g: 'Gramos', mg: 'Miligramos', lb: 'Libras', oz: 'Onzas' } },
-        temperature: { name: 'Temperatura', units: { c: 'Celsius', f: 'Fahrenheit', k: 'Kelvin' } }
+    const unitsByCategory = {
+        length: [
+            { id: 'm', name: 'Metros', factor: 1 },
+            { id: 'cm', name: 'Centimetros', factor: 100 },
+            { id: 'mm', name: 'Milimetros', factor: 1000 },
+            { id: 'km', name: 'Kilometros', factor: 0.001 },
+            { id: 'in', name: 'Pulgadas', factor: 39.3701 },
+            { id: 'ft', name: 'Pies', factor: 3.28084 },
+            { id: 'yd', name: 'Yardas', factor: 1.09361 },
+            { id: 'mi', name: 'Millas', factor: 0.000621371 }
+        ],
+        weight: [
+            { id: 'kg', name: 'Kilogramos', factor: 1 },
+            { id: 'g', name: 'Gramos', factor: 1000 },
+            { id: 'mg', name: 'Miligramos', factor: 1000000 },
+            { id: 'lb', name: 'Libras', factor: 2.20462 },
+            { id: 'oz', name: 'Onzas', factor: 35.274 },
+            { id: 't', name: 'Toneladas', factor: 0.001 }
+        ],
+        temperature: [
+            { id: 'c', name: 'Celsius' },
+            { id: 'f', name: 'Fahrenheit' },
+            { id: 'k', name: 'Kelvin' }
+        ],
+        voltage: [
+            { id: 'v', name: 'Voltios', factor: 1 },
+            { id: 'mv', name: 'Milivoltios', factor: 1000 },
+            { id: 'kv', name: 'Kilovoltios', factor: 0.001 },
+            { id: 'uv', name: 'Microvoltios', factor: 1000000 }
+        ],
+        current: [
+            { id: 'a', name: 'Amperios', factor: 1 },
+            { id: 'ma', name: 'Miliamperios', factor: 1000 },
+            { id: 'ua', name: 'Microamperios', factor: 1000000 },
+            { id: 'ka', name: 'Kiloamperios', factor: 0.001 }
+        ],
+        resistance: [
+            { id: 'ohm', name: 'Ohmios', factor: 1 },
+            { id: 'kohm', name: 'Kiloohmios', factor: 0.001 },
+            { id: 'mohm', name: 'Megaohmios', factor: 0.000001 },
+            { id: 'gohm', name: 'Gigaohmios', factor: 0.000000001 }
+        ],
+        capacitance: [
+            { id: 'f', name: 'Faradios', factor: 1 },
+            { id: 'mf', name: 'Milifaradios', factor: 1000 },
+            { id: 'uf', name: 'Microfaradios', factor: 1000000 },
+            { id: 'nf', name: 'Nanofaradios', factor: 1000000000 },
+            { id: 'pf', name: 'Picofaradios', factor: 1000000000000 }
+        ],
+        pressure: [
+            { id: 'pa', name: 'Pascales', factor: 1 },
+            { id: 'bar', name: 'Bar', factor: 0.00001 },
+            { id: 'psi', name: 'PSI', factor: 0.000145038 },
+            { id: 'atm', name: 'Atmosferas', factor: 0.0000098692 },
+            { id: 'mmhg', name: 'mmHg', factor: 0.00750062 }
+        ],
+        time: [
+            { id: 's', name: 'Segundos', factor: 1 },
+            { id: 'ms', name: 'Milisegundos', factor: 1000 },
+            { id: 'min', name: 'Minutos', factor: 1 / 60 },
+            { id: 'hr', name: 'Horas', factor: 1 / 3600 },
+            { id: 'day', name: 'Dias', factor: 1 / 86400 }
+        ],
+        energy: [
+            { id: 'j', name: 'Joules', factor: 1 },
+            { id: 'kj', name: 'Kilojoules', factor: 0.001 },
+            { id: 'cal', name: 'Calorias', factor: 0.239006 },
+            { id: 'kcal', name: 'Kilocalorias', factor: 0.000239006 },
+            { id: 'wh', name: 'Vatios-hora', factor: 0.000277778 },
+            { id: 'kwh', name: 'kWh', factor: 0.000000277778 }
+        ],
+        speed: [
+            { id: 'ms', name: 'm/s', factor: 1 },
+            { id: 'kmh', name: 'km/h', factor: 3.6 },
+            { id: 'mph', name: 'mph', factor: 2.23694 },
+            { id: 'kt', name: 'Nudos', factor: 1.94384 },
+            { id: 'mach', name: 'Mach', factor: 0.00293867 }
+        ]
     };
 
-    const convert = (val, from, to, cat) => {
-        const num = parseFloat(val) || 0;
-        const conversions = {
-            length: { m: 1, cm: 100, mm: 1000, km: 0.001, in: 39.3701, ft: 3.28084 },
-            weight: { kg: 1, g: 1000, mg: 1000000, lb: 2.20462, oz: 35.274 },
-            temperature: { c: 1, f: 1, k: 1 }
+    const [category, setCategory] = useState('temperature');
+    const [inputValue, setInputValue] = useState('1');
+    const [fromUnit, setFromUnit] = useState('c');
+    const [toUnit, setToUnit] = useState('f');
+
+    useEffect(() => {
+        const categoryUnits = unitsByCategory[category];
+        if (categoryUnits?.length) {
+            setFromUnit(categoryUnits[0].id);
+            setToUnit(categoryUnits[1]?.id || categoryUnits[0].id);
+        }
+    }, [category]);
+
+    const convert = () => {
+        const numericValue = parseFloat(inputValue.replace(',', '.')) || 0;
+        const categoryUnits = unitsByCategory[category];
+
+        const toBase = (value, unitId) => {
+            if (category === 'temperature') {
+                if (unitId === 'c') return value;
+                if (unitId === 'f') return (value - 32) * 5 / 9;
+                if (unitId === 'k') return value - 273.15;
+            }
+            const unit = categoryUnits.find(item => item.id === unitId);
+            return value / (unit?.factor || 1);
         };
 
-        if (cat === 'temperature') {
-            if (from === 'c' && to === 'f') return (num * 9/5) + 32;
-            if (from === 'c' && to === 'k') return num + 273.15;
-            if (from === 'f' && to === 'c') return (num - 32) * 5/9;
-            if (from === 'f' && to === 'k') return (num - 32) * 5/9 + 273.15;
-            if (from === 'k' && to === 'c') return num - 273.15;
-            if (from === 'k' && to === 'f') return (num - 273.15) * 9/5 + 32;
-            return num;
-        }
+        const fromBase = (baseValue, unitId) => {
+            if (category === 'temperature') {
+                if (unitId === 'c') return baseValue;
+                if (unitId === 'f') return (baseValue * 9 / 5) + 32;
+                if (unitId === 'k') return baseValue + 273.15;
+            }
+            const unit = categoryUnits.find(item => item.id === unitId);
+            return baseValue * (unit?.factor || 1);
+        };
 
-        const inBase = num / conversions[cat][from];
-        return inBase * conversions[cat][to];
+        const baseValue = toBase(numericValue, fromUnit);
+        const converted = fromBase(baseValue, toUnit);
+
+        return converted.toLocaleString('es-ES', {
+            maximumFractionDigits: 8,
+            minimumFractionDigits: 0
+        });
     };
 
+    const swapUnits = () => {
+        setFromUnit(toUnit);
+        setToUnit(fromUnit);
+    };
+
+    const getUnitName = (unitId) => unitsByCategory[category]?.find(unit => unit.id === unitId)?.name || '';
+    const result = convert();
+
     return (
-        <div className="converter-widget">
-            <div className="category-selector">
-                {Object.entries(units).map(([key, val]) => (
+        <div className="converter-shell">
+            <div className="converter-tabs">
+                {categories.map((item) => (
                     <button
-                        key={key}
-                        className={`category-btn ${category === key ? 'active' : ''}`}
-                        onClick={() => { setCategory(key); setFromUnit(Object.keys(val.units)[0]); setToUnit(Object.keys(val.units)[1]); }}
+                        key={item.id}
+                        onClick={() => setCategory(item.id)}
+                        className={`converter-tab ${category === item.id ? 'active' : ''}`}
                     >
-                        {val.name}
+                        <div>{item.icon}</div>
+                        <span>{item.short}</span>
                     </button>
                 ))}
             </div>
-            <div className="converter-body">
-                <div className="converter-input-group">
-                    <input
-                        type="number"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        className="converter-input"
-                    />
-                    <select
-                        value={fromUnit}
-                        onChange={(e) => setFromUnit(e.target.value)}
-                        className="converter-select"
-                    >
-                        {Object.entries(units[category].units).map(([key, val]) => (
-                            <option key={key} value={key}>{val}</option>
-                        ))}
-                    </select>
+
+            <div className="converter-panel">
+                <div className="converter-block">
+                    <div className="converter-block-meta">
+                        <label>Desde</label>
+                        <span>{getUnitName(fromUnit)}</span>
+                    </div>
+                    <div className="converter-field">
+                        <input
+                            type="text"
+                            inputMode="decimal"
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            className="converter-main-input"
+                        />
+                        <div className="converter-select-wrap">
+                            <select value={fromUnit} onChange={(e) => setFromUnit(e.target.value)} className="converter-main-select">
+                                {unitsByCategory[category]?.map((unit) => (
+                                    <option key={unit.id} value={unit.id}>{unit.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={16} className="converter-chevron" />
+                        </div>
+                    </div>
                 </div>
-                <div className="converter-arrow">↓</div>
-                <div className="converter-input-group">
-                    <input
-                        type="text"
-                        value={convert(value, fromUnit, toUnit, category).toFixed(4)}
-                        readOnly
-                        className="converter-input result"
-                    />
-                    <select
-                        value={toUnit}
-                        onChange={(e) => setToUnit(e.target.value)}
-                        className="converter-select"
-                    >
-                        {Object.entries(units[category].units).map(([key, val]) => (
-                            <option key={key} value={key}>{val}</option>
-                        ))}
-                    </select>
+
+                <div className="converter-swap-row">
+                    <button className="converter-swap" onClick={swapUnits}>
+                        <ArrowRightLeft size={18} />
+                    </button>
+                </div>
+
+                <div className="converter-block">
+                    <div className="converter-block-meta">
+                        <label>Hacia</label>
+                        <span>{getUnitName(toUnit)}</span>
+                    </div>
+                    <div className="converter-field result">
+                        <div className="converter-main-result">{result}</div>
+                        <div className="converter-select-wrap">
+                            <select value={toUnit} onChange={(e) => setToUnit(e.target.value)} className="converter-main-select">
+                                {unitsByCategory[category]?.map((unit) => (
+                                    <option key={unit.id} value={unit.id}>{unit.name}</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={16} className="converter-chevron" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-const PomodoroTimer = () => {
-    const [mode, setMode] = useState('pomodoro');
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
-    const [isRunning, setIsRunning] = useState(false);
-    const [isAlarmActive, setIsAlarmActive] = useState(false);
+const StudyClockWidget = () => {
+    const [activeTab, setActiveTab] = useState('Temporizador');
+    const [currentTime, setCurrentTime] = useState(new Date());
     const [soundEnabled, setSoundEnabled] = useState(true);
-    const [customMinutes, setCustomMinutes] = useState(10);
-    const audioContextRef = useRef(null);
-    const alarmIntervalRef = useRef(null);
+    const [isAlarmActive, setIsAlarmActive] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
-    const presets = {
-        pomodoro: { label: 'Pomodoro', minutes: 25, color: '#f43f5e', bgColor: 'rgba(244, 63, 94, 0.1)' },
-        shortBreak: { label: 'Descanso', minutes: 5, color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' },
-        longBreak: { label: 'Largo', minutes: 15, color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' },
-        custom: { label: 'Custom', minutes: 10, color: '#a855f7', bgColor: 'rgba(168, 85, 247, 0.1)' }
-    };
+    const [timerMinutes, setTimerMinutes] = useState(25);
+    const [timerSeconds, setTimerSeconds] = useState(0);
+    const [timerRemaining, setTimerRemaining] = useState(25 * 60);
+    const [isTimerRunning, setIsTimerRunning] = useState(false);
+    const timerIntervalRef = useRef(null);
 
-    const playAlarmSound = () => {
+    const [stopwatchTime, setStopwatchTime] = useState(0);
+    const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
+    const [laps, setLaps] = useState([]);
+    const stopwatchIntervalRef = useRef(null);
+
+    const [studyFocusMinutes, setStudyFocusMinutes] = useState(25);
+    const [studyBreakMinutes, setStudyBreakMinutes] = useState(5);
+    const [studyMode, setStudyMode] = useState('focus');
+    const [studyTime, setStudyTime] = useState(25 * 60);
+    const [isStudyRunning, setIsStudyRunning] = useState(false);
+    const studyIntervalRef = useRef(null);
+
+    const playAlarm = useCallback(() => {
+        if (!soundEnabled) return;
         try {
-            if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            const ctx = audioContextRef.current;
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
-            
-            oscillator.frequency.value = 880;
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
             oscillator.type = 'sine';
-            
-            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-            
-            oscillator.start(ctx.currentTime);
-            oscillator.stop(ctx.currentTime + 0.5);
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.5);
         } catch {
-            console.log('Audio not supported');
+            console.log('Audio no soportado');
         }
-    };
-
-    const stopAlarm = useCallback(() => {
-        setIsAlarmActive(false);
-        if (alarmIntervalRef.current) {
-            clearInterval(alarmIntervalRef.current);
-        }
-    }, []);
-
-    const triggerAlarm = useCallback(() => {
-        setIsAlarmActive(true);
-        
-        if (soundEnabled) {
-            playAlarmSound();
-        }
-        
-        alarmIntervalRef.current = setInterval(() => {
-            if (soundEnabled) {
-                playAlarmSound();
-            }
-        }, 2000);
     }, [soundEnabled]);
 
-    useEffect(() => {
-        let interval;
-        let timeoutId;
-        
-        if (isRunning && timeLeft > 0 && !isAlarmActive) {
-            interval = setInterval(() => {
-                setTimeLeft(t => t - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && isRunning) {
-            timeoutId = setTimeout(() => {
-                triggerAlarm();
-            }, 0);
+    const stopAllAlerts = useCallback(() => {
+        setIsAlarmActive(false);
+    }, []);
+
+    const clearTimerInterval = () => {
+        if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
         }
-        
+    };
+
+    const clearStopwatchInterval = () => {
+        if (stopwatchIntervalRef.current) {
+            clearInterval(stopwatchIntervalRef.current);
+            stopwatchIntervalRef.current = null;
+        }
+    };
+
+    const clearStudyInterval = () => {
+        if (studyIntervalRef.current) {
+            clearInterval(studyIntervalRef.current);
+            studyIntervalRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
         return () => {
-            clearInterval(interval);
-            clearTimeout(timeoutId);
+            clearTimerInterval();
+            clearStopwatchInterval();
+            clearStudyInterval();
         };
-    }, [isRunning, timeLeft, isAlarmActive, soundEnabled, triggerAlarm]);
+    }, []);
 
     const formatTime = (seconds) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
+
+    const formatStopwatch = (ms) => {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        const centiseconds = Math.floor((ms % 1000) / 10);
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+    };
+
+    const syncTimerRemaining = useCallback(() => {
+        const mins = Math.max(0, parseInt(timerMinutes || '0', 10) || 0);
+        const secs = Math.min(59, Math.max(0, parseInt(timerSeconds || '0', 10) || 0));
+        setTimerRemaining((mins * 60) + secs);
+    }, [timerMinutes, timerSeconds]);
+
+    useEffect(() => {
+        if (!isTimerRunning && !isAlarmActive) {
+            syncTimerRemaining();
+        }
+    }, [timerMinutes, timerSeconds, isTimerRunning, isAlarmActive, syncTimerRemaining]);
+
+    useEffect(() => {
+        if (!isStudyRunning && !isAlarmActive) {
+            const modeMinutes = studyMode === 'focus' ? studyFocusMinutes : studyBreakMinutes;
+            setStudyTime(Math.max(1, parseInt(modeMinutes || '1', 10) || 1) * 60);
+        }
+    }, [studyMode, studyFocusMinutes, studyBreakMinutes, isStudyRunning, isAlarmActive]);
 
     const startTimer = () => {
-        stopAlarm();
-        setIsRunning(true);
-    };
+        if (isAlarmActive) {
+            stopAllAlerts();
+            return;
+        }
 
-    const pauseTimer = () => {
-        setIsRunning(false);
+        if (isTimerRunning) {
+            clearTimerInterval();
+            setIsTimerRunning(false);
+            return;
+        }
+
+        if (timerRemaining <= 0) {
+            syncTimerRemaining();
+        }
+
+        timerIntervalRef.current = setInterval(() => {
+            setTimerRemaining((prev) => {
+                if (prev <= 1) {
+                    clearTimerInterval();
+                    setIsTimerRunning(false);
+                    setIsAlarmActive(true);
+                    playAlarm();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        setIsTimerRunning(true);
     };
 
     const resetTimer = () => {
-        stopAlarm();
-        setIsRunning(false);
-        const preset = presets[mode];
-        const minutes = mode === 'custom' ? customMinutes : preset.minutes;
-        setTimeLeft(minutes * 60);
+        clearTimerInterval();
+        setIsTimerRunning(false);
+        stopAllAlerts();
+        syncTimerRemaining();
     };
 
-    const selectMode = (newMode) => {
-        stopAlarm();
-        setMode(newMode);
-        setIsRunning(false);
-        const preset = presets[newMode];
-        const minutes = newMode === 'custom' ? customMinutes : preset.minutes;
-        setTimeLeft(minutes * 60);
-    };
-
-    const handleCustomChange = (mins) => {
-        const value = Math.max(1, Math.min(120, parseInt(mins) || 1));
-        setCustomMinutes(value);
-        if (mode === 'custom') {
-            setTimeLeft(value * 60);
+    const startStopwatch = () => {
+        if (isStopwatchRunning) {
+            clearStopwatchInterval();
+            setIsStopwatchRunning(false);
+            return;
         }
+
+        stopwatchIntervalRef.current = setInterval(() => {
+            setStopwatchTime((prev) => prev + 10);
+        }, 10);
+        setIsStopwatchRunning(true);
     };
 
-    const preset = presets[mode];
-    const progress = mode === 'custom' 
-        ? ((customMinutes * 60 - timeLeft) / (customMinutes * 60)) * 100
-        : ((preset.minutes * 60 - timeLeft) / (preset.minutes * 60)) * 100;
+    const resetStopwatch = () => {
+        clearStopwatchInterval();
+        setIsStopwatchRunning(false);
+        setStopwatchTime(0);
+        setLaps([]);
+    };
+
+    const addLap = () => {
+        setLaps((prev) => [stopwatchTime, ...prev]);
+    };
+
+    const startStudy = () => {
+        if (isAlarmActive) {
+            stopAllAlerts();
+            return;
+        }
+
+        if (isStudyRunning) {
+            clearStudyInterval();
+            setIsStudyRunning(false);
+            return;
+        }
+
+        studyIntervalRef.current = setInterval(() => {
+            setStudyTime((prev) => {
+                if (prev <= 1) {
+                    clearStudyInterval();
+                    setIsStudyRunning(false);
+                    setIsAlarmActive(true);
+                    playAlarm();
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        setIsStudyRunning(true);
+    };
+
+    const resetStudy = () => {
+        clearStudyInterval();
+        setIsStudyRunning(false);
+        stopAllAlerts();
+        const mins = studyMode === 'focus' ? studyFocusMinutes : studyBreakMinutes;
+        setStudyTime(Math.max(1, parseInt(mins || '1', 10) || 1) * 60);
+    };
+
+    const loadStudyPreset = (mode) => {
+        const minutes = mode === 'focus'
+            ? Math.max(1, parseInt(studyFocusMinutes || '1', 10) || 1)
+            : Math.max(1, parseInt(studyBreakMinutes || '1', 10) || 1);
+
+        clearTimerInterval();
+        setIsTimerRunning(false);
+        stopAllAlerts();
+        setActiveTab('Temporizador');
+        setTimerMinutes(minutes);
+        setTimerSeconds(0);
+        setTimerRemaining(minutes * 60);
+    };
+
+    const timerTotal = Math.max(1, ((parseInt(timerMinutes || '0', 10) || 0) * 60) + (parseInt(timerSeconds || '0', 10) || 0));
+    const timerProgress = Math.max(0, Math.min(100, ((timerTotal - timerRemaining) / timerTotal) * 100));
 
     return (
-        <div className="timer-widget-full" style={{ background: isAlarmActive ? preset.bgColor : 'transparent' }}>
-            {/* Mode Selector */}
-            <div className="timer-modes">
-                {Object.entries(presets).map(([key, val]) => (
+        <div className={`clock-pro-widget ${isAlarmActive ? 'alarm-active' : ''}`}>
+            <div className="clock-pro-now-card">
+                <div>
+                    <span className="clock-pro-label">Tiempo actual</span>
+                    <div className="clock-pro-now-time">
+                        {currentTime.toLocaleTimeString('es-CO', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: true
+                        })}
+                    </div>
+                </div>
+                <div className="clock-pro-now-actions">
                     <button
-                        key={key}
-                        className={`timer-mode-btn ${mode === key ? 'active' : ''}`}
-                        style={{ '--mode-color': val.color }}
-                        onClick={() => selectMode(key)}
+                        type="button"
+                        className="clock-pro-sound"
+                        onClick={() => setSoundEnabled((prev) => !prev)}
+                        aria-label={soundEnabled ? 'Silenciar alarma' : 'Activar alarma'}
                     >
-                        {val.label}
+                        {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+                    </button>
+                    <div className="clock-pro-now-icon">
+                        {isAlarmActive ? <Bell size={20} /> : <AlarmClock size={20} />}
+                    </div>
+                </div>
+            </div>
+
+            <div className="clock-pro-tabs">
+                {[
+                    { id: 'Temporizador', icon: Timer },
+                    { id: 'Cronometro', icon: StopCircle },
+                    { id: 'Estudio', icon: GraduationCap }
+                ].map(({ id, icon: Icon }) => (
+                    <button
+                        key={id}
+                        type="button"
+                        className={`clock-pro-tab ${activeTab === id ? 'active' : ''}`}
+                        onClick={() => {
+                            setActiveTab(id);
+                            stopAllAlerts();
+                            setShowSettings(false);
+                        }}
+                    >
+                        <Icon size={14} />
+                        <span>{id}</span>
                     </button>
                 ))}
             </div>
 
-            {/* Custom Time Input */}
-            {mode === 'custom' && (
-                <div className="timer-custom-input">
-                    <input
-                        type="number"
-                        min="1"
-                        max="120"
-                        value={customMinutes}
-                        onChange={(e) => handleCustomChange(e.target.value)}
-                        disabled={isRunning}
-                    />
-                    <span>minutos</span>
-                </div>
-            )}
+            <div className="clock-pro-content">
+                {activeTab === 'Temporizador' && (
+                    <div className="clock-pro-panel">
+                        <div className="clock-pro-input-grid">
+                            <label className="clock-pro-input-card">
+                                <span>Min</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="999"
+                                    value={timerMinutes}
+                                    onChange={(e) => setTimerMinutes(e.target.value)}
+                                />
+                            </label>
+                            <label className="clock-pro-input-card">
+                                <span>Seg</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    value={timerSeconds}
+                                    onChange={(e) => setTimerSeconds(Math.min(59, Math.max(0, parseInt(e.target.value || '0', 10))).toString())}
+                                />
+                            </label>
+                        </div>
 
-            {/* Timer Display */}
-            <div className={`timer-circle ${isAlarmActive ? 'alarm' : ''}`} style={{ borderColor: preset.color }}>
-                <svg className="timer-progress" viewBox="0 0 100 100">
-                    <circle
-                        className="timer-progress-bg"
-                        cx="50"
-                        cy="50"
-                        r="45"
-                    />
-                    <circle
-                        className="timer-progress-fill"
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        style={{
-                            stroke: preset.color,
-                            strokeDasharray: `${283 * (1 - progress / 100)} 283`
-                        }}
-                    />
-                </svg>
-                <div className="timer-display-content">
-                    <span className="timer-time" style={{ color: preset.color }}>
-                        {formatTime(timeLeft)}
-                    </span>
-                    <span className="timer-label" style={{ color: preset.color }}>
-                        {isRunning ? 'En curso...' : isAlarmActive ? '¡Tiempo!' : 'Listo'}
-                    </span>
-                </div>
-            </div>
+                        <div className="clock-pro-ring-wrap">
+                            <div className="clock-pro-ring" style={{ '--progress': `${timerProgress}%` }}>
+                                <div className="clock-pro-ring-inner">
+                                    <div className="clock-pro-main-time">{formatTime(timerRemaining)}</div>
+                                    <span className="clock-pro-status">
+                                        {isAlarmActive ? 'Alarma activa' : isTimerRunning ? 'En marcha' : 'Pausado'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
 
-            {/* Alarm Active Overlay */}
-            {isAlarmActive && (
-                <div className="timer-alarm-overlay">
-                    <Bell size={48} style={{ color: preset.color, animation: 'bellRing 0.5s infinite' }} />
-                    <p>¡Tiempo completado!</p>
-                </div>
-            )}
-
-            {/* Controls */}
-            <div className="timer-controls-full">
-                {isRunning ? (
-                    <button className="timer-control-btn pause" onClick={pauseTimer}>
-                        <Pause size={24} />
-                        Pausar
-                    </button>
-                ) : (
-                    <button className="timer-control-btn play" onClick={startTimer} style={{ background: preset.color }}>
-                        <Play size={24} />
-                        {isAlarmActive ? 'Reanudar' : timeLeft < presets[mode === 'custom' ? 'pomodoro' : mode].minutes * 60 ? 'Reanudar' : 'Iniciar'}
-                    </button>
+                        <div className="clock-pro-actions">
+                            <button type="button" className="clock-pro-btn primary" onClick={startTimer}>
+                                {isAlarmActive ? <Bell size={16} /> : isTimerRunning ? <Pause size={16} /> : <Play size={16} />}
+                                <span>{isAlarmActive ? 'Apagar' : isTimerRunning ? 'Pausar' : 'Iniciar'}</span>
+                            </button>
+                            <button type="button" className="clock-pro-btn" onClick={resetTimer}>
+                                <RotateCcw size={15} />
+                                <span>Reiniciar</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
-                <button className="timer-control-btn reset" onClick={resetTimer}>
-                    <RotateCcw size={20} />
-                </button>
-                <button 
-                    className="timer-control-btn sound" 
-                    onClick={() => setSoundEnabled(!soundEnabled)}
-                    style={{ color: soundEnabled ? preset.color : '#666' }}
-                >
-                    {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-                </button>
-            </div>
 
-            {isAlarmActive && (
-                <button className="timer-stop-alarm" onClick={stopAlarm} style={{ color: preset.color }}>
-                    Detener alarma
-                </button>
-            )}
+                {activeTab === 'Cronometro' && (
+                    <div className="clock-pro-panel">
+                        <div className="clock-pro-display-card">
+                            <div className="clock-pro-display-large">{formatStopwatch(stopwatchTime)}</div>
+                            <p>Ideal para exposiciones, laboratorios o practicas de aula.</p>
+                        </div>
+
+                        <div className="clock-pro-actions">
+                            <button type="button" className="clock-pro-btn primary" onClick={startStopwatch}>
+                                {isStopwatchRunning ? <Pause size={16} /> : <Play size={16} />}
+                                <span>{isStopwatchRunning ? 'Detener' : 'Iniciar'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="clock-pro-btn"
+                                onClick={isStopwatchRunning ? addLap : resetStopwatch}
+                            >
+                                <RotateCcw size={15} />
+                                <span>{isStopwatchRunning ? 'Vuelta' : 'Reset'}</span>
+                            </button>
+                        </div>
+
+                        <div className="clock-pro-laps">
+                            {laps.length > 0 ? laps.map((lapTime, index) => (
+                                <div key={`${lapTime}-${index}`} className="clock-pro-lap">
+                                    <span>V. {laps.length - index}</span>
+                                    <strong>{formatStopwatch(lapTime)}</strong>
+                                </div>
+                            )) : (
+                                <div className="clock-pro-empty">Las vueltas apareceran aqui.</div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'Estudio' && (
+                    <div className="clock-pro-panel">
+                        <div className="clock-pro-study-toggle">
+                            <button
+                                type="button"
+                                className={studyMode === 'focus' ? 'active' : ''}
+                                onClick={() => {
+                                    clearStudyInterval();
+                                    setIsStudyRunning(false);
+                                    setStudyMode('focus');
+                                    stopAllAlerts();
+                                }}
+                            >
+                                Pomodoro
+                            </button>
+                            <button
+                                type="button"
+                                className={studyMode === 'break' ? 'active' : ''}
+                                onClick={() => {
+                                    clearStudyInterval();
+                                    setIsStudyRunning(false);
+                                    setStudyMode('break');
+                                    stopAllAlerts();
+                                }}
+                            >
+                                Descanso
+                            </button>
+                        </div>
+
+                        <div className="clock-pro-study-card">
+                            <div className="clock-pro-study-time">{formatTime(studyTime)}</div>
+                            <span className="clock-pro-status">
+                                {isAlarmActive ? 'Bloque completo' : studyMode === 'focus' ? 'Estudio' : 'Descanso'}
+                            </span>
+                        </div>
+
+                        <div className="clock-pro-actions">
+                            <button type="button" className="clock-pro-btn primary" onClick={startStudy}>
+                                {isAlarmActive ? <Bell size={16} /> : isStudyRunning ? <Pause size={16} /> : <Play size={16} />}
+                                <span>{isAlarmActive ? 'Cerrar' : isStudyRunning ? 'Pausar' : 'Iniciar'}</span>
+                            </button>
+                            <button type="button" className="clock-pro-btn" onClick={resetStudy}>
+                                <RotateCcw size={15} />
+                                <span>Reset</span>
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="clock-pro-settings-toggle"
+                            onClick={() => setShowSettings((prev) => !prev)}
+                        >
+                            <Settings size={13} />
+                            <span>Configurar bloques</span>
+                        </button>
+
+                        {showSettings && (
+                            <div className="clock-pro-settings-grid">
+                                <label className="clock-pro-input-card compact">
+                                    <span>Min. enfoque</span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="180"
+                                        value={studyFocusMinutes}
+                                        onChange={(e) => setStudyFocusMinutes(e.target.value)}
+                                    />
+                                </label>
+                                <label className="clock-pro-input-card compact">
+                                    <span>Min. descanso</span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="180"
+                                        value={studyBreakMinutes}
+                                        onChange={(e) => setStudyBreakMinutes(e.target.value)}
+                                    />
+                                </label>
+                            </div>
+                        )}
+
+                        <div className="clock-pro-study-loaders">
+                            <button type="button" className="clock-pro-mini-btn" onClick={() => loadStudyPreset('focus')}>
+                                <CheckCircle2 size={14} />
+                                <span>Usar Pomodoro</span>
+                            </button>
+                            <button type="button" className="clock-pro-mini-btn" onClick={() => loadStudyPreset('break')}>
+                                <CheckCircle2 size={14} />
+                                <span>Usar descanso</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 const OhmsLawCalculator = () => {
-    const [variable, setVariable] = useState('voltage');
-    const [values, setValues] = useState({ voltage: '', current: '', resistance: '', power: '' });
+    const [activeMode, setActiveMode] = useState('calculadora');
+    const [target, setTarget] = useState('V');
+    const [values, setValues] = useState({ V: '', I: '', R: '' });
+    const [exercise, setExercise] = useState(null);
+    const [userAnswer, setUserAnswer] = useState('');
+    const [feedback, setFeedback] = useState(null);
+    const [score, setScore] = useState(0);
+    const [showInfo, setShowInfo] = useState(false);
 
-    const calculate = () => {
-        const V = parseFloat(values.voltage) || 0;
-        const I = parseFloat(values.current) || 0;
-        const R = parseFloat(values.resistance) || 0;
-        const P = parseFloat(values.power) || 0;
-
-        let result = {};
-        if (variable === 'voltage') {
-            if (I && R) result.voltage = (I * R).toFixed(2);
-            else if (P && I) result.voltage = (P / I).toFixed(2);
-            else if (P && R) result.voltage = Math.sqrt(P * R).toFixed(2);
-        } else if (variable === 'current') {
-            if (V && R) result.current = (V / R).toFixed(2);
-            else if (P && V) result.current = (P / V).toFixed(2);
-            else if (P && R) result.current = Math.sqrt(P / R).toFixed(2);
-        } else if (variable === 'resistance') {
-            if (V && I) result.resistance = (V / I).toFixed(2);
-            else if (P && I) result.resistance = (P / (I * I)).toFixed(2);
-            else if (P && V) result.resistance = ((V * V) / P).toFixed(2);
-        } else if (variable === 'power') {
-            if (V && I) result.power = (V * I).toFixed(2);
-            else if (V && R) result.power = ((V * V) / R).toFixed(2);
-            else if (I && R) result.power = (I * I * R).toFixed(2);
+    useEffect(() => {
+        const saved = window.localStorage.getItem('ohms-widget-values');
+        if (!saved) return;
+        try {
+            setValues(JSON.parse(saved));
+        } catch {
+            console.log('No saved Ohm values');
         }
-        return result;
+    }, []);
+
+    useEffect(() => {
+        window.localStorage.setItem('ohms-widget-values', JSON.stringify(values));
+    }, [values]);
+
+    useEffect(() => {
+        if (activeMode !== 'calculadora') return;
+
+        const v = parseFloat(values.V);
+        const i = parseFloat(values.I);
+        const r = parseFloat(values.R);
+
+        let calculatedV = values.V;
+        let calculatedI = values.I;
+        let calculatedR = values.R;
+
+        if (target === 'V' && i > 0 && r > 0) {
+            calculatedV = (i * r).toFixed(2);
+        } else if (target === 'I' && v > 0 && r > 0) {
+            calculatedI = (v / r).toFixed(4);
+        } else if (target === 'R' && v > 0 && i > 0) {
+            calculatedR = (v / i).toFixed(2);
+        }
+
+        setValues((prev) => ({
+            ...prev,
+            V: target === 'V' ? calculatedV : prev.V,
+            I: target === 'I' ? calculatedI : prev.I,
+            R: target === 'R' ? calculatedR : prev.R
+        }));
+    }, [values.V, values.I, values.R, target, activeMode]);
+
+    const colors = {
+        V: 'ohms-accent-v',
+        I: 'ohms-accent-i',
+        R: 'ohms-accent-r'
     };
 
-    const result = calculate();
+    const generateExercise = useCallback(() => {
+        const types = ['V', 'I', 'R'];
+        const quest = types[Math.floor(Math.random() * types.length)];
+        let val1;
+        let val2;
+        let unit1;
+        let unit2;
+        let correct;
+
+        if (quest === 'V') {
+            val1 = Math.floor(Math.random() * 10) + 1;
+            val2 = Math.floor(Math.random() * 100) + 1;
+            unit1 = 'A';
+            unit2 = 'Ω';
+            correct = val1 * val2;
+        } else if (quest === 'I') {
+            val2 = Math.floor(Math.random() * 50) + 1;
+            correct = Math.floor(Math.random() * 10) + 1;
+            val1 = correct * val2;
+            unit1 = 'V';
+            unit2 = 'Ω';
+        } else {
+            val2 = Math.floor(Math.random() * 5) + 1;
+            correct = Math.floor(Math.random() * 100) + 1;
+            val1 = correct * val2;
+            unit1 = 'V';
+            unit2 = 'A';
+        }
+
+        setExercise({ quest, val1, val2, unit1, unit2, correct });
+        setUserAnswer('');
+        setFeedback(null);
+    }, []);
+
+    const checkAnswer = () => {
+        if (!exercise) return;
+        const ans = parseFloat(userAnswer);
+        if (Math.abs(ans - exercise.correct) < 0.1) {
+            setFeedback({ status: 'success', message: 'Correcto. Excelente calculo.' });
+            setScore((prev) => prev + 10);
+            window.setTimeout(() => generateExercise(), 1600);
+        } else {
+            setFeedback({ status: 'error', message: `Incorrecto. El valor real era ${exercise.correct}.` });
+            setScore((prev) => Math.max(0, prev - 5));
+        }
+    };
 
     return (
-        <div className="ohms-widget">
-            <div className="ohms-formula">
-                <div className="formula-item"><strong>V</strong> = Voltaje (V)</div>
-                <div className="formula-item"><strong>I</strong> = Corriente (A)</div>
-                <div className="formula-item"><strong>R</strong> = Resistencia (Ω)</div>
-                <div className="formula-item"><strong>P</strong> = Potencia (W)</div>
-            </div>
-            <div className="ohms-variables">
-                <button className={`var-btn ${variable === 'voltage' ? 'active' : ''}`} onClick={() => setVariable('voltage')}>V = I × R</button>
-                <button className={`var-btn ${variable === 'current' ? 'active' : ''}`} onClick={() => setVariable('current')}>I = V / R</button>
-                <button className={`var-btn ${variable === 'resistance' ? 'active' : ''}`} onClick={() => setVariable('resistance')}>R = V / I</button>
-                <button className={`var-btn ${variable === 'power' ? 'active' : ''}`} onClick={() => setVariable('power')}>P = V × I</button>
-            </div>
-            <div className="ohms-inputs">
-                {['voltage', 'current', 'resistance', 'power'].map((v) => (
-                    <div key={v} className="ohms-input-group">
-                        <label>{v === 'voltage' ? 'Voltaje (V)' : v === 'current' ? 'Corriente (A)' : v === 'resistance' ? 'Resistencia (Ω)' : 'Potencia (W)'}</label>
-                        <input
-                            type="number"
-                            placeholder="0"
-                            value={values[v]}
-                            onChange={(e) => setValues({ ...values, [v]: e.target.value })}
-                        />
-                        {result[v] && <span className="result-badge">{result[v]}</span>}
+        <div className="ohms-pro-widget">
+            {showInfo && (
+                <div className="ohms-info-overlay">
+                    <div className="ohms-info-modal">
+                        <div className="ohms-info-header">
+                            <div className="ohms-info-title">
+                                <BookOpen size={17} />
+                                <span>Guia teorica</span>
+                            </div>
+                            <button type="button" className="ohms-info-close" onClick={() => setShowInfo(false)}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="ohms-info-body">
+                            <section>
+                                <h4>Que es la Ley de Ohm?</h4>
+                                <p>
+                                    Establece que la corriente que circula por un conductor es proporcional al
+                                    voltaje aplicado e inversamente proporcional a la resistencia.
+                                </p>
+                            </section>
+                            <div className="ohms-info-grid">
+                                <div className="ohms-info-row">
+                                    <div className="ohms-info-badge v">V</div>
+                                    <div>
+                                        <h5>Voltaje</h5>
+                                        <p>Presion electrica que empuja electrones.</p>
+                                    </div>
+                                </div>
+                                <div className="ohms-info-row">
+                                    <div className="ohms-info-badge i">I</div>
+                                    <div>
+                                        <h5>Corriente</h5>
+                                        <p>Flujo de electrones que pasa por el circuito.</p>
+                                    </div>
+                                </div>
+                                <div className="ohms-info-row">
+                                    <div className="ohms-info-badge r">R</div>
+                                    <div>
+                                        <h5>Resistencia</h5>
+                                        <p>Oposicion al paso de la corriente.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="ohms-info-footer">Formula base: V = I x R</div>
                     </div>
-                ))}
+                </div>
+            )}
+
+            <div className="ohms-pro-tabs">
+                <button
+                    type="button"
+                    className={activeMode === 'calculadora' ? 'active' : ''}
+                    onClick={() => setActiveMode('calculadora')}
+                >
+                    <Calculator size={14} />
+                    <span>Calculadora</span>
+                </button>
+                <button type="button" className="ohms-tab-bulb" onClick={() => setShowInfo(true)}>
+                    <Lightbulb size={15} />
+                </button>
+                <button
+                    type="button"
+                    className={activeMode === 'practica' ? 'active' : ''}
+                    onClick={() => {
+                        setActiveMode('practica');
+                        generateExercise();
+                    }}
+                >
+                    <Trophy size={14} />
+                    <span>Practicar</span>
+                </button>
+            </div>
+
+            <div className="ohms-pro-content">
+                {activeMode === 'calculadora' && (
+                    <>
+                        <div className="ohms-triangle-card">
+                            <div className="ohms-triangle-heading">
+                                <span><Target size={10} /> Toca para seleccionar</span>
+                                <h3>{target === 'V' ? 'V = I x R' : target === 'I' ? 'I = V / R' : 'R = V / I'}</h3>
+                            </div>
+
+                            <div className="ohms-visual-triangle">
+                                <svg viewBox="0 0 100 80" className="ohms-triangle-svg">
+                                    <path d="M50 5 L95 75 L5 75 Z" fill="#0f172a" stroke="#1e293b" strokeWidth="1.5" />
+                                    <line x1="25" y1="45" x2="75" y2="45" stroke="#334155" strokeWidth="1.5" />
+                                    <line x1="50" y1="45" x2="50" y2="75" stroke="#334155" strokeWidth="1.5" />
+                                </svg>
+
+                                <button type="button" className={`ohms-triangle-node node-v ${target === 'V' ? 'active' : ''}`} onClick={() => { setTarget('V'); setValues((prev) => ({ ...prev, V: '' })); }}>V</button>
+                                <button type="button" className={`ohms-triangle-node node-i ${target === 'I' ? 'active' : ''}`} onClick={() => { setTarget('I'); setValues((prev) => ({ ...prev, I: '' })); }}>I</button>
+                                <button type="button" className={`ohms-triangle-node node-r ${target === 'R' ? 'active' : ''}`} onClick={() => { setTarget('R'); setValues((prev) => ({ ...prev, R: '' })); }}>R</button>
+                            </div>
+                        </div>
+
+                        <div className="ohms-inputs-pro">
+                            {[
+                                { id: 'V', label: 'Voltaje', unit: 'V' },
+                                { id: 'I', label: 'Corriente', unit: 'A' },
+                                { id: 'R', label: 'Resistencia', unit: 'Ω' }
+                            ].map((item) => (
+                                <label key={item.id} className={`ohms-input-card ${target === item.id ? 'selected' : ''}`}>
+                                    <div className="ohms-input-top">
+                                        <span>{item.label}</span>
+                                        <strong className={colors[item.id]}>{item.unit}</strong>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        disabled={target === item.id}
+                                        value={values[item.id]}
+                                        onChange={(e) => setValues({ ...values, [item.id]: e.target.value })}
+                                        placeholder="0.0"
+                                        className={target === item.id ? colors[item.id] : ''}
+                                    />
+                                </label>
+                            ))}
+                        </div>
+
+                        <button type="button" className="ohms-clear-btn" onClick={() => setValues({ V: '', I: '', R: '' })}>
+                            <RefreshCw size={12} />
+                            <span>Limpiar valores</span>
+                        </button>
+                    </>
+                )}
+
+                {activeMode === 'practica' && exercise && (
+                    <div className="ohms-practice-card">
+                        <div className="ohms-practice-head">
+                            <div>
+                                <span>Desafio</span>
+                                <h4>Score: {score}</h4>
+                            </div>
+                            <button type="button" className="ohms-mini-refresh" onClick={generateExercise}>
+                                <RefreshCw size={15} />
+                            </button>
+                        </div>
+
+                        <p className="ohms-practice-text">
+                            Un circuito con <strong>{exercise.val1}{exercise.unit1}</strong> y una carga de <strong>{exercise.val2}{exercise.unit2}</strong>.
+                        </p>
+                        <h3 className="ohms-practice-question">
+                            Calcula el {exercise.quest === 'V' ? 'Voltaje' : exercise.quest === 'I' ? 'Amperaje' : 'Ohmiaje'}:
+                        </h3>
+
+                        <div className="ohms-answer-wrap">
+                            <input
+                                type="number"
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                                placeholder="Respuesta..."
+                            />
+                            <span>{exercise.quest === 'V' ? 'V' : exercise.quest === 'I' ? 'A' : 'Ω'}</span>
+                        </div>
+
+                        <div className="ohms-practice-actions">
+                            <button type="button" className="ohms-validate-btn" onClick={checkAnswer}>
+                                <span>Validar</span>
+                                <ChevronRight size={14} />
+                            </button>
+                            <button type="button" className="ohms-mini-refresh" onClick={generateExercise}>
+                                <RefreshCw size={15} />
+                            </button>
+                        </div>
+
+                        {feedback && (
+                            <div className={`ohms-feedback-box ${feedback.status}`}>
+                                {feedback.status === 'success' ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
+                                <span>{feedback.message}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
+const Gadgets = () => <Navigate to="/dashboard" replace />;
+
 export default Gadgets;
+

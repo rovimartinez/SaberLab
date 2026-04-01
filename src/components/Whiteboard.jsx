@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Eraser, Trash2, PenLine, Palette, Download, X, Wand2, Type, Minus, Maximize2, Minimize2, Ghost, Square, Circle, Triangle, Shapes, ArrowRight, Diamond, AppWindow, RotateCcw } from 'lucide-react';
+import { Eraser, Trash2, PenLine, Palette, Download, X, Wand2, Type, Minus, Maximize2, Minimize2, Ghost, Square, Circle, Triangle, Shapes, ArrowRight, Diamond, AppWindow, RotateCcw, MousePointer2 } from 'lucide-react';
 import './Whiteboard.css';
 
 const colors = ['#ffffff', '#a855f7', '#3b82f6', '#ec4899', '#f59e0b', '#10b981'];
@@ -85,6 +85,7 @@ const Whiteboard = ({ onClose }) => {
     const [brushSize, setBrushSize] = useState(3);
     const [isEraser, setIsEraser] = useState(false);
     const [isTextMode, setIsTextMode] = useState(false);
+    const [isSelectMode, setIsSelectMode] = useState(false);
     const [textInput, setTextInput] = useState({ visible: false, x: 0, y: 0, text: '' });
     const inputRef = useRef(null);
     
@@ -94,7 +95,7 @@ const Whiteboard = ({ onClose }) => {
     const [selectedShapeId, setSelectedShapeId] = useState(null);
     const [dragState, setDragState] = useState(null);
 
-    const [autoShape, setAutoShape] = useState(true); // Varita mágica (formas)
+    const [autoShape, setAutoShape] = useState(false); // Varita mágica (formas)
     const magicText = true; // Texto Mágico (suavizado) siempre activo
     const [isMaximized, setIsMaximized] = useState(false); // Default false para mejor UX
     const [isMinimized, setIsMinimized] = useState(false);
@@ -130,7 +131,7 @@ const Whiteboard = ({ onClose }) => {
     const savedCanvasState = useRef(null);
 
     // Arrastro y posición
-    const [position, setPosition] = useState({ x: Math.max(0, window.innerWidth / 2 - 400), y: Math.max(0, window.innerHeight / 2 - 300) });
+    const [position, setPosition] = useState({ x: Math.max(0, window.innerWidth / 2 - 430), y: Math.max(0, window.innerHeight / 2 - 300) });
     const [isDraggingHeader, setIsDraggingHeader] = useState(false);
     const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0, isDragging: false });
 
@@ -197,7 +198,8 @@ const Whiteboard = ({ onClose }) => {
                 ctx.drawImage(tempCanvas, 0, 0);
             }
             
-            ctx.strokeStyle = isEraser ? '#1e293b' : color;
+            ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+            ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
             ctx.lineWidth = isEraser ? brushSize * 3 : brushSize;
         });
 
@@ -209,7 +211,8 @@ const Whiteboard = ({ onClose }) => {
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
-        ctx.strokeStyle = isEraser ? '#1e293b' : color; // Match background if erasing
+        ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
+        ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
         ctx.lineWidth = isEraser ? brushSize * 3 : brushSize; // Make eraser bigger
         
         // Sincronizar estilo si hay una figura seleccionada
@@ -282,8 +285,30 @@ const Whiteboard = ({ onClose }) => {
         };
     }, [dragState]);
 
+    const intersectsEraser = (shape, x, y, radius) => {
+        const minX = Math.min(shape.x, shape.x + shape.width) - radius;
+        const maxX = Math.max(shape.x, shape.x + shape.width) + radius;
+        const minY = Math.min(shape.y, shape.y + shape.height) - radius;
+        const maxY = Math.max(shape.y, shape.y + shape.height) + radius;
+
+        if (shape.type === 'path' && shape.points?.length) {
+            return shape.points.some((point) => {
+                const px = shape.x + point.x;
+                const py = shape.y + point.y;
+                return Math.hypot(px - x, py - y) <= radius;
+            });
+        }
+
+        return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    };
+
     const startDrawing = (e) => {
         const { offsetX, offsetY } = getCoordinates(e);
+        if (isSelectMode) {
+            setSelectedShapeId(null);
+            return;
+        }
+
         setSelectedShapeId(null);
 
         if (isTextMode) {
@@ -359,6 +384,11 @@ const Whiteboard = ({ onClose }) => {
                 return; // Evita el lineTo normal
             }
         }
+
+        if (isEraser) {
+            const eraseRadius = Math.max(10, brushSize * 2.2);
+            setShapes((prev) => prev.filter((shape) => !intersectsEraser(shape, offsetX, offsetY, eraseRadius)));
+        }
         
         // Dibujo normal sin suavizado
         ctx.lineTo(offsetX, offsetY);
@@ -370,6 +400,10 @@ const Whiteboard = ({ onClose }) => {
         setIsDrawing(false);
         const ctx = canvasRef.current.getContext('2d');
         ctx.closePath();
+        const commitRecognizedShape = (shape) => {
+            ctx.putImageData(savedCanvasState.current, 0, 0);
+            setShapes(prev => [...prev, { id: Date.now(), rotation: 0, color, brushSize, ...shape }]);
+        };
 
         if (insertShape && tempShape) {
             if (Math.abs(tempShape.width) > 5 || Math.abs(tempShape.height) > 5) {
@@ -406,6 +440,7 @@ const Whiteboard = ({ onClose }) => {
                 
                 let circleError = 0;
                 let rectError = 0;
+                let simplified = [];
                 
                 points.forEach(p => {
                     circleError += Math.abs(Math.hypot(p.x - centerX, p.y - centerY) - radius);
@@ -418,17 +453,54 @@ const Whiteboard = ({ onClose }) => {
                 circleError /= points.length;
                 rectError /= points.length;
 
+                for (let factor = 0.06; factor <= 0.25; factor += 0.02) {
+                    const epsilon = Math.max(width, height) * factor;
+                    simplified = simplifyDP(points, epsilon);
+                    if (simplified.length >= 4 && simplified.length <= 6) {
+                        break;
+                    }
+                }
+
+                const rawPolygon = isClosed ? simplified.slice(0, -1) : simplified;
+                const polygonVertices = rawPolygon.filter((point, index, arr) => {
+                    if (index === 0) return true;
+                    const prev = arr[index - 1];
+                    return Math.hypot(point.x - prev.x, point.y - prev.y) > Math.max(width, height) * 0.12;
+                });
+                const polygonPoints = polygonVertices.length;
+                const topVertices = polygonVertices.filter(p => p.y <= minY + height * 0.38).length;
+                const bottomVertices = polygonVertices.filter(p => p.y >= minY + height * 0.55).length;
+                const looksLikeTriangle =
+                    polygonPoints >= 3 &&
+                    polygonPoints <= 5 &&
+                    topVertices >= 1 &&
+                    topVertices <= 2 &&
+                    bottomVertices >= 2 &&
+                    rectError >= Math.min(width, height) * 0.08;
+
                 if (circleError < radius * 0.25 && circleError < rectError) {
-                    ctx.putImageData(savedCanvasState.current, 0, 0);
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                    ctx.stroke();
+                    commitRecognizedShape({
+                        type: 'circle',
+                        x: centerX - radius,
+                        y: centerY - radius,
+                        width: radius * 2,
+                        height: radius * 2
+                    });
                     recognized = true;
-                } else if (rectError < Math.min(width, height) * 0.25) {
-                    ctx.putImageData(savedCanvasState.current, 0, 0);
-                    ctx.beginPath();
-                    ctx.rect(minX, minY, width, height);
-                    ctx.stroke();
+                } else if (looksLikeTriangle) {
+                    commitRecognizedShape({ type: 'triangle', x: minX, y: minY, width, height });
+                    recognized = true;
+                } else if (polygonPoints === 4 && rectError >= Math.min(width, height) * 0.18) {
+                    commitRecognizedShape({ type: 'diamond', x: minX, y: minY, width, height });
+                    recognized = true;
+                } else if (rectError < Math.min(width, height) * 0.18) {
+                    commitRecognizedShape({
+                        type: 'rect',
+                        x: minX,
+                        y: minY,
+                        width,
+                        height
+                    });
                     recognized = true;
                 }
                 
@@ -446,19 +518,29 @@ const Whiteboard = ({ onClose }) => {
                     }
 
                     if (simplified.length >= 3 && simplified.length <= 8) {
-                        ctx.putImageData(savedCanvasState.current, 0, 0);
-                        ctx.beginPath();
+                        
+                        
                         
                         // Si es cerrado, ignoramos el último punto superpuesto para que el closePath haga un cierre perfecto
                         const numPoints = isClosed ? simplified.length - 1 : simplified.length;
                         
-                        ctx.moveTo(simplified[0].x, simplified[0].y);
-                        for (let i = 1; i < numPoints; i++) {
-                            ctx.lineTo(simplified[i].x, simplified[i].y);
+                        if (numPoints === 3) {
+                            commitRecognizedShape({ type: 'triangle', x: minX, y: minY, width, height });
+                            recognized = true;
+                        } else if (numPoints === 4) {
+                            commitRecognizedShape({ type: 'diamond', x: minX, y: minY, width, height });
+                            recognized = true;
+                        } else {
+                            ctx.putImageData(savedCanvasState.current, 0, 0);
+                            ctx.beginPath();
+                            ctx.moveTo(simplified[0].x, simplified[0].y);
+                            for (let i = 1; i < numPoints; i++) {
+                                ctx.lineTo(simplified[i].x, simplified[i].y);
+                            }
+                            ctx.closePath();
+                            ctx.stroke();
+                            recognized = true;
                         }
-                        ctx.closePath();
-                        ctx.stroke();
-                        recognized = true;
                     }
                 }
             } else if (!isClosed && Math.max(width, height) > 40) {
@@ -473,11 +555,13 @@ const Whiteboard = ({ onClose }) => {
                     lineError /= points.length;
                     
                     if (lineError < lineLen * 0.1) {
-                        ctx.putImageData(savedCanvasState.current, 0, 0);
-                        ctx.beginPath();
-                        ctx.moveTo(start.x, start.y);
-                        ctx.lineTo(end.x, end.y);
-                        ctx.stroke();
+                        commitRecognizedShape({
+                            type: 'line',
+                            x: start.x,
+                            y: start.y,
+                            width: end.x - start.x,
+                            height: end.y - start.y
+                        });
                         recognized = true;
                     }
                 }
@@ -653,12 +737,16 @@ const Whiteboard = ({ onClose }) => {
                 onMouseDown={handleHeaderMouseDown}
                 style={{ cursor: isDraggingHeader ? 'grabbing' : 'grab' }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <PenLine size={24} className="text-gradient" />
-                    <h2>Pizarra Mágica</h2>
+                <div className="whiteboard-title-wrap">
+                    <span className="whiteboard-title-icon" aria-hidden="true">
+                        <PenLine size={22} className="whiteboard-title-icon-layer base" />
+                        <PenLine size={22} className="whiteboard-title-icon-layer pink" />
+                        <PenLine size={22} className="whiteboard-title-icon-layer blue" />
+                    </span>
+                    <h2 className="whiteboard-title text-gradient">Pizarra Mágica</h2>
                 </div>
                 
-                <div className="window-controls" style={{ display: 'flex', gap: '8px', zIndex: 60, marginLeft: 'auto' }}>
+                <div className="window-controls" style={{ display: 'flex', gap: '6px', zIndex: 60, marginLeft: 'auto' }}>
                     <button className={`tool-btn ${isInvisible ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsInvisible(!isInvisible); }} title={isInvisible ? "Desactivar Fondo Transparente" : "Modo Transparente"}>
                         <Ghost size={16} />
                     </button>
@@ -680,7 +768,7 @@ const Whiteboard = ({ onClose }) => {
                     <div className="tool-group">
                         <button 
                             className={`tool-btn ${autoShape ? 'active' : ''}`} 
-                            onClick={() => { setAutoShape(!autoShape); setActiveMenu(null); }}
+                            onClick={() => { setIsSelectMode(false); setAutoShape(!autoShape); setActiveMenu(null); }}
                             title="Varita Mágica (Auto-Formas)"
                             style={{ color: autoShape ? '#f59e0b' : 'inherit' }}
                         >
@@ -688,38 +776,41 @@ const Whiteboard = ({ onClose }) => {
                         </button>
                     </div>
                     
-                    <div className="tool-separator"></div>
-
                     <div className="tool-group">
                         <button 
-                            className={`tool-btn ${!isEraser && !isTextMode && !insertShape ? 'active' : ''}`} 
-                            onClick={() => { setIsEraser(false); setIsTextMode(false); setInsertShape(null); setActiveMenu(null); }}
+                            className={`tool-btn ${isSelectMode ? 'active' : ''}`} 
+                            onClick={() => { setIsSelectMode(true); setIsEraser(false); setIsTextMode(false); setInsertShape(null); setActiveMenu(null); }}
+                            title="Seleccionar"
+                        >
+                            <MousePointer2 size={18} />
+                        </button>
+                        <button 
+                            className={`tool-btn ${!isSelectMode && !isEraser && !isTextMode && !insertShape ? 'active' : ''}`} 
+                            onClick={() => { setIsSelectMode(false); setIsEraser(false); setIsTextMode(false); setInsertShape(null); setActiveMenu(null); }}
                             title="Lápiz"
                         >
                             <PenLine size={18} />
                         </button>
                         <button 
                             className={`tool-btn ${isEraser ? 'active' : ''}`} 
-                            onClick={() => { setIsEraser(true); setIsTextMode(false); setInsertShape(null); setActiveMenu(null); }}
+                            onClick={() => { setIsSelectMode(false); setIsEraser(true); setIsTextMode(false); setInsertShape(null); setActiveMenu(null); }}
                             title="Borrador"
                         >
                             <Eraser size={18} />
                         </button>
                         <button 
                             className={`tool-btn ${isTextMode ? 'active' : ''}`} 
-                            onClick={() => { setIsTextMode(true); setIsEraser(false); setInsertShape(null); setActiveMenu(null); }}
+                            onClick={() => { setIsSelectMode(false); setIsTextMode(true); setIsEraser(false); setInsertShape(null); setActiveMenu(null); }}
                             title="Texto"
                         >
                             <Type size={18} />
                         </button>
                     </div>
 
-                    <div className="tool-separator"></div>
-
                     <div className="tool-group" style={{ position: 'relative' }}>
                         <button 
                             className={`tool-btn ${insertShape || activeMenu === 'shapes' ? 'active' : ''}`} 
-                            onClick={() => setActiveMenu(activeMenu === 'shapes' ? null : 'shapes')}
+                            onClick={() => { setIsSelectMode(false); setActiveMenu(activeMenu === 'shapes' ? null : 'shapes'); }}
                             title="Formas Geométricas"
                         >
                             {insertShape === 'rect' ? <Square size={18} /> : 
@@ -745,39 +836,39 @@ const Whiteboard = ({ onClose }) => {
                         )}
                     </div>
 
-                    <div className="tool-separator"></div>
-
-                    {!isEraser && (
-                        <>
-                        <div className="tool-group" style={{ position: 'relative', alignItems: 'center' }}>
-                            <button 
-                                className={`tool-btn ${activeMenu === 'colors' ? 'active' : ''}`} 
-                                onClick={() => setActiveMenu(activeMenu === 'colors' ? null : 'colors')}
-                                title="Color"
-                            >
-                                <Palette size={18} color={color !== '#ffffff' ? color : 'var(--text-secondary)'} />
-                            </button>
-                            {activeMenu === 'colors' && (
-                                <div className="sub-menu" style={subMenuStyle}>
-                                    {colors.map(c => (
-                                        <button 
-                                            key={c}
-                                            className={`color-btn ${color === c ? 'selected' : ''}`}
-                                            style={{ background: c }}
-                                            onClick={() => { setColor(c); setActiveMenu(null); }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div className="tool-separator"></div>
-                        </>
-                    )}
+                    <>
+                    <div className="tool-group" style={{ position: 'relative', alignItems: 'center' }}>
+                        <button 
+                            className={`tool-btn ${activeMenu === 'colors' ? 'active' : ''} ${isEraser ? 'disabled' : ''}`} 
+                            onClick={() => {
+                                if (isEraser) return;
+                                setIsSelectMode(false);
+                                setActiveMenu(activeMenu === 'colors' ? null : 'colors');
+                            }}
+                            title={isEraser ? 'Color deshabilitado mientras usas borrador' : 'Color'}
+                            aria-disabled={isEraser}
+                        >
+                            <Palette size={18} color={isEraser ? 'rgba(148,163,184,0.55)' : color !== '#ffffff' ? color : 'var(--text-secondary)'} />
+                        </button>
+                        {!isEraser && activeMenu === 'colors' && (
+                            <div className="sub-menu" style={subMenuStyle}>
+                                {colors.map(c => (
+                                    <button 
+                                        key={c}
+                                        className={`color-btn ${color === c ? 'selected' : ''}`}
+                                        style={{ background: c }}
+                                        onClick={() => { setColor(c); setActiveMenu(null); }}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    </>
 
                     <div className="tool-group" style={{ position: 'relative', alignItems: 'center' }}>
                         <button 
                             className={`tool-btn ${activeMenu === 'size' ? 'active' : ''}`} 
-                            onClick={() => setActiveMenu(activeMenu === 'size' ? null : 'size')}
+                            onClick={() => { setIsSelectMode(false); setActiveMenu(activeMenu === 'size' ? null : 'size'); }}
                             title="Grosor"
                         >
                             <div style={{
@@ -817,7 +908,7 @@ const Whiteboard = ({ onClose }) => {
                     </div>
                 </div>
 
-             <div 
+            <div 
                 className="canvas-wrapper"
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
@@ -826,7 +917,7 @@ const Whiteboard = ({ onClose }) => {
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
-                style={{ position: 'relative', flex: 1, overflow: 'hidden', cursor: isTextMode ? 'text' : 'crosshair' }}
+                style={{ position: 'relative', flex: 1, overflow: 'hidden', cursor: isSelectMode ? 'default' : isTextMode ? 'text' : 'crosshair' }}
             >
                 {/* DOM Overlays para shapes - Debajo del canvas visualmente pero con pointer-events: auto */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
@@ -837,6 +928,7 @@ const Whiteboard = ({ onClose }) => {
                         const w = Math.abs(shape.width);
                         const h = Math.abs(shape.height);
                         const isActuallyDrawing = isDrawing && tempShape;
+                        const canSelectShapes = isSelectMode && !isActuallyDrawing;
 
                         return (
                             <div
@@ -850,16 +942,22 @@ const Whiteboard = ({ onClose }) => {
                                     outline: isSelected ? '2px solid #3b82f6' : 'none',
                                     transform: `rotate(${shape.rotation || 0}deg)`,
                                     transformOrigin: 'center center',
-                                    cursor: isActuallyDrawing ? 'crosshair' : 'move',
-                                    pointerEvents: 'auto'
+                                    cursor: canSelectShapes ? 'move' : 'default',
+                                    pointerEvents: canSelectShapes ? 'auto' : 'none'
                                 }}
                                 
                                 onDoubleClick={(e) => {
+                                    if (!canSelectShapes) return;
                                     e.stopPropagation();
                                     setSelectedShapeId(shape.id);
                                 }}
                                 onMouseDown={(e) => {
-                                    if (isActuallyDrawing || !isSelected) return; 
+                                    if (!canSelectShapes) return;
+                                    e.stopPropagation();
+                                    if (!isSelected) {
+                                        setSelectedShapeId(shape.id);
+                                        return;
+                                    }
                                     e.stopPropagation();
                                     setDragState({
                                         handle: 'center',
@@ -990,7 +1088,7 @@ const Whiteboard = ({ onClose }) => {
                     Esto permite que los trazos de lápiz sean visibles sobre las figuras. */}
                 <canvas
                     ref={canvasRef}
-                    className={isTextMode ? 'text-cursor' : 'hide-cursor'}
+                    className={isTextMode ? 'text-cursor' : isSelectMode ? '' : 'hide-cursor'}
                     style={{
                         position: 'absolute',
                         top: 0,

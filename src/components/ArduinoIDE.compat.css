@@ -1,0 +1,177 @@
+[class~="relative"] { position: relative; }
+[class~="absolute"] { position: absolute; }
+[class~="fixed"] { position: fixed; }
+[class~="inset-0"] { inset: 0; }
+[class~="top-full"] { top: 100%; }
+[class~="left-0"] { left: 0; }
+[class~="bottom-[45px]"] { bottom: 45px; }
+[class~="right-2"] { right: 0.5rem; }
+
+[class~="z-20"] { z-index: 20; }
+[class~="z-30"] { z-index: 30; }
+[class~="z-40"] { z-index: 40; }
+[class~="z-50"] { z-index: 50; }
+[class~="z-[90]"] { z-index: 90; }
+[class~="z-[100]"] { z-index: 100; }
+
+[class~="flex"] { display: flex; }
+[class~="inline-block"] { display: inline-block; }
+[class~="flex-1"] { flex: 1 1 0%; }
+[class~="shrink-0"] { flex-shrink: 0; }
+[class~="flex-col"] { flex-direction: column; }
+[class~="items-center"] { align-items: center; }
+[class~="justify-center"] { justify-content: center; }
+[class~="justify-between"] { justify-content: space-between; }
+[class~="justify-end"] { justify-content: flex-end; }
+
+[class~="w-full"] { width: 100%; }
+[class~="h-full"] { height: 100%; }
+[class~="w-1/2"] { width: 50%; }
+[class~="w-8"] { width: 2rem; }
+[class~="h-8"] { height: 2rem; }
+[class~="w-12"] { width: 3rem; }
+[class~="w-72"] { width: 18rem; }
+[class~="w-80"] { width: 20rem; }
+[class~="w-[600px]"] { width: 600px; }
+[class~="h-[450px]"] { height: 450px; }
+[class~="w-[1px]"] { width: 1px; }
+[class~="h-1.5"] { height: 0.375rem; }
+[class~="h-3"] { height: 0.75rem; }
+[class~="h-48"] { height: 12rem; }
+
+@media (min-width: 768px) {
+  [class~="md:h-56"] { height: 14rem; }
+}
+
+[class~="min-h-0"] { min-height: 0; }
+[class~="min-h-[1.5rem]"] { min-height: 1.5rem; }
+[class~="min-w-[220px]"] { min-width: 220px; }
+
+[class~="overflow-hidden"] { overflow: hidden; }
+[class~="overflow-auto"] { overflow: auto; }
+[class~="resize-none"] { resize: none; }
+[class~="whitespace-pre"] { white-space: pre; }
+[class~="pointer-events-none"] { pointer-events: none; }
+[class~="cursor-pointer"] { cursor: pointer; }
+[class~="outline-none"] { outline: none; }
+[class~="border-none"] { border: none; }
+
+[class~="rounded"] { border-radius: 0.25rem; }
+[class~="rounded-md"] { border-radius: 0.375rem; }
+[class~="rounded-lg"] { border-radius: 0.5rem; }
+[class~="rounded-full"] { border-radius: 9999px; }
+
+[class~="border"] { border-width: 1px; border-style: solid; }
+[class~="border-b"] { border-bottom-width: 1px; border-bottom-style: solid; }
+[class~="border-t"] { border-top-width: 1px; border-top-style: solid; }
+[class~="border-r"] { border-right-width: 1px; border-right-style: solid; }
+[class~="border-l-2"] { border-left-width: 2px; border-left-style: solid; }
+
+[class~="border-slate-600"] { border-color: #475569; }
+[class~="border-slate-700"] { border-color: #334155; }
+[class~="border-slate-800"] { border-color: #1e293b; }
+[class~="border-red-500"] { border-color: #ef4444; }
+[class~="border-amber-500/40"] { border-color: rgba(245, 158, 11, 0.4); }
+[class~="border-white/5"] { border-color: rgba(255, 255, 255, 0.05); }
+[class~="border-emerald-400/20"] { border-color: rgba(52, 211, 153, 0.2); }
+
+[class~="bg-transparent"] { background: transparent; }
+[class~="bg-black/60"] { background-color: rgba(0, 0, 0, 0.6); }
+[class~="bg-white/5"] { background-color: rgba(255, 255, 255, 0.05); }
+[class~="bg-[#23272e]"] { background-color: #23272e; }
+[class~="bg-[#1c1e26]"] { background-color: #1c1e26; }
+[class~="bg-[#1c1e26]/30"] { background-color: rgba(28, 30, 38, 0.3); }
+[class~="bg-[#141529]"] { background-color: #141529; }
+[class~="bg-[#0d0d1f]"] { background-color: #0d0d1f; }
+[class~="bg-[#00878f]"] { background-color: #00878f; }
+[class~="bg-[#00a3ad]"] { background-color: #00a3ad; }
+[class~="bg-[#2c313a]"] { background-color: #2c313a; }
+[class~="bg-cyan-500"] { background-color: #06b6d4; }
+[class~="bg-cyan-500/10"] { background-color: rgba(6, 182, 212, 0.1); }
+[class~="bg-red-500"] { background-color: #ef4444; }
+[class~="bg-red-900/20"] { background-color: rgba(127, 29, 29, 0.2); }
+[class~="bg-emerald-400/5"] { background-color: rgba(52, 211, 153, 0.05); }
+
+[class~="text-white"] { color: #ffffff; }
+[class~="text-transparent"] { color: transparent; }
+[class~="text-[#1c1e26]"] { color: #1c1e26; }
+[class~="text-slate-100"] { color: #f1f5f9; }
+[class~="text-slate-300"] { color: #cbd5e1; }
+[class~="text-slate-400"] { color: #94a3b8; }
+[class~="text-slate-500"] { color: #64748b; }
+[class~="text-slate-600"] { color: #475569; }
+[class~="text-cyan-400"] { color: #22d3ee; }
+[class~="text-emerald-400"] { color: #34d399; }
+[class~="text-red-400"] { color: #f87171; }
+[class~="text-amber-500"] { color: #f59e0b; }
+[class~="text-amber-500/60"] { color: rgba(245, 158, 11, 0.6); }
+
+[class~="p-1"] { padding: 0.25rem; }
+[class~="p-3"] { padding: 0.75rem; }
+[class~="p-4"] { padding: 1rem; }
+[class~="px-2"] { padding-left: 0.5rem; padding-right: 0.5rem; }
+[class~="px-3"] { padding-left: 0.75rem; padding-right: 0.75rem; }
+[class~="px-4"] { padding-left: 1rem; padding-right: 1rem; }
+[class~="px-6"] { padding-left: 1.5rem; padding-right: 1.5rem; }
+[class~="py-0.5"] { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+[class~="py-1"] { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+[class~="py-1.5"] { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+[class~="py-2"] { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+[class~="py-2.5"] { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+[class~="py-3"] { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+[class~="py-4"] { padding-top: 1rem; padding-bottom: 1rem; }
+
+[class~="ml-2"] { margin-left: 0.5rem; }
+[class~="mt-1"] { margin-top: 0.25rem; }
+[class~="mb-2"] { margin-bottom: 0.5rem; }
+
+[class~="gap-1.5"] { gap: 0.375rem; }
+[class~="gap-2"] { gap: 0.5rem; }
+[class~="gap-3"] { gap: 0.75rem; }
+[class~="gap-6"] { gap: 1.5rem; }
+[class~="space-y-0.5"] > * + * { margin-top: 0.125rem; }
+[class~="space-y-1"] > * + * { margin-top: 0.25rem; }
+
+[class~="text-left"] { text-align: left; }
+[class~="text-center"] { text-align: center; }
+[class~="text-right"] { text-align: right; }
+[class~="text-[10px]"] { font-size: 10px; }
+[class~="text-[11px]"] { font-size: 11px; }
+[class~="text-[12px]"] { font-size: 12px; }
+[class~="text-[13px]"] { font-size: 13px; }
+[class~="text-[14px]"] { font-size: 14px; }
+[class~="font-bold"] { font-weight: 700; }
+[class~="font-medium"] { font-weight: 500; }
+[class~="font-mono"] { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+[class~="italic"] { font-style: italic; }
+[class~="uppercase"] { text-transform: uppercase; }
+[class~="tracking-tight"] { letter-spacing: -0.025em; }
+[class~="tracking-wider"] { letter-spacing: 0.05em; }
+[class~="tracking-widest"] { letter-spacing: 0.1em; }
+[class~="leading-[1.5rem]"] { line-height: 1.5rem; }
+
+[class~="shadow-2xl"] { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45); }
+[class~="transition-all"] { transition: all 0.2s ease; }
+[class~="transition-colors"] { transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease; }
+[class~="opacity-0"] { opacity: 0; }
+
+[class~="hover:text-white"]:hover { color: #ffffff; }
+[class~="hover:text-slate-300"]:hover { color: #cbd5e1; }
+[class~="hover:text-red-400"]:hover { color: #f87171; }
+[class~="hover:bg-white/5"]:hover { background-color: rgba(255, 255, 255, 0.05); }
+[class~="hover:bg-[#00a3ad]"]:hover { background-color: #00a3ad; }
+[class~="hover:bg-[#2c313a]"]:hover { background-color: #2c313a; }
+
+[class~="group"]:hover [class~="group-hover:text-cyan-400"] { color: #22d3ee; }
+[class~="group"]:hover [class~="group-hover:opacity-100"] { opacity: 1; }
+
+[class~="backdrop-blur-sm"] { backdrop-filter: blur(4px); }
+[class~="caret-white"] { caret-color: #ffffff; }
+[class~="animate-spin"] { animation: arduino-compat-spin 1s linear infinite; }
+
+@keyframes arduino-compat-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+[class~="disabled:opacity-50"]:disabled { opacity: 0.5; }

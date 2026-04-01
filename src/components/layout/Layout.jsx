@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
+import { GadgetsProvider } from '../../context/GadgetsContext';
 import './Layout.css';
 
 const LayoutContent = () => {
@@ -35,7 +36,9 @@ import { useState } from 'react';
 const Layout = () => {
     return (
         <WhiteboardProvider>
-            <LayoutContent />
+            <GadgetsProvider>
+                <LayoutContent />
+            </GadgetsProvider>
         </WhiteboardProvider>
     );
 };

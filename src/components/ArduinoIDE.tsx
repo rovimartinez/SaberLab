@@ -3,17 +3,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Check, ArrowRight, ChevronDown, Trash2, Search, X, 
-  Cable, Pencil, Cpu, Loader2, Zap, ZapOff 
+  Cable, Pencil, Cpu, Loader2, Zap, ZapOff, Usb 
 } from 'lucide-react';
+import './ArduinoIDE.compat.css';
+
+const ARDUINO_TEAL = '#00979d';
+const ARDUINO_TEAL_LIGHT = '#22c7cf';
+const MIN_CONSOLE_HEIGHT = 112;
+const DEFAULT_CONSOLE_HEIGHT = 168;
+const MAX_CONSOLE_HEIGHT_RATIO = 0.55;
+const IDE_PANEL_DARK = '#1a1d24';
+const IDE_TITLEBAR_DARK = '#2b313a';
+const IDE_CONSOLE_BLACK = '#000000';
 
 const COLORS = {
   types: 'text-cyan-400',       
   numbers: 'text-cyan-400',     
   functions: 'text-orange-400',   
-  classes: 'text-orange-400',    
+  classes: 'text-white',    
   constants: 'text-white',       
   directives: 'text-pink-500',   
-  library: 'text-cyan-400',      
+  library: 'text-pink-500',      
   comments: 'text-slate-500',    
   string: 'text-cyan-400',      
   general: 'text-slate-300',     
@@ -34,12 +44,28 @@ const ALL_PORTS = ["COM1", "COM2", "COM3", "COM4", "COM5"];
 
 const ArduinoIDE = () => {
   const [textCode, setTextCode] = useState(
-`void setup() {
-  // Configuración
+`#include <Servo.h>
+
+Servo myservo; 
+int ledPin = 13;
+
+void setup() {
+  Serial.begin(9600);
+  myservo.attach(9);
+  pinMode(ledPin, OUTPUT);
+  Serial.println("Sistema iniciado...");
 }
 
 void loop() {
-  // Bucle principal
+  myservo.write(90);
+  digitalWrite(ledPin, HIGH);
+  Serial.println("LED Encendido - Posicion 90");
+  delay(1000);
+  
+  myservo.write(0);
+  digitalWrite(ledPin, LOW);
+  Serial.println("LED Apagado - Posicion 0");
+  delay(500);
 }`
   );
 
@@ -61,8 +87,10 @@ void loop() {
   const [errorHighlight, setErrorHighlight] = useState(null);
   const [serialMessages, setSerialMessages] = useState<any[]>([]);
   const [isSimulationActive, setIsSimulationActive] = useState(false);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState(DEFAULT_CONSOLE_HEIGHT);
   
   const [compiledLogic, setCompiledLogic] = useState<any[]>([]);
+  const [isResizingBottomPanel, setIsResizingBottomPanel] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const preRef = useRef<HTMLDivElement>(null);
@@ -70,6 +98,7 @@ void loop() {
   const mainMenuRef = useRef<HTMLDivElement>(null);
   const serialEndRef = useRef<HTMLDivElement>(null);
   const simulationTimeout = useRef<NodeJS.Timeout | null>(null);
+  const ideRootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -85,18 +114,43 @@ void loop() {
     const lines = code.split('\n');
     const logic: { text: string, wait: number }[] = [];
     let currentMsg: string | null = null;
+    let pendingSetupMessages: string[] = [];
+    let currentScope: 'setup' | 'loop' | null = null;
 
     lines.forEach(line => {
+      const cleanLine = line.trim();
+
+      if (/void\s+setup\s*\(\s*\)\s*\{/.test(cleanLine)) {
+        currentScope = 'setup';
+      } else if (/void\s+loop\s*\(\s*\)\s*\{/.test(cleanLine)) {
+        currentScope = 'loop';
+      } else if (cleanLine === '}') {
+        currentScope = null;
+      }
+
       const printMatch = line.match(/Serial\.println\("(.*?)"\)/);
       if (printMatch) {
-        currentMsg = printMatch[1];
+        if (currentScope === 'setup') {
+          pendingSetupMessages.push(printMatch[1]);
+        } else {
+          currentMsg = printMatch[1];
+        }
       }
+
       const delayMatch = line.match(/delay\((\d+)\)/);
       if (delayMatch && currentMsg) {
         logic.push({ text: currentMsg, wait: parseInt(delayMatch[1]) });
         currentMsg = null;
       }
     });
+
+    if (currentMsg) {
+      logic.push({ text: currentMsg, wait: 1000 });
+    }
+
+    if (pendingSetupMessages.length > 0) {
+      logic.unshift(...pendingSetupMessages.map((text, index) => ({ text, wait: index === pendingSetupMessages.length - 1 ? 400 : 700 })));
+    }
 
     if (logic.length === 0) {
       const allMsgs = lines.map(l => l.match(/Serial\.println\("(.*?)"\)/)).filter(m => m).map(m => m![1]);
@@ -137,6 +191,29 @@ void loop() {
       serialEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [serialMessages, activeTab]);
+
+  useEffect(() => {
+    if (!isResizingBottomPanel) return;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!ideRootRef.current) return;
+
+      const bounds = ideRootRef.current.getBoundingClientRect();
+      const maxHeight = Math.max(MIN_CONSOLE_HEIGHT, Math.floor(bounds.height * MAX_CONSOLE_HEIGHT_RATIO));
+      const nextHeight = bounds.bottom - event.clientY - 24;
+      setBottomPanelHeight(Math.max(MIN_CONSOLE_HEIGHT, Math.min(maxHeight, nextHeight)));
+    };
+
+    const handleMouseUp = () => setIsResizingBottomPanel(false);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizingBottomPanel]);
 
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
     const { scrollTop, scrollLeft } = e.currentTarget;
@@ -215,7 +292,9 @@ void loop() {
         return;
     }
 
-    setActiveTab('salida');
+    if (!(type === 'upload' && showMonitorTab && activeTab === 'monitor')) {
+      setActiveTab('salida');
+    }
     setIsCompiling(true);
     setErrorHighlight(null);
     setCompilationLogs([`${label === 'Compilando' ? 'Compilando' : 'Subiendo'} sketch...`]);
@@ -252,8 +331,7 @@ void loop() {
         setCompiledLogic(newLogic);
         setIsSimulationActive(true);
         setSerialMessages([
-          { time: new Date().toLocaleTimeString(), text: `--- Puerto Serie abierto en ${selectedBoard} ---` },
-          { time: new Date().toLocaleTimeString(), text: "Sistema reiniciado..." }
+          { time: new Date().toLocaleTimeString(), text: `--- Puerto Serie abierto en ${selectedBoard} ---` }
         ]);
       }
     }
@@ -279,6 +357,7 @@ void loop() {
             if (part.startsWith('"') && part.endsWith('"')) return <span key={j} className={COLORS.string}>{part}</span>;
             if (part.startsWith('#')) return <span key={j} className={COLORS.directives}>{part}</span>;
             if (part.startsWith('<') && part.endsWith('>')) return <span key={j} className={COLORS.library}>{part}</span>;
+            if (part.endsWith('.')) return <span key={j} className={COLORS.classes}>{part}</span>;
             if (VALID_ARDUINO_CLASSES.includes(part)) return <span key={j} className={COLORS.classes}>{part}</span>;
             if (VALID_ARDUINO_FUNCTIONS.includes(part)) return <span key={j} className={COLORS.functions}>{part}</span>;
             if (STRICT_LOWERCASE.includes(part)) return <span key={j} className={COLORS.types}>{part}</span>;
@@ -292,7 +371,7 @@ void loop() {
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full min-h-0">
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #1c1e26; }
@@ -325,9 +404,9 @@ void loop() {
                 </div>
                 <div className="flex-1 overflow-auto custom-scrollbar">
                   {ALL_BOARDS.map(b => (
-                    <div key={b} onClick={() => setTempBoard(b)} className={`px-4 py-2.5 text-[12px] flex items-center justify-between cursor-pointer border-b border-white/5 hover:bg-white/5 ${tempBoard === b ? 'bg-cyan-500/10 text-cyan-400 font-bold' : 'text-slate-300'}`}>
+                    <div key={b} onClick={() => setTempBoard(b)} className={`px-4 py-2.5 text-[12px] flex items-center justify-between cursor-pointer border-b border-white/5 hover:bg-white/5 ${tempBoard === b ? 'font-bold' : 'text-slate-300'}`} style={tempBoard === b ? { backgroundColor: 'rgba(0, 151, 157, 0.12)', color: ARDUINO_TEAL_LIGHT } : undefined}>
                       <div className="flex items-center gap-2">
-                        <Cpu size={14} className={tempBoard === b ? 'text-cyan-400' : 'text-slate-500'} />
+                        <Cpu size={14} className={tempBoard === b ? '' : 'text-slate-500'} style={tempBoard === b ? { color: ARDUINO_TEAL_LIGHT } : undefined} />
                         {b}
                       </div>
                       {tempBoard === b && <Check size={14} />}
@@ -340,8 +419,8 @@ void loop() {
                 <div className="p-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Puertos disponibles</div>
                 <div className="flex-1 overflow-auto custom-scrollbar">
                   {ALL_PORTS.map(p => (
-                    <div key={p} onClick={() => setTempPort(p)} className={`px-6 py-3 text-[12px] flex items-center gap-3 cursor-pointer hover:bg-white/5 ${tempPort === p ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
-                      <Cable size={16} className={tempPort === p ? 'text-emerald-400' : 'text-slate-500'} />
+                    <div key={p} onClick={() => setTempPort(p)} className={`px-6 py-3 text-[12px] flex items-center gap-3 cursor-pointer hover:bg-white/5 ${tempPort === p ? 'font-bold' : 'text-slate-300'}`} style={tempPort === p ? { color: ARDUINO_TEAL_LIGHT } : undefined}>
+                      <Usb size={16} className={tempPort === p ? '' : 'text-slate-500'} style={tempPort === p ? { color: ARDUINO_TEAL_LIGHT } : undefined} />
                       {p} Serial Port
                     </div>
                   ))}
@@ -350,25 +429,25 @@ void loop() {
             </div>
             <div className="p-4 border-t border-slate-700 bg-[#1c1e26] flex justify-end gap-3">
               <button onClick={() => setIsDialogOpen(false)} className="px-6 py-2 rounded text-[12px] font-medium border border-slate-600 text-slate-300 hover:bg-white/5">CANCELAR</button>
-              <button onClick={confirmSelection} className="px-6 py-2 rounded text-[12px] font-medium bg-[#00878f] text-white hover:bg-[#00a3ad]">ACEPTAR</button>
+              <button onClick={confirmSelection} className="px-6 py-2 rounded text-[12px] font-medium text-white" style={{ backgroundColor: ARDUINO_TEAL }}>ACEPTAR</button>
             </div>
           </div>
         </div>
       )}
 
       {/* Estructura Principal del IDE */}
-      <div className="relative w-full h-[80vh] flex flex-col bg-[#141529] rounded-lg overflow-hidden shadow-2xl border border-slate-800">
+      <div ref={ideRootRef} className="relative w-full h-full min-h-0 flex flex-col bg-[#141529] overflow-hidden">
         
         {/* Barra de Herramientas Superior */}
-        <div className="flex items-center justify-between px-4 py-2 bg-[#1c1e26] border-b border-slate-800">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800" style={{ backgroundColor: IDE_PANEL_DARK }}>
           <div className="flex items-center gap-3">
-            <button title="Verificar" onClick={() => runTask('Compilando', 'verify')} disabled={isCompiling} className="w-8 h-8 rounded-full bg-[#00878f] flex items-center justify-center text-[#1c1e26] hover:bg-[#00a3ad] transition-all disabled:opacity-50"><Check size={16} strokeWidth={3} /></button>
-            <button title="Subir" onClick={() => runTask('Subiendo', 'upload')} disabled={isCompiling} className="w-8 h-8 rounded-full bg-[#00878f] flex items-center justify-center text-[#1c1e26] hover:bg-[#00a3ad] transition-all disabled:opacity-50"><ArrowRight size={16} strokeWidth={3} /></button>
+            <button title="Verificar" onClick={() => runTask('Compilando', 'verify')} disabled={isCompiling} className="w-8 h-8 rounded-full flex items-center justify-center text-[#1c1e26] disabled:opacity-50" style={{ backgroundColor: ARDUINO_TEAL, boxShadow: 'none', transform: 'none', border: 'none', outline: 'none', appearance: 'none', WebkitAppearance: 'none' }}><Check size={16} strokeWidth={3} /></button>
+            <button title="Subir" onClick={() => runTask('Subiendo', 'upload')} disabled={isCompiling} className="w-8 h-8 rounded-full flex items-center justify-center text-[#1c1e26] disabled:opacity-50" style={{ backgroundColor: ARDUINO_TEAL, boxShadow: 'none', transform: 'none', border: 'none', outline: 'none', appearance: 'none', WebkitAppearance: 'none' }}><ArrowRight size={16} strokeWidth={3} /></button>
             
             <div className="relative ml-2" ref={mainMenuRef}>
-              <div onClick={() => setIsMainMenuOpen(!isMainMenuOpen)} className={`flex items-center gap-3 px-3 py-1.5 bg-[#1c1e26] border rounded-md text-[13px] cursor-pointer hover:bg-white/5 transition-all min-w-[220px] ${!selectedBoard ? 'border-amber-500/40' : 'border-slate-700'}`}>
-                <Cable size={16} className={selectedBoard ? "text-cyan-400" : "text-amber-500"} />
-                <span className={`font-medium flex-1 text-left tracking-tight ${selectedBoard ? 'text-slate-100' : 'text-amber-500'}`}>{selectedBoard || "Seleccionar placa"}</span>
+              <div onClick={() => setIsMainMenuOpen(!isMainMenuOpen)} className={`flex items-center gap-3 px-3 py-1.5 border rounded-md text-[13px] cursor-pointer min-w-[220px] ${!selectedBoard ? 'border-amber-500/40' : 'border-slate-700'}`} style={{ backgroundColor: IDE_PANEL_DARK, borderColor: !selectedBoard ? 'rgba(0, 151, 157, 0.45)' : undefined }}>
+                <Usb size={16} style={selectedBoard ? { color: ARDUINO_TEAL_LIGHT } : { color: ARDUINO_TEAL }} />
+                <span className={`font-medium flex-1 text-left tracking-tight ${selectedBoard ? 'text-slate-100' : ''}`} style={!selectedBoard ? { color: ARDUINO_TEAL } : undefined}>{selectedBoard || "Seleccionar placa"}</span>
                 <ChevronDown size={14} className="text-slate-500" />
               </div>
               {isMainMenuOpen && (
@@ -376,9 +455,9 @@ void loop() {
                   <div className="py-1">
                     <div onClick={() => { setSelectedBoard("Arduino Uno"); setSelectedPort("COM3"); setIsMainMenuOpen(false); }} className="flex items-center justify-between px-4 py-3 hover:bg-[#2c313a] cursor-pointer group border-b border-white/5">
                       <div className="flex items-center gap-3">
-                        <Cable size={18} className="text-slate-400 group-hover:text-cyan-400" />
+                        <Usb size={18} className="text-slate-400 group-hover:text-cyan-400" />
                         <div className="flex flex-col">
-                          <span className={`text-[13px] ${selectedBoard === "Arduino Uno" ? 'text-cyan-400 font-bold' : 'text-slate-100'}`}>Arduino Uno</span>
+                          <span className={`text-[13px] ${selectedBoard === "Arduino Uno" ? 'font-bold' : 'text-slate-100'}`} style={selectedBoard === "Arduino Uno" ? { color: ARDUINO_TEAL_LIGHT } : undefined}>Arduino Uno</span>
                           <span className="text-[11px] text-slate-400 font-mono">{selectedBoard === "Arduino Uno" ? selectedPort : 'COM3'}</span>
                         </div>
                       </div>
@@ -390,19 +469,26 @@ void loop() {
               )}
             </div>
           </div>
-          <button title="Monitor Serie" onClick={() => { setShowMonitorTab(true); setActiveTab('monitor'); }} className={`p-2 rounded-full transition-colors ${showMonitorTab ? 'text-cyan-400 bg-white/5' : 'text-slate-500 hover:bg-white/5'}`}><Search size={18} /></button>
+          <button
+            title="Monitor Serie"
+            onClick={() => { setShowMonitorTab(true); setActiveTab('monitor'); }}
+            className="flex items-center justify-center text-slate-400"
+            style={{ background: 'transparent', border: 'none', padding: 0, boxShadow: 'none' }}
+          >
+            <Search size={20} style={showMonitorTab ? { color: ARDUINO_TEAL_LIGHT } : undefined} />
+          </button>
         </div>
 
         {/* Área del Editor */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* Números de línea */}
-          <div ref={gutterRef} className="w-12 bg-[#141529] border-r border-slate-800 py-4 text-slate-600 font-mono text-[11px] leading-[1.5rem] overflow-hidden text-center no-scrollbar">
+          <div ref={gutterRef} className="w-12 border-r border-slate-800 py-4 text-slate-600 font-mono text-[11px] leading-[1.5rem] overflow-hidden text-center no-scrollbar" style={{ backgroundColor: IDE_PANEL_DARK }}>
             {textCode.split('\n').map((_, i) => (
               <div key={i} className={`${i === (cursorPos.line - 1) ? 'text-slate-300 bg-white/5' : ''} ${errorHighlight === i ? 'text-red-400 font-bold' : ''}`}>{i + 1}</div>
             ))}
           </div>
           {/* Editor de Código */}
-          <div className="flex-1 relative overflow-hidden bg-[#141529]">
+          <div className="flex-1 min-h-0 relative overflow-hidden bg-[#141529]">
             <textarea
               ref={textareaRef}
               value={textCode}
@@ -418,21 +504,38 @@ void loop() {
         </div>
 
         {/* Panel Inferior (Salida y Monitor) */}
-        <div className="h-56 bg-[#1c1e26] border-t border-slate-800 flex flex-col z-40 relative">
-          <div className="flex bg-[#141529] border-b border-slate-800 justify-between items-center pr-2">
+        <div className="shrink-0 border-t border-slate-800 flex flex-col z-40 relative" style={{ height: `${bottomPanelHeight}px`, backgroundColor: IDE_CONSOLE_BLACK }}>
+          <button
+            type="button"
+            aria-label="Redimensionar consola"
+            onMouseDown={() => setIsResizingBottomPanel(true)}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '10px', transform: 'translateY(-50%)', cursor: 'row-resize', background: 'transparent', border: 'none', zIndex: 45 }}
+          >
+            <span style={{ display: 'block', width: '60px', height: '2px', margin: '3px auto 0', borderRadius: '999px', backgroundColor: 'rgba(148, 163, 184, 0.45)' }} />
+          </button>
+          <div className="flex border-b border-slate-800 justify-between items-center pr-2" style={{ backgroundColor: IDE_PANEL_DARK }}>
             <div className="flex">
-              <button onClick={() => setActiveTab('salida')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === 'salida' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-white/5' : 'text-slate-500 hover:text-slate-300'}`}>Salida</button>
+              <button onClick={() => setActiveTab('salida')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider ${activeTab === 'salida' ? '' : 'text-slate-500 hover:text-slate-300'}`} style={{ color: activeTab === 'salida' ? ARDUINO_TEAL_LIGHT : undefined, background: 'transparent', border: 'none', boxShadow: activeTab === 'salida' ? `inset 0 2px 0 0 ${ARDUINO_TEAL_LIGHT}` : 'none' }}>Salida</button>
               {showMonitorTab && (
-                <button onClick={() => setActiveTab('monitor')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${activeTab === 'monitor' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-white/5' : 'text-slate-500 hover:text-slate-300'}`}>
+                <button onClick={() => setActiveTab('monitor')} className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 ${activeTab === 'monitor' ? '' : 'text-slate-500 hover:text-slate-300'}`} style={{ color: activeTab === 'monitor' ? ARDUINO_TEAL_LIGHT : undefined, background: 'transparent', border: 'none', boxShadow: activeTab === 'monitor' ? `inset 0 2px 0 0 ${ARDUINO_TEAL_LIGHT}` : 'none' }}>
                   Monitor Serial
                   <X size={12} className="hover:text-red-400" onClick={(e) => { e.stopPropagation(); setShowMonitorTab(false); setActiveTab('salida'); }}/>
                 </button>
               )}
             </div>
-            {activeTab === 'monitor' && <button onClick={() => setSerialMessages([])} className="p-1 text-slate-500 hover:text-slate-300 transition-colors" title="Limpiar"><Trash2 size={14} /></button>}
+            {activeTab === 'monitor' && (
+              <button
+                onClick={() => setSerialMessages([])}
+                className="p-1 text-slate-500 hover:text-slate-300 transition-colors"
+                title="Limpiar"
+                style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
           </div>
           
-          <div className="flex-1 overflow-auto p-4 font-mono text-[12px] custom-scrollbar bg-[#1c1e26]">
+          <div className="flex-1 overflow-auto p-4 font-mono text-[12px] custom-scrollbar" style={{ backgroundColor: IDE_CONSOLE_BLACK }}>
             {activeTab === 'salida' ? (
               <div className="space-y-0.5">
                 {compilationLogs.map((log, i) => (
@@ -440,7 +543,7 @@ void loop() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-1 text-emerald-400">
+              <div className="space-y-1" style={{ color: ARDUINO_TEAL_LIGHT }}>
                 {serialMessages.length === 0 ? <div className="text-slate-600 italic">Esperando datos en puerto serie...</div> : 
                   serialMessages.map((m, i) => (
                     <div key={i} className="flex gap-3">
@@ -461,21 +564,21 @@ void loop() {
             <div className="px-4 py-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
-                  {progressToast.status === 'busy' && <Loader2 size={16} className="animate-spin text-cyan-400" />}
+                  {progressToast.status === 'busy' && <Loader2 size={16} className="animate-spin" style={{ color: ARDUINO_TEAL_LIGHT }} />}
                   {progressToast.status === 'success' && <Check size={16} className="text-emerald-400" />}
                   {progressToast.status === 'error' && <X size={16} className="text-red-400" />}
                   <span className="text-[12px] font-bold text-slate-100 uppercase tracking-tight">{progressToast.label}</span>
                 </div>
               </div>
               <div className="h-1.5 w-full bg-[#141529] rounded-full overflow-hidden">
-                <div className={`h-full transition-all duration-300 ${progressToast.status === 'error' ? 'bg-red-500' : 'bg-cyan-500'}`} style={{ width: `${progressToast.percent}%` }} />
+                <div className={`h-full transition-all duration-300 ${progressToast.status === 'error' ? 'bg-red-500' : ''}`} style={{ width: `${progressToast.percent}%`, backgroundColor: progressToast.status === 'error' ? undefined : ARDUINO_TEAL }} />
               </div>
             </div>
           </div>
         )}
 
         {/* Barra de Estado Inferior */}
-        <div className="px-3 py-1 bg-[#0d0d1f] text-[11px] text-slate-500 flex justify-between border-t border-slate-800 font-medium z-50 items-center">
+        <div className="px-3 py-1 text-[11px] text-slate-500 flex justify-between border-t border-slate-800 font-medium z-50 items-center" style={{ backgroundColor: IDE_PANEL_DARK }}>
           <div className="flex items-center gap-6">
              <div className="flex items-center gap-1.5 uppercase tracking-wider"><span className="text-slate-400">Lín {cursorPos.line}, Col {cursorPos.col}</span></div>
              <div className="h-3 w-[1px] bg-slate-800"></div>
@@ -483,7 +586,7 @@ void loop() {
           </div>
           <div className="flex items-center gap-3 text-right">
             {selectedBoard ? (
-              <div className="flex items-center gap-1.5 text-emerald-400 font-bold uppercase tracking-widest bg-emerald-400/5 px-2 py-0.5 rounded border border-emerald-400/20">
+              <div className="flex items-center gap-1.5 font-bold uppercase tracking-widest px-2 py-0.5 rounded" style={{ color: ARDUINO_TEAL_LIGHT, backgroundColor: 'rgba(0, 151, 157, 0.08)', border: '1px solid rgba(0, 151, 157, 0.22)' }}>
                 <Zap size={10} fill="currentColor" />
                 <span>Conectado: {selectedBoard} en {selectedPort}</span>
               </div>

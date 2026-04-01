@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, BookOpen, X, PenLine, User, ChevronDown, LogOut, Bell, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
+import { useGadgets } from '../../context/useGadgets';
 
 const Sidebar = ({ isOpen, closeSidebar }) => {
     const { user, signOut } = useAuth();
+    const { openLauncher } = useGadgets();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
     
@@ -37,7 +39,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                { name: 'Gadgets', path: '/dashboard/gadgets', icon: <Wrench size={18} /> }
+                { name: 'Mis APPs', action: openLauncher, icon: <Wrench size={18} /> }
             ]
         },
         {

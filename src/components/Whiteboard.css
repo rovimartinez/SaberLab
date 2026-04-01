@@ -2,13 +2,13 @@
     position: fixed;
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: 1rem;
+    gap: 1rem;
     background: var(--bg-primary);
     z-index: 9999999;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     border-radius: 16px;
-    width: 800px;
+    width: 860px;
     height: 600px;
     min-width: 400px;
     min-height: 300px;
@@ -34,27 +34,73 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.6rem;
     user-select: none;
+    position: relative;
+}
+
+.whiteboard-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 0.35rem;
+}
+
+.whiteboard-title-icon {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.whiteboard-title-icon-layer {
+    position: absolute;
+    inset: 0;
+}
+
+.whiteboard-title-icon-layer.base {
+    color: #ffffff;
+    opacity: 0.95;
+}
+
+.whiteboard-title-icon-layer.pink {
+    color: #ec4899;
+    transform: translate(-0.4px, -0.4px);
+    opacity: 0.35;
+}
+
+.whiteboard-title-icon-layer.blue {
+    color: #60a5fa;
+    transform: translate(0.4px, 0.4px);
+    opacity: 0.3;
+}
+
+.whiteboard-title {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.1;
+    font-weight: 800;
 }
 
 .toolbar {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     background: rgba(0, 0, 0, 0.2);
-    padding: 1rem;
+    padding: 0.65rem 0.45rem;
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    width: fit-content;
+    width: 56px;
     z-index: 100;
 }
 
 .tool-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
     width: 100%;
     position: relative;
 }
@@ -86,9 +132,9 @@
 
 .tool-btn {
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     color: var(--text-secondary);
-    padding: 8px;
+    padding: 6px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
@@ -103,9 +149,23 @@
 }
 
 .tool-btn.active {
-    background: var(--gradient-primary);
+    background: rgba(96, 165, 250, 0.14);
+    border: 1px solid rgba(96, 165, 250, 0.28);
     color: white;
-    box-shadow: 0 2px 10px rgba(168, 85, 247, 0.3);
+    box-shadow: none;
+}
+
+.tool-btn.disabled {
+    opacity: 0.42;
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.05);
+    color: rgba(148, 163, 184, 0.55);
+    cursor: not-allowed;
+}
+
+.tool-btn.disabled:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(148, 163, 184, 0.55);
 }
 
 .tool-btn.danger:hover {
@@ -168,6 +228,8 @@
     touch-action: none;
     width: 100%;
     height: 100%;
+    position: relative;
+    z-index: 2;
 }
 
 .custom-brush-cursor {
@@ -211,8 +273,9 @@
     display: flex;
     flex-direction: row;
     flex: 1;
-    gap: 1.5rem;
+    gap: 0.9rem;
     min-height: 0;
+    position: relative;
 }
 
 .whiteboard-container.invisible-mode {
@@ -234,6 +297,40 @@
     background: transparent !important;
     box-shadow: none !important;
     border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+}
+
+.whiteboard-container.invisible-mode .content-row {
+    gap: 0;
+}
+
+.whiteboard-container.invisible-mode .toolbar {
+    position: absolute;
+    left: 50%;
+    top: -3.9rem;
+    transform: translate(-50%, 0);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    z-index: 120;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    border-color: rgba(255, 255, 255, 0.08);
+    padding: 0.45rem 0.55rem;
+}
+
+.whiteboard-container.invisible-mode .tool-group {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    flex: 0 0 auto;
+}
+
+.whiteboard-container.invisible-mode .tool-separator {
+    width: 1px;
+    height: 22px;
+    margin: 0;
 }
 
 /* Modal Styles */
