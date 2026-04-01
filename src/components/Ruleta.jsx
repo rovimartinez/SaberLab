@@ -3,7 +3,6 @@ import { Settings, X, History, Volume2, VolumeX } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const PALETTE = ['#FF3D00','#FFD600','#00E676','#00B0FF','#651FFF','#F50057','#FF9100','#00E5FF'];
-const SPIN_MS = 7000;
 
 const enrolledGroups = [
   { id:'6a',  name:'Grado 6A - Robótica',    students:['Ana','Beto','Carla','David','Elena','Fernando','Gaby','Hugo'] },
@@ -23,8 +22,10 @@ export default function Ruleta() {
   const [histOpen,    setHistOpen]    = useState(false);
   const [history,     setHistory]     = useState([]);
   const [soundOn,     setSoundOn]     = useState(true);
-  const [autoRemove,  setAutoRemove]  = useState(false);
+  const [autoRemove,  setAutoRemove]  = useState(true);
   const [tab,         setTab]         = useState('groups');
+  const [zoom,        setZoom]        = useState(1);
+  const [spinTime,    setSpinTime]    = useState(7);
 
   const canvasRef = useRef(null);
   const audioRef  = useRef(null);
@@ -91,30 +92,51 @@ export default function Ruleta() {
     if (isSpinning || names.length < 2) return;
     initAudio(); beep(600, 0.08);
     setIsSpinning(true); setShowModal(false);
-    const extra      = 2160 + Math.random() * 1440 + Math.random() * 360;
+    
+    // Increment base rotations so the extreme ease-out doesn't make it stop too fast
+    const extra      = 3600 + Math.random() * 1440 + Math.random() * 360;
     const finalAngle = angleDeg + extra;
     setAngleDeg(finalAngle);
-    const tick = setInterval(() => beep(460 + Math.random()*180, 0.04), 130);
+    
+    const targetSpinMs = spinTime * 1000;
+    
+    // Audio ticks that organically slow down alongside the extreme ease-out curve
+    const start = Date.now();
+    let tickTimeout;
+    const playTick = () => {
+      const elapsed = Date.now() - start;
+      if (elapsed >= targetSpinMs) return;
+      beep(460 + Math.random() * 180, 0.04);
+      const progress = elapsed / targetSpinMs;
+      const delay = 50 + Math.pow(progress, 3) * 700;
+      tickTimeout = setTimeout(playTick, Math.max(delay, 50));
+    };
+    playTick();
+
     setTimeout(() => {
-      clearInterval(tick);
+      clearTimeout(tickTimeout);
       setIsSpinning(false);
+      
       const w = calcWinner(finalAngle, names);
       setWinner(w);
       setHistory(prev => [w, ...prev]);
-      beep(880, 0.35);
+      
+      // Delay de 1 segundo (1000ms) de suspenso antes del pop-up del ganador
+      setTimeout(() => {
+        beep(880, 0.4);
+        confetti({
+            particleCount: 150, spread: 80, origin: { y: 0.6 },
+            colors: ['#4f46e5', '#ec4899', '#facc15', '#ffffff'],
+            zIndex: 9999
+        });
 
-      confetti({
-          particleCount: 150, spread: 80, origin: { y: 0.6 },
-          colors: ['#4f46e5', '#ec4899', '#facc15', '#ffffff'],
-          zIndex: 9999
-      });
+        if (autoRemove) {
+          setNames(prev => prev.filter(n => n !== w));
+        }
+        setShowModal(true);
+      }, 1000);
 
-      if (autoRemove) setNames(prev => {
-        const i = prev.indexOf(w);
-        return i === -1 ? prev : [...prev.slice(0,i), ...prev.slice(i+1)];
-      });
-      setShowModal(true);
-    }, SPIN_MS);
+    }, targetSpinMs);
   };
 
   const loadGroup = (students) => {
@@ -162,7 +184,7 @@ export default function Ruleta() {
         </div>
 
         {/* Wheel */}
-        <div style={{position:'relative',zIndex:10,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{position:'relative',zIndex:10,display:'flex',alignItems:'center',justifyContent:'center',transform:`scale(${zoom})`,transition:'transform 0.3s cubic-bezier(0.2,0,0,1)'}}>
           {/* Pointer */}
           <div style={{position:'absolute',right:-6,top:'50%',transform:'translateY(-50%)',zIndex:60,pointerEvents:'none',display:'flex',alignItems:'center'}}>
             <div style={{width:0,height:0,borderTop:'13px solid transparent',borderBottom:'13px solid transparent',borderRight:'24px solid white',filter:'drop-shadow(0 2px 4px rgba(0,0,0,.6))'}}/>
@@ -178,7 +200,7 @@ export default function Ruleta() {
                 style={{
                   width:'100%',height:'100%',borderRadius:'50%',display:'block',
                   transform:`rotate(${angleDeg}deg)`,
-                  transition: isSpinning ? `transform ${SPIN_MS}ms cubic-bezier(0.05,0,0.15,1)` : 'none',
+                  transition: isSpinning ? `transform ${spinTime * 1000}ms cubic-bezier(0.15,0,0,1)` : 'none',
                 }}
               />
               <button
@@ -204,22 +226,61 @@ export default function Ruleta() {
           </div>
         </div>
 
-        {/* Corner icons */}
+        {/* Top-Left: History */}
         <div style={{position:'absolute',left:20,top:20,display:'flex',flexDirection:'column',gap:10,zIndex:200}}>
           <IconBtn onClick={() => { setHistOpen(v=>!v); setPanelOpen(false); }} badge={history.length||null}>
             <History size={20}/>
           </IconBtn>
-          <IconBtn onClick={() => { initAudio(); setSoundOn(v=>!v); }}>
+        </div>
+
+        {/* Top-Right: Settings */}
+        <div style={{position:'absolute',right:20,top:20,zIndex:200}}>
+          <IconBtn onClick={() => { setPanelOpen(v=>!v); setHistOpen(false); }}>
+            <Settings size={20}/>
+          </IconBtn>
+        </div>
+
+        {/* Bottom-Left: Zoom controls */}
+        <div style={{position:'absolute',left:20,bottom:20,display:'flex',flexDirection:'column',gap:10,zIndex:200}}>
+          <IconBtn onClick={() => setZoom(z => Math.min(z + 0.15, 2.5))} title="Agrandar ruleta">
+            <span style={{fontSize:24, fontWeight:900, marginTop: -2}}>+</span>
+          </IconBtn>
+          <IconBtn onClick={() => setZoom(z => Math.max(z - 0.15, 0.4))} title="Reducir ruleta">
+            <span style={{fontSize:24, fontWeight:900, marginTop: -4}}>−</span>
+          </IconBtn>
+        </div>
+
+        {/* Bottom-Right: Audio, AutoElim, Multiplier */}
+        <div style={{position:'absolute',right:20,bottom:20,display:'flex',flexDirection:'column',gap:10,zIndex:200}}>
+          <IconBtn onClick={() => setSpinTime(v => v >= 10 ? 1 : v + 1)} title="Ajustar tiempo de giro">
+            <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', lineHeight:1}}>
+              <span style={{fontSize:14, fontWeight:900}}>{spinTime}s</span>
+              <span style={{fontSize:7, fontWeight:900, opacity:0.8, marginTop:2, letterSpacing:'0.05em'}}>GIRO</span>
+            </div>
+          </IconBtn>
+          <IconBtn onClick={() => { initAudio(); setSoundOn(v=>!v); }} title="Activar/Desactivar Sonido">
             {soundOn ? <Volume2 size={20}/> : <VolumeX size={20}/>}
           </IconBtn>
           <IconBtn onClick={() => setAutoRemove(v=>!v)} active={autoRemove} title="Auto-eliminar ganador">
             <span style={{fontSize:9,fontWeight:900,textAlign:'center',lineHeight:1.3,textTransform:'uppercase',marginTop:-2}}>AUTO{'\n'}ELIM</span>
           </IconBtn>
-        </div>
-
-        <div style={{position:'absolute',right:20,top:20,zIndex:200}}>
-          <IconBtn onClick={() => { setPanelOpen(v=>!v); setHistOpen(false); }}>
-            <Settings size={20}/>
+          <IconBtn 
+            onClick={() => { 
+              if (!isSpinning && names.length < 200) {
+                const unique = Array.from(new Set(names));
+                setNames(prev => [...prev, ...unique]);
+              }
+            }} 
+            title="Añadir porciones multiplicadoras a la ruleta"
+          >
+            <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', lineHeight:1}}>
+              <span style={{fontSize:14, fontWeight:900, color:'#818cf8', fontStyle:'italic'}}>
+                x{Math.floor(names.length / (new Set(names).size || 1))}
+              </span>
+              <span style={{fontSize:7, fontWeight:900, opacity:0.8, marginTop:2, letterSpacing:'0.05em'}}>
+                {new Set(names).size} ALUM
+              </span>
+            </div>
           </IconBtn>
         </div>
 
