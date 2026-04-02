@@ -278,12 +278,13 @@
 .page-content {
     flex: 1;
     overflow-y: visible;
-    overflow-x: visible;
+    overflow-x: hidden;
     border-radius: 20px;
     padding-right: 0.5rem;
     position: relative;
     z-index: 1;
     min-height: 0;
+    width: 100%;
 }
 
 /* Custom Scrollbar for Page Content */

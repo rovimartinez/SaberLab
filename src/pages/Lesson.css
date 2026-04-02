@@ -1,8 +1,9 @@
 .lesson-view-container {
     padding: 0 1rem 4rem 1rem;
-    max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
     animation: fadeIn 0.5s ease-out;
+    box-sizing: border-box;
 }
 
 /* Header Premium */
@@ -87,8 +88,7 @@
     margin-bottom: 1.25rem;
     display: flex;
     gap: 0.35rem;
-    position: sticky;
-    top: 1rem;
+    position: static;
     z-index: 100;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
@@ -131,18 +131,40 @@
 
 /* Content Area */
 .lesson-content-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 1.25rem;
-    min-height: 400px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    min-height: auto;
 }
 
-.content-body {
-    max-width: 1100px;
-    margin: 0 auto;
-    font-size: 1.1rem;
-    line-height: 1.8;
+.content-body,
+.lesson-content-container,
+.theory-section-main {
+    font-size: clamp(0.85rem, 1.5vw, 1rem) !important;
+    line-height: 1.6;
+}
+
+.lesson-content-container p,
+.theory-section-main p,
+.lesson-content-container li,
+.theory-section-main li {
+    font-size: inherit !important;
+}
+
+.lesson-content-container h3,
+.theory-section-main h3 {
+    font-size: clamp(1.1rem, 2vw, 1.4rem) !important;
+}
+
+.lesson-content-container h4,
+.theory-section-main h4 {
+    font-size: clamp(1rem, 1.8vw, 1.2rem) !important;
+}
+
+.lesson-content-container small,
+.theory-section-main small {
+    font-size: clamp(0.7rem, 1.2vw, 0.8rem) !important;
 }
 
 /* Navigation Footer */

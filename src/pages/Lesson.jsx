@@ -33,6 +33,7 @@ import './Lesson.css';
 import ChallengeRoadmap from '../components/ChallengeRoadmap';
 import CodeEditor from '../components/CodeEditor';
 import ArduinoSimulatorV2 from '../components/ArduinoSimulatorV2';
+import LedSimulator from '../components/LedSimulator';
 
 const subjectData = {
     1: { name: 'Electricidad y Electrónica Básica', color: '#f59e0b', icon: <Zap size={32} /> },
@@ -91,34 +92,6 @@ const lessonsData = {
                     </div>
                     <div style="background: rgba(249, 115, 22, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(249,115,22,0.2);">
                         <strong style="color: #f97316;">🖥️ Puerto USB</strong><br><small style="color: #94a3b8;">Conecta el Arduino a tu computadora para subir programas y monitorear datos en tiempo real.</small>
-                    </div>
-                </div>
-
-                <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.3 El LED y la Resistencia</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-                    <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
-                        <h4 style="color: #fbbf24; margin-bottom: 0.75rem;">💡 ¿Qué es un LED?</h4>
-                        <p style="line-height: 1.8; color: #cbd5e1; font-size: 0.95rem;">El LED (<em>Light Emitting Diode</em>) es un componente semiconductor que emite luz cuando la corriente eléctrica fluye a través de él. Tiene dos patas:</p>
-                        <ul style="margin-top: 0.75rem; padding-left: 1.2rem; color: #94a3b8; line-height: 1.8;">
-                            <li><strong style="color: #4ade80;">Ánodo (+):</strong> Pata más <strong>larga</strong> → conecta al pin del Arduino.</li>
-                            <li><strong style="color: #f87171;">Cátodo (−):</strong> Pata más <strong>corta</strong> → conecta a GND.</li>
-                        </ul>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
-                        <h4 style="color: #f97316; margin-bottom: 0.75rem;">🛡️ ¿Por qué la Resistencia?</h4>
-                        <p style="line-height: 1.8; color: #cbd5e1; font-size: 0.95rem;">Un LED sin resistencia se quema en segundos. La resistencia limita la corriente a un nivel seguro (~20mA). Para el LED estándar con Arduino usamos:</p>
-                        <div style="background: rgba(249,115,22,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 0.75rem; border-left: 3px solid #f97316; text-align: center;">
-                            <strong style="color: #fbbf24; font-size: 1.1rem;">220 Ω</strong><br>
-                            <small style="color: #94a3b8;">Código de colores: Rojo - Rojo - Marrón</small>
-                        </div>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: center;">
-                        <img src="https://i.postimg.cc/6qxRZ7Gt/LEDs.png" alt="Anatomía del LED" style="width: 100%; height: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
-                    </div>
-                    <div style="display: flex; justify-content: center;">
-                        <img src="https://i.postimg.cc/rm1svfKp/resistencia.png" alt="Guía de colores de resistencias" style="width: 100%; height: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
                     </div>
                 </div>
 
@@ -1406,7 +1379,33 @@ const Lesson = () => {
                         </div>
                     ) : activeTab === 'contenido' ? (
                         <div className="lesson-content-container">
-                            <div className="theory-section-main" dangerouslySetInnerHTML={{ __html: lesson.content }} />
+                            <div dangerouslySetInnerHTML={{ __html: lesson.content?.replace(/font-size:\s*[^;]+;?/g, '') }} />
+                            <h3 style={{color: '#a855f7', margin: '2rem 0 1rem'}}>1.3 El LED y la Resistencia</h3>
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem', alignItems: 'stretch'}}>
+                                <div style={{background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column'}}>
+                                    <h4 style={{color: '#fbbf24', marginBottom: '0.5rem'}}>💡 ¿Qué es un LED?</h4>
+                                    <p style={{lineHeight: 1.6, color: '#cbd5e1'}}>El LED emite luz. Tiene dos patas:</p>
+                                    <ul style={{marginTop: '0.5rem', paddingLeft: '1rem', color: '#94a3b8', lineHeight: 1.6, flex: 1}}>
+                                        <li><strong style={{color: '#4ade80'}}>Ánodo (+):</strong> Pata larga → al pin.</li>
+                                        <li><strong style={{color: '#f87171'}}>Cátodo (−):</strong> Pata corta → a GND.</li>
+                                    </ul>
+                                    <img src="https://i.postimg.cc/6qxRZ7Gt/LEDs.png" alt="Anatomía del LED" style={{width: '100%', marginTop: '0.75rem', height: 'auto', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)'}} />
+                                </div>
+                                <div style={{background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column'}}>
+                                    <h4 style={{color: '#f97316', marginBottom: '0.5rem'}}>🛡️ ¿Por qué la Resistencia?</h4>
+                                    <p style={{lineHeight: 1.6, color: '#cbd5e1'}}>Un LED sin resistencia se quema. Limita la corriente a ~20mA.</p>
+                                    <div style={{background: 'rgba(249,115,22,0.1)', padding: '0.5rem', borderRadius: '8px', marginTop: '0.5rem', borderLeft: '3px solid #f97316', textAlign: 'center'}}>
+                                        <strong style={{color: '#fbbf24'}}>220 Ω</strong><br />
+                                        <small style={{color: '#94a3b8'}}>Rojo - Rojo - Marrón</small>
+                                    </div>
+                                    <img src="https://i.postimg.cc/rm1svfKp/resistencia.png" alt="Guía de resistencias" style={{width: '100%', marginTop: '0.75rem', height: 'auto', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)'}} />
+                                </div>
+                                <div style={{background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column'}}>
+                                    <h4 style={{color: '#a855f7', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>🔌 Simulacro</h4>
+                                    <p style={{color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.75rem'}}>Interactúa con el LED</p>
+                                    <LedSimulator />
+                                </div>
+                            </div>
                             
                             {lesson.challenges && (
                                 <div className="challenges-tabs-section" style={{ marginTop: '3rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem' }}>
@@ -1508,7 +1507,7 @@ const Lesson = () => {
                                             <PlayCircle size={18} /> Simular
                                         </button>
 
-                                        <div dangerouslySetInnerHTML={{ __html: lesson.challenges[activeChallenge]?.content || '' }} />
+                                        <div dangerouslySetInnerHTML={{ __html: lesson.challenges[activeChallenge]?.content?.replace(/font-size:\s*[^;]+;?/g, '') || '' }} />
                                     </div>
 
                                     {showSimulator && (
