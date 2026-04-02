@@ -4,7 +4,7 @@ import { GraduationCap, Zap, Code, FlaskConical, Box, Bot, Brain, Play, BookOpen
 import './Courses.css';
 
 const ENROLLED_COURSES = [
-    { id: 5, name: 'Robótica Educativa', icon: <Bot size={28} />, color: '#a855f7', lessons: 16, progress: 0 }
+    { id: 5, abbr: 'RE', name: 'Robótica Educativa', icon: <Bot size={28} />, color: '#a855f7', lessons: 16, progress: 0 }
 ];
 
 const MyCourses = () => {
@@ -45,7 +45,7 @@ const MyCourses = () => {
                                 border: `1px solid ${course.color}40`,
                                 boxShadow: `0 4px 20px ${course.color}15`
                             }}
-                            onClick={() => navigate(`/dashboard/subject/${course.id}`)}
+                            onClick={() => navigate(`/dashboard/learn/${course.abbr}`)}
                         >
                             <div className="card-classic-main">
                                 <h3 className="card-classic-title">{course.name}</h3>

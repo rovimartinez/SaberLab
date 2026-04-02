@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen } from 'lucide-react';
+import { ArrowLeft, PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, Code, FlaskConical, Box, Brain } from 'lucide-react';
+import { getCourseByIdentifier } from '../data/coursesData.jsx';
 import './SubjectDetail.css';
 
 const subjectData = {
-    1: { name: 'Electricidad y Electrónica Básica', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: <Zap size={32} />, teacher: 'Ronny Martinez' },
-    5: { name: 'Robótica Educativa', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez' },
-    2: { name: 'Fundamentos de Programación', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez' },
-    3: { name: 'Mediaciones Tecnológicas en la Química', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez' },
-    4: { name: 'Modelado y Animación 3D', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez' },
-    6: { name: 'Tendencias y Desarrollo en Tecnología', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez' }
+    'EE': { name: 'Electricidad y Electrónica Básica', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: <Zap size={32} />, teacher: 'Ronny Martinez', abbr: 'EE' },
+    'RE': { name: 'Robótica Educativa', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez', abbr: 'RE' },
+    'FP': { name: 'Fundamentos de Programación', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: <Code size={32} />, teacher: 'Ronny Martinez', abbr: 'FP' },
+    'MQ': { name: 'Mediaciones Tecnológicas en la Química', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: <FlaskConical size={32} />, teacher: 'Ronny Martinez', abbr: 'MQ' },
+    'MA': { name: 'Modelado y Animación 3D', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)', icon: <Box size={32} />, teacher: 'Ronny Martinez', abbr: 'MA' },
+    'TD': { name: 'Tendencias y Desarrollo en Tecnología', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', icon: <Brain size={32} />, teacher: 'Ronny Martinez', abbr: 'TD' }
 };
 
 const agendaItems = [
@@ -30,16 +31,28 @@ const getIcon = (type, status) => {
 const SubjectDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const numericId = parseInt(id);
-    const subject = subjectData[numericId] || subjectData[1];
+    const realCourse = getCourseByIdentifier(id) || getCourseByIdentifier('RE');
+    const abbr = realCourse.abbr;
+    const subject = {
+        ...realCourse,
+        bg: `${realCourse.color}15`,
+        teacher: 'Ronny Martinez' // TODO: Get from course info
+    };
 
-    const modules = numericId === 5 ? [
+    // Redirigir automáticamente al slug descriptivo si se entra por la abreviatura
+    useEffect(() => {
+        if (id && realCourse && id !== realCourse.slug) {
+            navigate(`/dashboard/my-courses/${realCourse.slug}`, { replace: true });
+        }
+    }, [id, realCourse, navigate]);
+
+    const modules = abbr === 'RE' ? [
         { 
             id: 'm1', 
             name: 'Módulo 1: Fundamentos y Lógica Digital', 
             lessons: [
                 { id: 'l1', title: 'Mi primer parpadeo (Entorno y Salidas Digitales)', type: 'content', duration: '15 min', status: 'completed' },
-                { id: 'l2', title: 'Variables y Comentarios', type: 'content', duration: '20 min', status: 'current' },
+                { id: 'l2', title: 'Semáforos y Variables', type: 'content', duration: '20 min', status: 'current' },
                 { id: 'l3', title: 'El Robot decide (Condicionales y Botones)', type: 'content', duration: '25 min', status: 'locked' },
                 { id: 'l4', title: 'Monitor Serial y el Bucle while', type: 'content', duration: '18 min', status: 'locked' },
                 { id: 'l5', title: 'Entradas Analógicas y Resolución', type: 'quiz', duration: '20 min', status: 'locked' }
@@ -181,7 +194,7 @@ const SubjectDetail = () => {
                                                         <button 
                                                             className={`lesson-btn ${lesson.status === 'completed' ? 'revisit' : 'start'}`} 
                                                             style={lesson.status === 'current' ? { background: subject.color } : {}}
-                                                            onClick={() => navigate(`/dashboard/lesson/${numericId}/${module.id}/${lesson.id}`)}
+                                                            onClick={() => navigate(`/dashboard/my-courses/${subject.slug}/${module.id}/${lesson.id}`)}
                                                         >
                                                             {lesson.status === 'completed' ? 'Ver de nuevo' : 'Comenzar'}
                                                         </button>

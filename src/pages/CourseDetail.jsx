@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus } from 'lucide-react';
+import { getLessonInfo } from '../data/coursesData.jsx';
 import './CourseDetail.css';
 
 const CourseDetail = ({ courses, setCourses }) => {
@@ -269,7 +270,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                                         <div className="module-card-lessons">
                                             {module.lessons.map((lesson) => (
                                                 <div key={lesson.id} className={`lesson-item ${lesson.visible ? 'visible' : 'hidden'}`}>
-                                                    <span className="lesson-name">{lesson.name}</span>
+                                                    <span className="lesson-name">{getLessonInfo(lesson.id).title}</span>
                                                     <button 
                                                         className={`visibility-btn ${lesson.visible ? 'is-visible' : ''}`}
                                                         onClick={() => toggleLessonVisibility(module.id, lesson.id)}

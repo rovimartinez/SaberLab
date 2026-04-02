@@ -86,7 +86,7 @@ const LedSimulator = () => {
           ))}
         </div>
 
-        <svg viewBox="0 0 160 200" style={{ width: '100%', maxWidth: '120px', position: 'relative', zIndex: 10, marginLeft: '12px' }}>
+        <svg viewBox="0 0 160 200" style={{ width: '100%', maxWidth: '160px', position: 'relative', zIndex: 10, marginLeft: '12px' }}>
           <defs>
             <linearGradient id="ledGradNew" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={ledColor.dark} />

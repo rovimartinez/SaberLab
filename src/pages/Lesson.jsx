@@ -34,15 +34,7 @@ import ChallengeRoadmap from '../components/ChallengeRoadmap';
 import CodeEditor from '../components/CodeEditor';
 import ArduinoSimulatorV2 from '../components/ArduinoSimulatorV2';
 import LedSimulator from '../components/LedSimulator';
-
-const subjectData = {
-    1: { name: 'Electricidad y Electrónica Básica', color: '#f59e0b', icon: <Zap size={32} /> },
-    2: { name: 'Fundamentos de Programación', color: '#3b82f6', icon: <Code size={32} /> },
-    3: { name: 'Mediaciones Tecnológicas en la Química', color: '#10b981', icon: <FlaskConical size={32} /> },
-    4: { name: 'Modelado y Animación 3D', color: '#ec4899', icon: <Box size={32} /> },
-    5: { name: 'Robótica Educativa', color: '#a855f7', icon: <Bot size={32} />, teacher: 'Ronny Martinez' },
-    6: { name: 'Tendencias y Desarrollo en Tecnología', color: '#f97316', icon: <Brain size={32} /> }
-};
+import { getCourseByAbbr, getLessonContent, getLessonInfo, getFullLessonPath, getCourseByIdentifier } from '../data/coursesData.jsx';
 
 const tabs = [
     { id: 'contenido', label: 'Contenido', icon: <BookOpen size={18} /> },
@@ -50,410 +42,6 @@ const tabs = [
     { id: 'simulador', label: 'Práctica', icon: <Monitor size={18} /> },
     { id: 'prueba', label: 'Prueba', icon: <ClipboardList size={18} /> }
 ];
-
-const lessonsData = {
-    5: {
-        'm1-l1': {
-            title: 'Mi primer parpadeo (Entorno y Salidas Digitales)',
-            content: `
-                <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">1.1 Introducción al Hardware Abierto</h3>
-                <p style="margin-bottom: 1rem; line-height: 1.8;">El <strong>hardware abierto</strong> se refiere a dispositivos cuyas especificaciones de diseño son públicas, permitiendo que cualquiera los estudie, modifique y construya. Arduino es el ejemplo más popular y exitoso de este movimiento a nivel mundial.</p>
-                
-                <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.2 ¿Qué es Arduino?</h3>
-                <div style="display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: flex-start;">
-                    <div style="flex: 1; min-width: 280px;">
-                        <p style="margin-bottom: 1rem; line-height: 1.8;">Arduino es una <strong>plataforma de desarrollo</strong> basada en hardware y software libre. Consiste en una placa con un microcontrolador que puede ser programada para interactuar con el mundo físico mediante una gran variedad de sensores y actuadores.</p>
-                        <p style="margin-bottom: 1rem; line-height: 1.8;">Fue creado en 2005 en Italia para que estudiantes pudieran crear proyectos interactivos de manera sencilla y económica. Hoy es la plataforma de hardware más popular del mundo, con una comunidad global inmensa que comparte miles de proyectos creativos cada día.</p>
-                        <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 10px; border-left: 4px solid #10b981;">
-                            <strong style="color: #10b981;">💡 Dato:</strong> Arduino Uno es el modelo más popular y versátil para aprender. Funciona con un microcontrolador ATmega328P a 16 MHz.
-                        </div>
-                    </div>
-                    <div style="flex: 1; min-width: 260px; display: flex; justify-content: center;">
-                        <img src="https://i.postimg.cc/CxSNt25F/Arduino-Uno.png" alt="Arduino Uno" style="width: 100%; max-width: 420px; height: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
-                    </div>
-                </div>
-                
-                <h4 style="color: #a855f7; margin: 1.5rem 0 1rem;">Componentes Principales del Arduino Uno</h4>
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                    <div style="background: rgba(168, 85, 247, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(168,85,247,0.2);">
-                        <strong style="color: #a855f7;">🧠 CPU (ATmega328P)</strong><br><small style="color: #94a3b8;">El cerebro de la placa. Corre a 16 MHz y ejecuta tu programa línea por línea.</small>
-                    </div>
-                    <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2);">
-                        <strong style="color: #3b82f6;">💾 Memoria Flash (32 KB)</strong><br><small style="color: #94a3b8;">Donde se almacena tu sketch (programa). Es permanente: no se borra al desconectar.</small>
-                    </div>
-                    <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(16,185,129,0.2);">
-                        <strong style="color: #10b981;">📌 Pines Digitales (0–13)</strong><br><small style="color: #94a3b8;">14 pines que pueden leer o escribir señales de 0V (LOW) o 5V (HIGH).</small>
-                    </div>
-                    <div style="background: rgba(251, 191, 36, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(251,191,36,0.2);">
-                        <strong style="color: #fbbf24;">🔌 Pines Analógicos (A0–A5)</strong><br><small style="color: #94a3b8;">6 entradas que leen valores continuos entre 0 y 5V con resolución de 10 bits (0–1023).</small>
-                    </div>
-                    <div style="background: rgba(236, 72, 153, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
-                        <strong style="color: #ec4899;">🔋 Alimentación</strong><br><small style="color: #94a3b8;">Vía USB (5V) o Jack DC (7–12V). Los pines 5V y 3.3V pueden alimentar componentes externos.</small>
-                    </div>
-                    <div style="background: rgba(249, 115, 22, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(249,115,22,0.2);">
-                        <strong style="color: #f97316;">🖥️ Puerto USB</strong><br><small style="color: #94a3b8;">Conecta el Arduino a tu computadora para subir programas y monitorear datos en tiempo real.</small>
-                    </div>
-                </div>
-
-                <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.4 El Circuito</h3>
-                <div style="background: rgba(15, 23, 42, 0.8); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(168,85,247,0.2); margin-bottom: 2rem;">
-                    <p style="color: #cbd5e1; line-height: 1.8; margin-bottom: 1rem;">Para hacer parpadear un LED externo, conecta los componentes así:</p>
-                    <div style="display: flex; flex-direction: column; gap: 0.75rem; font-family: monospace; font-size: 0.9rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                            <span style="background: rgba(168,85,247,0.2); padding: 4px 12px; border-radius: 6px; color: #a855f7; font-weight: bold;">Pin 13</span>
-                            <span style="color: #4ade80;">────────────►</span>
-                            <span style="background: rgba(251,191,36,0.2); padding: 4px 12px; border-radius: 6px; color: #fbbf24; font-weight: bold;">Ánodo LED (+)</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-left: 2rem;">
-                            <span style="background: rgba(248,113,113,0.2); padding: 4px 12px; border-radius: 6px; color: #f87171; font-weight: bold;">Cátodo LED (−)</span>
-                            <span style="color: #4ade80;">──── 220Ω ────►</span>
-                            <span style="background: rgba(248,113,113,0.2); padding: 4px 12px; border-radius: 6px; color: #f87171; font-weight: bold;">GND</span>
-                        </div>
-                    </div>
-                    <div style="background: rgba(16,185,129,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #10b981;">
-                        <strong style="color: #10b981;">💡 Pro tip:</strong> El Arduino ya tiene un LED integrado conectado al <strong>Pin 13 (LED_BUILTIN)</strong> — ¡puedes probarlo sin conectar nada extra!
-                    </div>
-                </div>
-
-                <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.5 Estructura del Código Arduino</h3>
-                <p style="margin-bottom: 1rem; line-height: 1.8; color: #cbd5e1;">Todo programa de Arduino tiene exactamente <strong>dos funciones obligatorias</strong>:</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-                    <div style="background: rgba(59,130,246,0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(59,130,246,0.2);">
-                        <code style="color: #60a5fa; font-size: 1.05rem; font-weight: bold;">void setup()</code>
-                        <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.5rem; line-height: 1.6;">Se ejecuta <strong style="color: white;">una sola vez</strong> al arrancar. Aquí configuras los pines y la comunicación serial.</p>
-                    </div>
-                    <div style="background: rgba(168,85,247,0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(168,85,247,0.2);">
-                        <code style="color: #a855f7; font-size: 1.05rem; font-weight: bold;">void loop()</code>
-                        <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.5rem; line-height: 1.6;">Se repite <strong style="color: white;">infinitamente</strong> mientras el Arduino tenga energía. Aquí va la lógica principal.</p>
-                    </div>
-                </div>
-
-                <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">Código Base: Blink</h3>
-                <div style="display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; margin-bottom: 1.5rem;">
-                    <pre style="flex: 1; min-width: 280px; background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; margin: 0;"><code style="color: #60a5fa;">// Programa: Blink - Mi primer parpadeo
-// Hace parpadear el LED del pin 13 cada 1 segundo
-
-void setup() {
-  // Configuramos el pin 13 como SALIDA (OUTPUT)
-  pinMode(13, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(13, HIGH);  // Encender LED → 5V en el pin
-  delay(1000);              // Esperar 1 segundo (1000 ms)
-  digitalWrite(13, LOW);   // Apagar LED → 0V en el pin
-  delay(1000);              // Esperar 1 segundo
-  // El loop se repite ∞ → ¡el LED parpadea!
-}</code></pre>
-                    <div style="flex: 0 0 auto; display: flex; justify-content: center; align-items: center;">
-                        <ArduinoSimulator />
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 0;">
-                    <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                        <code style="color: #4ade80;">pinMode(pin, modo)</code>
-                        <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.5rem;">Define si el pin es entrada (INPUT) o salida (OUTPUT). Se usa siempre en setup().</p>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                        <code style="color: #60a5fa;">digitalWrite(pin, valor)</code>
-                        <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.5rem;">Escribe HIGH (5V) o LOW (0V) en un pin digital de salida.</p>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                        <code style="color: #fbbf24;">delay(milisegundos)</code>
-                        <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0.5rem;">Pausa la ejecución el tiempo indicado en ms. 1000ms = 1 segundo.</p>
-                    </div>
-                </div>
-            `,
-            flashcards: [
-                { id: 'f1', type: 'hw', q: '¿Cómo se llama la pata más larga de un LED?', a: 'Ánodo (+)', sub: 'Conexión al pin Positivo' },
-                { id: 'f2', type: 'hw', q: '¿Qué valor tiene la resistencia Rojo-Rojo-Marrón?', a: '220 Ω', sub: 'Protección LED estándar' },
-                { id: 'f3', type: 'code', q: '¿Qué función se ejecuta solo una vez?', a: 'void setup()', sub: 'Configuración inicial' },
-                { id: 'f4', type: 'code', q: '¿Qué función se repite infinitamente?', a: 'void loop()', sub: 'Lógica principal del programa' },
-                { id: 'f5', type: 'code', q: '¿Qué hace digitalWrite(13, HIGH)?', a: 'Enciende el LED', sub: 'Pone 5V en el pin 13' },
-                { id: 'f6', type: 'code', q: '¿Cuánto tiempo espera delay(500)?', a: '0.5 segundos', sub: '500 milisegundos = medio segundo' },
-                { id: 'f7', type: 'hw', q: '¿Qué pata del LED es la más corta?', a: 'Cátodo (−)', sub: 'Se conecta a GND' },
-                { id: 'f8', type: 'hw', q: '¿Cuántos pines digitales tiene el Arduino Uno?', a: '14 pines (0–13)', sub: 'Pueden ser INPUT u OUTPUT' },
-                { id: 'f9', type: 'code', q: '¿Qué hace pinMode(13, OUTPUT)?', a: 'Define el pin 13 como salida', sub: 'Necesario antes de usar digitalWrite' },
-                { id: 'f10', type: 'hw', q: '¿Qué voltaje suministra el pin 5V del Arduino?', a: '5 voltios', sub: 'Para alimentar componentes externos' },
-                { id: 'f11', type: 'code', q: '¿Qué valor representa HIGH en un pin digital?', a: '5 voltios (encendido)', sub: 'LOW representa 0 voltios (apagado)' },
-                { id: 'f12', type: 'hw', q: '¿Por qué se usa una resistencia con el LED?', a: 'Para limitar la corriente', sub: 'Evita que el LED se queme' },
-            ],
-            questions: [
-                {
-                    q: "¿Qué componente limita la corriente para que un LED no se queme?",
-                    options: ["Capacitor", "Resistencia", "Transistor", "Diodo"],
-                    correct: 1
-                },
-                {
-                    q: "¿En qué función de Arduino escribimos el código que se repite infinitamente?",
-                    options: ["setup()", "start()", "loop()", "main()"],
-                    correct: 2
-                },
-                {
-                    q: "¿Qué valor de resistencia se recomienda para proteger un LED con Arduino?",
-                    options: ["10 Ω", "1000 Ω", "220 Ω", "47 Ω"],
-                    correct: 2
-                },
-                {
-                    q: "¿Cuál es la pata más larga de un LED y cómo se llama?",
-                    options: ["La corta, Cátodo", "La larga, Ánodo", "La corta, Ánodo", "La larga, Cátodo"],
-                    correct: 1
-                },
-                {
-                    q: "¿Qué hace la instrucción delay(2000)?",
-                    options: ["Apaga el LED por 2ms", "Pausa el programa 2 segundos", "Repite el loop 2000 veces", "Reinicia el Arduino"],
-                    correct: 1
-                }
-            ]
-        },
-        'm1-l2': {
-            title: 'Variables y Comentarios',
-            content: `
-                <div class="lesson-intro">
-                    <p>En esta lección, daremos el siguiente paso en nuestra lógica de programación aprendiendo sobre <strong>Variables y Comentarios</strong>. Estos son las herramientas que hacen que tu código sea profesional, escalable y, sobre todo, comprensible para otros humanos.</p>
-                </div>
-
-                <div class="theory-section">
-                    <h3>1. El Poder de los Comentarios</h3>
-                    <p>Los comentarios son notas que el Arduino ignora totalmente. Sirven para explicar qué hace tu código y hacerlo profesional.</p>
-                    <div class="highlight-panel" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                        <p><strong>// Comentario de una línea:</strong> Usa doble barra para notas cortas.</p>
-                        <p><strong>/* Comentario multilínea */:</strong> Usa este formato para explicaciones largas o bloques enteros.</p>
-                    </div>
-                </div>
-
-                <div class="theory-section">
-                    <h3>2. ¿Qué es verdaderamente una Variable?</h3>
-                    <p>En el mundo real, si quieres guardar tus juguetes para que no se pierdan, usas una <strong>caja</strong> y le pones una <strong>etiqueta</strong> ("Mis Juguetes"). En programación, una <strong>variable</strong> es exactamente eso: una caja en la memoria de la placa Arduino donde podemos guardar información para usarla más adelante.</p>
-                    
-                    <p>Como las computadoras son muy estrictas, no puedes meter cualquier cosa en cualquier caja. Necesitas avisar qué forma tiene. Imagina que es como pedir "Solo peluches" o "Solo piezas de Lego". Por lo tanto, para crear esa caja de manera perfecta, necesitas 3 elementos clave:</p>
-                    
-                    <div class="highlight-panel" style="background: rgba(96, 165, 250, 0.1); border-left: 4px solid #3b82f6; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0;">
-                        <h4 style="color: #60a5fa; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
-                            La anatomía perfecta de una variable:
-                        </h4>
-                        <code style="font-size: 1.2rem; display: block; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">
-                            <span style="color: #a855f7;">int</span> <span style="color: #38bdf8;">tiempoEspera</span> = <span style="color: #fbbf24;">1000</span>;
-                        </code>
-                        <ul style="margin-top: 1rem; color: #cbd5e1; font-size: 0.95rem; line-height: 1.6;">
-                            <li><strong style="color: #a855f7;">El Tipo (int):</strong> Es la regla. Le dice al Arduino qué clase de información va a almacenar (en este caso, un número entero). Es como el "tamaño" o "forma" de tu caja en memoria.</li>
-                            <li><strong style="color: #38bdf8;">El Nombre (tiempoEspera):</strong> Es la etiqueta única de la caja. Como buenas prácticas, debe ser descriptivo (¡evita nombres como <code>a</code> o <code>x</code>!) e ir pegado con mayúscula la segunda palabra (a esto se llama <em>camelCase</em>).</li>
-                            <li><strong style="color: #fbbf24;">El Valor (1000):</strong> Es el contenido inicial, lo que pones adentro justo cuando la firmas.</li>
-                        </ul>
-                    </div>
-
-                    <p>¿Por qué no usar simplemente el número 1000 suelto por todos lados? Si luego tu jefe te dice que tiene que durar el doble, tendrías que buscar en cientos de líneas de código y cambiar cada "1000" manualmente (¡una pesadilla!). Con la variable, solo cambias el valor inicial una vez y, mágicamente, todas las veces que uses <code>tiempoEspera</code> se actualizará solo. Ese es el verdadero poder que te vuelve profesional.</p>
-                </div>
-
-                <div class="theory-section">
-                    <h3>3. El Catálogo de Tipos de Datos</h3>
-                    <p>Arduino necesita saber qué "tipo" de información vas a guardar para reservar el espacio correcto en memoria:</p>
-                    <div class="types-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                        <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <strong style="color: #a855f7;">int</strong> (Integer)
-                            <p style="font-size: 0.85rem; color: #94a3b8;">Números enteros (ej: 13, -5, 0). Es el más usado para pines.</p>
-                        </div>
-                        <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <strong style="color: #3b82f6;">float</strong> (Floating Point)
-                            <p style="font-size: 0.85rem; color: #94a3b8;">Números con decimales (ej: 3.14, 25.5). Útil para sensores.</p>
-                        </div>
-                        <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <strong style="color: #10b981;">bool</strong> (Boolean)
-                            <p style="font-size: 0.85rem; color: #94a3b8;">Solo dos valores: true (verdadero) o false (falso).</p>
-                        </div>
-                        <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <strong style="color: #f59e0b;">char</strong> (Character)
-                            <p style="font-size: 0.85rem; color: #94a3b8;">Un solo carácter (ej: 'A', 'z'). Se escriben con comilla simple.</p>
-                        </div>
-                        <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <strong style="color: #f97316;">long</strong> (Long Integer)
-                            <p style="font-size: 0.85rem; color: #94a3b8;">Igual que 'int' pero puede guardar números de hasta 2 mil billones. Imprescindible para el tiempo de ejecución (<code>millis()</code>).</p>
-                        </div>
-                        <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <strong style="color: #ec4899;">String</strong> (Text Buffer)
-                            <p style="font-size: 0.85rem; color: #94a3b8;">Permite guardar palabras completas y frases. Ideal para enviar mensajes a pantallas LCD o al monitor serial.</p>
-                        </div>
-                    </div>
-                </div>
-            `,
-            challenges: [
-                {
-                    title: 'Variables Básicas',
-                    content: `
-                        <h4>Reto: Parpadeo Configurable</h4>
-                        <p style="margin-bottom: 1rem;">Usa una variable para controlar el tiempo que el LED permanece encendido y apagado.</p>
-                        <pre style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;"><code style="color: #60a5fa;">// Definimos el pin y el tiempo
-int pinLed = 13;
-int pausa = 200; // ¡Cámbialo aquí fácilmente!
-
-void setup() {
-  pinMode(pinLed, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(pinLed, HIGH);
-  delay(pausa);
-  digitalWrite(pinLed, LOW);
-  delay(pausa);
-}</code></pre>
-                    `
-                },
-                {
-                    title: 'SOS de Emergencia',
-                    content: `
-                        <h4>Reto: Código Morse</h4>
-                        <p style="margin-bottom: 1rem;">Usa una variable para definir la unidad de tiempo básica y crea una señal de S.O.S.</p>
-                        <pre style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;"><code style="color: #60a5fa;">int led = 13;
-int punto = 200;
-int raya = 600;
-
-void setup() {
-  pinMode(led, OUTPUT);
-}
-
-void loop() {
-  // S (...)
-  digitalWrite(led, HIGH); delay(punto); digitalWrite(led, LOW); delay(punto);
-  digitalWrite(led, HIGH); delay(punto); digitalWrite(led, LOW); delay(punto);
-  digitalWrite(led, HIGH); delay(punto); digitalWrite(led, LOW); delay(punto);
-
-  delay(600); // Pausa entre letras
-
-  // O (---)
-  digitalWrite(led, HIGH); delay(raya); digitalWrite(led, LOW); delay(punto);
-  digitalWrite(led, HIGH); delay(raya); digitalWrite(led, LOW); delay(punto);
-  digitalWrite(led, HIGH); delay(raya); digitalWrite(led, LOW); delay(punto);
-
-  delay(600); // Pausa entre letras
-
-  // S (...)
-  digitalWrite(led, HIGH); delay(punto); digitalWrite(led, LOW); delay(punto);
-  digitalWrite(led, HIGH); delay(punto); digitalWrite(led, LOW); delay(punto);
-  digitalWrite(led, HIGH); delay(punto); digitalWrite(led, LOW); delay(punto);
-
-  delay(2000); // Pausa antes de repetir el mensaje
-}</code></pre>
-                    `
-                },
-                {
-                    title: 'Sirena Policial',
-                    content: `
-                        <h4>Reto: Patrulla en Emergencia</h4>
-                        <p style="margin-bottom: 1rem;">Usa variables para alternar dos luces a una velocidad de 300ms.</p>
-                        <pre style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;"><code style="color: #60a5fa;">int azul = 13;
-int rojo = 12;
-int espera = 300;
-
-void setup() {
-  pinMode(azul, OUTPUT);
-  pinMode(rojo, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(azul, HIGH); digitalWrite(rojo, LOW); delay(espera);
-  digitalWrite(azul, LOW); digitalWrite(rojo, HIGH); delay(espera);
-}</code></pre>
-                    `
-                },
-                {
-                    title: 'Secuenciador',
-                    content: `
-                        <div style="text-align: center; padding: 1rem;">
-                            <h4 style="color: #60a5fa; margin-bottom: 1.5rem;">🔥 Desafío: El Auto Fantástico</h4>
-                            <p style="margin-bottom: 1.5rem; color: #cbd5e1;">Crea un efecto de barrido horizontal usando 5 LEDs conectados de forma consecutiva.</p>
-                            
-                            <div style="background: rgba(168, 85, 247, 0.05); border: 1px dashed rgba(168, 85, 247, 0.2); padding: 1.5rem; border-radius: 20px; text-align: left; margin-bottom: 2rem;">
-                                <h5 style="color: #a855f7; margin-bottom: 1rem;">Misión de Ingeniería:</h5>
-                                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">
-                                    Programar un sistema que encienda un LED tras otro y luego regrese, creando un efecto de ida y vuelta.
-                                    <br><br>
-                                    <strong>Requisitos Técnicos:</strong>
-                                    <ul style="margin-top: 0.5rem; padding-left: 1.2rem; color: #cbd5e1;">
-                                        <li>Pines: <code>p1 = 12, p2 = 11, p3 = 10, p4 = 9, p5 = 8</code>.</li>
-                                        <li>Variable de tiempo: <code>int vel = 200;</code>.</li>
-                                        <li>Pista: ¡Debes encender uno y apagar el anterior!</li>
-                                    </ul>
-                                </p>
-                            </div>
-                            
-                            <a href="https://www.tinkercad.com/dashboard" target="_blank" style="background: #ef4444; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;">
-                                Abrir Tinkercad
-                            </a>
-                        </div>
-                    `
-                },
-                {
-                    title: 'Semáforo',
-                    content: `
-                        <div style="text-align: center; padding: 1rem;">
-                            <h4 style="color: #60a5fa; margin-bottom: 1.5rem;">🚨 Desafío Maestro: El Cruce Maestro</h4>
-                            <p style="margin-bottom: 1.5rem; color: #cbd5e1;">Crea un semáforo vehicular completo usando variables para cada color y tiempo.</p>
-                            
-                            <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 20px; text-align: left; margin-bottom: 2rem;">
-                                <h5 style="color: white; margin-bottom: 1rem;">Especificaciones del Sistema:</h5>
-                                <p style="font-size: 0.9rem; color: #94a3b8; line-height: 1.6;">
-                                    Debes programar la secuencia oficial de tráfico usando variables para optimizar tu código.
-                                    <br><br>
-                                    <strong>Plan de Trabajo:</strong>
-                                    <ul style="margin-top: 0.5rem; padding-left: 1.2rem; color: #cbd5e1;">
-                                        <li>Usa 3 variables <code>int</code> para los pines (12, 11, 10).</li>
-                                        <li>Usa variables <code>long</code> para los tiempos de espera largos.</li>
-                                        <li>Secuencia: Rojo -> Rojo+Amarillo -> Verde -> Amarillo.</li>
-                                    </ul>
-                                </p>
-                            </div>
-                            
-                            <a href="https://www.tinkercad.com/dashboard" target="_blank" style="background: #ef4444; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 800; display: inline-block;">
-                                Ir a Tinkercad
-                            </a>
-                        </div>
-                    `
-                }
-            ],
-            flashcards: [
-                { id: 'l2-f1', type: 'code', q: '¿Qué tipo de dato usarías para un contador de 0 a 100?', a: 'int', sub: 'Para números enteros' },
-                { id: 'l2-f2', type: 'code', q: '¿Qué tipo de dato usarías para el tiempo en milisegundos?', a: 'long', sub: 'Para valores de tiempo largos' },
-                { id: 'l2-f3', type: 'code', q: '¿Cuál es el valor inicial de "espera" en la Patrulla?', a: '300', sub: 'Pausa de 300ms entre luces' },
-                { id: 'l2-f4', type: 'code', q: '¿Cómo se llama el efecto del Reto 4?', a: 'Auto Fantástico', sub: 'Barrido secuencial de 5 LEDs' },
-                { id: 'l2-f5', type: 'code', q: '¿Qué variable controla la velocidad del barrido?', a: 'int vel = 200;', sub: 'Define la pausa en el secuenciador' },
-                { id: 'l2-f6', type: 'code', q: '¿Qué tipo de dato guarda una sola letra?', a: 'char', sub: 'Character' },
-                { id: 'l2-f7', type: 'code', q: '¿Es "2_led" un nombre de variable válido?', a: 'No', sub: 'No pueden empezar con números' },
-                { id: 'l2-f8', type: 'code', q: '¿Qué función configuramos en el setup?', a: 'pinMode()', sub: 'Define si es INPUT u OUTPUT' },
-                { id: 'l2-f9', type: 'code', q: '¿Para qué sirve el punto y coma (;)?', a: 'Terminar línea', sub: 'Indica el fin de una instrucción' },
-                { id: 'l2-f10', type: 'code', q: '¿Cómo comentas una sola línea de código?', a: '// Comentario', sub: 'Usa doble barra inclinada' },
-                { id: 'l2-f11', type: 'code', q: '¿Qué tipo de dato es 24.5?', a: 'float', sub: 'Para números con decimales' },
-                { id: 'l2-f12', type: 'code', q: '¿Cómo defines un pin como salida?', a: 'OUTPUT', sub: 'Modo de trabajo del pin' }
-            ],
-            questions: [
-                {
-                    q: "¿Qué tipo de dato elegirías para leer un sensor de humedad que da valores como 45.82%?",
-                    options: ["int", "char", "float", "bool"],
-                    correct: 2
-                },
-                {
-                    q: "Si declaras 'int pin = 13;', ¿cómo invocas ese pin en pinMode?",
-                    options: ["pinMode(13, OUTPUT)", "pinMode(pin, OUTPUT)", "Ambas son correctas", "No se puede usar variables en pinMode"],
-                    correct: 2
-                },
-                {
-                    q: "¿Qué tipo de dato ocupa menos memoria pero solo tiene dos estados?",
-                    options: ["long", "String", "bool", "float"],
-                    correct: 2
-                },
-                {
-                    q: "¿Qué sucede si intentas guardar '3.14' en una variable de tipo 'int'?",
-                    options: ["Da error de compilación", "Se guarda como 3 (se trunca)", "Se redondea a 4", "El Arduino explota"],
-                    correct: 1
-                },
-                {
-                    q: "¿Cuál es el beneficio principal de declarar los pines al inicio del código?",
-                    options: ["Hace que el Arduino vaya más rápido", "Facilita cambiar las conexiones físicas después", "Es obligatorio por ley", "No tiene beneficio"],
-                    correct: 1
-                }
-            ]
-        }
-    }
-};
 
 const ArduinoSimulator = () => {
     const [isOn, setIsOn] = useState(true);
@@ -886,30 +474,60 @@ const Lesson = () => {
     const { courseId, moduleId, lessonId } = useParams();
     const navigate = useNavigate();
     
-    const numericCourseId = parseInt(courseId);
-    const lessonKey = `${moduleId}-${lessonId}`;
-    const lesson = lessonsData[numericCourseId]?.[lessonKey] || {
-        title: 'Lección',
-        content: '<p>Contenido de la lección...</p>',
-        flashcards: [],
-        questions: []
-    };
-
+    const [lesson, setLesson] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('contenido');
+
+    const courseData = getCourseByIdentifier(courseId);
+
+    // Redirigir automáticamente al slug descriptivo si se entra por la abreviatura
+    useEffect(() => {
+        if (courseId && courseData && courseId !== courseData.slug) {
+            navigate(`/dashboard/my-courses/${courseData.slug}/${moduleId}/${lessonId}`, { replace: true });
+        }
+    }, [courseId, courseData, moduleId, lessonId, navigate]);
+
+    useEffect(() => {
+        const loadLesson = async () => {
+            setLoading(true);
+            console.log('Loading lesson registry lookup...');
+            try {
+                const registryCourseId = courseData ? courseData.abbr.toLowerCase() : courseId.toLowerCase();
+                const internalId = (lessonId && lessonId.includes('-')) ? lessonId : `${registryCourseId}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`;
+                const data = await getLessonContent(internalId);
+                console.log('Lesson data:', data);
+                setLesson(data);
+            } catch (e) {
+                console.error('Error loading lesson:', e);
+            }
+            setLoading(false);
+        };
+        loadLesson();
+    }, [courseId, courseData, moduleId, lessonId]);
+
+    const courseCode = courseData ? courseData.abbr.toLowerCase() : courseId.toLowerCase();
+    const internalId = (lessonId && lessonId.includes('-')) ? lessonId : `${courseCode}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`;
+    const lessonPath = getFullLessonPath(internalId);
+    const moduleInfo = (lessonPath && lessonPath.module) || { name: 'Módulo 1' };
+    const courseInfoMeta = (lessonPath && lessonPath.lesson) || { title: 'Lección' };
+    // If we can't find course info from registry (e.g. fallback for old links), default to RE
+    const subject = (lessonPath && lessonPath.course) || { name: 'Robótica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
+    const courseInfo = (lessonPath && lessonPath.lesson) || { title: 'Lección' };
+    
+    // Legacy support or generate a key
+    const lessonKey = internalId;
     const [scrollProgress, setScrollProgress] = useState(0);
-    const [showGuide, setShowGuide] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(30);
+    const timerRef = useRef(null);
     const [quizMode, setQuizMode] = useState('intro');
     const [currentQ, setCurrentQ] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(30);
     const [quizScore, setQuizScore] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [showGuide, setShowGuide] = useState(false);
     const [activeChallenge, setActiveChallenge] = useState(0);
     const [showSimulator, setShowSimulator] = useState(false);
-    const timerRef = useRef(null);
 
-    const quizQuestions = lesson.questions || [];
-    const subject = subjectData[numericCourseId] || subjectData[5];
-
+    const quizQuestions = lesson?.questions || [];
     const tabs = [
         { id: 'contenido', label: 'Contenido', icon: <FileText size={18} /> },
         { id: 'repaso', label: 'Repaso', icon: <PenTool size={18} /> },
@@ -1057,6 +675,29 @@ const Lesson = () => {
         );
     };
 
+    if (loading) {
+        return (
+            <div className="lesson-view-container animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                    <p>Cargando lección...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!lesson) {
+        return (
+            <div className="lesson-view-container animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>❌</div>
+                    <p>Lección no encontrada</p>
+                    <Link to="/dashboard" style={{ color: subject.color, marginTop: '1rem', display: 'inline-block' }}>Volver al inicio</Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="lesson-view-container animate-fade-in">
             <GuideModal />
@@ -1084,14 +725,14 @@ const Lesson = () => {
                         <div className="lesson-breadcrumb">
                             <span>{subject.name}</span>
                             <ChevronRight size={12} className="breadcrumb-sep" />
-                            <span>Módulo 1</span>
+                            <span>{moduleInfo.name}</span>
                             <ChevronRight size={12} className="breadcrumb-sep" />
-                            <span style={{ color: subject.color }}>Lección {lessonId.replace('l', '')}</span>
+                            <span style={{ color: subject.color }}>{lesson?.title || courseInfo.title}</span>
                         </div>
-                        <h1>{lesson.title}</h1>
+                        <h1>{lesson?.title || 'Cargando...'}</h1>
                     </div>
 
-                    <Link to={`/dashboard/subject/${courseId}`} className="btn-back-course">
+                    <Link to={`/dashboard/my-courses/${subject.slug}`} className="btn-back-course">
                         <ArrowLeft size={18} />
                         <span>Volver al curso</span>
                     </Link>
@@ -1380,33 +1021,16 @@ const Lesson = () => {
                     ) : activeTab === 'contenido' ? (
                         <div className="lesson-content-container">
                             <div dangerouslySetInnerHTML={{ __html: lesson.content?.replace(/font-size:\s*[^;]+;?/g, '') }} />
-                            <h3 style={{color: '#a855f7', margin: '2rem 0 1rem'}}>1.3 El LED y la Resistencia</h3>
-                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem', alignItems: 'stretch'}}>
-                                <div style={{background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column'}}>
-                                    <h4 style={{color: '#fbbf24', marginBottom: '0.5rem'}}>💡 ¿Qué es un LED?</h4>
-                                    <p style={{lineHeight: 1.6, color: '#cbd5e1'}}>El LED emite luz. Tiene dos patas:</p>
-                                    <ul style={{marginTop: '0.5rem', paddingLeft: '1rem', color: '#94a3b8', lineHeight: 1.6, flex: 1}}>
-                                        <li><strong style={{color: '#4ade80'}}>Ánodo (+):</strong> Pata larga → al pin.</li>
-                                        <li><strong style={{color: '#f87171'}}>Cátodo (−):</strong> Pata corta → a GND.</li>
-                                    </ul>
-                                    <img src="https://i.postimg.cc/6qxRZ7Gt/LEDs.png" alt="Anatomía del LED" style={{width: '100%', marginTop: '0.75rem', height: 'auto', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)'}} />
-                                </div>
-                                <div style={{background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column'}}>
-                                    <h4 style={{color: '#f97316', marginBottom: '0.5rem'}}>🛡️ ¿Por qué la Resistencia?</h4>
-                                    <p style={{lineHeight: 1.6, color: '#cbd5e1'}}>Un LED sin resistencia se quema. Limita la corriente a ~20mA.</p>
-                                    <div style={{background: 'rgba(249,115,22,0.1)', padding: '0.5rem', borderRadius: '8px', marginTop: '0.5rem', borderLeft: '3px solid #f97316', textAlign: 'center'}}>
-                                        <strong style={{color: '#fbbf24'}}>220 Ω</strong><br />
-                                        <small style={{color: '#94a3b8'}}>Rojo - Rojo - Marrón</small>
+                            {lesson.hasSimulator && (
+                                <div style={{ marginTop: '2rem' }}>
+                                    <h3 style={{ color: '#a855f7', margin: '2rem 0 1rem' }}>🔌 Simulacro</h3>
+                                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>Interactúa con el LED</p>
+                                    <div style={{ maxWidth: '300px' }}>
+                                        <LedSimulator />
                                     </div>
-                                    <img src="https://i.postimg.cc/rm1svfKp/resistencia.png" alt="Guía de resistencias" style={{width: '100%', marginTop: '0.75rem', height: 'auto', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)'}} />
                                 </div>
-                                <div style={{background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column'}}>
-                                    <h4 style={{color: '#a855f7', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>🔌 Simulacro</h4>
-                                    <p style={{color: '#94a3b8', fontSize: '0.8rem', marginBottom: '0.75rem'}}>Interactúa con el LED</p>
-                                    <LedSimulator />
-                                </div>
-                            </div>
-                            
+                            )}
+
                             {lesson.challenges && (
                                 <div className="challenges-tabs-section" style={{ marginTop: '3rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -1531,7 +1155,7 @@ const Lesson = () => {
                     <div className="lesson-nav-footer">
                         <button
                             className="nav-btn nav-btn-prev"
-                            onClick={() => navigate(`/dashboard/subject/${courseId}`)}
+                            onClick={() => navigate(`/dashboard/my-courses/${courseId}`)}
                         >
                             <ArrowLeft size={20} />
                             <span>Módulos del curso</span>

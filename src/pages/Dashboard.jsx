@@ -33,6 +33,8 @@ const Dashboard = () => {
     const enrolledCourses = [
         {
             id: 5,
+            abbr: 'RE',
+            slug: 'robotica-educativa',
             name: 'Robótica Educativa',
             icon: <Bot size={24} />,
             color: '#a855f7',
@@ -42,6 +44,8 @@ const Dashboard = () => {
         },
         {
             id: 1,
+            abbr: 'EE',
+            slug: 'electricidad-y-electronica',
             name: 'Electricidad y Electrónica',
             icon: <Zap size={24} />,
             color: '#f59e0b',
@@ -131,7 +135,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <Link
-                        to={`/dashboard/course/${lastCourse.id}`}
+                        to={`/dashboard/my-courses/${lastCourse.slug}`}
                         className="btn btn-primary continue-btn"
                         style={{
                             display: 'flex',
@@ -203,7 +207,7 @@ const Dashboard = () => {
                     <div className="subjects-grid">
                         {enrolledCourses.map(course => (
                             <Link
-                                to={`/dashboard/course/${course.id}`}
+                                to={`/dashboard/my-courses/${course.slug}`}
                                 key={course.id}
                                 className="subject-card glass-panel"
                                 style={{ padding: '1.25rem', textDecoration: 'none' }}
