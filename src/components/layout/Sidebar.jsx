@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, BookOpen, X, PenLine, User, ChevronDown, LogOut, Bell, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
-import { useGadgets } from '../../context/useGadgets';
+import { useApps } from '../../context/useApps';
 
 const Sidebar = ({ isOpen, closeSidebar }) => {
     const { user, signOut } = useAuth();
-    const { openLauncher } = useGadgets();
+    const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
 

@@ -4,7 +4,7 @@ import { Calculator, Clock, Ruler, Zap, PenLine, X, RotateCcw, Play, Pause, Bell
 import ArduinoIDE from '../components/ArduinoIDE';
 import RuletaWidget from '../components/Ruleta';
 import Whiteboard from '../components/Whiteboard';
-import './Gadgets.css';
+import './MyApps.css';
 
 const FloatingGadget = ({ gadget, children, onClose, width = 360, height = 450, defaultMaximized = false }) => {
     const [position, setPosition] = useState({
@@ -84,7 +84,7 @@ export const gadgetsCatalog = [
     { id: 'arduino', name: 'Arduino IDE', icon: <Cpu size={18} />, color: '#22c55e' }
 ];
 
-const GadgetsLauncherPanel = ({ openGadget, autoCloseLauncher, setAutoCloseLauncher }) => (
+const AppsLauncherPanel = ({ openGadget, autoCloseLauncher, setAutoCloseLauncher }) => (
     <div className="gadgets-launcher">
         <div className="gadgets-grid gadgets-grid-launcher">
             {gadgetsCatalog.map(gadget => (
@@ -118,7 +118,7 @@ const GadgetsLauncherPanel = ({ openGadget, autoCloseLauncher, setAutoCloseLaunc
     </div>
 );
 
-export const GadgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, openGadgets, closeGadget, autoCloseLauncher, setAutoCloseLauncher }) => (
+export const AppsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, openApps, closeGadget, autoCloseLauncher, setAutoCloseLauncher }) => (
     <>
         {isLauncherOpen && (
             <FloatingGadget
@@ -127,7 +127,7 @@ export const GadgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
                 width={470}
                 height={390}
             >
-                <GadgetsLauncherPanel
+                <AppsLauncherPanel
                     openGadget={openGadget}
                     autoCloseLauncher={autoCloseLauncher}
                     setAutoCloseLauncher={setAutoCloseLauncher}
@@ -135,49 +135,49 @@ export const GadgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
             </FloatingGadget>
         )}
 
-        {openGadgets.calculator && (
+        {openApps.calculator && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'calculator')} onClose={closeGadget} width={360} height={540}>
                 <ScientificCalculator />
             </FloatingGadget>
         )}
 
-        {openGadgets.converter && (
+        {openApps.converter && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'converter')} onClose={closeGadget} width={560} height={520}>
                 <UnitConverter />
             </FloatingGadget>
         )}
 
-        {openGadgets.timer && (
+        {openApps.timer && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'timer')} onClose={closeGadget} width={420} height={600}>
                 <StudyClockWidget />
             </FloatingGadget>
         )}
 
-        {openGadgets.roulette && (
+        {openApps.roulette && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'roulette')} onClose={closeGadget} width={500} height={750} defaultMaximized={true}>
                 <RuletaWidget />
             </FloatingGadget>
         )}
 
-        {openGadgets.traffic && (
+        {openApps.traffic && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'traffic')} onClose={closeGadget} width={370} height={500}>
                 <TrafficLightWidget />
             </FloatingGadget>
         )}
 
-        {openGadgets.ohms && (
+        {openApps.ohms && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'ohms')} onClose={closeGadget} width={500} height={500}>
                 <OhmsLawCalculator />
             </FloatingGadget>
         )}
 
-        {openGadgets.whiteboard && (
+        {openApps.whiteboard && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'whiteboard')} onClose={closeGadget} width={1100} height={700} defaultMaximized={true}>
                 <Whiteboard />
             </FloatingGadget>
         )}
 
-        {openGadgets.arduino && (
+        {openApps.arduino && (
             <FloatingGadget gadget={gadgetsCatalog.find(g => g.id === 'arduino')} onClose={closeGadget} width={1100} height={700} defaultMaximized={false}>
                 <ArduinoIDE />
             </FloatingGadget>
@@ -1407,7 +1407,7 @@ const OhmsLawCalculator = () => {
     );
 };
 
-const Gadgets = () => <Navigate to="/dashboard" replace />;
+const Apps = () => <Navigate to="/dashboard" replace />;
 
-export default Gadgets;
+export default Apps;
 

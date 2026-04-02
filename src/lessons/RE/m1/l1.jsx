@@ -192,5 +192,57 @@ void loop() {
             hints: ['LED_BUILTIN es una constante', 'Te evita acordarte del número']
         }
     ],
-    hasSimulator: true
+    hasSimulator: true,
+    questions: [
+        {
+            q: "¿Qué es Arduino?",
+            options: ["Un lenguaje de programación", "Una plataforma de hardware libre", "Un sistema operativo", "Una marca de celulares"],
+            correct: 1
+        },
+        {
+            q: "¿Cuál es el microcontrolador de Arduino Uno?",
+            options: ["ATmega328P", "ESP32", "Arduino Nano", "STM32"],
+            correct: 0
+        },
+        {
+            q: "¿Cuántos pines digitales tiene el Arduino Uno?",
+            options: ["10", "12", "14", "16"],
+            correct: 2
+        },
+        {
+            q: "¿Qué función se usa para configurar un pin como salida?",
+            options: ["digitalWrite()", "pinMode()", "setup()", "loop()"],
+            correct: 1
+        },
+        {
+            q: "¿Cuál es el valor máximo que lee un pin analógico (10 bits)?",
+            options: ["255", "512", "1023", "4096"],
+            correct: 2
+        },
+        {
+            q: "¿Qué comando pausa el programa por 1 segundo?",
+            options: ["delay(100)", "delay(1000)", "wait(1000)", "sleep(1)"],
+            correct: 1
+        },
+        {
+            q: "¿Qué función enciende un LED en un pin?",
+            options: ["digitalWrite(pin, ON)", "digitalWrite(pin, HIGH)", "digitalWrite(pin, 1)", "Ambas B y C"],
+            correct: 3
+        },
+        {
+            q: "¿Qué tipo de señal manejan los pines digitales de Arduino?",
+            options: ["Analógica", "Digital (0V o 5V)", "Continua", "Alterna"],
+            correct: 1
+        },
+        {
+            q: "¿Para qué sirve el pin 5V?",
+            options: ["Para leer sensores", "Para alimentar componentes", "Para conectar LEDs", "Para comunicación USB"],
+            correct: 1
+        },
+        {
+            q: "¿Qué significa LED_BUILTIN?",
+            options: ["Un LED externos", "El LED integrado en la placa", "Una función de Arduino", "Un tipo de sensor"],
+            correct: 1
+        }
+    ]
 };

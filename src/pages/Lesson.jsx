@@ -24,7 +24,7 @@ import {
     FlaskConical,
     Box,
     Brain,
-    Layout,
+    Cpu,
     Award
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -34,12 +34,12 @@ import ChallengeRoadmap from '../components/ChallengeRoadmap';
 import CodeEditor from '../components/CodeEditor';
 import ArduinoSimulatorV2 from '../components/ArduinoSimulatorV2';
 import LedSimulator from '../components/LedSimulator';
-import { getCourseByAbbr, getLessonContent, getLessonInfo, getFullLessonPath, getCourseByIdentifier } from '../data/coursesData.jsx';
+import { getCourseByAbbr, getLessonContent, getLessonInfo, getFullLessonPath, getCourseByIdentifier, COURSES_DEFINITION } from '../data/coursesData.jsx';
 
 const tabs = [
     { id: 'contenido', label: 'Contenido', icon: <BookOpen size={18} /> },
-    { id: 'repaso', label: 'Repaso', icon: <RefreshCw size={18} /> },
-    { id: 'simulador', label: 'Práctica', icon: <Monitor size={18} /> },
+    { id: 'repaso', label: 'Repaso', icon: <Brain size={18} /> },
+    { id: 'simulador', label: 'Simulador', icon: <Cpu size={18} /> },
     { id: 'prueba', label: 'Prueba', icon: <ClipboardList size={18} /> }
 ];
 
@@ -492,8 +492,13 @@ const Lesson = () => {
             setLoading(true);
             console.log('Loading lesson registry lookup...');
             try {
-                const registryCourseId = courseData ? courseData.abbr.toLowerCase() : courseId.toLowerCase();
+                // Fallback course data if lookup fails (e.g. missing slug)
+                const courseFallback = { name: 'Robótica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
+                const currentCourseData = courseData || COURSES_DEFINITION.find(c => c.slug === courseId || c.abbr.toLowerCase() === courseId.toLowerCase()) || courseFallback;
+                
+                const registryCourseId = currentCourseData ? currentCourseData.abbr.toLowerCase() : courseId.toLowerCase();
                 const internalId = (lessonId && lessonId.includes('-')) ? lessonId : `${registryCourseId}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`;
+                
                 const data = await getLessonContent(internalId);
                 console.log('Lesson data:', data);
                 setLesson(data);
@@ -528,12 +533,7 @@ const Lesson = () => {
     const [showSimulator, setShowSimulator] = useState(false);
 
     const quizQuestions = lesson?.questions || [];
-    const tabs = [
-        { id: 'contenido', label: 'Contenido', icon: <FileText size={18} /> },
-        { id: 'repaso', label: 'Repaso', icon: <PenTool size={18} /> },
-        { id: 'simulador', label: 'Simulador', icon: <Layout size={18} /> },
-        { id: 'prueba', label: 'Evaluación', icon: <Award size={18} /> }
-    ];
+
 
     const startQuiz = () => {
         setQuizMode('question');
@@ -816,7 +816,7 @@ const Lesson = () => {
                                         className="nav-btn nav-btn-complete"
                                         style={{ background: subject.color, border: 'none', color: 'white', padding: '0.85rem 2.5rem', fontSize: '1.1rem', fontWeight: 700, boxShadow: `0 8px 15px ${subject.color}30`, margin: '0', position: 'relative', zIndex: 1 }}
                                     >
-                                        Iniciar Evaluación
+                                        Iniciar Prueba
                                     </button>
                                 </div>
                             )}
@@ -1005,7 +1005,7 @@ const Lesson = () => {
                                             className="nav-btn nav-btn-prev"
                                             style={{ margin: 0, padding: '0.75rem 1.5rem' }}
                                         >
-                                            Repetir Evaluación
+                                            Repetir Prueba
                                         </button>
                                         <button 
                                             onClick={() => setActiveTab('contenido')}

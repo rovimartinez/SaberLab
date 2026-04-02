@@ -1,10 +1,10 @@
 import { createContext, useEffect, useState } from 'react';
 import { useWhiteboard } from './useWhiteboard';
-import { GadgetsOverlay } from '../pages/Gadgets';
+import { AppsOverlay } from '../pages/MyApps';
 
-export const GadgetsContext = createContext();
+export const AppsContext = createContext();
 
-export const GadgetsProvider = ({ children }) => {
+export const AppsProvider = ({ children }) => {
     const { openWhiteboard } = useWhiteboard();
     const [isLauncherOpen, setIsLauncherOpen] = useState(false);
     const [openGadgets, setOpenGadgets] = useState({});
@@ -44,7 +44,7 @@ export const GadgetsProvider = ({ children }) => {
     };
 
     return (
-        <GadgetsContext.Provider
+        <AppsContext.Provider
             value={{
                 isLauncherOpen,
                 openLauncher,
@@ -57,15 +57,15 @@ export const GadgetsProvider = ({ children }) => {
             }}
         >
             {children}
-            <GadgetsOverlay
+            <AppsOverlay
                 isLauncherOpen={isLauncherOpen}
                 closeLauncher={closeLauncher}
                 openGadget={openGadget}
-                openGadgets={openGadgets}
+                openApps={openGadgets}
                 closeGadget={closeGadget}
                 autoCloseLauncher={autoCloseLauncher}
                 setAutoCloseLauncher={setAutoCloseLauncher}
             />
-        </GadgetsContext.Provider>
+        </AppsContext.Provider>
     );
 };

@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
-import { GadgetsProvider } from '../../context/GadgetsContext';
+import { AppsProvider } from '../../context/AppsContext';
 import './Layout.css';
 
 const LayoutContent = () => {
@@ -36,9 +36,9 @@ import { useState } from 'react';
 const Layout = () => {
     return (
         <WhiteboardProvider>
-            <GadgetsProvider>
+            <AppsProvider>
                 <LayoutContent />
-            </GadgetsProvider>
+            </AppsProvider>
         </WhiteboardProvider>
     );
 };
