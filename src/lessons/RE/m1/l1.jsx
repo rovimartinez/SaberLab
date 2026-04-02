@@ -54,11 +54,27 @@ export const lessonData = {
             </ol>
 
             <div style="background: rgba(16,185,129,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #10b981;">
-                <strong style="color: #10b981;">💡 Pro tip:</strong> También puedes usar el <strong>Editor Web de Arduino</strong>直接在浏览器里编程，无需安装任何东西！
+                <strong style="color: #10b981;">💡 Pro tip:</strong> También puedes usar <strong>Tinkercad</strong> para simular Arduino.
             </div>
         </div>
 
-        <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.4 El Circuito</h3>
+        <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.4 Simular con Tinkercad</h3>
+        <div style="background: rgba(15, 23, 42, 0.8); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(168,85,247,0.2); margin-bottom: 2rem;">
+            <p style="color: #cbd5e1; line-height: 1.8; margin-bottom: 1rem;"><strong>Tinkercad</strong> es una herramienta gratuita de Autodesk que permite diseñar y simular circuitos electrónicos en el navegador, sin instalar nada.</p>
+            
+            <h4 style="color: #a855f7; margin: 1rem 0 0.75rem;">¿Por qué usar Tinkercad?</h4>
+            <ul style="color: #cbd5e1; line-height: 1.8; padding-left: 1.5rem;">
+                <li><strong>Sin instalación:</strong> Funciona en cualquier navegador web.</li>
+                <li><strong>Simulación real:</strong> Ve el comportamiento de LEDs, botones, sensores y más.</li>
+                <li><strong>Ideal para aprender:</strong> Si no tienes un Arduino físico, puedes practicar igual.</li>
+            </ul>
+
+            <div style="background: rgba(16,185,129,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #10b981;">
+                <strong style="color: #10b981;">💡 ¿Cómo empezar?</strong> Ve a <a href="https://www.tinkercad.com" target="_blank" style="color: #60a5fa;">tinkercad.com</a>, crea una cuenta gratis y entra en la sección <strong>"Circuitos"</strong>. Arrastra un Arduino Uno y začni a experimentar.
+            </div>
+        </div>
+
+        <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.5 El Circuito</h3>
         <div style="background: rgba(15, 23, 42, 0.8); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(168,85,247,0.2); margin-bottom: 2rem;">
             <p style="color: #cbd5e1; line-height: 1.8; margin-bottom: 1rem;">Para hacer parpadear un LED externo, conecta los componentes así:</p>
             <div style="display: flex; flex-direction: column; gap: 0.75rem; font-family: monospace; font-size: 0.9rem;">
@@ -99,7 +115,7 @@ export const lessonData = {
             </div>
         </div>
 
-        <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.5 Estructura del Código Arduino</h3>
+        <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.6 Estructura del Código Arduino</h3>
         <p style="margin-bottom: 1rem; line-height: 1.8; color: #cbd5e1;">Todo programa de Arduino tiene exactamente <strong>dos funciones obligatorias</strong>:</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
             <div style="background: rgba(59,130,246,0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(59,130,246,0.2);">
@@ -112,7 +128,7 @@ export const lessonData = {
             </div>
         </div>
 
-        <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">1.6 Código Base: Blink</h3>
+        <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">1.7 Código Base: Blink</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: flex-start; margin-bottom: 1.5rem;">
             <pre style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; margin: 0;"><code style="color: #60a5fa;">// Programa: Blink - Mi primer parpadeo
 // Hace parpadear el LED del pin 13 cada 1 segundo
