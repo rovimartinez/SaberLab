@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { createRoot } from 'react-dom/client';
 import {
     ArrowLeft,
     CheckCircle,
@@ -529,8 +530,38 @@ const Lesson = () => {
     const [quizScore, setQuizScore] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [showGuide, setShowGuide] = useState(false);
+    const [showArduinoParts, setShowArduinoParts] = useState(false);
     const [activeChallenge, setActiveChallenge] = useState(0);
     const [showSimulator, setShowSimulator] = useState(false);
+    const simulatorRootRef = useRef(null);
+
+    useEffect(() => {
+        if (lesson?.hasSimulator) {
+            const checkAndMount = () => {
+                const container = document.getElementById('simulator-container');
+                console.log('Checking for simulator container:', container);
+                
+                if (container && !container.hasChildNodes()) {
+                    console.log('Mounting LedSimulator into container');
+                    const root = createRoot(container);
+                    root.render(
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', padding: '1rem', gap: '1rem' }}>
+                            <LedSimulator />
+                        </div>
+                    );
+                }
+            };
+
+            // Intentar inmediatamente
+            setTimeout(checkAndMount, 500); // Espera segura
+
+            // Observationar cambios en el DOM por si el contenido se carga dinámicamente
+            const observer = new MutationObserver(checkAndMount);
+            observer.observe(document.body, { childList: true, subtree: true });
+
+            return () => observer.disconnect();
+        }
+    }, [lesson]);
 
     const quizQuestions = lesson?.questions || [];
 
@@ -591,10 +622,22 @@ const Lesson = () => {
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
-        window.dispatchShowGuide = () => setShowGuide(true);
+        
+        // Funciones globales para modales
+        window.dispatchShowGuide = () => {
+            console.log('Guide requested');
+            setShowGuide(true);
+        };
+        
+        window.showArduinoParts = () => {
+            console.log('Arduino parts requested');
+            setShowArduinoParts(true);
+        };
+
         return () => {
             window.removeEventListener('scroll', handleScroll);
             delete window.dispatchShowGuide;
+            delete window.showArduinoParts;
         };
     }, []);
 
@@ -675,6 +718,48 @@ const Lesson = () => {
         );
     };
 
+    const ArduinoPartsModal = () => {
+        if (!showArduinoParts) return null;
+
+        return (
+            <div
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)',
+                    backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    animation: 'fadeIn 0.3s ease-out'
+                }}
+                onClick={() => setShowArduinoParts(false)}
+            >
+                <div
+                    style={{
+                        background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '24px', width: '80%', maxWidth: '900px', padding: '2rem', position: 'relative',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                    }}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <button onClick={() => setShowArduinoParts(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}>
+                        <X size={16} />
+                    </button>
+
+                    <header style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                        <h2 style={{ color: '#a855f7', fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
+                            Componentes del Arduino Uno
+                        </h2>
+                    </header>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', width: '100%', margin: '0 auto' }}>
+                        <img 
+                            src="https://i.postimg.cc/Qt6Qb6G2/Partes-Arduino-Uno.png" 
+                            alt="Partes Arduino Uno" 
+                            style={{ width: '100%', maxWidth: '800px', height: 'auto', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }} 
+                        />
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     if (loading) {
         return (
             <div className="lesson-view-container animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -701,6 +786,7 @@ const Lesson = () => {
     return (
         <div className="lesson-view-container animate-fade-in">
             <GuideModal />
+            <ArduinoPartsModal />
             {/* Scroll Progress Bar */}
             <div style={{
                 position: 'fixed',
@@ -1033,16 +1119,7 @@ const Lesson = () => {
                         </div>
                     ) : activeTab === 'contenido' ? (
                         <div className="lesson-content-container">
-                            <div dangerouslySetInnerHTML={{ __html: lesson.content?.replace(/font-size:\s*[^;]+;?/g, '') }} />
-                            {lesson.hasSimulator && (
-                                <div style={{ marginTop: '2rem' }}>
-                                    <h3 style={{ color: '#a855f7', margin: '2rem 0 1rem' }}>🔌 Simulacro</h3>
-                                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>Interactúa con el LED</p>
-                                    <div style={{ maxWidth: '300px' }}>
-                                        <LedSimulator />
-                                    </div>
-                                </div>
-                            )}
+                            <div key={lesson.content} dangerouslySetInnerHTML={{ __html: lesson.content }} />
 
                             {lesson.challenges && (
                                 <div className="challenges-tabs-section" style={{ marginTop: '3rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem' }}>

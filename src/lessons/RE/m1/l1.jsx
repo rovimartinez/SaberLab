@@ -4,57 +4,54 @@ export const lessonData = {
         <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">1.1 Introducción al Hardware Abierto</h3>
         <p style="margin-bottom: 1rem; line-height: 1.8;">El <strong>hardware abierto</strong> se refiere a dispositivos cuyas especificaciones de diseño son públicas, permitiendo que cualquiera los estudie, modifique y construya. Arduino es el ejemplo más popular y exitoso de este movimiento a nivel mundial.</p>
         
-        <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.2 ¿Qué es Arduino?</h3>
-        <div style="display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: flex-start;">
-            <div style="flex: 1; min-width: 280px;">
+        <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">1.2 ¿Qué es Arduino?</h3>
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; margin-bottom: 2rem; align-items: start;">
+            <div style="flex: 1;">
                 <p style="margin-bottom: 1rem; line-height: 1.8;">Arduino es una <strong>plataforma de desarrollo</strong> basada en hardware y software libre. Consiste en una placa con un microcontrolador que puede ser programada para interactuar con el mundo físico mediante una gran variedad de sensores y actuadores.</p>
-                <p style="margin-bottom: 1rem; line-height: 1.8;">Fue creado en 2005 en Italia para que estudiantes pudieran crear proyectos interactivos de manera sencilla y económica. Hoy es la plataforma de hardware más popular del mundo, con una comunidad global inmensa que comparte miles de proyectos creativos cada día.</p>
+                <p style="margin-bottom: 1rem; line-height: 1.8;">Fue creado en 2005 en Italia para que estudiantes pudieran crear proyectos interactivos de manera sencilla y económica. Hoy es la plataforma de hardware más popular del mundo.</p>
                 <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 10px; border-left: 4px solid #10b981;">
-                    <strong style="color: #10b981;">💡 Dato:</strong> Arduino Uno es el modelo más popular y versátil para aprender. Funciona con un microcontrolador ATmega328P a 16 MHz.
+                    <strong style="color: #10b981; font-size: 1.1rem;">💡 Datos:</strong>
+                    <div style="color: #cbd5e1; margin-top: 0.2rem;">Arduino Uno es el modelo más popular y versátil para aprender.</div>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.2rem; color: #cbd5e1; line-height: 1.8;">
+                        <li><strong style="color: #a855f7;">🧠 Microcontrolador:</strong> ATmega328P a 16 MHz.</li>
+                        <li><strong style="color: #3b82f6;">💾 Memoria Flash (32 KB):</strong> Donde se almacena tu sketch (programa). Es permanente.</li>
+                        <li><strong style="color: #10b981;">🔌 Pines Digitales (0–13):</strong> 14 pines que pueden leer o escribir señales de 0V (LOW) o 5V (HIGH).</li>
+                        <li><strong style="color: #fbbf24;">🔌 Pines Analógicos (A0–A5):</strong> 6 entradas que leen valores de 0 a 5V (0-1023).</li>
+                        <li><strong style="color: #ec4899;">🔋 Alimentación:</strong> Vía USB (5V) o Jack DC (7–12V). Los pines 5V y 3.3V.</li>
+                        <li><strong style="color: #f97316;">🖥️ Puerto USB:</strong> Conecta el Arduino a tu computadora para subir programas.</li>
+                    </ul>
                 </div>
             </div>
-            <div style="flex: 1; min-width: 260px; display: flex; justify-content: center;">
-                <img src="https://i.postimg.cc/CxSNt25F/Arduino-Uno.png" alt="Arduino Uno" style="width: 100%; max-width: 420px; height: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4);" />
-            </div>
-        </div>
-        
-        <h4 style="color: #a855f7; margin: 1.5rem 0 1rem;">Componentes Principales del Arduino Uno</h4>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-            <div style="background: rgba(168, 85, 247, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(168,85,247,0.2);">
-                <strong style="color: #a855f7;">🧠 CPU (ATmega328P)</strong><br><small style="color: #94a3b8;">El cerebro de la placa. Corre a 16 MHz y ejecuta tu programa línea por línea.</small>
-            </div>
-            <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(59,130,246,0.2);">
-                <strong style="color: #3b82f6;">💾 Memoria Flash (32 KB)</strong><br><small style="color: #94a3b8;">Donde se almacena tu sketch (programa). Es permanente: no se borra al desconectar.</small>
-            </div>
-            <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(16,185,189,0.2);">
-                <strong style="color: #10b981;">📌 Pines Digitales (0–13)</strong><br><small style="color: #94a3b8;">14 pines que pueden leer o escribir señales de 0V (LOW) o 5V (HIGH).</small>
-            </div>
-            <div style="background: rgba(251, 191, 36, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(251,191,36,0.2);">
-                <strong style="color: #fbbf24;">🔌 Pines Analógicos (A0–A5)</strong><br><small style="color: #94a3b8;">6 entradas que leen valores continuos entre 0 y 5V con resolución de 10 bits (0–1023).</small>
-            </div>
-            <div style="background: rgba(236, 72, 153, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
-                <strong style="color: #ec4899;">🔋 Alimentación</strong><br><small style="color: #94a3b8;">Vía USB (5V) o Jack DC (7–12V). Los pines 5V y 3.3V pueden alimentar componentes externos.</small>
-            </div>
-            <div style="background: rgba(249, 115, 22, 0.1); padding: 1rem; border-radius: 10px; border: 1px solid rgba(249,115,22,0.2);">
-                <strong style="color: #f97316;">🖥️ Puerto USB</strong><br><small style="color: #94a3b8;">Conecta el Arduino a tu computadora para subir programas y monitorear datos en tiempo real.</small>
+            <div style="flex: 1.5; display: flex; flex-direction: column; align-items: center;">
+                <img src="https://i.postimg.cc/CxSNt25F/Arduino-Uno.png" alt="Arduino Uno" style="width: 100%; max-width: 500px; height: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 1.5rem;" />
+                <a href="#" onclick="if (window.showArduinoParts) { window.showArduinoParts(); } return false;" style="background: rgba(255,255,255,0.1); color: #a855f7; border: 1px solid #a855f7; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.3s;">
+                    🔍 Ver partes del Arduino
+                </a>
             </div>
         </div>
 
         <h3 style="color: #a855f7; margin: 2rem 0 1rem;">1.3 El Entorno de Desarrollo (IDE)</h3>
-        <div style="background: rgba(15, 23, 42, 0.8); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(168,85,247,0.2); margin-bottom: 2rem;">
-            <p style="color: #cbd5e1; line-height: 1.8; margin-bottom: 1rem;">Para programar Arduino necesitas el <strong>Arduino IDE</strong>, un entorno gratuito y multiplaforma (Windows, Mac, Linux).</p>
-            
-            <h4 style="color: #a855f7; margin: 1rem 0 0.75rem;">Pasos para instalar:</h4>
-            <ol style="color: #cbd5e1; line-height: 1.8; padding-left: 1.5rem;">
-                <li>Descarga el IDE desde <a href="https://www.arduino.cc/en/software" target="_blank" style="color: #60a5fa;">arduino.cc</a></li>
-                <li>Instala el driver (especialmente en Windows)</li>
-                <li>Conecta tu Arduino al USB</li>
-                <li>Selecciona tu placa en <code>Herramientas > Placa > Arduino Uno</code></li>
-                <li>Selecciona el puerto en <code>Herramientas > Puerto</code></li>
-            </ol>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; align-items: start;">
+            <div style="background: rgba(15, 23, 42, 0.8); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(168,85,247,0.2);">
+                <p style="color: #cbd5e1; line-height: 1.8; margin-bottom: 1rem;">Para programar Arduino necesitas el <strong>Arduino IDE</strong>, un entorno gratuito y multiplaforma (Windows, Mac, Linux).</p>
+                
+                <h4 style="color: #a855f7; margin: 1rem 0 0.75rem;">Pasos para instalar:</h4>
+                <ol style="color: #cbd5e1; line-height: 1.8; padding-left: 1.5rem;">
+                    <li>Descarga el IDE desde <a href="https://www.arduino.cc/en/software" target="_blank" style="color: #60a5fa;">arduino.cc</a></li>
+                    <li>Instala el driver (especialmente en Windows)</li>
+                    <li>Conecta tu Arduino al USB</li>
+                    <li>Selecciona tu placa en <code>Herramientas > Placa > Arduino Uno</code></li>
+                    <li>Selecciona el puerto en <code>Herramientas > Puerto</code></li>
+                </ol>
 
-            <div style="background: rgba(16,185,129,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #10b981;">
-                <strong style="color: #10b981;">💡 Pro tip:</strong> También puedes usar <strong>Tinkercad</strong> para simular Arduino.
+                <div style="background: rgba(16,185,129,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #10b981;">
+                    <strong style="color: #10b981;">💡 Pro tip:</strong> También puedes usar <strong>Tinkercad</strong> para simular Arduino.
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="background: rgba(255,255,255,0.03); padding: 0.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);">
+                    <img src="https://i.postimg.cc/ZR7N3j1W/IDE-Arduino.png" alt="Arduino IDE" style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3);" />
+                </div>
             </div>
         </div>
 
@@ -94,24 +91,27 @@ export const lessonData = {
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; align-items: stretch;">
-            <div style="background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
-                <h4 style="color: #fbbf24; margin-bottom: 0.5rem;">💡 ¿Qué es un LED?</h4>
-                <p style="line-height: 1.6; color: #cbd5e1;">El LED emite luz. Tiene dos patas:</p>
-                <ul style="margin-top: 0.5rem; padding-left: 1rem; color: #94a3b8; line-height: 1.6; flex: 1;">
-                    <li><strong style="color: #4ade80;">Ánodo (+):</strong> Pata larga → al pin.</li>
-                    <li><strong style="color: #f87171;">Cátodo (−):</strong> Pata corta → a GND.</li>
-                </ul>
-                <img src="https://i.postimg.cc/6qxRZ7Gt/LEDs.png" alt="Anatomía del LED" style="width: 100%; margin-top: 0.75rem; height: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);" />
-            </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 1.25rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column;">
-                <h4 style="color: #f97316; margin-bottom: 0.5rem;">🛡️ ¿Por qué la Resistencia?</h4>
-                <p style="line-height: 1.6; color: #cbd5e1;">Un LED sin resistencia se quema. Limita la corriente a ~20mA.</p>
-                <div style="background: rgba(249,115,22,0.1); padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem; border-left: 3px solid #f97316; text-align: center;">
-                    <strong style="color: #fbbf24;">220 Ω</strong><br />
-                    <small style="color: #94a3b8;">Rojo - Rojo - Marrón</small>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 1.5rem;">
+                <div style="flex: 1;">
+                    <h4 style="color: #fbbf24; margin-bottom: 0.5rem; font-size: 2rem;">💡 ¿Qué es un LED?</h4>
+                    <p style="line-height: 1.6; color: #cbd5e1; font-size: 1.5rem;">El LED (Diodo Emisor de Luz) es un componente electrónico que emite luz cuando la corriente fluye a través de él. Tiene dos patas:</p>
+                    <ul style="margin-top: 0.5rem; padding-left: 1rem; color: #94a3b8; line-height: 1.6; font-size: 1rem;">
+                        <li><strong style="color: #4ade80;">Ánodo (+):</strong> Pata larga → se conecta al pin positivo.</li>
+                        <li><strong style="color: #f87171;">Cátodo (−):</strong> Pata corta → se conecta a GND (tierra).</li>
+                    </ul>
                 </div>
-                <img src="https://i.postimg.cc/rm1svfKp/resistencia.png" alt="Guía de resistencias" style="width: 100%; margin-top: 0.75rem; height: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);" />
+                <img src="https://i.postimg.cc/6qxRZ7Gt/LEDs.png" alt="Anatomía del LED" style="width: 280px; height: auto; object-fit: contain; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);" />
+            </div>
+            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 1.5rem;">
+                <div style="flex: 1;">
+                    <h4 style="color: #f97316; margin-bottom: 0.5rem; font-size: 2rem;">🛡️ ¿Qué es una Resistencia?</h4>
+                    <p style="line-height: 1.6; color: #cbd5e1; font-size: 1.5rem;">La resistencia es un componente eléctrico que se opone al paso de la corriente. Su función es limitar el flujo de corriente para evitar que los componentes (como el LED) se quemen.</p>
+                    <a href="#" onclick="if (window.dispatchShowGuide) window.dispatchShowGuide(); return false;" style="display: block; background: rgba(249,115,22,0.1); padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem; border-left: 3px solid #f97316; text-align: center; font-size: 1.2rem; cursor: pointer; border: none; width: 100%; color: #fbbf24; font-weight: bold; text-decoration: none;">
+                        Ver código de colores
+                    </a>
+                </div>
+                <img src="https://i.postimg.cc/rm1svfKp/resistencia.png" alt="Guía de resistencias" style="width: 280px; height: auto; object-fit: contain; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);" />
             </div>
         </div>
 
@@ -130,24 +130,22 @@ export const lessonData = {
 
         <h3 style="color: #a855f7; margin: 1.5rem 0 1rem;">1.7 Código Base: Blink</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: flex-start; margin-bottom: 1.5rem;">
-            <pre style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; margin: 0;"><code style="color: #60a5fa;">// Programa: Blink - Mi primer parpadeo
+            <pre style="background: #1e1e1e; padding: 1.5rem; border-radius: 8px; border: 1px solid #333; overflow-x: auto; margin: 0; font-family: 'Courier New', monospace; font-size: 1.1rem; line-height: 1.4; color: #d4d4d4;"><code style="color: #6a9955;">// Programa: Blink - Mi primer parpadeo
 // Hace parpadear el LED del pin 13 cada 1 segundo
 
-void setup() {
-  // Configuramos el pin 13 como SALIDA (OUTPUT)
-  pinMode(13, OUTPUT);
+</code><code style="color: #569cd6;">void setup</code><code style="color: #d4d4d4;">() {
+  </code><code style="color: #c586c0;">// Configuramos el pin 13 como SALIDA (OUTPUT)
+  </code><code style="color: #569cd6;">pinMode</code><code style="color: #d4d4d4;">(13, </code><code style="color: #4ec9b0;">OUTPUT</code><code style="color: #d4d4d4;">);
 }
 
-void loop() {
-  digitalWrite(13, HIGH);  // Encender LED → 5V en el pin
-  delay(1000);              // Esperar 1 segundo (1000 ms)
-  digitalWrite(13, LOW);   // Apagar LED → 0V en el pin
-  delay(1000);              // Esperar 1 segundo
-  // El loop se repite ∞ → ¡el LED parpadea!
+</code><code style="color: #569cd6;">void loop</code><code style="color: #d4d4d4;">() {
+  </code><code style="color: #569cd6;">digitalWrite</code><code style="color: #d4d4d4;">(13, </code><code style="color: #4ec9b0;">HIGH</code><code style="color: #d4d4d4;">);  </code><code style="color: #6a9955;">// Encender LED → 5V en el pin
+  </code><code style="color: #569cd6;">delay</code><code style="color: #d4d4d4;">(1000);              </code><code style="color: #6a9955;">// Esperar 1 segundo (1000 ms)
+  </code><code style="color: #569cd6;">digitalWrite</code><code style="color: #d4d4d4;">(13, </code><code style="color: #4ec9b0;">LOW</code><code style="color: #d4d4d4;">);   </code><code style="color: #6a9955;">// Apagar LED → 0V en el pin
+  </code><code style="color: #569cd6;">delay</code><code style="color: #d4d4d4;">(1000);              </code><code style="color: #6a9955;">// Esperar 1 segundo
+  </code><code style="color: #6a9955;">// El loop se repite ∞ → ¡el LED parpadea!
 }</code></pre>
-            <div style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; min-height: 300px;">
-                <h1 style="color: #60a5fa; font-size: 2rem; font-weight: bold;">¡Hola!</h1>
-            </div>
+            <div id="simulator-container"></div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 0;">
             <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
