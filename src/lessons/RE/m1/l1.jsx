@@ -70,7 +70,7 @@ export const lessonData = {
             </ul>
 
             <div style="background: rgba(16,185,129,0.1); padding: 0.75rem; border-radius: 8px; margin-top: 1rem; border-left: 3px solid #10b981;">
-                <strong style="color: #10b981;">💡 ¿Cómo empezar?</strong> Ve a <a href="https://www.tinkercad.com" target="_blank" style="color: #60a5fa;">tinkercad.com</a>, crea una cuenta gratis y entra en la sección <strong>"Circuitos"</strong>. Arrastra un Arduino Uno y začni a experimentar.
+                <strong style="color: #10b981;">💡 ¿Cómo empezar?</strong> Ve a <a href="https://www.tinkercad.com" target="_blank" style="color: #60a5fa;">tinkercad.com</a>, crea una cuenta gratis y entra en la sección <strong>"Circuitos"</strong>. Arrastra un Arduino Uno y empezá a experimentar.
             </div>
         </div>
 
