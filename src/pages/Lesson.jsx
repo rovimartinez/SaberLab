@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { 
-    ArrowLeft, 
-    CheckCircle, 
-    FileText, 
-    PlayCircle, 
-    BookOpen, 
-    RefreshCw, 
-    Wrench, 
-    ClipboardList, 
-    PenTool, 
-    Monitor, 
+import {
+    ArrowLeft,
+    CheckCircle,
+    FileText,
+    PlayCircle,
+    BookOpen,
+    RefreshCw,
+    Wrench,
+    ClipboardList,
+    PenTool,
+    Monitor,
     ChevronRight,
     Search,
     X,
@@ -117,7 +117,7 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                 .select('card_id, status')
                 .eq('user_id', user.id)
                 .eq('lesson_id', lessonKey);
-            
+
             if (data) {
                 const progress = {};
                 data.forEach(item => {
@@ -165,7 +165,7 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                     let accentColor = card.type === 'hw' ? '#a855f7' : '#60a5fa';
                     let cardBg = 'rgba(30, 41, 59, 0.6)';
                     let glow = 'none';
-                    
+
                     if (status === 'known') {
                         accentColor = '#10b981';
                         cardBg = 'rgba(16, 185, 129, 0.15)';
@@ -177,28 +177,28 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                     }
 
                     return (
-                        <div 
-                            key={card.id} 
-                            className={`memory-card ${flipped[card.id] ? 'is-flipped' : ''}`} 
+                        <div
+                            key={card.id}
+                            className={`memory-card ${flipped[card.id] ? 'is-flipped' : ''}`}
                             onClick={() => toggleFlip(card.id)}
                             style={{ height: '230px', perspective: '1000px', cursor: 'pointer' }}
                         >
-                            <div className="card-inner" style={{ 
-                                position: 'relative', 
-                                width: '100%', 
-                                height: '100%', 
-                                transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)', 
+                            <div className="card-inner" style={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                                transition: 'transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)',
                                 transformStyle: 'preserve-3d'
                             }}>
-                                <div className="card-front" style={{ 
-                                    position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden', 
-                                    background: cardBg, border: `2px solid ${accentColor}`, borderRadius: '24px', 
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+                                <div className="card-front" style={{
+                                    position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
+                                    background: cardBg, border: `2px solid ${accentColor}`, borderRadius: '24px',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                     padding: '2rem', textAlign: 'center', boxShadow: glow, backdropFilter: 'blur(10px)',
                                     transition: 'all 0.4s ease'
                                 }}>
-                                    <div style={{ 
-                                        background: `${accentColor}15`, 
+                                    <div style={{
+                                        background: `${accentColor}15`,
                                         padding: '14px', borderRadius: '18px', marginBottom: '16px',
                                         border: `1px solid ${accentColor}30`,
                                         transition: 'all 0.4s ease'
@@ -208,30 +208,30 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                                     <span style={{ color: 'white', fontWeight: 800, fontSize: '1.05rem', lineHeight: 1.4 }}>{card.q}</span>
                                     <div style={{ marginTop: '1.25rem', fontSize: '0.65rem', color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.8 }}>Toca para ver respuesta</div>
                                 </div>
-                                <div className="card-back" style={{ 
-                                    position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden', 
-                                    background: 'rgba(15, 23, 42, 0.98)', border: `3px solid ${accentColor}`, borderRadius: '24px', 
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-                                    padding: '2rem', textAlign: 'center', transform: 'rotateY(180deg)', 
+                                <div className="card-back" style={{
+                                    position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
+                                    background: 'rgba(15, 23, 42, 0.98)', border: `3px solid ${accentColor}`, borderRadius: '24px',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                    padding: '2rem', textAlign: 'center', transform: 'rotateY(180deg)',
                                     boxShadow: `0 20px 40px rgba(0,0,0,0.5), ${glow}`, transition: 'all 0.4s ease'
                                 }}>
-                                    <span style={{ 
-                                        color: accentColor, fontWeight: 900, fontSize: '1.5rem', marginBottom: '14px', 
-                                        textShadow: `0 0 20px ${accentColor}60`, letterSpacing: '0.5px' 
+                                    <span style={{
+                                        color: accentColor, fontWeight: 900, fontSize: '1.5rem', marginBottom: '14px',
+                                        textShadow: `0 0 20px ${accentColor}60`, letterSpacing: '0.5px'
                                     }}>{card.a}</span>
                                     <p style={{ color: '#cbd5e1', fontSize: '0.88rem', marginBottom: '24px', lineHeight: 1.6, fontWeight: 500 }}>{card.sub}</p>
                                     <div style={{ display: 'flex', gap: '14px' }}>
-                                        <button 
-                                            onClick={(e) => handleMark(e, card.id, 'known')} 
-                                            style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(16, 185, 129, 0.3)' }} 
-                                            onMouseOver={e => { e.currentTarget.style.transform='scale(1.1)'; e.currentTarget.style.filter='brightness(1.1)'; }} 
-                                            onMouseOut={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.filter='brightness(1)'; }}
+                                        <button
+                                            onClick={(e) => handleMark(e, card.id, 'known')}
+                                            style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: '#10b981', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(16, 185, 129, 0.3)' }}
+                                            onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'brightness(1.1)'; }}
+                                            onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
                                         ><Check size={22} strokeWidth={4} /></button>
-                                        <button 
-                                            onClick={(e) => handleMark(e, card.id, 'unknown')} 
-                                            style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }} 
-                                            onMouseOver={e => { e.currentTarget.style.transform='scale(1.1)'; e.currentTarget.style.filter='brightness(1.1)'; }} 
-                                            onMouseOut={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.filter='brightness(1)'; }}
+                                        <button
+                                            onClick={(e) => handleMark(e, card.id, 'unknown')}
+                                            style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }}
+                                            onMouseOver={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'brightness(1.1)'; }}
+                                            onMouseOut={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.filter = 'brightness(1)'; }}
                                         ><X size={22} strokeWidth={4} /></button>
                                     </div>
                                 </div>
@@ -245,9 +245,9 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
 };
 
 const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
-    const [leds, setLeds] = useState({ 
-        r: false, y: false, g: false, blue: false, 
-        s1: false, s2: false, s3: false, s4: false, s5: false 
+    const [leds, setLeds] = useState({
+        r: false, y: false, g: false, blue: false,
+        s1: false, s2: false, s3: false, s4: false, s5: false
     });
     const [timeLeft, setTimeLeft] = useState(null);
 
@@ -278,23 +278,23 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                 } else if (challengeIdx === 1) {
                     const deat = { r: false, y: false, g: false, blue: false, s1: false, s2: false, s3: false, s4: false, s5: false };
                     const punto = 200, raya = 600;
-                    for(let i=0; i<3; i++) {
-                        setLeds({...deat, r: true}); await wait(punto); if(!isActive) break;
-                        setLeds(deat); await wait(punto); if(!isActive) break;
+                    for (let i = 0; i < 3; i++) {
+                        setLeds({ ...deat, r: true }); await wait(punto); if (!isActive) break;
+                        setLeds(deat); await wait(punto); if (!isActive) break;
                     }
-                    if(!isActive) break;
+                    if (!isActive) break;
                     await wait(600);
-                    for(let i=0; i<3; i++) {
-                        setLeds({...deat, r: true}); await wait(raya); if(!isActive) break;
-                        setLeds(deat); await wait(punto); if(!isActive) break;
+                    for (let i = 0; i < 3; i++) {
+                        setLeds({ ...deat, r: true }); await wait(raya); if (!isActive) break;
+                        setLeds(deat); await wait(punto); if (!isActive) break;
                     }
-                    if(!isActive) break;
+                    if (!isActive) break;
                     await wait(600);
-                    for(let i=0; i<3; i++) {
-                        setLeds({...deat, r: true}); await wait(punto); if(!isActive) break;
-                        setLeds(deat); await wait(punto); if(!isActive) break;
+                    for (let i = 0; i < 3; i++) {
+                        setLeds({ ...deat, r: true }); await wait(punto); if (!isActive) break;
+                        setLeds(deat); await wait(punto); if (!isActive) break;
                     }
-                    if(!isActive) break;
+                    if (!isActive) break;
                     await wait(2000);
                 } else if (challengeIdx === 2) {
                     // Sirena Policial (Rojo / Azul) corregido
@@ -315,7 +315,7 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                     }
                     for (let i = 3; i >= 1; i--) {
                         const state = { r: false, y: false, g: false, blue: false, s1: false, s2: false, s3: false, s4: false, s5: false };
-                        state[`s${i+1}`] = true;
+                        state[`s${i + 1}`] = true;
                         setLeds(state);
                         await wait(200);
                         if (!isActive) break;
@@ -360,7 +360,7 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
     );
 
     return (
-        <div 
+        <div
             style={{
                 position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(15, 23, 42, 0.8)',
                 backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -382,8 +382,8 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                 boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
                 position: 'relative'
             }} onClick={e => e.stopPropagation()}>
-                
-                <button 
+
+                <button
                     onClick={onClose}
                     style={{ position: 'absolute', right: '1.2rem', top: '1.2rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
@@ -393,7 +393,7 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                 <h4 style={{ color: '#cbd5e1', fontSize: '1rem', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 800 }}>
                     Simulador del Reto
                 </h4>
-                
+
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -402,26 +402,26 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                     minHeight: challengeIdx === 4 ? '220px' : '150px'
                 }}>
                     {challengeIdx === 2 ? (
-                        <div style={{ 
-                            background: 'linear-gradient(90deg, #111, #222)', 
-                            padding: '24px 32px', 
+                        <div style={{
+                            background: 'linear-gradient(90deg, #111, #222)',
+                            padding: '24px 32px',
                             borderRadius: '16px',
                             border: '3px solid #333',
                             boxShadow: '0 20px 40px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.9)',
-                            display: 'flex', 
-                            gap: '24px' 
+                            display: 'flex',
+                            gap: '24px'
                         }}>
                             <LedBulb color="#3b82f6" glowColor="#3b82f6" isOn={leds.blue} />
                             <LedBulb color="#ef4444" glowColor="#ef4444" isOn={leds.r} />
                         </div>
                     ) : challengeIdx === 3 ? (
-                        <div style={{ 
-                            background: '#111', 
-                            padding: '16px 24px', 
+                        <div style={{
+                            background: '#111',
+                            padding: '16px 24px',
                             borderRadius: '16px',
                             border: '3px solid #333',
-                            display: 'flex', 
-                            gap: '12px' 
+                            display: 'flex',
+                            gap: '12px'
                         }}>
                             <LedBulb color="#ef4444" glowColor="#ef4444" isOn={leds.s1} />
                             <LedBulb color="#ef4444" glowColor="#ef4444" isOn={leds.s2} />
@@ -430,15 +430,15 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                             <LedBulb color="#ef4444" glowColor="#ef4444" isOn={leds.s5} />
                         </div>
                     ) : challengeIdx === 4 ? (
-                        <div style={{ 
-                            background: 'linear-gradient(180deg, #111, #222)', 
-                            padding: '24px', 
+                        <div style={{
+                            background: 'linear-gradient(180deg, #111, #222)',
+                            padding: '24px',
                             borderRadius: '24px',
                             border: '3px solid #333',
                             boxShadow: '0 20px 40px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.9)',
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            gap: '16px' 
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px'
                         }}>
                             <LedBulb color="#ef4444" glowColor="#ef4444" isOn={leds.r} />
                             <LedBulb color="#facc15" glowColor="#facc15" isOn={leds.y} />
@@ -456,7 +456,7 @@ const MiniChallengeSimulator = ({ challengeIdx, onClose }) => {
                         </div>
                     )}
                 </div>
-                
+
                 <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '1.5rem', textAlign: 'center', fontWeight: 600 }}>
                     {challengeIdx === 0 && 'Parpadeo constante configurado a 200ms'}
                     {challengeIdx === 1 && 'Ciclo S.O.S reproduciendo (... --- ...)'}
@@ -473,7 +473,7 @@ const Lesson = () => {
     const { user } = useAuth();
     const { courseId, moduleId, lessonId } = useParams();
     const navigate = useNavigate();
-    
+
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('contenido');
@@ -495,10 +495,10 @@ const Lesson = () => {
                 // Fallback course data if lookup fails (e.g. missing slug)
                 const courseFallback = { name: 'Robótica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
                 const currentCourseData = courseData || COURSES_DEFINITION.find(c => c.slug === courseId || c.abbr.toLowerCase() === courseId.toLowerCase()) || courseFallback;
-                
+
                 const registryCourseId = currentCourseData ? currentCourseData.abbr.toLowerCase() : courseId.toLowerCase();
                 const internalId = (lessonId && lessonId.includes('-')) ? lessonId : `${registryCourseId}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`;
-                
+
                 const data = await getLessonContent(internalId);
                 console.log('Lesson data:', data);
                 setLesson(data);
@@ -518,7 +518,7 @@ const Lesson = () => {
     // If we can't find course info from registry (e.g. fallback for old links), default to RE
     const subject = (lessonPath && lessonPath.course) || { name: 'Robótica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
     const courseInfo = (lessonPath && lessonPath.lesson) || { title: 'Lección' };
-    
+
     // Legacy support or generate a key
     const lessonKey = internalId;
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -545,9 +545,9 @@ const Lesson = () => {
 
     const handleQuizAnswer = (optionIndex) => {
         if (selectedAnswer !== null) return;
-        
+
         setSelectedAnswer(optionIndex);
-        
+
         if (optionIndex !== -1 && optionIndex === quizQuestions[currentQ].correct) {
             setQuizScore(prev => prev + 1);
         }
@@ -601,7 +601,7 @@ const Lesson = () => {
 
     const GuideModal = () => {
         if (!showGuide) return null;
-        
+
         const colors = [
             { name: 'Negro', v12: 0, mult: 'x1 Ω', tol: '-', color: '#000000' },
             { name: 'Marrón', v12: 1, mult: 'x10 Ω', tol: '±1%', color: '#92400f' },
@@ -618,7 +618,7 @@ const Lesson = () => {
         ];
 
         return (
-            <div 
+            <div
                 style={{
                     position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)',
                     backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -626,7 +626,7 @@ const Lesson = () => {
                 }}
                 onClick={() => setShowGuide(false)}
             >
-                <div 
+                <div
                     style={{
                         background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(255,255,255,0.1)',
                         borderRadius: '20px', width: '90%', maxWidth: '520px', padding: '1.25rem', position: 'relative',
@@ -637,7 +637,7 @@ const Lesson = () => {
                     <button onClick={() => setShowGuide(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}>
                         <X size={16} />
                     </button>
-                    
+
                     <header style={{ marginBottom: '1rem' }}>
                         <h2 style={{ color: '#f97316', fontSize: '1.2rem', fontWeight: 900, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <Search size={22} />
@@ -715,12 +715,25 @@ const Lesson = () => {
             }} />
 
             {/* Premium Lesson Header */}
-            <header className="lesson-header-premium">
-                <div className="lesson-header-bg-icon">
-                    {subject.icon}
+            <header className="lesson-header-premium" style={{
+                background: `linear-gradient(90deg, ${subject.color}50 0%, #161d2b 100%)`,
+                border: `1px solid ${subject.color}40`,
+                boxShadow: `0 4px 20px ${subject.color}15`
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    right: '1rem',
+                    top: '50%',
+                    transform: 'translateY(-50%) rotate(15deg)',
+                    opacity: 0.4,
+                    color: subject.color,
+                    pointerEvents: 'none',
+                    zIndex: 1
+                }}>
+                    {React.cloneElement(subject.icon, { size: 140 })}
                 </div>
 
-                <div className="lesson-header-main">
+                <div className="lesson-header-main" style={{ position: 'relative', zIndex: 10 }}>
                     <div className="lesson-header-info">
                         <div className="lesson-breadcrumb">
                             <span>{subject.name}</span>
@@ -764,11 +777,11 @@ const Lesson = () => {
                     ) : activeTab === 'prueba' ? (
                         <div className="quiz-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
                             {quizMode === 'intro' && (
-                                <div style={{ 
-                                    textAlign: 'center', 
-                                    padding: '2rem', 
-                                    background: 'rgba(255,255,255,0.03)', 
-                                    borderRadius: '24px', 
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '2rem',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '24px',
                                     border: '1px solid rgba(255,255,255,0.05)',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -778,10 +791,10 @@ const Lesson = () => {
                                 }}>
                                     {/* Decorative Background Icon */}
                                     {subject?.icon && (
-                                        <div style={{ 
-                                            position: 'absolute', 
-                                            right: '-2rem', 
-                                            top: '50%', 
+                                        <div style={{
+                                            position: 'absolute',
+                                            right: '-2rem',
+                                            top: '50%',
                                             transform: 'translateY(-50%) rotate(-15deg)',
                                             opacity: 0.05,
                                             color: subject.color,
@@ -811,7 +824,7 @@ const Lesson = () => {
                                             Necesitas 100% de aciertos para avanzar
                                         </li>
                                     </ul>
-                                    <button 
+                                    <button
                                         onClick={startQuiz}
                                         className="nav-btn nav-btn-complete"
                                         style={{ background: subject.color, border: 'none', color: 'white', padding: '0.85rem 2.5rem', fontSize: '1.1rem', fontWeight: 700, boxShadow: `0 8px 15px ${subject.color}30`, margin: '0', position: 'relative', zIndex: 1 }}
@@ -822,7 +835,7 @@ const Lesson = () => {
                             )}
 
                             {quizMode === 'question' && (
-                                <div style={{ 
+                                <div style={{
                                     animation: 'fadeIn 0.5s ease-out',
                                     position: 'relative',
                                     padding: '1rem',
@@ -831,15 +844,15 @@ const Lesson = () => {
                                 }}>
                                     {/* Time's Up Overlay */}
                                     {selectedAnswer === -1 && (
-                                        <div className="animate-scale-in" style={{ 
-                                            position: 'absolute', 
-                                            inset: 0, 
-                                            zIndex: 20, 
-                                            background: 'rgba(15, 23, 42, 0.9)', 
-                                            backdropFilter: 'blur(8px)', 
-                                            display: 'flex', 
-                                            flexDirection: 'column', 
-                                            alignItems: 'center', 
+                                        <div className="animate-scale-in" style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            zIndex: 20,
+                                            background: 'rgba(15, 23, 42, 0.9)',
+                                            backdropFilter: 'blur(8px)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
                                             justifyContent: 'center'
                                         }}>
                                             <div style={{ background: 'rgba(239, 68, 68, 0.2)', padding: '2rem', borderRadius: '50%', marginBottom: '1.5rem' }}>
@@ -853,10 +866,10 @@ const Lesson = () => {
 
                                     {/* Decorative Background Icon */}
                                     {subject?.icon && (
-                                        <div style={{ 
-                                            position: 'absolute', 
-                                            right: '-2rem', 
-                                            top: '50%', 
+                                        <div style={{
+                                            position: 'absolute',
+                                            right: '-2rem',
+                                            top: '50%',
                                             transform: 'translateY(-50%) rotate(-15deg)',
                                             opacity: 0.03,
                                             color: subject.color,
@@ -870,12 +883,12 @@ const Lesson = () => {
                                         <span style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600 }}>
                                             Pregunta {currentQ + 1} de {quizQuestions.length}
                                         </span>
-                                        <div style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '8px', 
-                                            color: timeLeft > 20 ? '#10b981' : timeLeft > 10 ? '#f59e0b' : '#ef4444', 
-                                            fontWeight: 700, 
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            color: timeLeft > 20 ? '#10b981' : timeLeft > 10 ? '#f59e0b' : '#ef4444',
+                                            fontWeight: 700,
                                             fontSize: '1.2rem',
                                             position: 'relative',
                                             zIndex: 2,
@@ -888,17 +901,17 @@ const Lesson = () => {
 
                                     <div style={{ display: 'flex', gap: '3px', marginBottom: '2.5rem', position: 'relative', zIndex: 1 }}>
                                         {[...Array(30)].map((_, i) => (
-                                            <div 
-                                                key={i} 
-                                                style={{ 
-                                                    flex: 1, 
+                                            <div
+                                                key={i}
+                                                style={{
+                                                    flex: 1,
                                                     height: '8px',
-                                                    background: i < timeLeft 
-                                                        ? (timeLeft > 20 ? '#10b981' : timeLeft > 10 ? '#f59e0b' : '#ef4444') 
+                                                    background: i < timeLeft
+                                                        ? (timeLeft > 20 ? '#10b981' : timeLeft > 10 ? '#f59e0b' : '#ef4444')
                                                         : 'rgba(255,255,255,0.1)',
                                                     borderRadius: '2px',
                                                     transition: 'all 0.3s ease'
-                                                }} 
+                                                }}
                                             />
                                         ))}
                                     </div>
@@ -913,7 +926,7 @@ const Lesson = () => {
                                             const isCorrect = quizQuestions[currentQ].correct === optIdx;
                                             let bg = 'rgba(30, 41, 59, 0.4)';
                                             let border = '1px solid rgba(255,255,255,0.08)';
-                                            
+
                                             if (selectedAnswer !== null && isSelected) {
                                                 if (isCorrect) {
                                                     bg = 'rgba(16, 185, 129, 0.2)';
@@ -958,11 +971,11 @@ const Lesson = () => {
                             )}
 
                             {quizMode === 'result' && (
-                                <div style={{ 
-                                    textAlign: 'center', 
-                                    padding: '2rem', 
-                                    background: 'rgba(255,255,255,0.03)', 
-                                    borderRadius: '24px', 
+                                <div style={{
+                                    textAlign: 'center',
+                                    padding: '2rem',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '24px',
                                     border: '1px solid rgba(255,255,255,0.05)',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -972,10 +985,10 @@ const Lesson = () => {
                                 }}>
                                     {/* Decorative Background Icon */}
                                     {subject?.icon && (
-                                        <div style={{ 
-                                            position: 'absolute', 
-                                            right: '-2rem', 
-                                            top: '50%', 
+                                        <div style={{
+                                            position: 'absolute',
+                                            right: '-2rem',
+                                            top: '50%',
                                             transform: 'translateY(-50%) rotate(-15deg)',
                                             opacity: 0.05,
                                             color: quizScore === quizQuestions.length ? '#10b981' : '#ef4444',
@@ -988,26 +1001,26 @@ const Lesson = () => {
                                     <div style={{ position: 'relative', zIndex: 1, marginBottom: '1.5rem' }}>
                                         {quizScore === quizQuestions.length ? <Trophy size={60} color="#10b981" /> : <AlertCircle size={60} color="#ef4444" />}
                                     </div>
-                                    
+
                                     <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem', position: 'relative', zIndex: 1 }}>
                                         {quizScore === quizQuestions.length ? '¡Increíble! Dominio Total' : 'Sigue Practicando'}
                                     </h3>
-                                    
+
                                     <p style={{ color: '#94a3b8', fontSize: '1rem', marginBottom: '2rem', maxWidth: '500px', position: 'relative', zIndex: 1 }}>
-                                        {quizScore === quizQuestions.length 
-                                            ? 'Has superado el reto con éxito. Has demostrado un dominio absoluto de los temas de esta lección.' 
+                                        {quizScore === quizQuestions.length
+                                            ? 'Has superado el reto con éxito. Has demostrado un dominio absoluto de los temas de esta lección.'
                                             : `Has acertado ${quizScore} de ${quizQuestions.length}. Para avanzar a la siguiente lección debes obtener el 100% de aciertos.`}
                                     </p>
 
                                     <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', position: 'relative', zIndex: 1 }}>
-                                        <button 
+                                        <button
                                             onClick={() => setQuizMode('intro')}
                                             className="nav-btn nav-btn-prev"
                                             style={{ margin: 0, padding: '0.75rem 1.5rem' }}
                                         >
                                             Repetir Prueba
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => setActiveTab('contenido')}
                                             className="nav-btn nav-btn-complete"
                                             style={{ background: subject.color, border: 'none', color: 'white', margin: 0, padding: '0.75rem 1.5rem' }}
@@ -1039,10 +1052,10 @@ const Lesson = () => {
                                         </div>
                                         <h3 style={{ color: 'white', fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Retos de Programación</h3>
                                     </div>
-                                    
-                                    <div className="challenges-nav" style={{ 
-                                        display: 'flex', 
-                                        gap: '4px', 
+
+                                    <div className="challenges-nav" style={{
+                                        display: 'flex',
+                                        gap: '4px',
                                         alignItems: 'flex-end',
                                         marginBottom: '-1px',
                                         padding: '0 4px 0 24px', // 24px padding-left added
@@ -1050,7 +1063,7 @@ const Lesson = () => {
                                         zIndex: 2
                                     }}>
                                         {lesson.challenges.map((c, idx) => (
-                                            <button 
+                                            <button
                                                 key={idx}
                                                 onClick={() => setActiveChallenge(idx)}
                                                 style={{
@@ -1073,7 +1086,7 @@ const Lesson = () => {
                                                     position: 'relative'
                                                 }}
                                             >
-                                                <div style={{ 
+                                                <div style={{
                                                     width: '24px',
                                                     height: '24px',
                                                     borderRadius: '6px',
@@ -1092,8 +1105,8 @@ const Lesson = () => {
                                         ))}
                                     </div>
 
-                                    <div 
-                                        className="challenge-display-area animate-fade-in" 
+                                    <div
+                                        className="challenge-display-area animate-fade-in"
                                         key={activeChallenge}
                                         style={{
                                             background: 'rgba(30, 41, 59, 0.4)',
@@ -1104,7 +1117,7 @@ const Lesson = () => {
                                             position: 'relative'
                                         }}
                                     >
-                                        <button 
+                                        <button
                                             onClick={() => setShowSimulator(true)}
                                             style={{
                                                 position: 'absolute',
@@ -1135,9 +1148,9 @@ const Lesson = () => {
                                     </div>
 
                                     {showSimulator && (
-                                        <MiniChallengeSimulator 
-                                            challengeIdx={activeChallenge} 
-                                            onClose={() => setShowSimulator(false)} 
+                                        <MiniChallengeSimulator
+                                            challengeIdx={activeChallenge}
+                                            onClose={() => setShowSimulator(false)}
                                         />
                                     )}
                                 </div>

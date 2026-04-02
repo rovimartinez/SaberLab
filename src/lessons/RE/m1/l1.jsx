@@ -145,7 +145,9 @@ void loop() {
   delay(1000);              // Esperar 1 segundo
   // El loop se repite ∞ → ¡el LED parpadea!
 }</code></pre>
-            <div id="simulator-container"></div>
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 1.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; min-height: 300px;">
+                <h1 style="color: #60a5fa; font-size: 2rem; font-weight: bold;">¡Hola!</h1>
+            </div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 0;">
             <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
@@ -175,38 +177,6 @@ void loop() {
         { id: 'f10', type: 'hw', q: '¿Qué voltaje suministra el pin 5V del Arduino?', a: '5 voltios', sub: 'Para alimentar componentes externos' },
         { id: 'f11', type: 'hw', q: '¿Cómo se llama el microcontrolador del Arduino Uno?', a: 'ATmega328P', sub: 'Corre a 16 MHz' },
         { id: 'f12', type: 'code', q: '¿Qué significa delay(1000)?', a: 'Esperar 1 segundo', sub: '1000 milisegundos' }
-    ],
-    challenges: [
-        {
-            title: 'Reto 1: Mi primer Blink',
-            instruction: 'Copia el código base y súbelo a tu Arduino para ver el LED parpadear.',
-            solution: `void setup() {
-  pinMode(13, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(13, HIGH);
-  delay(1000);
-  digitalWrite(13, LOW);
-  delay(1000);
-}`,
-            hints: ['Usa el código de ejemplo', 'delay(1000) = 1 segundo']
-        },
-        {
-            title: 'Reto 2: Cambia el pin',
-            instruction: 'Modifica el código para usar el LED_BUILTIN en lugar del número 13.',
-            solution: `void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);
-}
-
-void loop() {
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(1000);
-  digitalWrite(LED_BUILTIN, LOW);
-  delay(1000);
-}`,
-            hints: ['LED_BUILTIN es una constante', 'Te evita acordarte del número']
-        }
     ],
     hasSimulator: true,
     questions: [

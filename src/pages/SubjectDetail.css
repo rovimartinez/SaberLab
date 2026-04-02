@@ -201,23 +201,28 @@
 }
 
 .lesson-btn {
-    padding: 5px 12px;
-    border-radius: 5px;
+    padding: 6px 12px;
+    border-radius: 6px;
     font-weight: 700;
     font-size: 0.75rem;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     transition: all 0.3s ease;
+    width: 115px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .lesson-btn.start {
     color: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .lesson-btn.revisit {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .lesson-btn:hover {

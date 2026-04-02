@@ -101,14 +101,23 @@ const SubjectDetail = () => {
         }
     ];
 
-    const [expandedModules, setExpandedModules] = useState({});
+    const [expandedModules, setExpandedModules] = useState(() => {
+        const initialState = { m1: true };
+        modules.forEach(m => {
+            if (m.lessons.some(l => l.status === 'current')) {
+                initialState[m.id] = true;
+            }
+        });
+        return initialState;
+    });
 
     return (
         <div className="subject-detail-container animate-fade-in" style={{ padding: '0 1rem' }}>
             <div className="detail-header-classic" style={{ 
-                background: `linear-gradient(90deg, ${subject.color}50 0%, #0f172a 100%)`, 
+                background: `linear-gradient(90deg, ${subject.color}50 0%, #161d2b 100%)`, 
                 padding: '1.5rem 2rem', 
-                border: `1px solid ${subject.color}30`,
+                border: `1px solid ${subject.color}40`,
+                boxShadow: `0 4px 20px ${subject.color}15`,
                 position: 'relative',
                 overflow: 'hidden',
                 borderRadius: '20px',
@@ -142,12 +151,13 @@ const SubjectDetail = () => {
                 {/* Decorative Background Element */}
                 <div style={{ 
                     position: 'absolute', 
-                    right: '-1rem', 
+                    right: '1rem', 
                     top: '50%', 
-                    transform: 'translateY(-50%) rotate(-10deg)',
-                    opacity: 0.15,
+                    transform: 'translateY(-50%) rotate(15deg)',
+                    opacity: 0.4,
                     color: subject.color,
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
+                    zIndex: 1
                 }}>
                     {React.cloneElement(subject.icon, { size: 180 })}
                 </div>
@@ -229,18 +239,18 @@ const SubjectDetail = () => {
                                 return (
                                     <div key={index} className="agenda-card-classic" style={{ padding: '0.85rem 1.25rem' }}>
                                         <div className="agenda-top-bar" style={{ flexWrap: 'nowrap', gap: '1rem', width: '100%', display: 'flex', alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
-                                                <span className="agenda-module-badge" style={{ backgroundColor: `${subject.color}20`, color: subject.color, minWidth: '75px', textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, whiteSpace: 'nowrap' }}>
+                                                <span className="agenda-module-badge" style={{ backgroundColor: `${subject.color}20`, color: subject.color, width: '80px', textAlign: 'center', flexShrink: 0 }}>
                                                     {modulePart}
                                                 </span>
-                                                <span className="agenda-type-pill" style={{ backgroundColor: 'transparent', color: '#f43f5e', fontSize: '0.85rem', padding: '0', fontWeight: 800 }}>
+                                                <span className="agenda-type-pill" style={{ backgroundColor: 'transparent', color: '#f43f5e', fontSize: '0.82rem', padding: '0', fontWeight: 800, width: '135px', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                     {item.type} {mainTitle.split(' ').pop()}
                                                 </span>
-                                                <span className="agenda-points-badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, marginLeft: '0.5rem' }}>
+                                                <span className="agenda-points-badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '4px 8px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, width: '70px', textAlign: 'center', flexShrink: 0 }}>
                                                     {item.points} pts
                                                 </span>
                                             </div>
-                                            <span className="agenda-date-small" style={{ marginLeft: 'auto' }}>{item.date}</span>
+                                            <span className="agenda-date-small" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.75rem', textAlign: 'right', minWidth: '100px' }}>{item.date}</span>
                                         </div>
                                     </div>
                                 );
