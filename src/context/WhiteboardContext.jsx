@@ -1,5 +1,5 @@
 import { createContext, useState } from 'react';
-import Whiteboard from '../components/Whiteboard';
+import PizarraMagica from '../components/widgets/PizarraMagica';
 
 export const WhiteboardContext = createContext();
 
@@ -12,7 +12,7 @@ export const WhiteboardProvider = ({ children }) => {
     return (
         <WhiteboardContext.Provider value={{ isOpen, openWhiteboard, closeWhiteboard }}>
             {children}
-            {isOpen && <Whiteboard onClose={closeWhiteboard} />}
+            {isOpen && <PizarraMagica onClose={closeWhiteboard} />}
         </WhiteboardContext.Provider>
     );
 };

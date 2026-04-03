@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, RotateCw, Download, Upload, Save, Code } from 'lucide-react';
 
-const CodeEditor = ({ onRun, compact = false, initialCode }) => {
+const CodeEditor = ({ onRun, compact = false, initialCode, showOutput = true }) => {
     const [code, setCode] = useState(initialCode || `void setup() {
   pinMode(13, OUTPUT);
   Serial.begin(9600);
@@ -74,7 +74,7 @@ void loop() {
     };
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : '1.2fr 1fr', gap: '1.5rem', height: compact ? '100%' : '600px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: showOutput && !compact ? '1.2fr 1fr' : '1fr', gap: '1.5rem', height: compact ? '100%' : '600px' }}>
             {/* Editor Section */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
                 <div style={{ 
@@ -153,6 +153,7 @@ void loop() {
             </div>
 
             {/* Console/Simulator Section */}
+            {showOutput && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
                 <div style={{ 
                     background: '#1e293b', 
@@ -242,6 +243,7 @@ void loop() {
                     </div>
                 </div>
             </div>
+            )}
         </div>
     );
 };

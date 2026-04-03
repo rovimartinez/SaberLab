@@ -19,28 +19,33 @@ import {
     Trophy,
     AlertCircle,
     Check,
+    Rocket,
     Bot,
     Zap,
     Code,
+    Code2,
     FlaskConical,
     Box,
     Brain,
     Cpu,
+    Lightbulb,
     Award
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/useAuth';
 import './Lesson.css';
-import ChallengeRoadmap from '../components/ChallengeRoadmap';
+import MisionRoadMap from '../components/simulators/RE/MisionRoadMap';
 import CodeEditor from '../components/CodeEditor';
-import ArduinoSimulatorV2 from '../components/ArduinoSimulatorV2';
-import LedSimulator from '../components/LedSimulator';
+import ArduinoSimulatorV2 from '../components/simulators/RE/ArduinoSimulatorV2';
+import LedSimulator from '../components/simulators/RE/LedSimulator';
+import { l1Missions } from '../lessons/RE/m1/l1.missions';
+import { l2Missions } from '../lessons/RE/m1/l2.missions';
 import { getCourseByAbbr, getLessonContent, getLessonInfo, getFullLessonPath, getCourseByIdentifier, COURSES_DEFINITION } from '../data/coursesData.jsx';
 
 const tabs = [
     { id: 'contenido', label: 'Contenido', icon: <BookOpen size={18} /> },
     { id: 'repaso', label: 'Repaso', icon: <Brain size={18} /> },
-    { id: 'simulador', label: 'Simulador', icon: <Cpu size={18} /> },
+    { id: 'simulador', label: 'Misiones', icon: <Rocket size={18} /> },
     { id: 'prueba', label: 'Prueba', icon: <ClipboardList size={18} /> }
 ];
 
@@ -99,10 +104,19 @@ const ArduinoSimulator = () => {
     );
 };
 
-const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
+const ReviewSection = ({ user, lessonKey, flashcards = [], accentColor = '#a855f7', lessonContent = '', onGoToContent }) => {
     const [flipped, setFlipped] = useState({});
     const [mastered, setMastered] = useState({});
     const [loading, setLoading] = useState(false);
+    const [reviewModal, setReviewModal] = useState({ open: false, title: '', html: '' });
+    const [summaryModal, setSummaryModal] = useState({ open: false, sections: [] });
+    const [analyzing, setAnalyzing] = useState(false);
+    const [summaryShown, setSummaryShown] = useState(false);
+    const [summaryClosing, setSummaryClosing] = useState(false);
+    const [closeTransform, setCloseTransform] = useState('');
+    const summaryButtonRef = useRef(null);
+    const summaryModalRef = useRef(null);
+    const contentRef = useRef(null);
 
     useEffect(() => {
         if (user && lessonKey) {
@@ -110,7 +124,7 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
         }
     }, [user, lessonKey]);
 
-    const loadProgress = async () => {
+    const loadProgress = React.useCallback(async () => {
         try {
             setLoading(true);
             const { data } = await supabase
@@ -131,10 +145,111 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user, lessonKey]);
 
     const toggleFlip = (id) => {
         setFlipped(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const openReview = (e, sectionId) => {
+        e.stopPropagation();
+        if (!sectionId || !contentRef.current) return;
+        const heading = contentRef.current.querySelector(`#${sectionId}`);
+        if (!heading) return;
+
+        const parts = [];
+        let node = heading.nextElementSibling;
+        while (node && node.tagName && node.tagName.toLowerCase() !== 'h3') {
+            parts.push(node.outerHTML);
+            node = node.nextElementSibling;
+        }
+
+        setReviewModal({
+            open: true,
+            title: heading.textContent || 'Repaso',
+            html: parts.join('')
+        });
+    };
+
+    const getSectionTitle = (sectionId) => {
+        if (!sectionId || !contentRef.current) return '';
+        const heading = contentRef.current.querySelector(`#${sectionId}`);
+        return heading ? heading.textContent : '';
+    };
+
+    const getTitleSortKey = (title) => {
+        if (!title) return [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
+        const match = title.match(/(\d+)\.(\d+)/);
+        if (!match) return [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
+        return [parseInt(match[1], 10), parseInt(match[2], 10)];
+    };
+
+    const buildSummarySections = () => {
+        const unknownCards = flashcards.filter(card => mastered[card.id] === 'unknown');
+        const sectionMap = new Map();
+        unknownCards.forEach(card => {
+            const title = getSectionTitle(card.sectionId) || 'Contenido';
+            if (!sectionMap.has(title)) {
+                sectionMap.set(title, []);
+            }
+            sectionMap.get(title).push(card.q);
+        });
+
+        return Array.from(sectionMap.entries())
+            .map(([title, questions]) => ({ title, questions }))
+            .sort((a, b) => {
+                const [a1, a2] = getTitleSortKey(a.title);
+                const [b1, b2] = getTitleSortKey(b.title);
+                if (a1 !== b1) return a1 - b1;
+                return a2 - b2;
+            });
+    };
+
+    const allAnswered = flashcards.length > 0 && flashcards.every(card => mastered[card.id]);
+    const unknownCount = flashcards.filter(card => mastered[card.id] === 'unknown').length;
+    const summaryStatus = !allAnswered ? 'neutral' : unknownCount === 0 ? 'ok' : unknownCount <= 2 ? 'warn' : 'danger';
+
+    useEffect(() => {
+        if (!flashcards.length || summaryShown) return;
+        const allDone = flashcards.every(card => mastered[card.id]);
+        if (!allDone) return;
+
+        const unknownCards = flashcards.filter(card => mastered[card.id] === 'unknown');
+        if (unknownCards.length === 0) {
+            setSummaryShown(true);
+            setSummaryModal({ open: true, sections: [] });
+            return;
+        }
+
+        const sections = buildSummarySections();
+
+        setAnalyzing(true);
+        const t = setTimeout(() => {
+            setAnalyzing(false);
+            setSummaryModal({ open: true, sections });
+            setSummaryShown(true);
+        }, 2000);
+        return () => clearTimeout(t);
+    }, [flashcards, mastered, summaryShown]);
+
+    const closeSummary = () => {
+        if (summaryButtonRef.current && summaryModalRef.current) {
+            const btn = summaryButtonRef.current.getBoundingClientRect();
+            const modal = summaryModalRef.current.getBoundingClientRect();
+            const targetX = btn.left + btn.width / 2;
+            const targetY = btn.top + btn.height / 2;
+            const dx = targetX - modal.left;
+            const dy = targetY - modal.top;
+            setCloseTransform(`translate(${dx}px, ${dy}px) scale(0.35)`);
+        } else {
+            setCloseTransform('translate(200px, -140px) scale(0.35)');
+        }
+        setSummaryClosing(true);
+        setTimeout(() => {
+            setSummaryModal({ open: false, sections: [] });
+            setSummaryClosing(false);
+            setCloseTransform('');
+        }, 500);
     };
 
     const handleMark = async (e, id, status) => {
@@ -153,36 +268,93 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                 console.error("Error saving progress:", err);
             }
         }
-        setTimeout(() => setFlipped(prev => ({ ...prev, [id]: false })), 800);
+        setTimeout(() => setFlipped(prev => ({ ...prev, [id]: false })), 200);
     };
 
     if (loading) return <div style={{ textAlign: 'center', padding: '4rem', color: '#a855f7' }}><RefreshCw className="animate-spin" size={32} /></div>;
 
     return (
         <div className="review-section-interactive" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem', padding: '1rem' }}>
+            <div className="review-hint" style={{ padding: '0 1rem 0.25rem 1rem' }}>
+                <span>Haz clic en una tarjeta para ver la respuesta</span>
+                <button
+                    className={`summary-trigger summary-trigger-glow summary-trigger-${summaryStatus}`}
+                    ref={summaryButtonRef}
+                    onClick={() => setSummaryModal({ open: true, sections: buildSummarySections() })}
+                    title="Ver resumen de repaso"
+                >
+                    <Lightbulb size={16} />
+                </button>
+            </div>
+            {reviewModal.open && (
+                <div className="review-modal-backdrop" onClick={() => setReviewModal({ open: false, title: '', html: '' })}>
+                    <div className="review-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="review-modal-header">
+                            <h4>{reviewModal.title}</h4>
+                            <button onClick={() => setReviewModal({ open: false, title: '', html: '' })}>Cerrar</button>
+                        </div>
+                        <div className="review-modal-content" dangerouslySetInnerHTML={{ __html: reviewModal.html }} />
+                    </div>
+                </div>
+            )}
+            {analyzing && (
+                <div className="summary-modal-backdrop">
+                    <div className="summary-modal">
+                        <div className="summary-title">Analizando...</div>
+                        <div className="summary-sub">Revisando tus tarjetas pendientes</div>
+                        <div className="summary-dots" aria-hidden="true">
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+                    </div>
+                </div>
+            )}
+            {summaryModal.open && (
+                <div className="summary-modal-backdrop" onClick={closeSummary}>
+                    <div
+                        ref={summaryModalRef}
+                        className={`summary-modal${summaryClosing ? ' summary-modal-closing' : ''}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={summaryClosing && closeTransform ? { transform: closeTransform } : undefined}
+                    >
+                        <div className="summary-modal-header">
+                            <div className="summary-modal-title">Resumen de tu repaso</div>
+                            <button className="summary-close" onClick={closeSummary}>×</button>
+                        </div>
+                        <div className="summary-sub">Estas secciones corresponden a las tarjetas marcadas como "No lo sé".</div>
+                        <div className="summary-list">
+                            {summaryModal.sections.length === 0 ? (
+                                <div className="summary-empty">No tienes pendientes por repasar.</div>
+                            ) : (
+                                summaryModal.sections.map((section, i) => (
+                                    <div key={`${section.title}-${i}`} className="summary-section">
+                                        <div className="summary-section-title">{section.title}</div>
+                                        <ul className="summary-questions">
+                                            {section.questions.map((q, qi) => (
+                                                <li key={`${section.title}-${qi}`}>{q}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            <div className="review-grid">
                 {flashcards.map(card => {
                     const status = mastered[card.id];
-                    let accentColor = card.type === 'hw' ? '#a855f7' : '#60a5fa';
-                    let cardBg = 'rgba(30, 41, 59, 0.6)';
-                    let glow = 'none';
-
-                    if (status === 'known') {
-                        accentColor = '#10b981';
-                        cardBg = 'rgba(16, 185, 129, 0.15)';
-                        glow = '0 0 20px rgba(16, 185, 129, 0.2)';
-                    } else if (status === 'unknown') {
-                        accentColor = '#ef4444';
-                        cardBg = 'rgba(239, 68, 68, 0.15)';
-                        glow = '0 0 20px rgba(239, 68, 68, 0.2)';
-                    }
+                    const cardBg = 'rgba(15, 23, 42, 0.98)';
+                    const statusColor = status === 'known' ? '#10b981' : status === 'unknown' ? '#ef4444' : accentColor;
+                    const glow = `0 0 20px ${statusColor}20`;
 
                     return (
                         <div
                             key={card.id}
                             className={`memory-card ${flipped[card.id] ? 'is-flipped' : ''}`}
                             onClick={() => toggleFlip(card.id)}
-                            style={{ height: '230px', perspective: '1000px', cursor: 'pointer' }}
+                            style={{ height: '210px', perspective: '1000px', cursor: 'pointer' }}
                         >
                             <div className="card-inner" style={{
                                 position: 'relative',
@@ -193,32 +365,44 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                             }}>
                                 <div className="card-front" style={{
                                     position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
-                                    background: cardBg, border: `2px solid ${accentColor}`, borderRadius: '24px',
+                                    background: cardBg, border: `3px solid ${statusColor}`, borderRadius: '24px',
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                     padding: '2rem', textAlign: 'center', boxShadow: glow, backdropFilter: 'blur(10px)',
                                     transition: 'all 0.4s ease'
                                 }}>
-                                    <div style={{
-                                        background: `${accentColor}15`,
-                                        padding: '14px', borderRadius: '18px', marginBottom: '16px',
-                                        border: `1px solid ${accentColor}30`,
-                                        transition: 'all 0.4s ease'
-                                    }}>
-                                        {card.type === 'hw' ? <PenTool size={26} color={accentColor} /> : <Code size={26} color={accentColor} />}
+                                    {status && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '12px',
+                                            left: '12px',
+                                            padding: '6px 10px',
+                                            borderRadius: '999px',
+                                            fontSize: '0.65rem',
+                                            fontWeight: 800,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.08em',
+                                            color: status === 'known' ? '#10b981' : '#ef4444',
+                                            background: status === 'known' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                                            border: `1px solid ${status === 'known' ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`
+                                        }}>
+                                            {status === 'known' ? 'Lo sé' : 'No lo sé'}
+                                        </div>
+                                    )}
+                                    <div className="card-icon-bg" style={{ color: `${accentColor}40` }}>
+                                        {card.type === 'hw' ? <Cpu size={96} /> : <Code2 size={96} />}
                                     </div>
                                     <span style={{ color: 'white', fontWeight: 800, fontSize: '1.05rem', lineHeight: 1.4 }}>{card.q}</span>
-                                    <div style={{ marginTop: '1.25rem', fontSize: '0.65rem', color: '#94a3b8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.8 }}>Toca para ver respuesta</div>
                                 </div>
                                 <div className="card-back" style={{
                                     position: 'absolute', width: '100%', height: '100%', backfaceVisibility: 'hidden',
-                                    background: 'rgba(15, 23, 42, 0.98)', border: `3px solid ${accentColor}`, borderRadius: '24px',
+                                    background: 'rgba(15, 23, 42, 0.98)', border: `3px solid ${statusColor}`, borderRadius: '24px',
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                     padding: '2rem', textAlign: 'center', transform: 'rotateY(180deg)',
                                     boxShadow: `0 20px 40px rgba(0,0,0,0.5), ${glow}`, transition: 'all 0.4s ease'
                                 }}>
                                     <span style={{
-                                        color: accentColor, fontWeight: 900, fontSize: '1.5rem', marginBottom: '14px',
-                                        textShadow: `0 0 20px ${accentColor}60`, letterSpacing: '0.5px'
+                                        color: statusColor, fontWeight: 900, fontSize: '1.5rem', marginBottom: '14px',
+                                        textShadow: `0 0 20px ${statusColor}60`, letterSpacing: '0.5px'
                                     }}>{card.a}</span>
                                     <p style={{ color: '#cbd5e1', fontSize: '0.88rem', marginBottom: '24px', lineHeight: 1.6, fontWeight: 500 }}>{card.sub}</p>
                                     <div style={{ display: 'flex', gap: '14px' }}>
@@ -241,6 +425,7 @@ const ReviewSection = ({ user, lessonKey, flashcards = [] }) => {
                     );
                 })}
             </div>
+            <div ref={contentRef} style={{ display: 'none' }} dangerouslySetInnerHTML={{ __html: lessonContent }} />
         </div>
     );
 };
@@ -520,6 +705,12 @@ const Lesson = () => {
     const subject = (lessonPath && lessonPath.course) || { name: 'Robótica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
     const courseInfo = (lessonPath && lessonPath.lesson) || { title: 'Lección' };
 
+    const lessonMissionsMap = {
+        're-m1-l1': l1Missions,
+        're-m1-l2': l2Missions
+    };
+    const resolvedMissions = lessonMissionsMap[internalId] || [];
+
     // Legacy support or generate a key
     const lessonKey = internalId;
     const [scrollProgress, setScrollProgress] = useState(0);
@@ -538,15 +729,23 @@ const Lesson = () => {
     useEffect(() => {
         if (lesson?.hasSimulator) {
             const checkAndMount = () => {
-                const container = document.getElementById('simulator-container');
-                console.log('Checking for simulator container:', container);
-                
-                if (container && !container.hasChildNodes()) {
-                    console.log('Mounting LedSimulator into container');
-                    const root = createRoot(container);
+                const ledContainer = document.getElementById('led-simulator-container');
+                const arduinoContainer = document.getElementById('arduino-simulator-container');
+
+                if (ledContainer && !ledContainer.hasChildNodes()) {
+                    const root = createRoot(ledContainer);
                     root.render(
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', padding: '1rem', gap: '1rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', padding: '0.5rem' }}>
                             <LedSimulator />
+                        </div>
+                    );
+                }
+
+                if (arduinoContainer && !arduinoContainer.hasChildNodes()) {
+                    const root = createRoot(arduinoContainer);
+                    root.render(
+                        <div style={{ width: '100%', minHeight: '520px' }}>
+                            <ArduinoSimulatorV2 />
                         </div>
                     );
                 }
@@ -612,7 +811,7 @@ const Lesson = () => {
             }, 1500);
         }
         return () => clearTimeout(timerRef.current);
-    }, [timeLeft, quizMode, currentQ, selectedAnswer]);
+    }, [timeLeft, quizMode, currentQ, selectedAnswer, quizQuestions.length]);
 
     const handleScroll = () => {
         const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
@@ -622,13 +821,13 @@ const Lesson = () => {
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
-        
+
         // Funciones globales para modales
         window.dispatchShowGuide = () => {
             console.log('Guide requested');
             setShowGuide(true);
         };
-        
+
         window.showArduinoParts = () => {
             console.log('Arduino parts requested');
             setShowArduinoParts(true);
@@ -640,125 +839,6 @@ const Lesson = () => {
             delete window.showArduinoParts;
         };
     }, []);
-
-
-    const GuideModal = () => {
-        if (!showGuide) return null;
-
-        const colors = [
-            { name: 'Negro', v12: 0, mult: 'x1 Ω', tol: '-', color: '#000000' },
-            { name: 'Marrón', v12: 1, mult: 'x10 Ω', tol: '±1%', color: '#92400f' },
-            { name: 'Rojo', v12: 2, mult: 'x100 Ω', tol: '±2%', color: '#ef4444' },
-            { name: 'Naranja', v12: 3, mult: 'x1k Ω', tol: '-', color: '#f59e0b' },
-            { name: 'Amarillo', v12: 4, mult: 'x10k Ω', tol: '-', color: '#facc15' },
-            { name: 'Verde', v12: 5, mult: 'x100k Ω', tol: '±0.5%', color: '#22c55e' },
-            { name: 'Azul', v12: 6, mult: 'x1M Ω', tol: '±0.25%', color: '#3b82f6' },
-            { name: 'Violeta', v12: 7, mult: 'x10M Ω', tol: '±0.1%', color: '#a855f7' },
-            { name: 'Gris', v12: 8, mult: '-', tol: '±0.05%', color: '#64748b' },
-            { name: 'Blanco', v12: 9, mult: '-', tol: '-', color: '#ffffff' },
-            { name: 'Oro', v12: '-', mult: 'x0.1 Ω', tol: '±5%', color: '#fbbf24' },
-            { name: 'Plata', v12: '-', mult: 'x0.01 Ω', tol: '±10%', color: '#94a3b8' },
-        ];
-
-        return (
-            <div
-                style={{
-                    position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)',
-                    backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    animation: 'fadeIn 0.3s ease-out'
-                }}
-                onClick={() => setShowGuide(false)}
-            >
-                <div
-                    style={{
-                        background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '20px', width: '90%', maxWidth: '520px', padding: '1.25rem', position: 'relative',
-                        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-                    }}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <button onClick={() => setShowGuide(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}>
-                        <X size={16} />
-                    </button>
-
-                    <header style={{ marginBottom: '1rem' }}>
-                        <h2 style={{ color: '#f97316', fontSize: '1.2rem', fontWeight: 900, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Search size={22} />
-                            Guía de Colores (4 Bandas)
-                        </h2>
-                    </header>
-
-                    <div style={{ overflowX: 'hidden' }}>
-                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px' }}>
-                            <thead>
-                                <tr style={{ color: '#64748b', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    <th style={{ padding: '0.25rem 0.75rem', textAlign: 'left' }}>Color</th>
-                                    <th style={{ padding: '0.25rem 0.75rem', textAlign: 'center' }}>B 1/2</th>
-                                    <th style={{ padding: '0.25rem 0.75rem', textAlign: 'center' }}>Mult.</th>
-                                    <th style={{ padding: '0.25rem 0.75rem', textAlign: 'right' }}>Tol.</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {colors.map(c => (
-                                    <tr key={c.name} style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                        <td style={{ padding: '0.4rem 0.75rem', borderRadius: '8px 0 0 8px', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                            <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: c.color, border: '1px solid rgba(255,255,255,0.1)' }}></div>
-                                            <span style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.8rem' }}>{c.name}</span>
-                                        </td>
-                                        <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: '#cbd5e1', fontWeight: 600, fontSize: '0.8rem' }}>{c.v12}</td>
-                                        <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: '#f97316', fontWeight: 700, fontSize: '0.8rem' }}>{c.mult}</td>
-                                        <td style={{ padding: '0.4rem 0.75rem', borderRadius: '0 8px 8px 0', textAlign: 'right', color: c.tol !== '-' ? '#10b981' : '#64748b', fontWeight: 800, fontSize: '0.8rem' }}>{c.tol}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const ArduinoPartsModal = () => {
-        if (!showArduinoParts) return null;
-
-        return (
-            <div
-                style={{
-                    position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)',
-                    backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    animation: 'fadeIn 0.3s ease-out'
-                }}
-                onClick={() => setShowArduinoParts(false)}
-            >
-                <div
-                    style={{
-                        background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '24px', width: '80%', maxWidth: '900px', padding: '2rem', position: 'relative',
-                        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-                    }}
-                    onClick={e => e.stopPropagation()}
-                >
-                    <button onClick={() => setShowArduinoParts(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}>
-                        <X size={16} />
-                    </button>
-
-                    <header style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-                        <h2 style={{ color: '#a855f7', fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
-                            Componentes del Arduino Uno
-                        </h2>
-                    </header>
-
-                    <div style={{ display: 'flex', justifyContent: 'center', width: '100%', margin: '0 auto' }}>
-                        <img 
-                            src="https://i.postimg.cc/Qt6Qb6G2/Partes-Arduino-Uno.png" 
-                            alt="Partes Arduino Uno" 
-                            style={{ width: '100%', maxWidth: '800px', height: 'auto', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }} 
-                        />
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     if (loading) {
         return (
@@ -785,8 +865,8 @@ const Lesson = () => {
 
     return (
         <div className="lesson-view-container animate-fade-in">
-            <GuideModal />
-            <ArduinoPartsModal />
+            <GuideModal showGuide={showGuide} setShowGuide={setShowGuide} />
+            <ArduinoPartsModal showArduinoParts={showArduinoParts} setShowArduinoParts={setShowArduinoParts} />
             {/* Scroll Progress Bar */}
             <div style={{
                 position: 'fixed',
@@ -859,7 +939,7 @@ const Lesson = () => {
             <main className="lesson-content-card glass-panel">
                 <article className="content-body">
                     {activeTab === 'repaso' ? (
-                        <ReviewSection user={user} lessonKey={lessonKey} flashcards={lesson.flashcards} />
+                        <ReviewSection user={user} lessonKey={lessonKey} flashcards={lesson.flashcards} accentColor={subject.color} lessonContent={lesson.content} onGoToContent={() => setActiveTab('contenido')} />
                     ) : activeTab === 'prueba' ? (
                         <div className="quiz-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
                             {quizMode === 'intro' && (
@@ -1234,7 +1314,7 @@ const Lesson = () => {
                             )}
                         </div>
                     ) : activeTab === 'simulador' ? (
-                        <ChallengeRoadmap />
+                        <MisionRoadMap missions={resolvedMissions} lessonKey={internalId} />
                     ) : (
                         <div
                             dangerouslySetInnerHTML={{ __html: tabs.find(t => t.id === activeTab)?.content || '' }}
@@ -1260,6 +1340,121 @@ const Lesson = () => {
                     </div>
                 </article>
             </main>
+        </div>
+    );
+};
+
+const GuideModal = ({ showGuide, setShowGuide }) => {
+    if (!showGuide) return null;
+
+    const colors = [
+        { name: 'Negro', v12: 0, mult: 'x1 Ω', tol: '-', color: '#000000' },
+        { name: 'Marrón', v12: 1, mult: 'x10 Ω', tol: '±1%', color: '#92400f' },
+        { name: 'Rojo', v12: 2, mult: 'x100 Ω', tol: '±2%', color: '#ef4444' },
+        { name: 'Naranja', v12: 3, mult: 'x1k Ω', tol: '-', color: '#f59e0b' },
+        { name: 'Amarillo', v12: 4, mult: 'x10k Ω', tol: '-', color: '#facc15' },
+        { name: 'Verde', v12: 5, mult: 'x100k Ω', tol: '±0.5%', color: '#22c55e' },
+        { name: 'Azul', v12: 6, mult: 'x1M Ω', tol: '±0.25%', color: '#3b82f6' },
+        { name: 'Violeta', v12: 7, mult: 'x10M Ω', tol: '±0.1%', color: '#a855f7' },
+        { name: 'Gris', v12: 8, mult: '-', tol: '±0.05%', color: '#64748b' },
+        { name: 'Blanco', v12: 9, mult: '-', tol: '-', color: '#ffffff' },
+        { name: 'Oro', v12: '-', mult: 'x0.1 Ω', tol: '±5%', color: '#fbbf24' },
+        { name: 'Plata', v12: '-', mult: 'x0.01 Ω', tol: '±10%', color: '#94a3b8' },
+    ];
+
+    return (
+        <div
+            style={{
+                position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)',
+                backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: 'fadeIn 0.3s ease-out'
+            }}
+            onClick={() => setShowGuide(false)}
+        >
+            <div
+                style={{
+                    background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '20px', width: '90%', maxWidth: '520px', padding: '1.25rem', position: 'relative',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                <button onClick={() => setShowGuide(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}>
+                    <X size={16} />
+                </button>
+
+                <header style={{ marginBottom: '1rem' }}>
+                    <h2 style={{ color: '#f97316', fontSize: '1.2rem', fontWeight: 900, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Search size={22} />
+                        Guía de Colores (4 Bandas)
+                    </h2>
+                </header>
+
+                <div style={{ overflowX: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px' }}>
+                        <thead>
+                            <tr style={{ color: '#64748b', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <th style={{ padding: '0.25rem 0.75rem', textAlign: 'left' }}>Color</th>
+                                <th style={{ padding: '0.25rem 0.75rem', textAlign: 'center' }}>B 1/2</th>
+                                <th style={{ padding: '0.25rem 0.75rem', textAlign: 'center' }}>Mult.</th>
+                                <th style={{ padding: '0.25rem 0.75rem', textAlign: 'right' }}>Tol.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {colors.map(c => (
+                                <tr key={c.name} style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                    <td style={{ padding: '0.4rem 0.75rem', borderRadius: '8px 0 0 8px', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: c.color, border: '1px solid rgba(255,255,255,0.1)' }}></div>
+                                        <span style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.8rem' }}>{c.name}</span>
+                                    </td>
+                                    <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: '#cbd5e1', fontWeight: 600, fontSize: '0.8rem' }}>{c.v12}</td>
+                                    <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: '#f97316', fontWeight: 700, fontSize: '0.8rem' }}>{c.mult}</td>
+                                    <td style={{ padding: '0.4rem 0.75rem', borderRadius: '0 8px 8px 0', textAlign: 'right', color: c.tol !== '-' ? '#10b981' : '#64748b', fontWeight: 800, fontSize: '0.8rem' }}>{c.tol}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ArduinoPartsModal = ({ showArduinoParts, setShowArduinoParts }) => {
+    if (!showArduinoParts) return null;
+    return (
+        <div
+            style={{
+                position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)',
+                backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: 'fadeIn 0.3s ease-out'
+            }}
+            onClick={() => setShowArduinoParts(false)}
+        >
+            <div
+                style={{
+                    background: 'rgba(30, 41, 59, 0.98)', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '24px', width: '80%', maxWidth: '900px', padding: '2rem', position: 'relative',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                <button onClick={() => setShowArduinoParts(false)} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px', borderRadius: '50%', cursor: 'pointer' }}>
+                    <X size={16} />
+                </button>
+                <header style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                    <h2 style={{ color: '#a855f7', fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
+                        Componentes del Arduino Uno
+                    </h2>
+                </header>
+                <div style={{ display: 'flex', justifyContent: 'center', width: '100%', margin: '0 auto' }}>
+                    <img
+                        src="https://i.postimg.cc/Qt6Qb6G2/Partes-Arduino-Uno.png"
+                        alt="Partes Arduino Uno"
+                        style={{ width: '100%', maxWidth: '800px', height: 'auto', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }}
+                    />
+                </div>
+            </div>
         </div>
     );
 };

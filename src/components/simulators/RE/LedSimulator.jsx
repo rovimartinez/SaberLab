@@ -49,7 +49,7 @@ const LedSimulator = () => {
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
-        minHeight: '260px',
+        minHeight: '360px',
         background: '#0d1117',
         borderRadius: '24px',
         border: '1px solid #30363d',
@@ -86,7 +86,7 @@ const LedSimulator = () => {
           ))}
         </div>
 
-        <svg viewBox="0 0 160 200" style={{ width: '100%', maxWidth: '160px', position: 'relative', zIndex: 10, marginLeft: '12px' }}>
+        <svg viewBox="0 0 160 200" style={{ width: '100%', maxWidth: '220px', position: 'relative', zIndex: 10, marginLeft: '12px' }}>
           <defs>
             <linearGradient id="ledGradNew" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={ledColor.dark} />
@@ -147,7 +147,7 @@ const LedSimulator = () => {
 
         <div style={{
           position: 'absolute',
-          right: '32px',
+          right: '100px',
           bottom: '80px',
           background: 'rgba(28, 33, 40, 0.8)',
           backdropFilter: 'blur(8px)',
@@ -156,7 +156,7 @@ const LedSimulator = () => {
           border: '1px solid #30363d',
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}>
-          <span style={{ color: '#f97316', fontFamily: 'monospace', fontSize: '10px', fontWeight: 'bold', letterSpacing: '-0.5px' }}>330 Ω</span>
+          <span style={{ color: '#f97316', fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold', letterSpacing: '-0.5px' }}>330 Ω</span>
         </div>
       </div>
 

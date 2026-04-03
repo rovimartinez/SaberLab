@@ -14,7 +14,7 @@ import Notifications from './pages/Notifications';
 import Evaluations from './pages/Evaluations';
 import Progress from './pages/Progress';
 import Resources from './pages/Resources';
-import MyApps from './pages/MyApps';
+import Widgets from './pages/Widgets';
 import SettingsPage from './pages/Settings';
 import './index.css';
 import { useState } from 'react';
@@ -70,7 +70,7 @@ function AppRoutes() {
                     <Route path="evaluations" element={<Evaluations />} />
                     <Route path="progress" element={<Progress />} />
                     <Route path="resources" element={<Resources />} />
-                    <Route path="myapps" element={<MyApps />} />
+                    <Route path="myapps" element={<Widgets />} />
                     <Route path="settings" element={<SettingsPage />} />
                 </Route>
             </Routes>

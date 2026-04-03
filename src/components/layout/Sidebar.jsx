@@ -39,7 +39,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                { name: 'Mis APPs', action: openLauncher, icon: <Wrench size={18} /> }
+                { name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }
             ]
         },
         {

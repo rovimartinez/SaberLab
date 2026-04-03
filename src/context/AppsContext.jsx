@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import { useWhiteboard } from './useWhiteboard';
-import { AppsOverlay } from '../pages/MyApps';
+import { WidgetsOverlay } from '../pages/Widgets';
 
 export const AppsContext = createContext();
 
@@ -11,14 +11,14 @@ export const AppsProvider = ({ children }) => {
     const [autoCloseLauncher, setAutoCloseLauncher] = useState(true);
 
     useEffect(() => {
-        const saved = window.localStorage.getItem('gadgets-launcher-auto-close');
+        const saved = window.localStorage.getItem('widgets-launcher-auto-close');
         if (saved !== null) {
             setAutoCloseLauncher(saved === 'true');
         }
     }, []);
 
     useEffect(() => {
-        window.localStorage.setItem('gadgets-launcher-auto-close', String(autoCloseLauncher));
+        window.localStorage.setItem('widgets-launcher-auto-close', String(autoCloseLauncher));
     }, [autoCloseLauncher]);
 
     const openLauncher = () => setIsLauncherOpen(true);
@@ -57,7 +57,7 @@ export const AppsProvider = ({ children }) => {
             }}
         >
             {children}
-            <AppsOverlay
+            <WidgetsOverlay
                 isLauncherOpen={isLauncherOpen}
                 closeLauncher={closeLauncher}
                 openGadget={openGadget}

@@ -1,15 +1,15 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../../../context/useAuth';
 import { Lock, Zap, Box, Code2, List, Settings, CircleDot, Star, X } from 'lucide-react';
 import ArduinoExercisesSimulator from './MisionLeccion';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-const ChallengeRoadmap = () => {
+const MisionRoadMap = ({ missions = [] }) => {
   const { user } = useAuth();
-  const [progreso, setProgreso] = useState(6); // Habilitado para probar las 6 misiones
+  const [progreso, setProgreso] = useState(missions.length || 0);
   const [mounted, setMounted] = useState(false);
   const [hoveredId, setHoveredId] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -26,14 +26,30 @@ const ChallengeRoadmap = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const rutaRetos = [
-    { id: 1, title: "Misión 1", desc: "Prender LED", type: "BLOQUE", icon: <Zap size={24} />, xp: 50 },
-    { id: 2, title: "Misión 2", desc: "Código LED", type: "CÓDIGO", icon: <Code2 size={24} />, xp: 80 },
-    { id: 3, title: "Misión 3", desc: "Parpadeo", type: "BLOQUE", icon: <Settings size={24} />, xp: 100 },
-    { id: 4, title: "Misión 4", desc: "Código Parpadeo", type: "CÓDIGO", icon: <List size={24} />, xp: 120 },
-    { id: 5, title: "Misión 5", desc: "Sirena Policial", type: "BLOQUE", icon: <Box size={24} />, xp: 150 },
-    { id: 6, title: "Misión 6", desc: "Código Sirena", type: "CÓDIGO", icon: <CircleDot size={24} />, xp: 200 }
-  ];
+  useEffect(() => {
+    setProgreso(missions.length || 0);
+    setSelectedChallengeId(null);
+  }, [missions]);
+
+  const iconByType = {
+    drag: <Zap size={24} />,
+    write: <Code2 size={24} />
+  };
+
+  const rutaRetos = missions.map((mission, index) => {
+    const parts = mission.title.split(':');
+    const shortTitle = parts[0]?.trim() || `Mision ${index + 1}`;
+    const shortDesc = parts.slice(1).join(':').trim() || mission.goal;
+
+    return {
+      id: index + 1,
+      title: shortTitle,
+      desc: shortDesc,
+      type: mission.type === 'write' ? 'CODIGO' : 'BLOQUE',
+      icon: iconByType[mission.type] || <CircleDot size={24} />,
+      xp: 50 + (index * 30)
+    };
+  });
 
   const handleNodeClick = (retoId) => {
     const isLocked = retoId > progreso;
@@ -43,7 +59,7 @@ const ChallengeRoadmap = () => {
   };
 
   const totalRetos = rutaRetos.length;
-  const progressPercentage = ((progreso - 1) / (totalRetos - 1)) * 100;
+  const progressPercentage = totalRetos > 1 ? ((progreso - 1) / (totalRetos - 1)) * 100 : 0;
   
   const selectedChallenge = rutaRetos.find(r => r.id === selectedChallengeId);
 
@@ -55,7 +71,7 @@ const ChallengeRoadmap = () => {
       justifyContent: 'center', 
       position: 'relative', 
       borderRadius: '16px', 
-      padding: '2.5rem 1rem 6rem', // Más padding abajo para el texto
+      padding: '2.5rem 1rem 6rem', // MÃ¡s padding abajo para el texto
       marginTop: '1rem',
       background: 'rgba(30, 41, 59, 0.5)',
       border: '1px solid rgba(255,255,255,0.1)'
@@ -83,6 +99,24 @@ const ChallengeRoadmap = () => {
         backgroundSize: '32px 32px' 
       }}></div>
 
+      {rutaRetos.length === 0 && (
+        <div style={{
+          width: '100%',
+          maxWidth: '720px',
+          margin: '2rem auto',
+          padding: '2rem',
+          borderRadius: '16px',
+          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'rgba(15, 23, 42, 0.7)',
+          color: '#cbd5e1',
+          textAlign: 'center',
+          position: 'relative',
+          zIndex: 2
+        }}>
+          No hay misiones configuradas para esta leccion todavia.
+        </div>
+      )}
+
       {/* Main Container */}
       <div style={{ 
         position: 'relative', 
@@ -94,7 +128,8 @@ const ChallengeRoadmap = () => {
         marginTop: '1rem'
       }}>
         
-        {/* Connection System - Ahora dentro del contenedor de nodos para mejor alineación */}
+        {/* Connection System - Ahora dentro del contenedor de nodos para mejor alineaciÃ³n */}
+        {rutaRetos.length > 0 && (
         <div style={{ 
           position: 'absolute', 
           left: '24px', /* Mitad del ancho del contenedor (48px / 2) */
@@ -145,6 +180,7 @@ const ChallengeRoadmap = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* Challenge Nodes */}
         <div style={{ 
@@ -194,7 +230,7 @@ const ChallengeRoadmap = () => {
                         display: 'flex', 
                         flexDirection: 'column', 
                         alignItems: 'center', 
-                        animation: 'float 3s ease-in-out infinite' // Animación aparte
+                        animation: 'float 3s ease-in-out infinite' // AnimaciÃ³n aparte
                       }}>
                         <div style={{ 
                           position: 'relative', 
@@ -424,7 +460,7 @@ const ChallengeRoadmap = () => {
             
             {/* Content */}
             <div style={{ flex: 1, overflow: 'hidden', padding: '0' }}>
-               <ArduinoExercisesSimulator initialChallengeId={selectedChallengeId - 1} onClose={() => setSelectedChallengeId(null)} />
+               <ArduinoExercisesSimulator challengesData={missions} initialChallengeId={selectedChallengeId - 1} onClose={() => setSelectedChallengeId(null)} />
             </div>
           </div>
         </div>
@@ -433,4 +469,5 @@ const ChallengeRoadmap = () => {
   );
 };
 
-export default ChallengeRoadmap;
+export default MisionRoadMap;
+

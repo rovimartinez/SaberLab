@@ -215,10 +215,306 @@
 .memory-card {
     transition: transform 0.6s;
     transform-style: preserve-3d;
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    user-select: none;
 }
 
 .memory-card.is-flipped .card-inner {
     transform: rotateY(180deg);
+}
+
+.review-hint {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.summary-trigger {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #e2e8f0;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.summary-trigger-glow {
+    animation: summaryGlow 1.6s ease-in-out infinite;
+}
+
+.summary-trigger-neutral {
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.5);
+    box-shadow: 0 0 6px rgba(148, 163, 184, 0.25);
+}
+
+.summary-trigger-ok {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.35), 0 0 16px rgba(16, 185, 129, 0.2);
+}
+
+.summary-trigger-warn {
+    color: #f97316;
+    border-color: rgba(249, 115, 22, 0.7);
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.35), 0 0 16px rgba(249, 115, 22, 0.2);
+}
+
+.summary-trigger-danger {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.35), 0 0 16px rgba(239, 68, 68, 0.2);
+}
+
+@keyframes summaryGlow {
+    0%, 100% { transform: scale(1) translateY(0); filter: brightness(1); }
+    50% { transform: scale(1.08) translateY(2px); filter: brightness(1.1); }
+}
+.review-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.7);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 1.5rem;
+}
+
+.review-modal {
+    width: min(820px, 100%);
+    max-height: 80vh;
+    overflow: auto;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.55);
+    padding: 1.25rem 1.5rem;
+    color: #e2e8f0;
+}
+
+.review-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.review-modal-header h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #f8fafc;
+}
+
+.review-modal-header button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.review-modal-content {
+    color: #cbd5e1;
+    line-height: 1.7;
+}
+
+.summary-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.7);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3100;
+    padding: 1.5rem;
+}
+
+.summary-modal {
+    width: min(640px, 100%);
+    background: #0f172a;
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.55);
+    padding: 1.5rem;
+    color: #e2e8f0;
+    transform-origin: top left;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+
+.summary-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.summary-modal-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.summary-close {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #e2e8f0;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.summary-modal-closing {
+    opacity: 0;
+}
+
+.summary-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    justify-content: center;
+}
+
+.summary-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #94a3b8;
+    animation: summaryPulse 1s infinite ease-in-out;
+    opacity: 0.5;
+}
+
+.summary-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.summary-dots span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes summaryPulse {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-6px); opacity: 1; }
+}
+
+.summary-sub {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.summary-list {
+    margin: 0 0 1.25rem 0;
+    color: #e2e8f0;
+    line-height: 1.7;
+}
+
+.summary-section {
+    margin-bottom: 0.75rem;
+}
+
+.summary-section-title {
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.summary-questions {
+    margin: 0.25rem 0 0 0;
+    padding-left: 1.2rem;
+    color: #cbd5e1;
+}
+
+.summary-empty {
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.summary-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.summary-btn {
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: #e2e8f0;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.summary-primary {
+    background: #1e293b;
+    border-color: rgba(255,255,255,0.25);
+}
+
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.review-grid .memory-card {
+    grid-column: span 12;
+}
+
+@media (min-width: 640px) {
+    .review-grid .memory-card {
+        grid-column: span 6;
+    }
+}
+
+@media (min-width: 900px) {
+    .review-grid .memory-card {
+        grid-column: span 4;
+    }
+}
+
+@media (min-width: 1200px) {
+    .review-grid .memory-card {
+        grid-column: span 3;
+    }
+}
+
+.card-icon-bg {
+    position: absolute;
+    right: 8px;
+    bottom: 6px;
+    opacity: 0.2;
+    pointer-events: none;
+    filter: blur(0.2px);
+    transform: scale(0.8);
+    transform-origin: bottom right;
+}
+
+.memory-card .card-inner {
+    border-radius: 24px;
 }
 
 @keyframes fadeIn {
