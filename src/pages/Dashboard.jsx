@@ -1,61 +1,35 @@
 import React from 'react';
-import { Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, Zap, Bot } from 'lucide-react';
+import { Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, Zap, Bot, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import './Dashboard.css';
 
+const getCourseIcon = (abbr) => {
+    const def = COURSES_DEFINITION.find(c => c.abbr === abbr);
+    if (def?.icon) return def.icon;
+    if (abbr === 'RE') return <Bot size={24} />;
+    if (abbr === 'EE') return <Zap size={24} />;
+    return <GraduationCap size={24} />;
+};
+
+const getCourseColor = (abbr) => {
+    const def = COURSES_DEFINITION.find(c => c.abbr === abbr);
+    return def?.color || '#6366f1';
+};
+
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, enrolledCourses } = useAuth();
 
     const fullName = user?.user_metadata?.full_name?.split(' ')[0] || 'Estudiante';
 
-    const upcomingActivities = [
-        {
-            id: 1,
-            date: 'Hoy',
-            type: 'EVALUACIÓN',
-            badgeClass: 'badge-eval',
-            title: 'Módulo 1 - Examen 1',
-            course: 'Robótica Educativa',
-            points: 150
-        },
-        {
-            id: 2,
-            date: 'Mañana',
-            type: 'TAREA',
-            badgeClass: 'badge-task',
-            title: 'Practica de Circuitos',
-            course: 'Electricidad',
-            points: 50
-        }
-    ];
+    const upcomingActivities = []; 
 
-    const enrolledCourses = [
-        {
-            id: 5,
-            abbr: 'RE',
-            slug: 'robotica-educativa',
-            name: 'Robótica Educativa',
-            icon: <Bot size={24} />,
-            color: '#a855f7',
-            progress: 85,
-            lessons: 16,
-            lastLesson: 'Sensor Ultrasonido'
-        },
-        {
-            id: 1,
-            abbr: 'EE',
-            slug: 'electricidad-y-electronica',
-            name: 'Electricidad y Electrónica',
-            icon: <Zap size={24} />,
-            color: '#f59e0b',
-            progress: 45,
-            lessons: 12,
-            lastLesson: 'Resistencia eléctrica'
-        }
-    ];
-
-    const lastCourse = enrolledCourses[0];
+    const lastCourse = enrolledCourses.length > 0 ? enrolledCourses[0] : null;
+    
+    const totalProgress = enrolledCourses.length > 0 
+        ? Math.round(enrolledCourses.reduce((acc, c) => acc + (c.progress || 0), 0) / enrolledCourses.length)
+        : 0;
 
     return (
         <div className="dashboard-grid">
@@ -73,27 +47,41 @@ const Dashboard = () => {
                     <div className="stat-item">
                         <Target className="text-gradient" size={24} color="#10b981" />
                         <div>
-                            <div className="stat-value">65%</div>
+                            <div className="stat-value">{totalProgress}%</div>
                             <div className="stat-label">Progreso General</div>
                         </div>
                     </div>
                     <div className="stat-item">
                         <Clock className="text-gradient" size={24} color="#a855f7" />
                         <div>
-                            <div className="stat-value">7</div>
+                            <div className="stat-value">0</div>
                             <div className="stat-label">Días de Racha</div>
                         </div>
                     </div>
                     <div className="stat-item">
                         <BookOpen className="text-gradient" size={24} color="#3b82f6" />
                         <div>
-                            <div className="stat-value">2</div>
+                            <div className="stat-value">{enrolledCourses.length}</div>
                             <div className="stat-label">Cursos</div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            {/* Estado vacío: Sin cursos */}
+            {enrolledCourses.length === 0 ? (
+                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', marginTop: '1.5rem' }}>
+                    <GraduationCap size={64} color="rgba(255,255,255,0.2)" style={{ marginBottom: '1rem' }} />
+                    <h2 style={{ color: 'white', marginBottom: '0.5rem' }}>No tienes cursos inscritos</h2>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                        Únete a un curso usando el código que te proporcionó tu docente.
+                    </p>
+                    <Link to="/dashboard/my-courses" className="btn btn-primary">
+                        Unirse a un Curso
+                    </Link>
+                </div>
+            ) : (
+            <>
             {/* Continuar donde quedaste */}
             <div className="glass-panel continue-section" style={{ padding: '1.5rem' }}>
                 <div className="continue-header">
@@ -205,7 +193,10 @@ const Dashboard = () => {
                     </div>
 
                     <div className="subjects-grid">
-                        {enrolledCourses.map(course => (
+                        {enrolledCourses.map(course => {
+                            const icon = getCourseIcon(course.abbr);
+                            const color = getCourseColor(course.abbr);
+                            return (
                             <Link
                                 to={`/dashboard/my-courses/${course.slug}`}
                                 key={course.id}
@@ -214,13 +205,13 @@ const Dashboard = () => {
                             >
                                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                     <div style={{
-                                        background: `${course.color}20`,
-                                        color: course.color,
+                                        background: `${color}20`,
+                                        color: color,
                                         padding: '10px',
                                         borderRadius: '12px',
                                         flexShrink: 0
                                     }}>
-                                        {course.icon}
+                                        {icon}
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', color: 'white' }}>
@@ -231,20 +222,22 @@ const Dashboard = () => {
                                                 className="progress-bar-fill"
                                                 style={{
                                                     width: `${course.progress}%`,
-                                                    background: course.color
+                                                    background: color
                                                 }}
                                             />
                                         </div>
                                     </div>
-                                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: course.color }}>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: color }}>
                                         {course.progress}%
                                     </span>
                                 </div>
                             </Link>
-                        ))}
+                        )})}
                     </div>
                 </div>
             </div>
+            </>
+            )}
         </div>
     );
 };

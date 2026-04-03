@@ -21,7 +21,7 @@ const Courses = ({ courses }) => {
                         key={course.id} 
                         className="course-overview-card glass-panel"
                         style={{ background: `linear-gradient(135deg, ${course.color}40 0%, ${course.color}10 100%)` }}
-                        onClick={() => navigate(`/dashboard/learn/${course.abbr}`)}
+                        onClick={() => navigate(`/dashboard/course/${course.id}`)}
                     >
                         <div className="course-bg-icon" style={{ color: course.color }}>
                             {React.cloneElement(course.icon, { size: 120 })}
@@ -30,7 +30,7 @@ const Courses = ({ courses }) => {
                         <div className="course-overview-meta">
                             <span className="course-overview-groups">
                                 <Layers size={14} />
-                                {course.groups.length} grupo{course.groups.length !== 1 ? 's' : ''}
+                                0 grupos
                             </span>
                         </div>
                         <div className="course-overview-action">

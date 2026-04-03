@@ -308,6 +308,7 @@
     min-height: 0;
     padding: 1rem;
     overflow-y: auto;
+    background: #1e293b;
 }
 
 .floating-content-roulette {

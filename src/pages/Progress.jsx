@@ -1,56 +1,85 @@
-import React, { useState } from 'react';
-import { TrendingUp, Target, Award, Calendar, BookOpen, Clock, ChevronRight, Flame, Activity, Zap, Bot } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Target, Award, Calendar, BookOpen, Clock, ChevronRight, Flame, Activity, Zap, Bot, GraduationCap } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { supabase } from '../lib/supabase';
+import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import './Progress.css';
 
 const Progress = () => {
+    const { user, enrolledCourses } = useAuth();
+    const [loading, setLoading] = useState(true);
+    const [userProgress, setUserProgress] = useState(null);
+    const [achievements, setAchievements] = useState([]);
     const [timeRange, setTimeRange] = useState('week');
 
-    const overallProgress = 67;
-    const streakDays = 7;
-    const totalHours = 48;
-    const lessonsCompleted = 24;
-    const totalLessons = 36;
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user) return;
 
-    const subjectProgress = [
-        { name: 'Electricidad y Electrónica Básica', progress: 45, color: '#f59e0b', lessons: 8, totalLessons: 18, icon: <Zap size={24} /> },
-        { name: 'Robótica Educativa', progress: 12, color: '#a855f7', lessons: 3, totalLessons: 25, icon: <Bot size={24} /> }
-    ];
+            const { data: progressData } = await supabase
+                .from('user_progress')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            if (progressData) {
+                setUserProgress(progressData);
+            }
+
+            const { data: achievementsData } = await supabase
+                .from('achievements')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('unlocked_at', { ascending: false });
+
+            if (achievementsData) {
+                setAchievements(achievementsData);
+            }
+
+            setLoading(false);
+        };
+
+        fetchData();
+    }, [user]);
+
+    const overallProgress = userProgress?.overall_progress || 0;
+    const streakDays = userProgress?.streak_days || 0;
+    const totalHours = userProgress?.total_hours || 0;
+    const lessonsCompleted = userProgress?.lessons_completed || 0;
+
+    const subjectProgress = enrolledCourses.map(c => {
+        const courseDef = COURSES_DEFINITION.find(def => def.id === c.id) || c;
+        return {
+            name: c.name,
+            progress: c.progress || 0,
+            color: courseDef.color || '#6366f1',
+            lessons: Math.round((c.progress || 0) * (c.lessons || 0) / 100),
+            totalLessons: c.lessons || 0,
+            icon: courseDef.icon || <GraduationCap size={24} />
+        };
+    });
 
     const weeklyActivity = [
-        { day: 'Lun', hours: 2.5, color: '#3b82f6' },
-        { day: 'Mar', hours: 1.5, color: '#8b5cf6' },
-        { day: 'Mié', hours: 3.0, color: '#3b82f6' },
-        { day: 'Jue', hours: 2.0, color: '#a855f7' },
-        { day: 'Vie', hours: 1.0, color: '#8b5cf6' },
+        { day: 'Lun', hours: 0, color: '#64748b' },
+        { day: 'Mar', hours: 0, color: '#64748b' },
+        { day: 'Mié', hours: 0, color: '#64748b' },
+        { day: 'Jue', hours: 0, color: '#64748b' },
+        { day: 'Vie', hours: 0, color: '#64748b' },
         { day: 'Sáb', hours: 0, color: '#64748b' },
         { day: 'Dom', hours: 0, color: '#64748b' }
     ];
 
-    const maxHours = Math.max(...weeklyActivity.map(d => d.hours));
+    const maxHours = Math.max(...weeklyActivity.map(d => d.hours), 1);
 
     const generateHeatmapData = () => {
         const weeks = [];
         const today = new Date();
-        
-        const fixedData = [
-             [0, 1, 2, 1, 3, 0, 0],
-             [2, 3, 1, 2, 0, 1, 0],
-             [1, 0, 2, 3, 2, 0, 0],
-             [0, 1, 1, 2, 3, 1, 0],
-             [2, 2, 1, 0, 1, 2, 0],
-             [1, 3, 2, 1, 0, 0, 0],
-             [0, 1, 2, 2, 1, 0, 0],
-             [1, 2, 0, 1, 2, 1, 0]
-        ];
-
         for (let w = 7; w >= 0; w--) {
             const week = [];
-            const dataRow = fixedData[7 - w] || [];
             for (let d = 0; d < 7; d++) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - (w * 7 + (6 - d)));
-                const level = dataRow[d] || 0;
-                week.push({ date, level });
+                week.push({ date, level: 0 });
             }
             weeks.push(week);
         }
@@ -59,20 +88,17 @@ const Progress = () => {
 
     const heatmapData = generateHeatmapData();
 
-    const achievements = [
-        { name: 'Primer Paso', description: 'Completa tu primera lección', icon: '🎯', unlocked: true, date: 'Feb 15, 2026' },
-        { name: 'Estudiante Dedicado', description: '7 días de racha consecutivos', icon: '🔥', unlocked: true, date: 'Mar 10, 2026' },
-        { name: 'Lectura Rápida', description: 'Completa 5 lecturas', icon: '📚', unlocked: true, date: 'Mar 8, 2026' },
-        { name: 'Maestro del Examen', description: 'Obtén 100% en un examen', icon: '💯', unlocked: false, date: null },
-        { name: 'Explorador', description: 'Explora 10 cursos diferentes', icon: '🧭', unlocked: false, date: null },
-        { name: 'Noctámbulo', description: 'Estudia después de las 10pm', icon: '🌙', unlocked: false, date: null }
-    ];
-
-    const gradesHistory = [
-        { date: 'Mar 11', exam: 'Módulo 1 - Examen 1', grade: 85, subject: 'Electrónica' },
-        { date: 'Mar 5', exam: 'Cuestionario de Circuitos', grade: 92, subject: 'Electrónica' },
-        { date: 'Mar 20', exam: 'Cuestionario de Motores', grade: 78, subject: 'Robótica' }
-    ];
+    const getIcon = (iconStr) => {
+        switch(iconStr) {
+            case '🎯': return '🎯';
+            case '🔥': return '🔥';
+            case '📚': return '📚';
+            case '💯': return '💯';
+            case '🧭': return '🧭';
+            case '🌙': return '🌙';
+            default: return '🏆';
+        }
+    };
 
     return (
         <div className="progress-page">
@@ -103,6 +129,10 @@ const Progress = () => {
                 </div>
             </div>
 
+            {loading ? (
+                <div className="empty-state glass-panel"><p>Cargando...</p></div>
+            ) : (
+            <>
             <div className="overview-cards">
                 <div className="overview-card glass-panel main-progress">
                     <div className="progress-circle-container">
@@ -130,7 +160,7 @@ const Progress = () => {
                     </div>
                     <div className="progress-details">
                         <h3>Progreso General</h3>
-                        <p>{lessonsCompleted} de {totalLessons} lecciones completadas</p>
+                        <p>{lessonsCompleted} lecciones completadas</p>
                     </div>
                 </div>
 
@@ -231,6 +261,9 @@ const Progress = () => {
                             <BookOpen size={20} />
                             Progreso por Materia
                         </h2>
+                        {subjectProgress.length === 0 ? (
+                            <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>No hay cursos inscritos.</p>
+                        ) : (
                         <div className="subjects-progress">
                             {subjectProgress.map((subject, index) => (
                                 <div 
@@ -265,6 +298,7 @@ const Progress = () => {
                                 </div>
                             ))}
                         </div>
+                        )}
                     </div>
                 </div>
 
@@ -274,23 +308,29 @@ const Progress = () => {
                             <Award size={20} />
                             Logros Desbloqueados
                         </h2>
+                        {achievements.length === 0 ? (
+                             <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>No hay logros desbloqueados aún.</p>
+                        ) : (
                         <div className="achievements-grid">
                             {achievements.map((achievement, index) => (
                                 <div 
                                     key={index} 
                                     className={`achievement-item ${achievement.unlocked ? 'unlocked' : 'locked'}`}
                                 >
-                                    <div className="achievement-icon">{achievement.icon}</div>
+                                    <div className="achievement-icon">{getIcon(achievement.icon)}</div>
                                     <div className="achievement-info">
                                         <span className="achievement-name">{achievement.name}</span>
                                         <span className="achievement-desc">{achievement.description}</span>
-                                        {achievement.unlocked && achievement.date && (
-                                            <span className="achievement-date">{achievement.date}</span>
+                                        {achievement.unlocked && achievement.unlocked_at && (
+                                            <span className="achievement-date">
+                                                {new Date(achievement.unlocked_at).toLocaleDateString()}
+                                            </span>
                                         )}
                                     </div>
                                 </div>
                             ))}
                         </div>
+                        )}
                     </div>
 
                     <div className="glass-panel section-card">
@@ -299,22 +339,13 @@ const Progress = () => {
                             Historial de Calificaciones
                         </h2>
                         <div className="grades-history">
-                            {gradesHistory.map((grade, index) => (
-                                <div key={index} className="grade-item">
-                                    <div className="grade-date">{grade.date}</div>
-                                    <div className="grade-info">
-                                        <span className="grade-exam">{grade.exam}</span>
-                                        <span className="grade-subject">{grade.subject}</span>
-                                    </div>
-                                    <div className="grade-value" style={{ color: grade.grade >= 80 ? '#10b981' : grade.grade >= 60 ? '#f59e0b' : '#f43f5e' }}>
-                                        {grade.grade}
-                                    </div>
-                                </div>
-                            ))}
+                            <p style={{ color: 'var(--text-secondary)', padding: '1rem' }}>Sin calificaciones aún.</p>
                         </div>
                     </div>
                 </div>
             </div>
+            </>
+            )}
         </div>
     );
 };

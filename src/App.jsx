@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import Layout from './components/layout/Layout';
@@ -16,24 +16,45 @@ import Progress from './pages/Progress';
 import Resources from './pages/Resources';
 import Widgets from './pages/Widgets';
 import SettingsPage from './pages/Settings';
+import AccessRequests from './pages/AccessRequests';
+import Landing from './pages/Landing';
+import RequestAccess from './pages/RequestAccess';
 import './index.css';
 import { useState } from 'react';
-import { COURSES_DEFINITION } from './data/coursesData.jsx';
+import { COURSES_DEFINITION, getCourseByIdentifier } from './data/coursesData.jsx';
 
 const ProtectedRoute = ({ children }) => {
-    const { user, loading } = useAuth();
+    const { user, loading, profile } = useAuth();
     if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>Cargando...</div>;
-    return user ? children : <Navigate to="/" replace />;
+
+    if (!user) {
+        return <Navigate to="/" replace />;
+    }
+
+    if (!profile) {
+        return <Navigate to="/request-access" replace />;
+    }
+
+    return children;
+};
+
+const AdminRoute = ({ children }) => {
+    const { profile, loading } = useAuth();
+    if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>Cargando...</div>;
+    return profile?.role === 'admin' ? children : <Navigate to="/dashboard" replace />;
 };
 
 const PublicRoute = ({ children }) => {
-    const { user, loading } = useAuth();
+    const { user, loading, profile } = useAuth();
+
     if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>Cargando...</div>;
+
+    if (user && !profile) {
+        return <Navigate to="/request-access" replace />;
+    }
+
     return user ? <Navigate to="/dashboard" replace /> : children;
 };
-
-import { useParams } from 'react-router-dom';
-import { getCourseByIdentifier } from './data/coursesData.jsx';
 
 const RedirectToMyCourses = () => {
     const { id } = useParams();
@@ -49,23 +70,22 @@ const RedirectLessonToMyCourses = () => {
     return <Navigate to={`/dashboard/my-courses/${targetCourseId}/${moduleId}/${lessonId}`} replace />;
 };
 
-import Landing from './pages/Landing';
-
 function AppRoutes() {
     const [courses, setCourses] = useState(COURSES_DEFINITION);
 
     return (
         <Router>
             <Routes>
-                {/* Landing page for unauthenticated users, auth handles redirection if logged in */}
                 <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/request-access" element={<RequestAccess />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                     <Route index element={<Dashboard />} />
                     <Route path="my-courses" element={<MyCourses />} />
-                    <Route path="courses" element={<Courses courses={courses} />} />
+                    <Route path="courses" element={<AdminRoute><Courses courses={courses} /></AdminRoute>} />
                     <Route path="course/:id" element={<CourseDetail courses={courses} setCourses={setCourses} />} />
-                    <Route path="admin" element={<Admin />} />
+                    <Route path="admin" element={<AdminRoute><Admin /></AdminRoute>} />
+                    <Route path="requests" element={<AdminRoute><AccessRequests /></AdminRoute>} />
                     <Route path="learn/:id" element={<RedirectToMyCourses />} />
                     <Route path="learn/:courseId/:moduleId/:lessonId" element={<RedirectLessonToMyCourses />} />
                     <Route path="my-courses/:id" element={<SubjectDetail />} />

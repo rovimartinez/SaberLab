@@ -1,84 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight, Filter } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { supabase } from '../lib/supabase';
 import './Evaluations.css';
 
 const Evaluations = () => {
+    const { user, enrolledCourses } = useAuth();
+    const [evaluations, setEvaluations] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
 
-    const evaluations = [
-        {
-            id: 1,
-            title: 'Módulo 1 - Examen 1',
-            subject: 'Electricidad y Electrónica Básica',
-            type: 'Examen',
-            date: '2026-03-11',
-            dueDate: 'Marzo 11, 2026',
-            points: 150,
-            status: 'completed',
-            grade: 85,
-            color: '#3b82f6'
-        },
-        {
-            id: 2,
-            title: 'Cuestionario de Circuitos',
-            subject: 'Electricidad y Electrónica Básica',
-            type: 'Cuestionario',
-            date: '2026-03-05',
-            dueDate: 'Marzo 5, 2026',
-            points: 50,
-            status: 'completed',
-            grade: 92,
-            color: '#3b82f6'
-        },
-        {
-            id: 3,
-            title: 'Práctica de Soldadura',
-            subject: 'Electricidad y Electrónica Básica',
-            type: 'Práctica',
-            date: '2026-03-18',
-            dueDate: 'Marzo 18, 2026',
-            points: 100,
-            status: 'pending',
-            grade: null,
-            color: '#3b82f6'
-        },
-        {
-            id: 4,
-            title: 'Módulo 2 - Examen 2',
-            subject: 'Electricidad y Electrónica Básica',
-            type: 'Examen',
-            date: '2026-04-22',
-            dueDate: 'Abril 22, 2026',
-            points: 125,
-            status: 'pending',
-            grade: null,
-            color: '#3b82f6'
-        },
-        {
-            id: 5,
-            title: 'Proyecto de Robot Seguidor de Línea',
-            subject: 'Robótica Educativa',
-            type: 'Proyecto',
-            date: '2026-04-10',
-            dueDate: 'Abril 10, 2026',
-            points: 200,
-            status: 'in_progress',
-            grade: null,
-            color: '#a855f7'
-        },
-        {
-            id: 6,
-            title: 'Cuestionario de Motores',
-            subject: 'Robótica Educativa',
-            type: 'Cuestionario',
-            date: '2026-03-20',
-            dueDate: 'Marzo 20, 2026',
-            points: 75,
-            status: 'completed',
-            grade: 78,
-            color: '#a855f7'
-        }
-    ];
+    useEffect(() => {
+        const fetchEvaluations = async () => {
+            if (!user || enrolledCourses.length === 0) {
+                setEvaluations([]);
+                setLoading(false);
+                return;
+            }
+
+            const courseIds = enrolledCourses.map(c => c.id);
+            
+            const { data, error } = await supabase
+                .from('evaluations')
+                .select('*, course:courses(*)')
+                .in('course_id', courseIds)
+                .order('due_date', { ascending: true });
+
+            if (!error && data) {
+                setEvaluations(data);
+            }
+            setLoading(false);
+        };
+
+        fetchEvaluations();
+    }, [user, enrolledCourses]);
 
     const filteredEvaluations = evaluations.filter(e => {
         if (filter === 'all') return true;
@@ -90,12 +45,14 @@ const Evaluations = () => {
         completed: evaluations.filter(e => e.status === 'completed').length,
         pending: evaluations.filter(e => e.status === 'pending').length,
         inProgress: evaluations.filter(e => e.status === 'in_progress').length,
-        averageGrade: Math.round(
-            evaluations
-                .filter(e => e.grade !== null)
-                .reduce((sum, e) => sum + e.grade, 0) / 
-            evaluations.filter(e => e.grade !== null).length
-        )
+        averageGrade: evaluations.filter(e => e.grade !== null).length > 0 
+            ? Math.round(
+                evaluations
+                    .filter(e => e.grade !== null)
+                    .reduce((sum, e) => sum + e.grade, 0) / 
+                evaluations.filter(e => e.grade !== null).length
+            )
+            : 0
     };
 
     const getStatusBadge = (status) => {
@@ -107,6 +64,12 @@ const Evaluations = () => {
         return badges[status] || badges.pending;
     };
 
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
     return (
         <div className="evaluations-page">
             <div className="page-header">
@@ -116,6 +79,16 @@ const Evaluations = () => {
                 </div>
             </div>
 
+            {loading ? (
+                <div className="empty-state glass-panel"><p>Cargando...</p></div>
+            ) : evaluations.length === 0 ? (
+                <div className="empty-state glass-panel">
+                    <FileText size={48} color="#64748b" />
+                    <h3>No hay evaluaciones</h3>
+                    <p>No tienes evaluaciones asignadas en tus cursos.</p>
+                </div>
+            ) : (
+            <>
             <div className="stats-grid">
                 <div className="stat-card glass-panel">
                     <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
@@ -192,13 +165,14 @@ const Evaluations = () => {
                 ) : (
                     filteredEvaluations.map(evaluation => {
                         const badge = getStatusBadge(evaluation.status);
+                        const color = evaluation.course?.color || '#6366f1';
                         return (
                             <div 
                                 key={evaluation.id} 
                                 className="evaluation-card glass-panel"
                             >
                                 <div className="evaluation-header">
-                                    <div className="evaluation-type-badge" style={{ backgroundColor: `${evaluation.color}20`, color: evaluation.color }}>
+                                    <div className="evaluation-type-badge" style={{ backgroundColor: `${color}20`, color: color }}>
                                         {evaluation.type}
                                     </div>
                                     <span className={`status-badge ${badge.class}`}>
@@ -207,11 +181,11 @@ const Evaluations = () => {
                                     </span>
                                 </div>
                                 <h3 className="evaluation-title">{evaluation.title}</h3>
-                                <p className="evaluation-subject">{evaluation.subject}</p>
+                                <p className="evaluation-subject">{evaluation.course?.name}</p>
                                 <div className="evaluation-footer">
                                     <div className="evaluation-meta">
                                         <Calendar size={14} />
-                                        <span>{evaluation.dueDate}</span>
+                                        <span>{formatDate(evaluation.due_date)}</span>
                                     </div>
                                     <div className="evaluation-points">
                                         <span className="points-value">{evaluation.points}</span>
@@ -230,6 +204,8 @@ const Evaluations = () => {
                     })
                 )}
             </div>
+            </>
+            )}
         </div>
     );
 };

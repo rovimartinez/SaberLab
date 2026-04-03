@@ -271,15 +271,7 @@ export const COURSES_DEFINITION = [
                 ]
             }
         ],
-        groups: [
-            {
-                id: 'g1', name: '2026-I Grupo 1', teacher: 'Ronny Martinez', students: [
-                    { id: 8, name: 'Diego Fernández', progress: 100 },
-                    { id: 9, name: 'Lucía Morales', progress: 75 },
-                    { id: 10, name: 'Miguel Torres', progress: 60 }
-                ]
-            }
-        ]
+        groups: []
     },
     {
         id: 6,

@@ -1,72 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Trash2, Filter } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { supabase } from '../lib/supabase';
 import './Notifications.css';
 
 const Notifications = () => {
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: 'evaluation',
-            icon: <AlertCircle size={20} />,
-            title: 'Nueva evaluación disponible',
-            message: 'El examen del Módulo 3 de Electricidad está disponible hasta el 15 de abril.',
-            time: 'Hace 2 horas',
-            read: false,
-            color: '#f43f5e'
-        },
-        {
-            id: 2,
-            type: 'lesson',
-            icon: <BookOpen size={20} />,
-            title: 'Nueva lección completada',
-            message: 'Has completado "Introducción a los circuitos básicos" en Robótica.',
-            time: 'Hace 5 horas',
-            read: false,
-            color: '#3b82f6'
-        },
-        {
-            id: 3,
-            type: 'achievement',
-            icon: <Award size={20} />,
-            title: 'Nuevo logro desbloqueado',
-            message: '¡Felicidades! Has desbloqueado "Estudiante Dedicado" por 7 días consecutivos.',
-            time: 'Hace 1 día',
-            read: true,
-            color: '#f59e0b'
-        },
-        {
-            id: 4,
-            type: 'message',
-            icon: <MessageSquare size={20} />,
-            title: 'Mensaje del profesor',
-            message: 'Prof. García ha publicado un comentario en tu entrega del Proyecto Final.',
-            time: 'Hace 1 día',
-            read: true,
-            color: '#8b5cf6'
-        },
-        {
-            id: 5,
-            type: 'reminder',
-            icon: <Clock size={20} />,
-            title: 'Recordatorio de actividad',
-            message: 'No has estudiado en 2 días. ¡Retoma tu racha de estudio!',
-            time: 'Hace 2 días',
-            read: true,
-            color: '#10b981'
-        },
-        {
-            id: 6,
-            type: 'evaluation',
-            icon: <AlertCircle size={20} />,
-            title: 'Calificación publicada',
-            message: 'Tu calificación en el Examen 2 de Electrónica está disponible: 85/100.',
-            time: 'Hace 3 días',
-            read: true,
-            color: '#f43f5e'
-        }
-    ]);
-
+    const { user, refreshNotificationsCount } = useAuth();
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchNotifications = async () => {
+            const { data, error } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                setNotifications(data);
+            }
+            setLoading(false);
+        };
+
+        fetchNotifications();
+    }, [user]);
 
     const filteredNotifications = notifications.filter(n => {
         if (filter === 'all') return true;
@@ -74,25 +35,61 @@ const Notifications = () => {
         return n.type === filter;
     });
 
-    const markAsRead = (id) => {
+    const markAsRead = async (id) => {
+        await supabase.from('notifications').update({ read: true }).eq('id', id);
         setNotifications(notifications.map(n => 
             n.id === id ? { ...n, read: true } : n
         ));
+        refreshNotificationsCount();
     };
 
-    const markAllAsRead = () => {
-        setNotifications(notifications.map(n => ({ ...n, read: true })));
+    const markAllAsRead = async () => {
+        const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+        if (unreadIds.length > 0) {
+            await supabase.from('notifications').update({ read: true }).in('id', unreadIds);
+            setNotifications(notifications.map(n => ({ ...n, read: true })));
+            refreshNotificationsCount();
+        }
     };
 
-    const deleteNotification = (id) => {
+    const deleteNotification = async (id) => {
+        await supabase.from('notifications').delete().eq('id', id);
         setNotifications(notifications.filter(n => n.id !== id));
+        refreshNotificationsCount();
     };
 
-    const clearAll = () => {
-        setNotifications([]);
+    const clearAll = async () => {
+        const allIds = notifications.map(n => n.id);
+        if (allIds.length > 0) {
+            await supabase.from('notifications').delete().in('id', allIds);
+            setNotifications([]);
+            refreshNotificationsCount();
+        }
     };
 
     const unreadCount = notifications.filter(n => !n.read).length;
+
+    const getIcon = (type) => {
+        switch(type) {
+            case 'evaluation': return <AlertCircle size={20} />;
+            case 'lesson': return <BookOpen size={20} />;
+            case 'achievement': return <Award size={20} />;
+            case 'message': return <MessageSquare size={20} />;
+            case 'reminder': return <Clock size={20} />;
+            default: return <Bell size={20} />;
+        }
+    };
+
+    const getColor = (type) => {
+        switch(type) {
+            case 'evaluation': return '#f43f5e';
+            case 'lesson': return '#3b82f6';
+            case 'achievement': return '#f59e0b';
+            case 'message': return '#8b5cf6';
+            case 'reminder': return '#10b981';
+            default: return '#64748b';
+        }
+    };
 
     return (
         <div className="notifications-page">
@@ -118,6 +115,16 @@ const Notifications = () => {
                 </div>
             </div>
 
+            {loading ? (
+                <div className="empty-state glass-panel"><p>Cargando...</p></div>
+            ) : notifications.length === 0 ? (
+                <div className="empty-state glass-panel">
+                    <Bell size={48} color="#64748b" />
+                    <h3>No hay notificaciones</h3>
+                    <p>Estás al día.</p>
+                </div>
+            ) : (
+            <>
             <div className="filter-tabs glass-panel">
                 <button 
                     className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
@@ -166,9 +173,9 @@ const Notifications = () => {
                         >
                             <div 
                                 className="notification-icon"
-                                style={{ backgroundColor: `${notification.color}20`, color: notification.color }}
+                                style={{ backgroundColor: `${getColor(notification.type)}20`, color: getColor(notification.type) }}
                             >
-                                {notification.icon}
+                                {getIcon(notification.type)}
                             </div>
                             <div className="notification-content">
                                 <div className="notification-header">
@@ -200,6 +207,8 @@ const Notifications = () => {
                     ))
                 )}
             </div>
+            </>
+            )}
         </div>
     );
 };

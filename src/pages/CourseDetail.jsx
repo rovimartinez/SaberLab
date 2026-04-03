@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus } from 'lucide-react';
 import { getLessonInfo } from '../data/coursesData.jsx';
+import { supabase } from '../lib/supabase';
 import './CourseDetail.css';
 
 const CourseDetail = ({ courses, setCourses }) => {
@@ -12,9 +13,49 @@ const CourseDetail = ({ courses, setCourses }) => {
     const [activeTab, setActiveTab] = useState('groups');
     const [expandedModules, setExpandedModules] = useState({});
     const [courseModules, setCourseModules] = useState([]);
-    const [codeModal, setCodeModal] = useState({ isOpen: false, group: null, code: null, expiresAt: null });
+    const [dbGroups, setDbGroups] = useState([]); // Grupos desde Supabase
+    const [codeModal, setCodeModal] = useState({ isOpen: false, group: null, code: null, codeId: null, expiresAt: null });
     const [copied, setCopied] = useState(false);
-    const [newGroupModal, setNewGroupModal] = useState({ isOpen: false, teacher: '' });
+    const [newGroupModal, setNewGroupModal] = useState({ isOpen: false, name: '', teacher: '' });
+    const [loadingGroups, setLoadingGroups] = useState(false);
+
+    // Cargar grupos de Supabase
+    useEffect(() => {
+        const loadGroups = async () => {
+            if (!course) return;
+            setLoadingGroups(true);
+            try {
+                const { data, error } = await supabase
+                    .from('groups')
+                    .select('*')
+                    .eq('course_id', course.id);
+                
+                if (!error && data) {
+                    setDbGroups(data);
+                }
+            } catch (err) {
+                console.error('Error cargando grupos:', err);
+            } finally {
+                setLoadingGroups(false);
+            }
+        };
+        loadGroups();
+    }, [course]);
+
+    // Mostrar mensaje de carga si no hay curso
+    if (!course) {
+        return (
+            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
+                <p>Cargando curso...</p>
+            </div>
+        );
+    }
+
+    // Combinar grupos locales con los de BD
+    const allGroups = [...(course?.groups || []), ...dbGroups];
+    const uniqueGroups = allGroups.filter((g, index, self) => 
+        index === self.findIndex((gg) => gg.id === g.id)
+    );
 
     const courseRef = useRef(course);
     useEffect(() => {
@@ -68,18 +109,37 @@ const CourseDetail = ({ courses, setCourses }) => {
     };
 
     const openNewGroupModal = () => {
-        setNewGroupModal({ isOpen: true, teacher: '' });
+        setNewGroupModal({ isOpen: true, name: '', teacher: '' });
     };
 
     const closeNewGroupModal = () => {
-        setNewGroupModal({ isOpen: false, teacher: '' });
+        setNewGroupModal({ isOpen: false, name: '', teacher: '' });
     };
 
-    const handleCreateGroup = () => {
-        if (newGroupModal.teacher.trim()) {
+    const handleCreateGroup = async () => {
+        if (newGroupModal.name.trim() && newGroupModal.teacher.trim()) {
+            const newGroupId = getNewGroupId();
+            
+            // Guardar en Supabase
+            const { error } = await supabase
+                .from('groups')
+                .insert({
+                    id: newGroupId,
+                    course_id: course.id,
+                    name: newGroupModal.name.trim(),
+                    teacher: newGroupModal.teacher.trim()
+                });
+
+            if (error) {
+                console.error('Error creando grupo:', error);
+                alert('Error al crear grupo');
+                return;
+            }
+
+            // También guardar en estado local
             const newGroup = {
-                id: getNewGroupId(),
-                name: newGroupModal.teacher.trim(),
+                id: newGroupId,
+                name: newGroupModal.name.trim(),
                 teacher: newGroupModal.teacher.trim(),
                 students: []
             };
@@ -92,15 +152,55 @@ const CourseDetail = ({ courses, setCourses }) => {
         updateCourse({ ...course, groups: course.groups.filter(g => g.id !== groupId) });
     };
 
-    const openCodeModal = (group) => {
-        const code = generateCode(course.name, group.name);
-        const expiresAt = getExpiresAt();
-        setCodeModal({ isOpen: true, group, code, expiresAt });
+    const removeCodeFromDatabase = async (modalState) => {
+        if (!modalState?.codeId) return;
+
+        const { error } = await supabase
+            .from('group_codes')
+            .delete()
+            .eq('id', modalState.codeId);
+
+        if (error) {
+            console.error('Error eliminando cÃ³digo:', error);
+            return;
+        }
+
+        setCodeModal((current) =>
+            current.codeId === modalState.codeId
+                ? { ...current, codeId: null }
+                : current
+        );
+    };
+
+    const openCodeModal = async (group) => {
+        const code = generateCode(course.name);
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutos
+
+        // Guardar código en Supabase
+        const { data, error } = await supabase
+            .from('group_codes')
+            .insert({
+                group_id: group.id,
+                code: code,
+                expires_at: expiresAt
+            })
+            .select('id')
+            .single();
+
+        if (error) {
+            console.error('Error guardando código:', error);
+            alert('Error al generar código');
+            return;
+        }
+
+        setCodeModal({ isOpen: true, group, code, codeId: data?.id ?? null, expiresAt });
         setCopied(false);
     };
 
-    const closeCodeModal = () => {
-        setCodeModal({ isOpen: false, group: null, code: null, expiresAt: null });
+    const closeCodeModal = async () => {
+        const currentModal = codeModal;
+        await removeCodeFromDatabase(currentModal);
+        setCodeModal({ isOpen: false, group: null, code: null, codeId: null, expiresAt: null });
     };
 
     const copyCode = async () => {
@@ -160,7 +260,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                     <h1>{course.name}</h1>
                     <span className="course-detail-stats">
                         <Layers size={16} />
-                        {course.groups.length} grupo{course.groups.length !== 1 ? 's' : ''}
+                        0 grupos
                     </span>
                 </div>
             </div>
@@ -200,7 +300,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                             </button>
                         </div>
                         <div className="groups-list">
-                            {course.groups.map((group) => (
+                            {uniqueGroups.map((group) => (
                                 <div key={group.id} className="group-card">
                                     <div className="group-card-info">
                                         <span className="group-card-name">{group.name}</span>
@@ -210,7 +310,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                                             </span>
                                         )}
                                         <span className="group-card-students">
-                                            {group.students.length} estudiante{group.students.length !== 1 ? 's' : ''}
+                                            0 estudiantes
                                         </span>
                                     </div>
                                     <div className="group-card-actions">
@@ -224,7 +324,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                                     </div>
                                 </div>
                             ))}
-                            {course.groups.length === 0 && (
+                            {uniqueGroups.length === 0 && (
                                 <div className="empty-state">
                                     <p>No hay grupos creados</p>
                                 </div>
@@ -304,7 +404,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                             <div className="setting-item">
                                 <div className="setting-info">
                                     <span className="setting-name">Total de grupos</span>
-                                    <span className="setting-value">{course.groups.length}</span>
+                                    <span className="setting-value">0</span>
                                 </div>
                             </div>
                             <div className="setting-item">
@@ -320,7 +420,7 @@ const CourseDetail = ({ courses, setCourses }) => {
 
             {/* Code Modal */}
             {codeModal.isOpen && (
-                <div className="code-modal-overlay" onClick={closeCodeModal}>
+                <div className="code-modal-overlay" onClick={() => void closeCodeModal()}>
                     <div className="code-modal glass-panel" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <span className="modal-label">Código para unirse al grupo:</span>
@@ -332,7 +432,10 @@ const CourseDetail = ({ courses, setCourses }) => {
                         </div>
 
                         <CodeTimer expiresAt={codeModal.expiresAt} onExpire={() => {
-                            setTimeout(closeCodeModal, 3000);
+                            void removeCodeFromDatabase(codeModal);
+                            setTimeout(() => {
+                                void closeCodeModal();
+                            }, 3000);
                         }} />
 
                         <div className="modal-actions">
@@ -340,7 +443,7 @@ const CourseDetail = ({ courses, setCourses }) => {
                                 {copied ? <Check size={18} /> : <Copy size={18} />}
                                 {copied ? '¡Copiado!' : 'Copiar Código'}
                             </button>
-                            <button className="btn btn-secondary" onClick={closeCodeModal}>
+                            <button className="btn btn-secondary" onClick={() => void closeCodeModal()}>
                                 Cerrar
                             </button>
                         </div>
@@ -358,18 +461,28 @@ const CourseDetail = ({ courses, setCourses }) => {
                         </div>
 
                         <div className="form-group">
-                            <label>Docente</label>
+                            <label>Nombre del Grupo</label>
+                            <input
+                                type="text"
+                                placeholder="Ej: 2026-I Grupo A"
+                                value={newGroupModal.name}
+                                onChange={(e) => setNewGroupModal(prev => ({ ...prev, name: e.target.value }))}
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Docente Encargado</label>
                             <input
                                 type="text"
                                 placeholder="Nombre del docente"
                                 value={newGroupModal.teacher}
                                 onChange={(e) => setNewGroupModal(prev => ({ ...prev, teacher: e.target.value }))}
-                                autoFocus
                             />
                         </div>
 
                         <div className="modal-actions">
-                            <button className="btn btn-primary" onClick={handleCreateGroup}>
+                            <button className="btn btn-primary" onClick={handleCreateGroup} disabled={!newGroupModal.name.trim() || !newGroupModal.teacher.trim()}>
                                 <Plus size={18} />
                                 Crear Grupo
                             </button>
@@ -391,7 +504,9 @@ const CodeTimer = ({ expiresAt, onExpire }) => {
     useEffect(() => {
         const updateTimer = () => {
             const now = Date.now();
-            const diff = expiresAt - now;
+            // Convertir expiresAt a número si es string
+            const expiresTime = new Date(expiresAt).getTime();
+            const diff = expiresTime - now;
             
             if (diff <= 0) {
                 setTimeLeft({ time: '0:00', color: 'red' });

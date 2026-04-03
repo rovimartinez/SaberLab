@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, BookOpen, X, PenLine, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, profile, signOut } = useAuth();
+    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
-    // Datos de usuario (preferimos los de la tabla profiles sobre los de Google)
     const isAdmin = profile?.role === 'admin';
     const userMetadata = user?.user_metadata || {};
     const avatarUrl = userMetadata.avatar_url;
@@ -32,7 +31,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             items: [
                 { name: 'Inicio', path: '/dashboard', icon: <Home size={18} /> },
                 { name: 'Mis Cursos', path: '/dashboard/my-courses', icon: <Layers size={18} /> },
-                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: 3 },
+                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: unreadNotificationsCount },
                 { name: 'Evaluaciones', path: '/dashboard/evaluations', icon: <Target size={18} /> },
                 { name: 'Progreso', path: '/dashboard/progress', icon: <BarChart2 size={18} /> }
             ]
@@ -44,11 +43,11 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                 { name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }
             ]
         },
-        // Sólo se incluye si el usuario es admin
         ...(isAdmin ? [{
             title: 'ADMIN',
             items: [
-                { name: 'Gestión de Cursos', path: '/dashboard/courses', icon: <GraduationCap size={18} /> },
+                { name: 'Solicitudes', path: '/dashboard/requests', icon: <UserPlus size={18} />, badge: pendingAccessRequestsCount },
+                { name: 'Gestion de Cursos', path: '/dashboard/courses', icon: <GraduationCap size={18} /> },
                 { name: 'Plataforma', path: '/dashboard/admin', icon: <Shield size={18} /> }
             ]
         }] : [])
@@ -84,17 +83,16 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             {category.items.map((item) => {
                                 const renderIcon = () => (
-                                    <span className="nav-icon" style={{ display: 'flex', alignItems: 'center' }}>
+                                    <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', minWidth: '24px', justifyContent: 'center' }}>
                                         <div style={{
-                                            color: item.path === '/dashboard' ? '#ff6b6b' :
-                                                item.path?.includes('courses') ? '#4ade80' :
-                                                    item.path?.includes('evaluations') ? '#f43f5e' :
-                                                        item.path?.includes('progress') ? '#60a5fa' :
-                                                            item.path?.includes('resources') ? '#facc15' :
-                                                                !item.path ? '#a855f7' : // Herramientas
-                                                                    item.path?.includes('gadgets') ? '#a78bfa' :
-                                                                        item.path?.includes('settings') ? '#cbd5e1' :
-                                                                            '#38bdf8'
+                                            color: item.path === '/dashboard' ? '#ff6b6b'
+                                                : item.path?.includes('courses') ? '#4ade80'
+                                                    : item.path?.includes('evaluations') ? '#f43f5e'
+                                                        : item.path?.includes('progress') ? '#60a5fa'
+                                                            : item.path?.includes('resources') ? '#facc15'
+                                                                : !item.path ? '#a855f7'
+                                                                    : item.path?.includes('settings') ? '#cbd5e1'
+                                                                        : '#38bdf8'
                                         }}>
                                             {item.icon}
                                         </div>
@@ -107,18 +105,9 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                             key={item.name}
                                             onClick={() => { item.action(); closeSidebar(); }}
                                             className="nav-item"
-                                            style={{
-                                                padding: '0.75rem 1rem',
-                                                fontSize: '0.9rem',
-                                                background: 'transparent',
-                                                border: 'none',
-                                                textAlign: 'left',
-                                                width: '100%',
-                                                cursor: 'pointer'
-                                            }}
                                         >
                                             {renderIcon()}
-                                            <span className="nav-text" style={{ flex: 1, color: 'var(--text-secondary)' }}>{item.name}</span>
+                                            <span className="nav-text">{item.name}</span>
                                         </button>
                                     );
                                 }
@@ -130,12 +119,11 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                         end={item.path === '/dashboard'}
                                         onClick={closeSidebar}
                                         className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                                        style={{ padding: '0.75rem 1rem', fontSize: '0.9rem' }}
                                     >
                                         {renderIcon()}
-                                        <span className="nav-text" style={{ flex: 1, color: 'var(--text-secondary)' }}>{item.name}</span>
+                                        <span className="nav-text">{item.name}</span>
 
-                                        {item.badge && (
+                                        {!!item.badge && (
                                             <span style={{
                                                 background: '#f43f5e',
                                                 color: 'white',
@@ -188,10 +176,27 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                 <User size={20} color="var(--bg-primary)" />
                             </div>
                         )}
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginLeft: '0.75rem', color: 'var(--text-primary)' }}>
-                            {fullName}
-                        </span>
-                        <ChevronDown size={16} style={{ color: 'var(--text-secondary)', transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
+                        <div style={{ flex: 1, marginLeft: '0.75rem', overflow: 'hidden' }}>
+                            <span style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', color: 'var(--text-primary)' }}>
+                                {fullName}
+                            </span>
+                            <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                padding: '1px 7px',
+                                borderRadius: '20px',
+                                display: 'inline-block',
+                                marginTop: '2px',
+                                background: profile?.role === 'admin' ? 'rgba(168,85,247,0.2)' : profile?.role === 'teacher' ? 'rgba(59,130,246,0.2)' : 'rgba(148,163,184,0.15)',
+                                color: profile?.role === 'admin' ? '#c084fc' : profile?.role === 'teacher' ? '#60a5fa' : '#94a3b8',
+                                border: `1px solid ${profile?.role === 'admin' ? 'rgba(168,85,247,0.4)' : profile?.role === 'teacher' ? 'rgba(59,130,246,0.4)' : 'rgba(148,163,184,0.2)'}`,
+                                textTransform: 'capitalize',
+                                letterSpacing: '0.5px'
+                            }}>
+                                {profile?.role || 'Estudiante'}
+                            </span>
+                        </div>
+                        <ChevronDown size={16} style={{ color: 'var(--text-secondary)', flexShrink: 0, transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
                     </div>
 
                     {isMenuOpen && (
@@ -220,19 +225,18 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                             <div className="dropdown-divider"></div>
                             <Link to="/dashboard/settings" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
                                 <Settings size={16} />
-                                Configuración
+                                Configuracion
                             </Link>
                             <div className="dropdown-divider"></div>
                             <button className="dropdown-item text-danger" onClick={signOut} style={{ width: '100%' }}>
                                 <LogOut size={16} />
-                                Cerrar Sesión
+                                Cerrar sesion
                             </button>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Pestañita flotante que se mueve con el panel */}
             <button
                 className="mobile-sidebar-handle"
                 onClick={(e) => {

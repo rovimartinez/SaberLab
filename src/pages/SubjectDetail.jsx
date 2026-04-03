@@ -4,6 +4,7 @@ import { ArrowLeft, PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen,
 import { getCourseByIdentifier } from '../data/coursesData.jsx';
 import './SubjectDetail.css';
 
+// eslint-disable-next-line no-unused-vars
 const subjectData = {
     'EE': { name: 'Electricidad y Electrónica Básica', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: <Zap size={32} />, teacher: 'Ronny Martinez', abbr: 'EE' },
     'RE': { name: 'Robótica Educativa', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez', abbr: 'RE' },
@@ -113,30 +114,25 @@ const SubjectDetail = () => {
 
     return (
         <div className="subject-detail-container animate-fade-in" style={{ padding: '0 1rem' }}>
-            <div className="detail-header-classic" style={{ 
+            <div className="detail-header-classic subject-hero" style={{ 
                 background: `linear-gradient(90deg, ${subject.color}50 0%, #161d2b 100%)`, 
-                padding: '1.5rem 2rem', 
                 border: `1px solid ${subject.color}40`,
-                boxShadow: `0 4px 20px ${subject.color}15`,
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: '20px',
-                marginBottom: '2rem'
+                boxShadow: `0 4px 20px ${subject.color}15`
             }}>
-                <div style={{ position: 'relative', zIndex: 10 }}>
+                <div className="subject-hero-content" style={{ position: 'relative', zIndex: 10 }}>
                     <div style={{ marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.85rem', fontWeight: 800, color: subject.color, letterSpacing: '0.5px' }}>PANEL DEL CURSO</span>
                     </div>
                     
-                    <h1 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.5px' }}>
+                    <h1 className="subject-hero-title" style={{ color: 'white', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.5px' }}>
                         {subject.name}
                     </h1>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div className="subject-hero-meta" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                         <div className="header-stat-item">
                             <span className="stat-label">Docente: <b style={{ color: subject.color }}>{subject.teacher}</b></span>
                         </div>
-                        <div className="header-stat-item" style={{ flex: 1, maxWidth: '200px' }}>
+                        <div className="header-stat-item subject-progress-block" style={{ flex: 1, maxWidth: '200px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.75rem' }}>
                                 <span className="stat-label">Progreso</span>
                                 <span className="stat-label">5%</span>
@@ -149,16 +145,7 @@ const SubjectDetail = () => {
                 </div>
 
                 {/* Decorative Background Element */}
-                <div style={{ 
-                    position: 'absolute', 
-                    right: '1rem', 
-                    top: '50%', 
-                    transform: 'translateY(-50%) rotate(15deg)',
-                    opacity: 0.4,
-                    color: subject.color,
-                    pointerEvents: 'none',
-                    zIndex: 1
-                }}>
+                <div className="subject-hero-art" style={{ color: subject.color }}>
                     {React.cloneElement(subject.icon, { size: 180 })}
                 </div>
             </div>
@@ -237,9 +224,9 @@ const SubjectDetail = () => {
                                 const mainTitle = parts.length > 1 ? parts.slice(1).join(' - ') : item.title;
                                 
                                 return (
-                                    <div key={index} className="agenda-card-classic" style={{ padding: '0.85rem 1.25rem' }}>
-                                        <div className="agenda-top-bar" style={{ flexWrap: 'nowrap', gap: '1rem', width: '100%', display: 'flex', alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1, whiteSpace: 'nowrap' }}>
+                                    <div key={index} className="agenda-card-classic agenda-card-mobile" style={{ padding: '0.85rem 1.25rem' }}>
+                                        <div className="agenda-top-bar agenda-top-bar-mobile" style={{ gap: '1rem', width: '100%', display: 'flex', alignItems: 'center' }}>
+                                            <div className="agenda-main-row" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1 }}>
                                                 <span className="agenda-module-badge" style={{ backgroundColor: `${subject.color}20`, color: subject.color, width: '80px', textAlign: 'center', flexShrink: 0 }}>
                                                     {modulePart}
                                                 </span>
@@ -250,7 +237,7 @@ const SubjectDetail = () => {
                                                     {item.points} pts
                                                 </span>
                                             </div>
-                                            <span className="agenda-date-small" style={{ marginLeft: 'auto', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.75rem', textAlign: 'right', minWidth: '100px' }}>{item.date}</span>
+                                            <span className="agenda-date-small agenda-date-mobile" style={{ marginLeft: 'auto', flexShrink: 0, fontSize: '0.75rem', textAlign: 'right', minWidth: '100px' }}>{item.date}</span>
                                         </div>
                                     </div>
                                 );
