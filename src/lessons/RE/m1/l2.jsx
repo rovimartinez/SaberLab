@@ -6,7 +6,7 @@ export const lessonData = {
         </div>
 
         <div class="theory-section">
-            <h3>2.1 El Poder de los Comentarios</h3>
+            <h3 id="re-2-1">2.1 El Poder de los Comentarios</h3>
             <p>Los comentarios son notas que el Arduino ignora totalmente. Sirven para explicar qué hace tu código y hacerlo profesional.</p>
             <div class="highlight-panel" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
                 <p><strong>// Comentario de una línea:</strong> Usa doble barra para notas cortas.</p>
@@ -15,7 +15,7 @@ export const lessonData = {
         </div>
 
         <div class="theory-section">
-            <h3>2.2 ¿Qué es verdaderamente una Variable?</h3>
+            <h3 id="re-2-2">2.2 ¿Qué es verdaderamente una Variable?</h3>
             <p>En el mundo real, si quieres guardar tus juguetes para que no se pierdan, usas una <strong>caja</strong> y le pones una <strong>etiqueta</strong> ("Mis Juguetes"). En programación, una <strong>variable</strong> es exactamente eso: una caja en la memoria de la placa Arduino donde podemos guardar información para usarla más adelante.</p>
             
             <p>Como las computadoras son muy estrictas, no puedes meter cualquier cosa en cualquier caja. Necesitas avisar qué forma tiene. Imagina que es como pedir "Solo peluches" o "Solo piezas de Lego". Por lo tanto, para crear esa caja de manera perfecta, necesitas 3 elementos clave:</p>
@@ -38,7 +38,7 @@ export const lessonData = {
         </div>
 
         <div class="theory-section">
-            <h3>2.3 El Catálogo de Tipos de Datos</h3>
+            <h3 id="re-2-3">2.3 El Catálogo de Tipos de Datos</h3>
             <p>Arduino necesita saber qué "tipo" de información vas a guardar para reservar el espacio correcto en memoria:</p>
             <div class="types-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
                 <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
@@ -203,18 +203,18 @@ void loop() {
         }
     ],
     flashcards: [
-        { id: 'l2-f1', type: 'code', q: '¿Qué tipo de dato usarías para un contador de 0 a 100?', a: 'int', sub: 'Para números enteros' },
-        { id: 'l2-f2', type: 'code', q: '¿Qué tipo de dato usarías para el tiempo en milisegundos?', a: 'long', sub: 'Para valores de tiempo largos' },
-        { id: 'l2-f3', type: 'code', q: '¿Cuál es el valor inicial de "espera" en la Patrulla?', a: '300', sub: 'Pausa de 300ms entre luces' },
-        { id: 'l2-f4', type: 'code', q: '¿Cómo se llama el efecto del Reto 4?', a: 'Auto Fantástico', sub: 'Barrido secuencial de 5 LEDs' },
-        { id: 'l2-f5', type: 'code', q: '¿Qué variable controla la velocidad del barrido?', a: 'int vel = 200;', sub: 'Define la pausa en el secuenciador' },
-        { id: 'l2-f6', type: 'code', q: '¿Qué tipo de dato guarda una sola letra?', a: 'char', sub: 'Character' },
-        { id: 'l2-f7', type: 'code', q: '¿Es "2_led" un nombre de variable válido?', a: 'No', sub: 'No pueden empezar con números' },
-        { id: 'l2-f8', type: 'code', q: '¿Qué función configuramos en el setup?', a: 'pinMode()', sub: 'Define si es INPUT u OUTPUT' },
-        { id: 'l2-f9', type: 'code', q: '¿Para qué sirve el punto y coma (;)?', a: 'Terminar línea', sub: 'Indica el fin de una instrucción' },
-        { id: 'l2-f10', type: 'code', q: '¿Cómo comentas una sola línea de código?', a: '// Comentario', sub: 'Usa doble barra inclinada' },
-        { id: 'l2-f11', type: 'code', q: '¿Qué tipo de dato es 24.5?', a: 'float', sub: 'Para números con decimales' },
-        { id: 'l2-f12', type: 'code', q: '¿Cómo defines un pin como salida?', a: 'OUTPUT', sub: 'Modo de trabajo del pin' }
+        { id: 'l2-f1', type: 'code', q: '¿Qué tipo de dato usarías para un contador de 0 a 100?', a: 'int', sub: 'Para números enteros', sectionId: 're-2-3' },
+        { id: 'l2-f2', type: 'code', q: '¿Qué tipo de dato usarías para el tiempo en milisegundos?', a: 'long', sub: 'Para valores de tiempo largos', sectionId: 're-2-3' },
+        { id: 'l2-f3', type: 'code', q: '¿Cuál es el valor inicial de "espera" en la Patrulla?', a: '300', sub: 'Pausa de 300ms entre luces', sectionId: 're-2-2' },
+        { id: 'l2-f4', type: 'code', q: '¿Cómo se llama el efecto del Reto 4?', a: 'Auto Fantástico', sub: 'Barrido secuencial de 5 LEDs', sectionId: 're-2-2' },
+        { id: 'l2-f5', type: 'code', q: '¿Qué variable controla la velocidad del barrido?', a: 'int vel = 200;', sub: 'Define la pausa en el secuenciador', sectionId: 're-2-2' },
+        { id: 'l2-f6', type: 'code', q: '¿Qué tipo de dato guarda una sola letra?', a: 'char', sub: 'Character', sectionId: 're-2-3' },
+        { id: 'l2-f7', type: 'code', q: '¿Es "2_led" un nombre de variable válido?', a: 'No', sub: 'No pueden empezar con números', sectionId: 're-2-2' },
+        { id: 'l2-f8', type: 'code', q: '¿Qué función configuramos en el setup?', a: 'pinMode()', sub: 'Define si es INPUT u OUTPUT', sectionId: 're-2-2' },
+        { id: 'l2-f9', type: 'code', q: '¿Para qué sirve el punto y coma (;)?', a: 'Terminar línea', sub: 'Indica el fin de una instrucción', sectionId: 're-2-1' },
+        { id: 'l2-f10', type: 'code', q: '¿Cómo comentas una sola línea de código?', a: '// Comentario', sub: 'Usa doble barra inclinada', sectionId: 're-2-1' },
+        { id: 'l2-f11', type: 'code', q: '¿Qué tipo de dato es 24.5?', a: 'float', sub: 'Para números con decimales', sectionId: 're-2-3' },
+        { id: 'l2-f12', type: 'code', q: '¿Cómo defines un pin como salida?', a: 'OUTPUT', sub: 'Modo de trabajo del pin', sectionId: 're-2-2' }
     ],
     questions: [
         {

@@ -215,22 +215,28 @@ const ReviewSection = ({ user, lessonKey, flashcards = [], accentColor = '#a855f
         const allDone = flashcards.every(card => mastered[card.id]);
         if (!allDone) return;
 
-        const unknownCards = flashcards.filter(card => mastered[card.id] === 'unknown');
-        if (unknownCards.length === 0) {
-            setSummaryShown(true);
-            setSummaryModal({ open: true, sections: [] });
-            return;
-        }
+        // Esperar 2 segundos antes de iniciar el procesamiento para que la última tarjeta termine de voltearse
+        const mainTimeout = setTimeout(() => {
+            const unknownCards = flashcards.filter(card => mastered[card.id] === 'unknown');
+            if (unknownCards.length === 0) {
+                setSummaryShown(true);
+                setSummaryModal({ open: true, sections: [] });
+                return;
+            }
 
-        const sections = buildSummarySections();
-
-        setAnalyzing(true);
-        const t = setTimeout(() => {
-            setAnalyzing(false);
-            setSummaryModal({ open: true, sections });
-            setSummaryShown(true);
+            const sections = buildSummarySections();
+            setAnalyzing(true);
+            
+            const analysisTimeout = setTimeout(() => {
+                setAnalyzing(false);
+                setSummaryModal({ open: true, sections });
+                setSummaryShown(true);
+            }, 2000);
+            
+            return () => clearTimeout(analysisTimeout);
         }, 2000);
-        return () => clearTimeout(t);
+
+        return () => clearTimeout(mainTimeout);
     }, [flashcards, mastered, summaryShown]);
 
     const closeSummary = () => {

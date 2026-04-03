@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/useAuth';
@@ -64,18 +64,217 @@ const MisionRoadMap = ({ missions = [] }) => {
   const selectedChallenge = rutaRetos.find(r => r.id === selectedChallengeId);
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      position: 'relative', 
-      borderRadius: '16px', 
-      padding: '2.5rem 1rem 6rem', // MÃ¡s padding abajo para el texto
-      marginTop: '1rem',
-      background: 'rgba(30, 41, 59, 0.5)',
-      border: '1px solid rgba(255,255,255,0.1)'
-    }}>
+    <>
+      <style>{`
+        .mision-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          border-radius: 16px;
+          padding: 5rem 2rem 8rem;
+          margin-top: 1rem;
+          background: rgba(30, 41, 59, 0.5);
+          border: 1px solid rgba(255,255,255,0.1);
+          min-height: 350px;
+          overflow: hidden;
+        }
+        
+        .mision-nodes-container {
+          display: flex;
+          justify-content: space-between;
+          width: 100%;
+          position: relative;
+          z-index: 10;
+        }
+        
+        .mision-line-bg {
+          position: absolute;
+          left: 24px;
+          right: 24px;
+          height: 6px;
+          top: 24px;
+          pointer-events: none;
+          z-index: 1;
+        }
+        
+        .mision-line-fill {
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          width: var(--progress);
+          background: linear-gradient(90deg, #10b981, #a855f6, #6366f1);
+          border-radius: 4px;
+          transition: all 1s ease-out;
+          box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+        
+        @keyframes float-horizontal {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(10px); }
+        }
+        
+        .avatar-anim-responsive {
+          display: flex;
+          align-items: center;
+          flex-direction: column;
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        .mision-node-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 48px;
+          position: relative;
+        }
+        
+        .mision-node-avatar {
+          position: absolute;
+          top: -30px;
+          left: 50%;
+          transform: translate(-50%, 0);
+          z-index: 100;
+          width: 40px;
+          height: 40px;
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .mision-info-box {
+          position: absolute;
+          top: 64px;
+          left: 50%;
+          transform: translate(-50%, 0);
+          text-align: center;
+          width: 120px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transition: all 0.3s ease;
+          pointer-events: none;
+        }
+        
+        .mision-info-box.hovered {
+          transform: translate(-50%, 4px);
+        }
+
+        .mision-particle-cont {
+          position: absolute;
+          height: 100%;
+          overflow: hidden;
+          left: var(--particle-left);
+          width: var(--particle-width);
+        }
+
+        .mision-particle-bg {
+          width: 33%;
+          height: 100%;
+          background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);
+          animation: energy-flow 1.5s linear infinite;
+        }
+
+        @media (max-width: 768px) {
+          .mision-wrapper {
+            padding: 32px 16px;
+            align-items: stretch;
+            min-height: auto;
+          }
+          .mision-nodes-container {
+            flex-direction: column;
+            gap: 2.5rem;
+            width: 100%;
+            padding-left: 140px; /* Desplazamos más el núcleo a la derecha */
+          }
+          .mision-line-bg {
+            left: 161px; /* 140px cont-padding + 24px half-node - 3px half-line = 161px */
+            top: 24px;
+            bottom: 24px;
+            right: auto;
+            width: 6px;
+            height: auto;
+            z-index: -1;
+          }
+          .mision-line-fill {
+            width: 100%;
+            height: var(--progress);
+            background: linear-gradient(180deg, #10b981, #a855f6, #6366f1);
+          }
+          .mision-node-item {
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+          }
+          .mision-node-avatar {
+            /* Forced fallback to override mobile weirdness */
+            position: absolute !important; 
+            top: 50% !important;
+            bottom: auto !important;
+            left: -56px !important; /* Lo halamos más a la izquierda para que NO se mueva tanto a la derecha */
+            transform: translateY(-50%) scale(0.95) !important; /* Más grande y centrado verticalmente */
+            margin: 0;
+            z-index: 100;
+          }
+          .avatar-anim-responsive {
+            flex-direction: row; /* Mantiene la flecha a la derecha en modo móvil */
+            animation: float-horizontal 3s ease-in-out infinite; /* Flotamiento Izquierda/Derecha en móvil */
+          }
+          .mision-info-box {
+            position: static;
+            transform: none !important;
+            text-align: left;
+            width: calc(100% - 64px);
+            align-items: flex-start;
+            margin-left: 16px;
+          }
+          .mision-info-box p:first-child {
+            font-size: 11px !important;
+            margin-bottom: 2px !important;
+          }
+          .mision-info-box p:nth-child(2) {
+            font-size: 10px !important;
+            max-width: 100% !important;
+            margin-bottom: 4px !important;
+          }
+          .mision-particle-cont {
+            top: var(--particle-left);
+            height: var(--particle-width);
+            left: 0;
+            width: 100%;
+          }
+          .mision-particle-bg {
+            height: 33%;
+            width: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.8), transparent);
+          }
+          .mobile-arrow { display: block !important; }
+          .pc-arrow { display: none !important; }
+        }
+        
+        @media (min-width: 769px) {
+          .mision-node-avatar {
+            position: absolute;
+            top: -46px; /* Ajuste preciso hacia arriba para no tapar el nodo en PC */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+          }
+          .mobile-arrow { display: none !important; }
+          .pc-arrow { display: block !important; }
+        }
+      `}</style>
+      <div 
+        className="mision-wrapper" 
+        style={{ 
+          "--progress": `${mounted ? progressPercentage : 0}%`, 
+          "--particle-left": `${((progreso - 2) / (totalRetos - 1)) * 100}%`, 
+          "--particle-width": `${(1 / (totalRetos - 1)) * 100}%` 
+        }}
+      >
       
       {/* Dynamic Lighting Layer */}
       <div 
@@ -128,144 +327,60 @@ const MisionRoadMap = ({ missions = [] }) => {
         marginTop: '1rem'
       }}>
         
-        {/* Connection System - Ahora dentro del contenedor de nodos para mejor alineaciÃ³n */}
-        {rutaRetos.length > 0 && (
-        <div style={{ 
-          position: 'absolute', 
-          left: '24px', /* Mitad del ancho del contenedor (48px / 2) */
-          right: '24px', 
-          height: '6px', 
-          top: '24px', /* Centro del nodo de 48px */
-          pointerEvents: 'none',
-          zIndex: 1
-        }}>
-          <div style={{ 
-            position: 'absolute', 
-            height: '100%', 
-            width: '100%', 
-            background: 'rgba(255,255,255,0.1)', 
-            borderRadius: '4px'
-          }}></div>
+        {/* Challenge Nodes */}
+        <div className="mision-nodes-container">
           
-          <div 
-            style={{ 
+          {/* Connection System - AHORA COMO HIJO */}
+          {rutaRetos.length > 0 && (
+          <div className="mision-line-bg">
+            <div style={{ 
               position: 'absolute', 
               height: '100%', 
-              background: 'linear-gradient(90deg, #10b981, #a855f6, #6366f1)', 
-              borderRadius: '4px', 
-              transition: 'all 1s ease-out',
-              boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
-              left: 0, 
-              width: mounted ? `${progressPercentage}%` : '0%' 
-            }}
-          ></div>
+              width: '100%', 
+              background: 'rgba(255,255,255,0.1)', 
+              borderRadius: '4px'
+            }}></div>
+            
+            <div className="mision-line-fill"></div>
 
-          {/* Energy flow particle */}
-          {progreso > 1 && (
-            <div 
-              style={{ 
-                position: 'absolute', 
-                height: '100%', 
-                overflow: 'hidden',
-                left: `${((progreso - 2) / (totalRetos - 1)) * 100}%`,
-                width: `${(1 / (totalRetos - 1)) * 100}%`
-              }}
-            >
-              <div style={{ 
-                width: '33%', 
-                height: '100%', 
-                background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent)',
-                animation: 'energy-flow 1.5s linear infinite'
-              }}></div>
-            </div>
+            {/* Energy flow particle */}
+            {progreso > 1 && (
+              <div className="mision-particle-cont">
+                <div className="mision-particle-bg"></div>
+              </div>
+            )}
+          </div>
           )}
-        </div>
-        )}
-
-        {/* Challenge Nodes */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          width: '100%', 
-          position: 'relative', 
-          zIndex: 10 
-        }}>
           {rutaRetos.map((reto, index) => {
             const isCompleted = index + 1 < progreso;
             const isCurrent = index + 1 === progreso;
             const isLocked = index + 1 > progreso;
 
             return (
-              <div key={reto.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '48px', position: 'relative' }}>
-                <div 
-                  style={{ 
-                    position: 'relative', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center',
-                    width: '48px', // Forzar ancho del nodo para el centrado
-                    cursor: !isLocked ? 'pointer' : 'not-allowed'
-                  }}
-                  onMouseEnter={() => setHoveredId(reto.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  onClick={() => handleNodeClick(reto.id)}
-                >
-                  
+              <div 
+                key={reto.id} 
+                className="mision-node-item"
+                style={{ cursor: !isLocked ? 'pointer' : 'not-allowed' }}
+                onMouseEnter={() => setHoveredId(reto.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                onClick={() => handleNodeClick(reto.id)}
+              >
+                
+                {/* Visual Node Container (48x48) */}
+                <div style={{ position: 'relative', width: '48px', height: '48px', flexShrink: 0 }}>
+                    
                   {/* User Avatar for current challenge */}
                   {isCurrent && (
-                    <div style={{ 
-                      position: 'absolute', 
-                      top: '40%', // Subido un poquito para no tapar tanto el nodo
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)', 
-                      width: '40px',
-                      height: '40px',
-                      zIndex: 100,
-                      pointerEvents: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        animation: 'float 3s ease-in-out infinite' // AnimaciÃ³n aparte
-                      }}>
-                        <div style={{ 
-                          position: 'relative', 
-                          padding: '2px', 
-                          borderRadius: '50%', 
-                          background: 'linear-gradient(to bottom, rgba(168, 85, 247, 0.7), #a855f7)',
-                          border: '2px solid rgba(255,255,255,0.2)',
-                          boxShadow: '0 0 15px rgba(168, 85, 247, 0.5)'
-                        }}>
-                          <div style={{ 
-                            width: '32px', 
-                            height: '32px', 
-                            borderRadius: '50%', 
-                            background: '#1e293b', 
-                            border: '2px solid #ffffff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            fontSize: '14px',
-                            color: 'white',
-                            overflow: 'hidden',
-                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), inset 0 0 8px rgba(59, 130, 246, 0.4)'
-                          }}>
+                    <div className="mision-node-avatar">
+                      <div className="avatar-anim-responsive">
+                        <div style={{ position: 'relative', padding: '2px', borderRadius: '50%', background: 'linear-gradient(to right, rgba(168, 85, 247, 0.7), #a855f7)', border: '2px solid rgba(255,255,255,0.2)', boxShadow: '0 0 15px rgba(168, 85, 247, 0.5)' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#1e293b', border: '2px solid #ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '16px', color: 'white', overflow: 'hidden', boxShadow: '0 0 15px rgba(59, 130, 246, 0.8), inset 0 0 8px rgba(59, 130, 246, 0.4)' }}>
                              {userAvatar.startsWith('http') ? <img src={userAvatar} alt="Avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} /> : userAvatar}
                           </div>
                         </div>
-                        <div style={{ 
-                          width: 0, 
-                          height: 0, 
-                          borderLeft: '4px solid transparent', 
-                          borderRight: '4px solid transparent', 
-                          borderTop: '5px solid #a855f7', 
-                          marginTop: '2px'
-                        }}></div>
+                        <div className="mobile-arrow" style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '6px solid #a855f7', marginLeft: '-2px' }}></div>
+                        {/* PC Arrow (Hidden by default) */}
+                        <div className="pc-arrow" style={{ display: 'none', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '6px solid #a855f7', marginTop: '-2px' }}></div>
                       </div>
                     </div>
                   )}
@@ -281,7 +396,9 @@ const MisionRoadMap = ({ missions = [] }) => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.5s ease',
-                      position: 'relative',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
                       background: isCompleted ? '#1e293b' : isCurrent ? '#a855f7' : isLocked ? '#334155' : 'rgba(15, 23, 42, 0.8)',
                       borderColor: isCompleted ? '#10b981' : isCurrent ? '#ffffff' : isLocked ? '#64748b' : 'rgba(255,255,255,0.05)',
                       opacity: 1,
@@ -339,20 +456,25 @@ const MisionRoadMap = ({ missions = [] }) => {
                     </div>
                   </div>
 
-                  {/* Challenge Info */}
-                  <div style={{ 
-                    position: 'absolute',
-                    top: '64px', // Por debajo del nodo (48px + margen)
-                    left: '50%',
-                    transform: hoveredId === reto.id ? 'translate(-50%, 4px)' : 'translate(-50%, 0)',
-                    textAlign: 'center', 
-                    width: '120px', 
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    transition: 'all 0.3s ease',
-                    pointerEvents: 'none' // Que no moleste al hacer click
-                  }}>
+                  {/* Node Pulse Effect */}
+                  {isCurrent && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      width: '48px', 
+                      height: '48px', 
+                      borderRadius: '12px', 
+                      background: 'rgba(168, 85, 247, 0.1)', 
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      transform: 'scale(1.3)', 
+                      zIndex: -10,
+                      filter: 'blur(15px)'
+                    }}></div>
+                  )}
+                </div> {/* End Visual Node Container */}
+
+                {/* Challenge Info */}
+                <div className={`mision-info-box ${hoveredId === reto.id ? 'hovered' : ''}`}>
                     <p style={{ 
                       fontSize: '9px', 
                       fontWeight: 900, 
@@ -396,21 +518,6 @@ const MisionRoadMap = ({ missions = [] }) => {
                     </div>
                   </div>
 
-                  {isCurrent && (
-                    <div style={{ 
-                      position: 'absolute', 
-                      inset: 0, 
-                      width: '48px', 
-                      height: '48px', 
-                      borderRadius: '12px', 
-                      background: 'rgba(168, 85, 247, 0.1)', 
-                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      transform: 'scale(1.3)', 
-                      zIndex: -10,
-                      filter: 'blur(15px)'
-                    }}></div>
-                  )}
-                </div>
               </div>
             );
           })}
@@ -466,6 +573,7 @@ const MisionRoadMap = ({ missions = [] }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
