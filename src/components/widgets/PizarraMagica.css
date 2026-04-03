@@ -10,10 +10,10 @@
     border-radius: 16px;
     width: 860px;
     height: 600px;
-    min-width: 400px;
+    min-width: 320px;
     min-height: 300px;
     resize: both;
-    overflow: hidden;
+    overflow: visible; /* IMPORTANTE: Permitir que las herramientas floten fuera */
 }
 
 .whiteboard-container.maximized {
@@ -27,6 +27,55 @@
     z-index: 9999999 !important;
     overflow: hidden;
     background: var(--bg-primary) !important;
+}
+
+@media (max-width: 900px) {
+    .whiteboard-container {
+        width: 95vw !important;
+        height: 70vh !important;
+        min-width: 300px !important;
+        resize: none;
+    }
+    
+    .whiteboard-title {
+        font-size: 0.9rem;
+    }
+
+    .toolbar {
+        flex-direction: row !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0.5rem !important;
+        gap: 0.75rem !important;
+        justify-content: center;
+        order: 2;
+    }
+
+    .tool-group {
+        flex-direction: row !important;
+        width: auto !important;
+        gap: 0.5rem !important;
+    }
+
+    .content-row {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+
+    .canvas-wrapper {
+        order: 1;
+        flex: 1;
+    }
+
+    .tool-btn {
+        padding: 6px;
+    }
+
+    .tool-separator {
+        width: 1px !important;
+        height: 20px !important;
+        margin: 0 4px !important;
+    }
 }
 
 .whiteboard-header {
@@ -107,9 +156,6 @@
 
 .sub-menu {
     position: absolute;
-    left: calc(100% + 12px);
-    top: 50%;
-    transform: translateY(-50%);
     display: flex;
     flex-direction: row;
     gap: 8px;
@@ -126,8 +172,8 @@
 }
 
 @keyframes slideInRight {
-    from { opacity: 0; transform: translate(-15px, -50%); }
-    to { opacity: 1; transform: translate(0, -50%); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .tool-btn {
@@ -303,10 +349,14 @@
     gap: 0;
 }
 
+.whiteboard-container.maximized.invisible-mode .toolbar {
+    bottom: 0.8rem !important;
+}
+
 .whiteboard-container.invisible-mode .toolbar {
     position: absolute;
     left: 50%;
-    top: -3.9rem;
+    bottom: -4.2rem;
     transform: translate(-50%, 0);
     flex-direction: row;
     align-items: center;

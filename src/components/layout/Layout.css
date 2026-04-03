@@ -16,11 +16,11 @@
     padding: 1.5rem;
     flex-shrink: 0;
     border-radius: 20px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    background: radial-gradient(circle at top left, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.98));
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.4);
     z-index: 1;
     position: sticky;
     top: 1rem;
@@ -305,6 +305,11 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* Sidebar Handle Hidden by Default for PC */
+.mobile-sidebar-handle {
+    display: none;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
     .app-layout {
@@ -314,17 +319,20 @@
 
     .sidebar {
         position: fixed;
-        top: 1rem;
-        bottom: 1rem;
-        left: 1rem;
-        z-index: 50;
-        transform: translateX(-120%);
-        transition: transform var(--transition-normal);
-        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5);
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        transform: translateX(-280px); /* Mantener el borde en el píxel 0 */
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 280px;
+        overflow: visible !important;
+        pointer-events: none;
     }
 
     .sidebar.open {
         transform: translateX(0);
+        pointer-events: auto;
     }
 
     .mobile-menu-btn {
@@ -339,9 +347,34 @@
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 90;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(2px);
+        z-index: 900;
+    }
+
+    /* Pestañota Orgánica Izquierda (Visible only on mobile/tablet) */
+    .mobile-sidebar-handle {
+        position: absolute;
+        left: 279px;
+        top: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 64px;
+        background: radial-gradient(circle at top left, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.98));
+        backdrop-filter: blur(30px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-left: none;
+        border-top-right-radius: 32px;
+        border-bottom-right-radius: 32px;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.4);
+        z-index: 9999999;
+        pointer-events: auto;
+        padding: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 }
 

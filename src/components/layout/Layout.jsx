@@ -16,6 +16,7 @@ const LayoutContent = () => {
         <div className="app-layout">
             <Sidebar 
                 isOpen={isSidebarOpen} 
+                toggleSidebar={toggleSidebar}
                 closeSidebar={() => setIsSidebarOpen(false)} 
             />
             {isSidebarOpen && (

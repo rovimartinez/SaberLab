@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, BookOpen, X, PenLine, User, ChevronDown, LogOut, Bell, GraduationCap } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, BookOpen, X, PenLine, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 
-const Sidebar = ({ isOpen, closeSidebar }) => {
+const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
     const { user, signOut } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +24,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
     const navCategories = [
         {
             title: 'PRINCIPAL',
@@ -62,9 +63,6 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                     />
                     <h2 className="text-gradient" style={{ fontSize: '1.5rem', margin: 0 }}>SaberLab</h2>
                 </div>
-                <button className="icon-btn mobile-close-btn" onClick={closeSidebar}>
-                    <X size={20} />
-                </button>
             </div>
 
             <nav className="sidebar-nav" style={{ overflowY: 'auto', paddingRight: '4px' }}>
@@ -231,6 +229,18 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
                     )}
                 </div>
             </div>
+
+            {/* Pestañita flotante que se mueve con el panel */}
+            <button
+                className="mobile-sidebar-handle"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSidebar();
+                }}
+            >
+                {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+            </button>
         </aside>
     );
 };

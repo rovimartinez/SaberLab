@@ -58,6 +58,49 @@
     line-height: 1.2;
 }
 
+.challenges-nav {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    margin-bottom: -1px;
+    padding: 0 4px 0 0;
+    position: relative;
+    z-index: 2;
+}
+
+.challenges-nav button {
+    min-width: 180px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .challenges-nav {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 1px !important;
+        gap: 8px !important;
+        scrollbar-width: none;
+        /* Hide scrollbar for cleaner look */
+    }
+
+    .challenges-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .challenges-nav button {
+        min-width: 60px !important;
+        padding: 10px 0 !important;
+        flex-shrink: 0 !important;
+        gap: 0 !important;
+    }
+
+    .challenge-title-text,
+    .challenge-btn-prefix {
+        display: none !important;
+    }
+}
+
 .btn-back-course {
     display: flex;
     align-items: center;
@@ -129,6 +172,46 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
+/* Universal Mobile Stacker for Lesson Content (Overrides Inline Styles) */
+@media (max-width: 768px) {
+    .lesson-content-container [style*="display: grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+        padding: 1rem !important;
+    }
+
+    /* Solo apilar flex si es un contenedor de contenido ancho (gap grande) */
+    .lesson-content-container [style*="display: flex"][style*="gap: 1.5rem"],
+    .lesson-content-container [style*="display:flex"][style*="gap: 1.5rem"],
+    .lesson-content-container [style*="display: flex"][style*="gap: 2rem"],
+    .lesson-content-container [style*="display:flex"][style*="gap: 2rem"] {
+        flex-direction: column !important;
+    }
+
+    /* Excepción técnica: Mantener horizontal el Esquema de Conexión */
+    .lesson-content-container [style*="grid-template-columns: 80px 100px 100px"],
+    .lesson-content-container [style*="grid-template-columns:80px 100px 100px"] {
+        grid-template-columns: 80px 100px 100px !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        gap: 0.4rem !important;
+        padding: 0 !important;
+    }
+
+    .lesson-content-container [style*="grid-column"] {
+        grid-column: span 1 !important;
+        width: 100% !important;
+    }
+
+    #led-simulator-container,
+    .arduino-simulator-wrapper,
+    [id*="simulator-container"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: none !important;
+    }
+}
+
 /* Content Area */
 .lesson-content-card {
     background: transparent;
@@ -143,6 +226,19 @@
 .theory-section-main {
     font-size: clamp(0.85rem, 1.5vw, 1rem) !important;
     line-height: 1.6;
+    max-width: 1100px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.theory-section {
+    margin-top: 1.8rem;
+    position: relative;
+    width: 100%;
+}
+
+.theory-section:first-of-type {
+    margin-top: 1rem;
 }
 
 .lesson-content-container p,
@@ -211,6 +307,7 @@
 .nav-btn:hover {
     transform: translateY(-3px);
 }
+
 /* Memory Cards Interactive */
 .memory-card {
     transition: transform 0.6s;
@@ -238,7 +335,7 @@
 
 .summary-trigger {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #e2e8f0;
     width: 28px;
     height: 28px;
@@ -279,9 +376,19 @@
 }
 
 @keyframes summaryGlow {
-    0%, 100% { transform: scale(1) translateY(0); filter: brightness(1); }
-    50% { transform: scale(1.08) translateY(2px); filter: brightness(1.1); }
+
+    0%,
+    100% {
+        transform: scale(1) translateY(0);
+        filter: brightness(1);
+    }
+
+    50% {
+        transform: scale(1.08) translateY(2px);
+        filter: brightness(1.1);
+    }
 }
+
 .review-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -299,9 +406,9 @@
     max-height: 80vh;
     overflow: auto;
     background: #0f172a;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.55);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
     padding: 1.25rem 1.5rem;
     color: #e2e8f0;
 }
@@ -322,7 +429,7 @@
 
 .review-modal-header button {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #e2e8f0;
     padding: 6px 12px;
     border-radius: 10px;
@@ -349,9 +456,9 @@
 .summary-modal {
     width: min(640px, 100%);
     background: #0f172a;
-    border: 2px solid rgba(255,255,255,0.08);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.55);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
     padding: 1.5rem;
     color: #e2e8f0;
     transform-origin: top left;
@@ -366,7 +473,7 @@
     gap: 1rem;
     padding-bottom: 0.75rem;
     margin-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .summary-modal-title {
@@ -377,7 +484,7 @@
 
 .summary-close {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #e2e8f0;
     width: 28px;
     height: 28px;
@@ -416,8 +523,17 @@
 }
 
 @keyframes summaryPulse {
-    0%, 100% { transform: translateY(0); opacity: 0.4; }
-    50% { transform: translateY(-6px); opacity: 1; }
+
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+
+    50% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
 }
 
 .summary-sub {
@@ -461,7 +577,7 @@
 .summary-btn {
     padding: 8px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     background: transparent;
     color: #e2e8f0;
     cursor: pointer;
@@ -470,7 +586,7 @@
 
 .summary-primary {
     background: #1e293b;
-    border-color: rgba(255,255,255,0.25);
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 .review-grid {
@@ -517,20 +633,76 @@
     border-radius: 24px;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+@media (max-width: 768px) {
+    .lesson-tabs-wrapper {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin-bottom: 0 !important;
+        border-radius: 24px 24px 0 0 !important;
+        z-index: 2000 !important;
+        /* Por encima de todo */
+        background: rgba(15, 23, 42, 0.9) !important;
+        backdrop-filter: blur(20px) !important;
+        padding: 0.6rem 0.5rem 1rem 0.5rem !important;
+        /* Padding extra para el notch/gestos */
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 24px 24px 0 0 !important;
+    }
 
-@keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
-}
+    .challenge-display-area {
+        padding: 1.5rem 1.25rem !important; /* Reclaimed top space */
+        display: flex !important;
+        flex-direction: column !important;
+    }
 
-.animate-scale-in {
-    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
+    .btn-simular-reto {
+        position: static !important;
+        width: 100% !important;
+        margin-top: 1.5rem !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+    }
 
-.animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
+    .lesson-tab-btn {
+        flex-direction: column !important;
+        font-size: 0.7rem !important;
+        gap: 4px !important;
+        padding: 0.5rem 0.25rem !important;
+    }
+
+    .lesson-tab-btn svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    .lesson-view-container {
+        padding-bottom: 6rem !important;
+        /* Espacio para que el contenido no quede oculto */
+        padding-top: 0.5rem !important;
+    }
+
+    .lesson-breadcrumb {
+        display: none !important;
+        /* Ocultamos ruta en móvil */
+    }
+
+    .lesson-header-main {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.75rem !important;
+    }
+
+    .lesson-header-info h1 {
+        font-size: 1.15rem !important;
+        /* Título más pequeño */
+        font-weight: 800 !important;
+    }
+
+    .btn-back-course {
+        display: none !important;
+    }
 }

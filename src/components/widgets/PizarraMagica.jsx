@@ -96,10 +96,10 @@ const PizarraMagica = ({ onClose }) => {
     const [dragState, setDragState] = useState(null);
 
     const [autoShape, setAutoShape] = useState(false); // Varita mágica (formas)
-    const magicText = true; // Texto Mágico (suavizado) siempre activo
+    const magicText = false; // Desactivado por rendimiento en tiempo real
     const [isMaximized, setIsMaximized] = useState(false); // Default false para mejor UX
     const [isMinimized, setIsMinimized] = useState(false);
-    const [isInvisible, setIsInvisible] = useState(false); // Transparente
+    const [isInvisible, setIsInvisible] = useState(false); // Iniciamos en modo normal
     const [insertShape, setInsertShape] = useState(null); // 'rect', 'circle', 'triangle'
     const [activeMenu, setActiveMenu] = useState(null);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -121,7 +121,19 @@ const PizarraMagica = ({ onClose }) => {
         boxShadow: '3px 10px 30px rgba(0,0,0,0.6)',
         zIndex: 1000,
         width: 'max-content',
-        alignItems: 'center'
+        alignItems: 'center',
+        ...(window.innerWidth <= 900 ? {
+            left: '50%',
+            bottom: 'calc(100% + 10px)',
+            top: 'auto',
+            transform: 'translateX(-50%)',
+            flexDirection: 'row'
+        } : {
+            left: 'calc(100% + 14px)',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            flexDirection: 'row'
+        })
     };
 
     const customCursorRef = useRef(null);
@@ -131,7 +143,13 @@ const PizarraMagica = ({ onClose }) => {
     const savedCanvasState = useRef(null);
 
     // Arrastro y posición
-    const [position, setPosition] = useState({ x: Math.max(0, window.innerWidth / 2 - 430), y: Math.max(0, window.innerHeight / 2 - 300) });
+    const INITIAL_WIDTH = window.innerWidth > 900 ? 860 : window.innerWidth * 0.95;
+    const INITIAL_HEIGHT = window.innerWidth > 900 ? 600 : window.innerHeight * 0.7;
+    
+    const [position, setPosition] = useState({ 
+        x: Math.max(10, window.innerWidth / 2 - INITIAL_WIDTH / 2), 
+        y: Math.max(10, window.innerHeight / 2 - INITIAL_HEIGHT / 2) 
+    });
     const [isDraggingHeader, setIsDraggingHeader] = useState(false);
     const dragRef = useRef({ startX: 0, startY: 0, initialX: 0, initialY: 0, isDragging: false });
 

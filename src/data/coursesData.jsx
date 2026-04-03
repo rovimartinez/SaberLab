@@ -17,28 +17,65 @@ export const LESSONS_REGISTRY = {
         title: 'Semáforos y Variables',
         load: () => import('../lessons/RE/m1/l2').then(m => m.lessonData)
     },
+    're-m1-l3': { id: 're-m1-l3', title: 'Entradas Digitales (Pulsadores)', load: null },
+    're-m1-l4': { id: 're-m1-l4', title: 'El Monitor Serie', load: null },
+    're-m2-l1': { id: 're-m2-l1', title: 'Sensores de Distancia', load: null },
+    're-m2-l2': { id: 're-m2-l2', title: 'Sensores de Luz (LDR)', load: null },
+    're-m2-l3': { id: 're-m2-l3', title: 'Sensores de Temperatura', load: null },
+    're-m2-l4': { id: 're-m2-l4', title: 'Sensor de Humedad y Suelo', load: null },
+    're-m3-l1': { id: 're-m3-l1', title: 'Servomotores', load: null },
+    're-m3-l2': { id: 're-m3-l2', title: 'Motores DC (L298N)', load: null },
+    're-m3-l3': { id: 're-m3-l3', title: 'Pantallas LCD', load: null },
+    're-m3-l4': { id: 're-m3-l4', title: 'Joystick y Control', load: null },
+    're-m4-l1': { id: 're-m4-l1', title: 'Robot seguidor de línea', load: null },
+    're-m4-l2': { id: 're-m4-l2', title: 'Sistema domótico básico', load: null },
+    're-m4-l3': { id: 're-m4-l3', title: 'Brazo Robótico Pro', load: null },
+    're-m4-l4': { id: 're-m4-l4', title: 'Proyecto Integrador Final', load: null },
     
-    // Lecciones de relleno para completar la estructura (Pendientes de archivo .jsx)
+    // --- ELECTRICIDAD (EE) ---
     'ee-concepts': { id: 'ee-concepts', title: 'Conceptos básicos de electricidad', load: null },
-    'ee-voltage': { id: 'ee-voltage', title: 'Tensión y corriente', load: null },
-    'ee-resistance': { id: 'ee-resistance', title: 'Resistencia eléctrica', load: null },
-    'ee-resistors': { id: 'ee-resistors', title: 'Resistores', load: null },
-    
-    'fp-program': { id: 'fp-program', title: '¿Qué es un programa?', load: null },
-    'fp-variables': { id: 'fp-variables', title: 'Variables y tipos de datos', load: null },
-    'fp-operators': { id: 'fp-operators', title: 'Operadores', load: null },
-    
-    'mq-atoms': { id: 'mq-atoms', title: 'Átomos y moléculas', load: null },
-    'mq-table': { id: 'mq-table', title: 'Tabla periódica', load: null },
-    'mq-bonds': { id: 'mq-bonds', title: 'Enlaces químicos', load: null },
-    
-    'ma-concepts': { id: 'ma-concepts', title: 'Conceptos básicos de modelado', load: null },
-    'ma-tools': { id: 'ma-tools', title: 'Herramientas de transformación', load: null },
-    'ma-textures': { id: 'ma-textures', title: 'Materiales y texturas', load: null },
-    
-    'td-ai': { id: 'td-ai', title: 'Inteligencia Artificial', load: null },
-    'td-blockchain': { id: 'td-blockchain', title: 'Blockchain y NFTs', load: null },
-    'td-iot': { id: 'td-iot', title: 'Internet de las Cosas', load: null }
+    'ee-voltage': { id: 'ee-voltage', title: 'Tensión, Corriente y Resistencia', load: null },
+    'ee-ohm': { id: 'ee-ohm', title: 'Ley de Ohm y Potencia', load: null },
+    'ee-resistors': { id: 'ee-resistors', title: 'Resistores y Código de Colores', load: null },
+    'ee-capacitors': { id: 'ee-capacitors', title: 'Capacitores y Almacenamiento', load: null },
+    'ee-diodes': { id: 'ee-diodes', title: 'Diodos y Rectificación', load: null },
+    'ee-series': { id: 'ee-series', title: 'Circuitos en Serie', load: null },
+    'ee-parallel': { id: 'ee-parallel', title: 'Circuitos en Paralelo', load: null },
+    'ee-breadboard': { id: 'ee-breadboard', title: 'Uso de la Protoboard', load: null },
+
+    // --- PROGRAMACIÓN (FP) ---
+    'fp-program': { id: 'fp-program', title: '¿Qué es la Programación?', load: null },
+    'fp-variables': { id: 'fp-variables', title: 'Variables y Tipos de Datos', load: null },
+    'fp-operators': { id: 'fp-operators', title: 'Operadores Matemáticos y Lógicos', load: null },
+    'fp-conditionals': { id: 'fp-conditionals', title: 'Condicionales (If-Else)', load: null },
+    'fp-loops-for': { id: 'fp-loops-for', title: 'Bucles y Ciclos (For)', load: null },
+    'fp-loops-while': { id: 'fp-loops-while', title: 'Ciclos Condicionales (While)', load: null },
+    'fp-functions': { id: 'fp-functions', title: 'Funciones y Modularidad', load: null },
+    'fp-arrays': { id: 'fp-arrays', title: 'Arreglos y Listas', load: null },
+
+    // --- QUIMICA (MQ) ---
+    'mq-atoms': { id: 'mq-atoms', title: 'Átomos, Protones y Neutrones', load: null },
+    'mq-table': { id: 'mq-table', title: 'La Tabla Periódica Interactiva', load: null },
+    'mq-bonds': { id: 'mq-bonds', title: 'Enlaces Iónicos y Covalentes', load: null },
+    'mq-reactions': { id: 'mq-reactions', title: 'Reacciones Químicas Básicas', load: null },
+    'mq-states': { id: 'mq-states', title: 'Estados de la Materia', load: null },
+    'mq-lab-virtual': { id: 'mq-lab-virtual', title: 'Simulación de Laboratorio', load: null },
+
+    // --- MODELADO 3D (MA) ---
+    'ma-concepts': { id: 'ma-concepts', title: 'Introducción al Espacio 3D', load: null },
+    'ma-tools': { id: 'ma-tools', title: 'Extrusión y Modelado Básico', load: null },
+    'ma-textures': { id: 'ma-textures', title: 'Mapeado UV y Texturizado', load: null },
+    'ma-lighting': { id: 'ma-lighting', title: 'Iluminación y Cámaras', load: null },
+    'ma-animation': { id: 'ma-animation', title: 'Keyframes y Animación', load: null },
+    'ma-rendering': { id: 'ma-rendering', title: 'Motores de Renderizado', load: null },
+
+    // --- TENDENCIAS (TD) ---
+    'td-ai': { id: 'td-ai', title: 'Inteligencia Artificial y Redes Neuronales', load: null },
+    'td-blockchain': { id: 'td-blockchain', title: 'Blockchain y Criptoactivos', load: null },
+    'td-iot': { id: 'td-iot', title: 'IoT: El Internet de las Cosas', load: null },
+    'td-cyber': { id: 'td-cyber', title: 'Ciberseguridad y Ética Digital', load: null },
+    'td-metaverse': { id: 'td-metaverse', title: 'Realidad Virtual y Metaverso', load: null },
+    'td-green': { id: 'td-green', title: 'Tecnologías Verdes y Sostenibles', load: null }
 };
 
 /**
@@ -56,18 +93,29 @@ export const COURSES_DEFINITION = [
         modules: [
             {
                 id: 'm1',
-                name: 'Módulo 1: Introducción a la Electricidad',
+                name: 'Módulo 1: Fundamentos Eléctricos',
                 lessons: [
                     { id: 'ee-concepts', visible: true },
                     { id: 'ee-voltage', visible: true },
-                    { id: 'ee-resistance', visible: true }
+                    { id: 'ee-ohm', visible: true }
                 ]
             },
             {
                 id: 'm2',
-                name: 'Módulo 2: Componentes Electrónicos',
+                name: 'Módulo 2: Componentes Pasivos',
                 lessons: [
-                    { id: 'ee-resistors', visible: true }
+                    { id: 'ee-resistors', visible: true },
+                    { id: 'ee-capacitors', visible: true },
+                    { id: 'ee-diodes', visible: true }
+                ]
+            },
+            {
+                id: 'm3',
+                name: 'Módulo 3: Circuitos y Prototipado',
+                lessons: [
+                    { id: 'ee-series', visible: true },
+                    { id: 'ee-parallel', visible: true },
+                    { id: 'ee-breadboard', visible: true }
                 ]
             }
         ],
@@ -83,11 +131,28 @@ export const COURSES_DEFINITION = [
         modules: [
             {
                 id: 'm1',
-                name: 'Módulo 1: Conceptos Iniciales',
+                name: 'Módulo 1: Lógica y Algoritmos',
                 lessons: [
                     { id: 'fp-program', visible: true },
                     { id: 'fp-variables', visible: true },
                     { id: 'fp-operators', visible: true }
+                ]
+            },
+            {
+                id: 'm2',
+                name: 'Módulo 2: Estructuras de Control',
+                lessons: [
+                    { id: 'fp-conditionals', visible: true },
+                    { id: 'fp-loops-for', visible: true },
+                    { id: 'fp-loops-while', visible: true }
+                ]
+            },
+            {
+                id: 'm3',
+                name: 'Módulo 3: Funciones y Datos',
+                lessons: [
+                    { id: 'fp-functions', visible: true },
+                    { id: 'fp-arrays', visible: true }
                 ]
             }
         ],
@@ -109,6 +174,15 @@ export const COURSES_DEFINITION = [
                     { id: 'mq-table', visible: true },
                     { id: 'mq-bonds', visible: true }
                 ]
+            },
+            {
+                id: 'm2',
+                name: 'Módulo 2: Reacciones y Estados',
+                lessons: [
+                    { id: 'mq-reactions', visible: true },
+                    { id: 'mq-states', visible: true },
+                    { id: 'mq-lab-virtual', visible: true }
+                ]
             }
         ],
         groups: []
@@ -126,8 +200,23 @@ export const COURSES_DEFINITION = [
                 name: 'Módulo 1: Fundamentos 3D',
                 lessons: [
                     { id: 'ma-concepts', visible: true },
-                    { id: 'ma-tools', visible: true },
-                    { id: 'ma-textures', visible: true }
+                    { id: 'ma-tools', visible: true }
+                ]
+            },
+            {
+                id: 'm2',
+                name: 'Módulo 2: Apariencia y Realismo',
+                lessons: [
+                    { id: 'ma-textures', visible: true },
+                    { id: 'ma-lighting', visible: true }
+                ]
+            },
+            {
+                id: 'm3',
+                name: 'Módulo 3: Movimiento y Entrega',
+                lessons: [
+                    { id: 'ma-animation', visible: true },
+                    { id: 'ma-rendering', visible: true }
                 ]
             }
         ],
@@ -145,8 +234,40 @@ export const COURSES_DEFINITION = [
                 id: 'm1',
                 name: 'Módulo 1: Fundamentos y Lógica Digital',
                 lessons: [
-                    { id: 'l1', visible: true },
-                    { id: 'l2', visible: true }
+                    { id: 're-m1-l1', visible: true },
+                    { id: 're-m1-l2', visible: true },
+                    { id: 're-m1-l3', visible: true },
+                    { id: 're-m1-l4', visible: true }
+                ]
+            },
+            {
+                id: 'm2',
+                name: 'Módulo 2: El Mundo Físico (Sensores)',
+                lessons: [
+                    { id: 're-m2-l1', visible: true },
+                    { id: 're-m2-l2', visible: true },
+                    { id: 're-m2-l3', visible: true },
+                    { id: 're-m2-l4', visible: true }
+                ]
+            },
+            {
+                id: 'm3',
+                name: 'Módulo 3: Movimiento y Actuadores',
+                lessons: [
+                    { id: 're-m3-l1', visible: true },
+                    { id: 're-m3-l2', visible: true },
+                    { id: 're-m3-l3', visible: true },
+                    { id: 're-m3-l4', visible: true }
+                ]
+            },
+            {
+                id: 'm4',
+                name: 'Módulo 4: Integración y Proyectos',
+                lessons: [
+                    { id: 're-m4-l1', visible: true },
+                    { id: 're-m4-l2', visible: true },
+                    { id: 're-m4-l3', visible: true },
+                    { id: 're-m4-l4', visible: true }
                 ]
             }
         ],
@@ -170,11 +291,26 @@ export const COURSES_DEFINITION = [
         modules: [
             {
                 id: 'm1',
-                name: 'Módulo 1: Futuro y Tecnología',
+                name: 'Módulo 1: Inteligencia y Futuro',
                 lessons: [
                     { id: 'td-ai', visible: true },
-                    { id: 'td-blockchain', visible: true },
-                    { id: 'td-iot', visible: true }
+                    { id: 'td-blockchain', visible: true }
+                ]
+            },
+            {
+                id: 'm2',
+                name: 'Módulo 2: Conectividad y Redes',
+                lessons: [
+                    { id: 'td-iot', visible: true },
+                    { id: 'td-cyber', visible: true }
+                ]
+            },
+            {
+                id: 'm3',
+                name: 'Módulo 3: Nuevos Mundos',
+                lessons: [
+                    { id: 'td-metaverse', visible: true },
+                    { id: 'td-green', visible: true }
                 ]
             }
         ],

@@ -352,12 +352,17 @@
 }
 
 /* Responsiveness */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .course-content {
         flex-direction: column;
     }
     .course-sidebar-improved {
         width: 100%;
+        min-width: 0;
         flex: none;
+    }
+    .syllabus-section {
+        min-width: 0;
+        width: 100%;
     }
 }

@@ -53,21 +53,33 @@ body {
 }
 
 /* Unified Global Overflow */
+@media (min-width: 1024px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
 
-::-webkit-scrollbar {
-  width: 8px;
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #a855f7, #4c1d95);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #c084fc, #6d28d9);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #a855f7, #4c1d95);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #c084fc, #6d28d9);
+@media (max-width: 1023px) {
+  ::-webkit-scrollbar {
+    display: none; /* Hide for and Chrome/Safari */
+  }
+  * {
+    scrollbar-width: none; /* Hide for Firefox */
+    -ms-overflow-style: none; /* Hide for IE/Edge */
+  }
 }
 
 /* Base App Layout */
@@ -184,8 +196,17 @@ h6 {
   }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+/* Universal Mobile Stacking Utilities */
+@media (max-width: 768px) {
+  .grid-stack-mobile,
+  [class*="grid-repeat"],
+  [class*="-grid"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .flex-stack-mobile {
+    flex-direction: column !important;
+  }
 }
 
 @keyframes float {

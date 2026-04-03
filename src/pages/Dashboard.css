@@ -100,20 +100,29 @@
 }
 
 /* Content Columns */
-.content-columns {
+.course-content {
     display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
+    gap: 2rem;
+    padding: 0;
+    flex-wrap: wrap; 
 }
 
-.activities-column {
-    flex: 1;
-    min-width: 300px;
+@media (max-width: 1024px) {
+    .course-content {
+        flex-direction: column;
+    }
 }
 
-.subjects-column {
-    flex: 1;
-    min-width: 300px;
+@media (max-width: 1024px) {
+    .content-columns {
+        flex-direction: column;
+    }
+    
+    .activities-column, 
+    .subjects-column {
+        width: 100%;
+        min-width: 0;
+    }
 }
 
 /* Activities Widget */
@@ -142,10 +151,32 @@
     letter-spacing: 0.5px;
 }
 
-.badge-eval {
-    background: rgba(168, 85, 247, 0.15);
-    color: #c084fc;
-    border: 1px solid rgba(168, 85, 247, 0.3);
+/* Continue Card Stacking */
+@media (max-width: 768px) {
+    .continue-card {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .continue-info {
+        width: 100%;
+    }
+    
+    .continue-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .banner-stats {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .stat-item {
+        width: 100%;
+        justify-content: flex-start;
+    }
 }
 
 .badge-task {

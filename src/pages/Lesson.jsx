@@ -41,6 +41,7 @@ import LedSimulator from '../components/simulators/RE/LedSimulator';
 import { l1Missions } from '../lessons/RE/m1/l1.missions';
 import { l2Missions } from '../lessons/RE/m1/l2.missions';
 import { getCourseByAbbr, getLessonContent, getLessonInfo, getFullLessonPath, getCourseByIdentifier, COURSES_DEFINITION } from '../data/coursesData.jsx';
+import CourseSidebar from '../components/course/CourseSidebar';
 
 const tabs = [
     { id: 'contenido', label: 'Contenido', icon: <BookOpen size={18} /> },
@@ -724,6 +725,7 @@ const Lesson = () => {
     const [showArduinoParts, setShowArduinoParts] = useState(false);
     const [activeChallenge, setActiveChallenge] = useState(0);
     const [showSimulator, setShowSimulator] = useState(false);
+    const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     const simulatorRootRef = useRef(null);
 
     useEffect(() => {
@@ -735,7 +737,7 @@ const Lesson = () => {
                 if (ledContainer && !ledContainer.hasChildNodes()) {
                     const root = createRoot(ledContainer);
                     root.render(
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', padding: '0.5rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '0.5rem' }}>
                             <LedSimulator />
                         </div>
                     );
@@ -744,7 +746,7 @@ const Lesson = () => {
                 if (arduinoContainer && !arduinoContainer.hasChildNodes()) {
                     const root = createRoot(arduinoContainer);
                     root.render(
-                        <div style={{ width: '100%', minHeight: '520px' }}>
+                        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                             <ArduinoSimulatorV2 />
                         </div>
                     );
@@ -867,6 +869,15 @@ const Lesson = () => {
         <div className="lesson-view-container animate-fade-in">
             <GuideModal showGuide={showGuide} setShowGuide={setShowGuide} />
             <ArduinoPartsModal showArduinoParts={showArduinoParts} setShowArduinoParts={setShowArduinoParts} />
+
+            {/* Right Course Sidebar (Mobile Only) */}
+            <CourseSidebar
+                subject={subject}
+                currentLessonId={internalId}
+                isOpen={isRightSidebarOpen}
+                toggleSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+            />
+
             {/* Scroll Progress Bar */}
             <div style={{
                 position: 'fixed',
@@ -1237,7 +1248,6 @@ const Lesson = () => {
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
                                                     gap: '12px',
-                                                    minWidth: '180px',
                                                     borderRadius: '12px 12px 0 0',
                                                     boxShadow: activeChallenge === idx ? '0 -10px 20px rgba(0,0,0,0.2)' : 'none',
                                                     position: 'relative'
@@ -1257,7 +1267,7 @@ const Lesson = () => {
                                                 }}>
                                                     {idx + 1}
                                                 </div>
-                                                <span style={{ transition: 'all 0.3s ease' }}>{c.title}</span>
+                                                <span className="challenge-title-text" style={{ transition: 'all 0.3s ease' }}>{c.title}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -1274,7 +1284,10 @@ const Lesson = () => {
                                             position: 'relative'
                                         }}
                                     >
-                                        <button
+                                        <div dangerouslySetInnerHTML={{ __html: lesson.challenges[activeChallenge]?.content?.replace(/font-size:\s*[^;]+;?/g, '') || '' }} />
+
+                                        <button 
+                                            className="btn-simular-reto"
                                             onClick={() => setShowSimulator(true)}
                                             style={{
                                                 position: 'absolute',
@@ -1282,6 +1295,7 @@ const Lesson = () => {
                                                 right: '1.5rem',
                                                 display: 'flex',
                                                 alignItems: 'center',
+                                                justifyContent: 'center',
                                                 gap: '8px',
                                                 background: subject.color,
                                                 color: 'white',
@@ -1300,8 +1314,6 @@ const Lesson = () => {
                                         >
                                             <PlayCircle size={18} /> Simular
                                         </button>
-
-                                        <div dangerouslySetInnerHTML={{ __html: lesson.challenges[activeChallenge]?.content?.replace(/font-size:\s*[^;]+;?/g, '') || '' }} />
                                     </div>
 
                                     {showSimulator && (

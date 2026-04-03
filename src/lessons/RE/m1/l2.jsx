@@ -6,7 +6,7 @@ export const lessonData = {
         </div>
 
         <div class="theory-section">
-            <h3>1. El Poder de los Comentarios</h3>
+            <h3>2.1 El Poder de los Comentarios</h3>
             <p>Los comentarios son notas que el Arduino ignora totalmente. Sirven para explicar qué hace tu código y hacerlo profesional.</p>
             <div class="highlight-panel" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
                 <p><strong>// Comentario de una línea:</strong> Usa doble barra para notas cortas.</p>
@@ -15,7 +15,7 @@ export const lessonData = {
         </div>
 
         <div class="theory-section">
-            <h3>2. ¿Qué es verdaderamente una Variable?</h3>
+            <h3>2.2 ¿Qué es verdaderamente una Variable?</h3>
             <p>En el mundo real, si quieres guardar tus juguetes para que no se pierdan, usas una <strong>caja</strong> y le pones una <strong>etiqueta</strong> ("Mis Juguetes"). En programación, una <strong>variable</strong> es exactamente eso: una caja en la memoria de la placa Arduino donde podemos guardar información para usarla más adelante.</p>
             
             <p>Como las computadoras son muy estrictas, no puedes meter cualquier cosa en cualquier caja. Necesitas avisar qué forma tiene. Imagina que es como pedir "Solo peluches" o "Solo piezas de Lego". Por lo tanto, para crear esa caja de manera perfecta, necesitas 3 elementos clave:</p>
@@ -38,7 +38,7 @@ export const lessonData = {
         </div>
 
         <div class="theory-section">
-            <h3>3. El Catálogo de Tipos de Datos</h3>
+            <h3>2.3 El Catálogo de Tipos de Datos</h3>
             <p>Arduino necesita saber qué "tipo" de información vas a guardar para reservar el espacio correcto en memoria:</p>
             <div class="types-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
                 <div class="type-card" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">

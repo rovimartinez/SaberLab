@@ -147,14 +147,15 @@ const LedSimulator = () => {
 
         <div style={{
           position: 'absolute',
-          right: '100px',
-          bottom: '80px',
+          right: '45px',
+          bottom: '115px',
           background: 'rgba(28, 33, 40, 0.8)',
           backdropFilter: 'blur(8px)',
           padding: '6px 12px',
           borderRadius: '8px',
           border: '1px solid #30363d',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          zIndex: 30
         }}>
           <span style={{ color: '#f97316', fontFamily: 'monospace', fontSize: '12px', fontWeight: 'bold', letterSpacing: '-0.5px' }}>330 Ω</span>
         </div>
