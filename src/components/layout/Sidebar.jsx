@@ -5,15 +5,16 @@ import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, signOut } = useAuth();
+    const { user, profile, signOut } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
 
-    // Datos de usuario
+    // Datos de usuario (preferimos los de la tabla profiles sobre los de Google)
+    const isAdmin = profile?.role === 'admin';
     const userMetadata = user?.user_metadata || {};
     const avatarUrl = userMetadata.avatar_url;
-    const fullName = userMetadata.full_name || user?.email?.split('@')[0] || 'Estudiante';
+    const fullName = profile?.full_name || userMetadata.full_name || user?.email?.split('@')[0] || 'Estudiante';
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -43,13 +44,14 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                 { name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }
             ]
         },
-        {
+        // Sólo se incluye si el usuario es admin
+        ...(isAdmin ? [{
             title: 'ADMIN',
             items: [
                 { name: 'Gestión de Cursos', path: '/dashboard/courses', icon: <GraduationCap size={18} /> },
                 { name: 'Plataforma', path: '/dashboard/admin', icon: <Shield size={18} /> }
             ]
-        }
+        }] : [])
     ];
 
     return (

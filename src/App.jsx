@@ -49,13 +49,17 @@ const RedirectLessonToMyCourses = () => {
     return <Navigate to={`/dashboard/my-courses/${targetCourseId}/${moduleId}/${lessonId}`} replace />;
 };
 
+import Landing from './pages/Landing';
+
 function AppRoutes() {
     const [courses, setCourses] = useState(COURSES_DEFINITION);
 
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+                {/* Landing page for unauthenticated users, auth handles redirection if logged in */}
+                <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                     <Route index element={<Dashboard />} />
                     <Route path="my-courses" element={<MyCourses />} />

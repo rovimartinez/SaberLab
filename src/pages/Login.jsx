@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Mail, GraduationCap } from 'lucide-react';
+import { Mail, ChevronLeft } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
 import './Login.css';
 
@@ -20,7 +20,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     
     // Auth context
-    const { user, signInWithGoogle } = useAuth();
+    const { user, signInWithGoogle, sessionRejected, setSessionRejected } = useAuth();
     const navigate = useNavigate();
 
     // Catálogos dinámicos
@@ -28,6 +28,8 @@ const Login = () => {
 
     // Form State (Not linked to backend yet for email, only doing Google auth)
     const [email, setEmail] = useState('');
+    const [classCode, setClassCode] = useState('');
+    const [isCodeValid, setIsCodeValid] = useState(false);
 
     // Redirigir si ya está autenticado (protección extra)
     if (user) {
@@ -49,29 +51,53 @@ const Login = () => {
         // Here we handle the fake email login/register/forgot flows for UI demonstration
         if (mode === 'forgotPassword') {
             alert(`Si el correo ${email} existe, enviaremos instrucciones de recuperación.`);
-            setMode('login');
+            handleSetMode('login');
+        } else if (mode === 'register') {
+            // Simulamos la validación del código institucional (debe tener más de 4 letras)
+            if(classCode.length > 4) {
+                setIsCodeValid(true);
+            } else {
+                alert('Código inválido. Por favor, revisa e intenta de nuevo.');
+            }
         } else {
             alert(`Aún no has conectado el Auth de Email/Password a Supabase. \nUsa "Continuar con Google" para entrar al panel.`);
         }
     };
 
+    // Helper para resetear estados al cambiar de flujos
+    const handleSetMode = (newMode) => {
+        setMode(newMode);
+        if (newMode !== 'register') {
+            setIsCodeValid(false);
+            setClassCode('');
+        }
+    };
+
     const renderHeader = () => {
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
+                <button 
+                  type="button"
+                  onClick={() => navigate('/')} 
+                  style={{ position: 'absolute', left: '-10px', top: '-10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '0.85rem' }}
+                >
+                  <ChevronLeft size={18} /> Volver
+                </button>
                 <img 
                     src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" 
                     alt="SaberLab Logo" 
-                    style={{ height: '64px', width: 'auto', marginBottom: '1rem' }}
+                    style={{ height: '64px', width: 'auto', marginBottom: '1rem', cursor: 'pointer' }}
+                    onClick={() => navigate('/')}
                 />
                 <h1 className="auth-title">
                     {mode === 'login' && 'SaberLab Login'}
-                    {mode === 'register' && 'Crear Cuenta'}
+                    {mode === 'register' && 'Activación Institucional'}
                     {mode === 'forgotPassword' && 'Recuperar Clave'}
                 </h1>
                 <p className="auth-subtitle">
                     {mode === 'login' && 'Ingresa tus credenciales para continuar.'}
-                    {mode === 'register' && 'Únete a la plataforma de aprendizaje integral.'}
-                    {mode === 'forgotPassword' && 'Te enviaremos un correo para cambiarla.'}
+                    {mode === 'register' && (isCodeValid ? '¡Código validado! Vincula tu perfil rápido y seguro.' : 'Ingresa el código proporcionado por tu profesor.')}
+                    {mode === 'forgotPassword' && 'Te enviaremos instrucciones por correo.'}
                 </p>
             </div>
         );
@@ -79,116 +105,147 @@ const Login = () => {
 
     return (
         <div className="auth-wrapper">
+            {/* Pantalla de rechazo: aparece si Google login falló sin código */}
+            {sessionRejected && (
+                <div className="auth-card" style={{ textAlign: 'center', maxWidth: '420px' }}>
+                    <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🔒</div>
+                    <h2 style={{ color: '#f87171', fontFamily: 'Outfit, sans-serif', fontWeight: 700, fontSize: '1.4rem', marginBottom: '0.5rem' }}>
+                        Acceso Restringido
+                    </h2>
+                    <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+                        Tu correo de Google <strong style={{ color: '#e2e8f0' }}>no está vinculado</strong> a ninguna clase activa en SaberLab.
+                        <br /><br />
+                        ¿Tienes un <strong style={{ color: '#a855f7' }}>Código Institucional</strong> entregado por tu docente? Úsalo para activar tu acceso.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <button 
+                            className="auth-button" 
+                            onClick={() => { setSessionRejected(false); handleSetMode('register'); }}
+                        >
+                            🏫 Tengo un Código de Acceso
+                        </button>
+                        <button 
+                            className="auth-button" 
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(148,163,184,0.2)', boxShadow: 'none', color: '#94a3b8' }}
+                            onClick={() => { setSessionRejected(false); navigate('/'); }}
+                        >
+                            ← Volver al Inicio
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {!sessionRejected && (
+            <>
             <div className="auth-card">
                 {renderHeader()}
 
-                {/* Mostrar botón de Google si NO estamos en Recuperar Contraseña */}
-                {mode !== 'forgotPassword' && (
+                {mode === 'register' ? (
                     <>
-                        <button 
-                            className="auth-google-btn" 
-                            onClick={handleGoogleLogin} 
-                            disabled={isLoading}
-                        >
-                            <GoogleIcon />
-                            {isLoading ? 'Conectando...' : 'Continuar con Google'}
-                        </button>
-                        <div className="auth-divider">o continuar con correo</div>
+                        {!isCodeValid ? (
+                            <form className="auth-form" onSubmit={handleSubmit}>
+                                <div className="form-group">
+                                    <label className="form-label">Código de Acceso Institucional</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        placeholder="Ej: SABER-X89J" 
+                                        style={{ letterSpacing: '4px', textTransform: 'uppercase', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold' }} 
+                                        required 
+                                        value={classCode}
+                                        onChange={(e) => setClassCode(e.target.value.toUpperCase())}
+                                    />
+                                </div>
+                                <button type="submit" className="auth-button">
+                                    Validar Código
+                                </button>
+                            </form>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ background: 'rgba(34, 197, 94, 0.05)', border: '1px solid rgba(34, 197, 94, 0.3)', padding: '1rem', borderRadius: '12px', color: '#4ade80', textAlign: 'center', fontSize: '0.9rem' }}>
+                                    ✓ <strong>{classCode}</strong> aceptado.<br/>
+                                </div>
+                                <button 
+                                    className="auth-google-btn" 
+                                    onClick={() => {
+                                        localStorage.setItem('saberlab_valid_code', 'true');
+                                        handleGoogleLogin();
+                                    }} 
+                                    disabled={isLoading}
+                                    style={{ marginTop: '0.2rem' }}
+                                >
+                                    <GoogleIcon />
+                                    {isLoading ? 'Conectando...' : 'Completar Registro con Google'}
+                                </button>
+                                <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                    Autenticación cifrada extremo a extremo.
+                                </div>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <>
+                        {/* Botón de Google global SOLO si No es forgotPassword (para Login) */}
+                        {mode === 'login' && (
+                            <>
+                                <button 
+                                    className="auth-google-btn" 
+                                    onClick={handleGoogleLogin} 
+                                    disabled={isLoading}
+                                >
+                                    <GoogleIcon />
+                                    {isLoading ? 'Conectando...' : 'Continuar con Google'}
+                                </button>
+                                <div className="auth-divider">o iniciar con credenciales</div>
+                            </>
+                        )}
+                        
+                        <form className="auth-form" onSubmit={handleSubmit}>
+                            {/* Email siempre visible para Login y Recuperar */}
+                            <div className="form-group" style={{ position: 'relative' }}>
+                                <label className="form-label">Correo Electrónico o Usuario</label>
+                                <div style={{ position: 'relative' }}>
+                                    <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        placeholder="usuario o tu@email.com" 
+                                        style={{ paddingLeft: '36px' }} 
+                                        required 
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Contraseña sólo para login */}
+                            {mode === 'login' && (
+                                <div className="form-group">
+                                    <div className="form-label">
+                                        Contraseña
+                                        <button type="button" className="forgot-password-link" onClick={() => handleSetMode('forgotPassword')}>
+                                            ¿Olvidaste tu clave?
+                                        </button>
+                                    </div>
+                                    <input type="password" className="form-input" placeholder="••••••••" required />
+                                </div>
+                            )}
+
+                            <button type="submit" className="auth-button">
+                                {mode === 'login' && 'Ingresar al Campus'}
+                                {mode === 'forgotPassword' && 'Enviar Correo'}
+                            </button>
+                        </form>
                     </>
                 )}
-
-                <form className="auth-form" onSubmit={handleSubmit}>
-                    {/* Fila de Nombre si es registro */}
-                    {mode === 'register' && (
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label className="form-label">Nombre</label>
-                                <input type="text" className="form-input" placeholder="Tu Nombre" required />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Apellido</label>
-                                <input type="text" className="form-input" placeholder="Tu Apellido" required />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Email siempre visible */}
-                    <div className="form-group" style={{ position: 'relative' }}>
-                        <label className="form-label">Correo Electrónico</label>
-                        <div style={{ position: 'relative' }}>
-                            <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-                            <input 
-                                type="email" 
-                                className="form-input" 
-                                placeholder="tu@email.com" 
-                                style={{ paddingLeft: '36px' }} 
-                                required 
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Mostrar selector en Registro */}
-                    {mode === 'register' && (
-                        <>
-                            <div className="form-group">
-                                <label className="form-label">Institución Educativa</label>
-                                <select className="form-select" required defaultValue="">
-                                    <option value="" disabled>Selecciona tu institución</option>
-                                    {institutions.map(inst => (
-                                        <option key={inst} value={inst}>{inst}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Grado o Especialidad</label>
-                                <select className="form-select" required defaultValue="">
-                                    <option value="" disabled>Selecciona tu nivel</option>
-                                    {specialties.map(spec => (
-                                        <option key={spec} value={spec}>{spec}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </>
-                    )}
-
-                    {/* Contraseñas si NO es forgotPassword */}
-                    {mode !== 'forgotPassword' && (
-                        <div className="form-group">
-                            <div className="form-label">
-                                Contraseña
-                                {mode === 'login' && (
-                                    <button type="button" className="forgot-password-link" onClick={() => setMode('forgotPassword')}>
-                                        ¿Olvidaste tu clave?
-                                    </button>
-                                )}
-                            </div>
-                            <input type="password" className="form-input" placeholder="••••••••" required />
-                        </div>
-                    )}
-
-                    {mode === 'register' && (
-                        <div className="form-group">
-                            <label className="form-label">Confirmar Contraseña</label>
-                            <input type="password" className="form-input" placeholder="••••••••" required />
-                        </div>
-                    )}
-
-                    <button type="submit" className="auth-button">
-                        {mode === 'login' && 'Ingresar al Campus'}
-                        {mode === 'register' && 'Crear Cuenta'}
-                        {mode === 'forgotPassword' && 'Enviar Correo de Recuperación'}
-                    </button>
-                </form>
 
                 {/* Toggles (Ir a Login, Ir a Registro) */}
                 <div className="auth-toggle">
                     {mode === 'login' && (
-                        <>¿No tienes una cuenta de correo? <button onClick={() => setMode('register')}>Regístrate</button></>
+                        <>¿Tienes un código Institucional? <button onClick={() => handleSetMode('register')}>Actívalo aquí</button></>
                     )}
                     {(mode === 'register' || mode === 'forgotPassword') && (
-                        <>¿Ya te acordaste de tu contraseña? <button onClick={() => setMode('login')}>Inicia Sesión</button></>
+                        <>¿Ya perteneces a una clase? <button onClick={() => handleSetMode('login')}>Inicia Sesión</button></>
                     )}
                 </div>
             </div>
@@ -196,6 +253,8 @@ const Login = () => {
             <div className="auth-footer">
                 © {new Date().getFullYear()} SaberLab Edu. Todos los derechos reservados.
             </div>
+            </>
+            )}
         </div>
     );
 };
