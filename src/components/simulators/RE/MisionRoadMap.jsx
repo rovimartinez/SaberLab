@@ -326,7 +326,37 @@ const MisionRoadMap = ({ missions = [] }) => {
         maxWidth: '1000px', 
         marginTop: '1rem'
       }}>
-        
+        {/* Onboarding Guide */}
+        {rutaRetos.length > 0 && (
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '4rem',
+            padding: '0 20px',
+            zIndex: 10,
+            position: 'relative'
+          }}>
+            <h2 style={{
+              fontSize: 'clamp(1.2rem, 5vw, 1.8rem)', /* Se achica solita en móvil */
+              fontWeight: '800',
+              color: 'white',
+              letterSpacing: '0.05em',
+              marginBottom: '0.75rem',
+              textShadow: '0 0 20px rgba(168, 85, 247, 0.4)'
+            }}>
+              SIMULADOR DE MISIONES
+            </h2>
+            <p style={{
+              fontSize: 'clamp(0.75rem, 3vw, 0.85rem)', /* Texto más pequeño y sutil */
+              color: '#94a3b8',
+              maxWidth: '450px',
+              margin: '0 auto',
+              lineHeight: '1.5'
+            }}>
+              Haz clic sobre la <strong style={{color: '#a855f7', textShadow: '0 0 10px rgba(168, 85, 247, 0.5)'}}>misión iluminada</strong> de tu mapa para entrar al simulador y probar tu propio código.
+            </p>
+          </div>
+        )}
+
         {/* Challenge Nodes */}
         <div className="mision-nodes-container">
           
