@@ -1,20 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Shield, Settings, UserPlus, MoreVertical, Edit2, Trash2, Plus, X } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
+import { supabase } from '../lib/supabase';
 import './Admin.css';
 
-// Usuarios de prueba simulando la base de datos
-const MOCK_USERS = [
-    { id: 1, name: 'Ronny Martinez', email: 'ronny@ejemplo.com', role: 'admin', especialidad: 'Tecnología e Informática', institucion: 'Universidad Nacional', joined: '2026-03-30' },
-    { id: 2, name: 'Elizabeth', email: 'eliza@ejemplo.com', role: 'profesor', especialidad: 'Química y Biología', institucion: 'Colegio San Mateo', joined: '2026-03-25' },
-    { id: 3, name: 'Carlos López', email: 'carlos@ejemplo.com', role: 'estudiante', especialidad: 'Tecnología e Informática', institucion: 'Colegio San Mateo', joined: '2026-03-28' },
-    { id: 4, name: 'María Gómez', email: 'maria@ejemplo.com', role: 'estudiante', especialidad: 'Lengua y Literatura', institucion: 'Instituto Técnico', joined: '2026-03-20' },
-    { id: 5, name: 'Andrés Sarmiento', email: 'andres@ejemplo.com', role: 'estudiante', especialidad: 'Educación Secundaria', institucion: 'Universidad Nacional', joined: '2026-03-29' }
-];
+const Admin = ({ showHeader = true, showTabs = true, section }) => {
+    const [internalActiveTab, setInternalActiveTab] = useState('users');
+    const activeTab = section || internalActiveTab;
+    const setActiveTab = section ? () => {} : setInternalActiveTab;
 
-const Admin = () => {
-    // Definir pestañas
-    const [activeTab, setActiveTab] = useState('users'); // 'users' o 'settings'
+    // Estado para usuarios reales
+    const [users, setUsers] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [userGroups, setUserGroups] = useState({});
+    const [loading, setLoading] = useState(true);
+
+    // Cargar usuarios de Supabase
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            
+            const [usersRes, coursesRes, groupsRes, ugRes] = await Promise.all([
+                supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+                supabase.from('courses').select('*').order('name'),
+                supabase.from('groups').select('*').order('name'),
+                supabase.from('user_groups').select('*')
+            ]);
+            
+            if (usersRes.data) setUsers(usersRes.data);
+            if (coursesRes.data) setCourses(coursesRes.data);
+            if (groupsRes.data) setGroups(groupsRes.data);
+            
+            // Crear mapa de usuario -> grupos
+            if (ugRes.data) {
+                const ugMap = {};
+                ugRes.data.forEach(ug => {
+                    if (!ugMap[ug.user_id]) ugMap[ug.user_id] = [];
+                    ugMap[ug.user_id].push(ug.group_id);
+                });
+                setUserGroups(ugMap);
+            }
+            
+            setLoading(false);
+        };
+
+        fetchData();
+    }, []);
 
     // Estado para la tabla de usuarios
     const [filterRole, setFilterRole] = useState('todos');
@@ -35,11 +67,52 @@ const Admin = () => {
     const [editingInst, setEditingInst] = useState(null); // {oldName, currentName}
     const [editingSpec, setEditingSpec] = useState(null); // {oldName, currentName}
 
-    const filteredUsers = MOCK_USERS.filter(user => {
+    const sortedUsers = [...users].sort((a, b) => {
+        if (a.role === 'admin' && b.role !== 'admin') return -1;
+        if (b.role === 'admin' && a.role !== 'admin') return 1;
+        return (a.full_name || '').localeCompare(b.full_name || '');
+    });
+
+    const getCourseName = (courseId) => {
+        if (courseId) {
+            const course = courses.find(c => c.id === courseId);
+            return course?.name || 'Sin curso';
+        }
+        return 'Sin curso';
+    };
+
+    const getGroupInfo = (userId) => {
+        const groupIds = userGroups[userId] || [];
+        if (groupIds.length === 0) return { course: 'Sin curso', groups: 'Sin grupo' };
+        
+        const groupNames = [];
+        let courseName = 'Sin curso';
+        
+        groupIds.forEach(gid => {
+            const group = groups.find(g => g.id === gid);
+            if (group) {
+                groupNames.push(group.name || 'Grupo');
+                // Obtener nombre del curso desde el grupo
+                if (group.course_id) {
+                    const course = courses.find(c => c.id === group.course_id);
+                    if (course) courseName = course.name;
+                }
+            }
+        });
+        
+        return {
+            course: courseName,
+            groups: groupNames.length > 0 ? groupNames.join(', ') : 'Sin grupo'
+        };
+    };
+
+    const filteredUsers = sortedUsers.filter(user => {
         const matchesRole = filterRole === 'todos' || user.role === filterRole;
-        const matchesInst = filterInst === 'todas' || user.institucion === filterInst;
-        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              user.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesInst = filterInst === 'todas' || user.institution === filterInst;
+        const fullName = user.full_name || '';
+        const userEmail = user.email || '';
+        const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              userEmail.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesRole && matchesInst && matchesSearch;
     });
 
@@ -83,30 +156,33 @@ const Admin = () => {
 
     return (
         <div className="admin-container">
+            {showHeader && (
             <div className="page-header">
                 <div className="header-title">
                     <Shield size={28} color="#60a5fa" />
                     <h1>Plataforma</h1>
                 </div>
             </div>
+            )}
 
-            {/* Sistema de Pestañas */}
-            <div className="admin-tabs">
-                <button 
-                    className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('users')}
-                >
-                    Usuarios
-                </button>
-                <button 
-                    className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('settings')}
-                >
-                    Catálogos y Opciones
-                </button>
-            </div>
+            {showTabs && (
+                <div className="admin-tabs">
+                    <button 
+                        className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('users')}
+                    >
+                        Usuarios
+                    </button>
+                    <button 
+                        className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('settings')}
+                    >
+                        Catálogos y Opciones
+                    </button>
+                </div>
+            )}
 
-            {activeTab === 'users' && (
+            {(section ? section === 'users' : true) && (
                 <>
                     <div className="admin-controls">
                         <div className="search-wrapper">
@@ -120,7 +196,7 @@ const Admin = () => {
                         </div>
                         
                         <div className="role-filters" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                            {/* Filtro Dinámico por Institución */}
+                            {/* Filtro Dinámico por Curso */}
                             <select 
                                 style={{
                                     background: 'rgba(255, 255, 255, 0.05)',
@@ -134,18 +210,18 @@ const Admin = () => {
                                 value={filterInst}
                                 onChange={(e) => setFilterInst(e.target.value)}
                             >
-                                <option value="todas">Todas las Instituciones</option>
-                                {institutions.map(inst => (
-                                    <option key={inst} value={inst}>{inst}</option>
+                                <option value="todas">Todos los Cursos</option>
+                                {courses.map(course => (
+                                    <option key={course.id} value={course.id}>{course.name}</option>
                                 ))}
                             </select>
 
                             {/* Filtro por Rol */}
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button className={`filter-btn ${filterRole === 'todos' ? 'active' : ''}`} onClick={() => setFilterRole('todos')}>Roles</button>
                                 <button className={`filter-btn ${filterRole === 'admin' ? 'active' : ''}`} onClick={() => setFilterRole('admin')}>Admins</button>
                                 <button className={`filter-btn ${filterRole === 'profesor' ? 'active' : ''}`} onClick={() => setFilterRole('profesor')}>Profesores</button>
                                 <button className={`filter-btn ${filterRole === 'estudiante' ? 'active' : ''}`} onClick={() => setFilterRole('estudiante')}>Estudiantes</button>
+                                <button className={`filter-btn ${filterRole === 'todos' ? 'active' : ''}`} onClick={() => setFilterRole('todos')}>Todos</button>
                             </div>
                         </div>
                     </div>
@@ -155,8 +231,8 @@ const Admin = () => {
                             <thead>
                                 <tr>
                                     <th>Usuario</th>
-                                    <th>Institución</th>
-                                    <th>Especialidad</th>
+                                    <th>Curso</th>
+                                    <th>Grupo</th>
                                     <th>Rol Actual</th>
                                     <th>Modificar Rol</th>
                                     <th style={{ textAlign: 'right' }}>Acciones</th>
@@ -168,31 +244,31 @@ const Admin = () => {
                                         <td>
                                             <div className="user-cell">
                                                 <div className="user-avatar">
-                                                    {getInitial(user.name)}
+                                                    {getInitial(user.full_name || user.email)}
                                                 </div>
                                                 <div className="user-info">
-                                                    <span className="user-name">{user.name}</span>
+                                                    <span className="user-name">{user.full_name || 'Sin nombre'}</span>
                                                     <span className="user-email">{user.email}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                                                {user.institucion}
+                                                {getGroupInfo(user.id).course}
                                             </span>
                                         </td>
                                         <td>
                                             <span style={{ color: 'var(--text-secondary)' }}>
-                                                {user.especialidad}
+                                                {getGroupInfo(user.id).groups}
                                             </span>
                                         </td>
                                         <td>
                                             <span className={`role-badge ${getRoleBadgeClass(user.role)}`}>
-                                                {user.role.toUpperCase()}
+                                                {user.role?.toUpperCase() || 'ESTUDIANTE'}
                                             </span>
                                         </td>
                                         <td>
-                                            <select className="action-select" defaultValue={user.role}>
+                                            <select className="action-select" defaultValue={user.role || 'estudiante'}>
                                                 <option value="estudiante">Estudiante</option>
                                                 <option value="profesor">Profesor</option>
                                                 <option value="admin">Administrador</option>
@@ -221,7 +297,7 @@ const Admin = () => {
                 </>
             )}
 
-            {activeTab === 'settings' && (
+            {(section ? section === 'settings' : true) && (
                 <div className="settings-grid">
                     {/* Panel de Instituciones */}
                     <div className="settings-panel">

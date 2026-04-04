@@ -20,6 +20,7 @@ import Resources from './pages/Resources';
 import Widgets from './pages/Widgets';
 import SettingsPage from './pages/Settings';
 import AccessRequests from './pages/AccessRequests';
+import AdminPanel from './pages/AdminPanel';
 import Landing from './pages/Landing';
 import RequestAccess from './pages/RequestAccess';
 import './index.css';
@@ -88,6 +89,7 @@ function AppRoutes() {
                     <Route path="courses" element={<AdminRoute><Courses courses={courses} /></AdminRoute>} />
                     <Route path="course/:id" element={<CourseDetail courses={courses} setCourses={setCourses} />} />
                     <Route path="admin" element={<AdminRoute><Admin /></AdminRoute>} />
+                    <Route path="admin-panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
                     <Route path="requests" element={<AdminRoute><AccessRequests /></AdminRoute>} />
                     <Route path="learn/:id" element={<RedirectToMyCourses />} />
                     <Route path="learn/:courseId/:moduleId/:lessonId" element={<RedirectLessonToMyCourses />} />

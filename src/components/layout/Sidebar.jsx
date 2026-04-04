@@ -46,8 +46,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         ...(isAdmin ? [{
             title: 'ADMIN',
             items: [
-                { name: 'Gestion de Cursos', path: '/dashboard/courses', icon: <GraduationCap size={18} /> },
-                { name: 'Plataforma', path: '/dashboard/admin', icon: <Shield size={18} /> }
+                { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> }
             ]
         }] : [])
     ];

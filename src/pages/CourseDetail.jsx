@@ -1,19 +1,55 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus } from 'lucide-react';
+import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus, Edit2, X, Key } from 'lucide-react';
 import { getLessonInfo } from '../data/coursesData.jsx';
 import { supabase } from '../lib/supabase';
 import './CourseDetail.css';
 
-const CourseDetail = ({ courses, setCourses }) => {
+const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }) => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const course = courses.find(c => c.id === parseInt(id));
+    const course = embeddedCourse || courses.find(c => c.id === parseInt(id));
 
     const [activeTab, setActiveTab] = useState('groups');
     const [expandedModules, setExpandedModules] = useState({});
     const [courseModules, setCourseModules] = useState([]);
     const [dbGroups, setDbGroups] = useState([]); // Grupos desde Supabase
+    // Cargar grupos y estudiantes de Supabase
+    useEffect(() => {
+        const loadGroups = async () => {
+            if (!course) return;
+            setLoadingGroups(true);
+            try {
+                const [groupsRes, ugRes] = await Promise.all([
+                    supabase.from('groups').select('*').eq('course_id', course.id),
+                    supabase.from('user_groups').select('user_id, group_id')
+                ]);
+                
+                if (groupsRes.data) {
+                    const studentCounts = {};
+                    if (ugRes.data) {
+                        ugRes.data.forEach(ug => {
+                            studentCounts[ug.group_id] = (studentCounts[ug.group_id] || 0) + 1;
+                        });
+                    }
+                    const groupsWithCounts = groupsRes.data.map(g => ({
+                        ...g,
+                        studentCount: studentCounts[g.id] || 0
+                    }));
+                    setDbGroups(groupsWithCounts);
+                }
+            } catch (err) {
+                console.error('Error cargando grupos:', err);
+            } finally {
+                setLoadingGroups(false);
+            }
+        };
+        loadGroups();
+    }, [course]);
+
+    const [studentsModal, setStudentsModal] = useState({ isOpen: false, group: null, students: [] });
+    const [editCourseModal, setEditCourseModal] = useState({ isOpen: false, name: '', teacher: '' });
+    const [editGroupModal, setEditGroupModal] = useState({ isOpen: false, group: null, name: '', teacher: '' });
     const [codeModal, setCodeModal] = useState({ isOpen: false, group: null, code: null, codeId: null, expiresAt: null });
     const [copied, setCopied] = useState(false);
     const [newGroupModal, setNewGroupModal] = useState({ isOpen: false, name: '', teacher: '' });
@@ -81,6 +117,114 @@ const CourseDetail = ({ courses, setCourses }) => {
         }
         return `${prefix}${code}`;
     }, []);
+
+    const openStudentsModal = async (group) => {
+        const { data: ugData } = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .eq('group_id', group.id);
+        
+        if (!ugData || ugData.length === 0) {
+            setStudentsModal({ isOpen: true, group, students: [] });
+            return;
+        }
+
+        const userIds = ugData.map(ug => ug.user_id);
+        const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, avatar_url')
+            .in('id', userIds);
+
+        setStudentsModal({ 
+            isOpen: true, 
+            group, 
+            students: profilesData || [] 
+        });
+    };
+
+    const openEditCourseModal = () => {
+        setEditCourseModal({
+            isOpen: true,
+            name: course.name,
+            teacher: course.teacher || ''
+        });
+    };
+
+    const handleUpdateCourse = async () => {
+        const { error } = await supabase
+            .from('courses')
+            .update({ 
+                name: editCourseModal.name,
+                teacher: editCourseModal.teacher 
+            })
+            .eq('id', course.id);
+
+        if (!error) {
+            updateCourse({ ...course, name: editCourseModal.name, teacher: editCourseModal.teacher });
+            setEditCourseModal({ isOpen: false, name: '', teacher: '' });
+        }
+    };
+
+    const openEditGroupModal = (group) => {
+        setEditGroupModal({
+            isOpen: true,
+            group,
+            name: group.name,
+            teacher: group.teacher || ''
+        });
+    };
+
+    const handleUpdateGroup = async () => {
+        const { error } = await supabase
+            .from('groups')
+            .update({
+                name: editGroupModal.name,
+                teacher: editGroupModal.teacher
+            })
+            .eq('id', editGroupModal.group.id);
+
+        if (!error) {
+            setDbGroups(prev => prev.map(g => 
+                g.id === editGroupModal.group.id
+                    ? { ...g, name: editGroupModal.name, teacher: editGroupModal.teacher }
+                    : g
+            ));
+            setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
+        }
+    };
+
+    const handleDeleteGroup = async () => {
+        const confirmed = window.confirm('¿Estás seguro de eliminar este grupo? Se eliminarán todos los estudiantes asignados a este grupo.');
+        if (!confirmed) return;
+
+        await supabase.from('user_groups').delete().eq('group_id', editGroupModal.group.id);
+        const { error } = await supabase.from('groups').delete().eq('id', editGroupModal.group.id);
+
+        if (!error) {
+            setDbGroups(prev => prev.filter(g => g.id !== editGroupModal.group.id));
+            setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
+        }
+    };
+
+    const removeStudentFromGroup = async (studentId, groupId) => {
+        const { error } = await supabase
+            .from('user_groups')
+            .delete()
+            .eq('user_id', studentId)
+            .eq('group_id', groupId);
+
+        if (!error) {
+            setStudentsModal(prev => ({
+                ...prev,
+                students: prev.students.filter(s => s.id !== studentId)
+            }));
+            setDbGroups(prev => prev.map(g => 
+                g.id === groupId 
+                    ? { ...g, studentCount: (g.studentCount || 1) - 1 }
+                    : g
+            ));
+        }
+    };
 
     const getExpiresAt = useCallback(() => {
         return Date.now() + 5 * 60 * 1000;
@@ -252,18 +396,25 @@ const CourseDetail = ({ courses, setCourses }) => {
 
     return (
         <div className="course-detail-page">
+            {showHeader && (
             <div className="course-detail-header glass-panel" style={{ background: `linear-gradient(135deg, ${course.color}40 0%, ${course.color}10 100%)` }}>
                 <button className="back-btn" onClick={() => navigate('/dashboard/courses')}>
                     <ArrowLeft size={20} />
                 </button>
                 <div className="course-detail-info">
-                    <h1>{course.name}</h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <h1>{course.name}</h1>
+                        <button className="icon-btn" onClick={openEditCourseModal} title="Editar curso">
+                            <Edit2 size={18} />
+                        </button>
+                    </div>
                     <span className="course-detail-stats">
                         <Layers size={16} />
-                        0 grupos
+                        {dbGroups.length} grupos
                     </span>
                 </div>
             </div>
+            )}
 
             <div className="course-detail-tabs glass-panel">
                 <button 
@@ -301,25 +452,23 @@ const CourseDetail = ({ courses, setCourses }) => {
                         </div>
                         <div className="groups-list">
                             {uniqueGroups.map((group) => (
-                                <div key={group.id} className="group-card">
-                                    <div className="group-card-info">
-                                        <span className="group-card-name">{group.name}</span>
-                                        {group.teacher && (
-                                            <span className="group-card-teacher">
-                                                Prof. {group.teacher}
-                                            </span>
-                                        )}
-                                        <span className="group-card-students">
-                                            0 estudiantes
+                                <div key={group.id} className="group-card" style={{ padding: '1rem', gap: '0.75rem', textAlign: 'center' }}>
+                                    <div className="group-card-info" style={{ alignItems: 'center' }}>
+                                        <span 
+                                            className="group-card-name" 
+                                            onDoubleClick={() => openEditGroupModal(group)}
+                                            title="Doble clic para editar"
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {group.name}
                                         </span>
                                     </div>
-                                    <div className="group-card-actions">
-                                        <button className="btn btn-small" onClick={() => openCodeModal(group)}>
-                                            <FileCode size={14} />
-                                            Generar Código
+                                    <div className="group-card-actions" style={{ justifyContent: 'center', gap: '0.5rem' }}>
+                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openStudentsModal(group)}>
+                                            <Users size={14} />
                                         </button>
-                                        <button className="btn btn-small btn-danger" onClick={() => deleteGroup(group.id)}>
-                                            <Trash2 size={14} />
+                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openCodeModal(group)}>
+                                            <Key size={14} />
                                         </button>
                                     </div>
                                 </div>

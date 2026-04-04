@@ -8,21 +8,20 @@ import './evanoti.css';
 const EvaExam = () => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState({});
-    const [timeLeft, setTimeLeft] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(1200);
 
     const questions = module1EvaluationData.questions || [];
     const totalQuestions = questions.length;
 
-    useEffect(() => {
-        if (answers[currentQuestion] !== undefined) {
-            return;
-        }
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
+    useEffect(() => {
         if (timeLeft <= 0) {
-            if (currentQuestion < totalQuestions - 1) {
-                setCurrentQuestion(currentQuestion + 1);
-                setTimeLeft(5);
-            }
+            alert('Tiempo agotado');
             return;
         }
 
@@ -31,7 +30,7 @@ const EvaExam = () => {
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [timeLeft, currentQuestion, answers, totalQuestions]);
+    }, [timeLeft]);
 
     const handleAnswer = (optionIndex) => {
         setAnswers({ ...answers, [currentQuestion]: optionIndex });
@@ -40,20 +39,17 @@ const EvaExam = () => {
     const handleNext = () => {
         if (currentQuestion < totalQuestions - 1) {
             setCurrentQuestion(currentQuestion + 1);
-            setTimeLeft(5);
         }
     };
 
     const handlePrev = () => {
         if (currentQuestion > 0) {
             setCurrentQuestion(currentQuestion - 1);
-            setTimeLeft(5);
         }
     };
 
     const handleQuestionClick = (index) => {
         setCurrentQuestion(index);
-        setTimeLeft(5);
     };
 
     const currentQ = questions[currentQuestion];
@@ -65,6 +61,15 @@ const EvaExam = () => {
                 <div className="header-title">
                     <Bell size={28} color="#facc15" />
                     <h1>Módulo 1 - Robótica Educativa</h1>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ 
+                        color: timeLeft <= 60 ? '#ef4444' : '#f8fafc',
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold'
+                    }}>
+                        {formatTime(timeLeft)}
+                    </div>
                 </div>
             </div>
 
@@ -83,9 +88,6 @@ const EvaExam = () => {
                         question={currentQ}
                         userAnswer={userAnswer}
                         onAnswer={handleAnswer}
-                        timeLeft={timeLeft}
-                        answers={answers}
-                        questions={questions}
                     />
 
                     <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between' }}>
