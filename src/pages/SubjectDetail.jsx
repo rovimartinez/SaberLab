@@ -56,7 +56,7 @@ const SubjectDetail = () => {
                 { id: 'l2', title: 'Semáforos y Variables', type: 'content', duration: '20 min', status: 'current' },
                 { id: 'l3', title: 'Entradas digitales y pulsadores', type: 'content', duration: '25 min', status: 'locked' },
                 { id: 'l4', title: 'Monitor serie y depuracion inicial', type: 'content', duration: '18 min', status: 'locked' },
-                { id: 'l5', title: 'Evaluacion teorica del modulo 1', type: 'quiz', duration: '30 min', status: 'locked' }
+                { id: 'l5', title: 'Entradas analógicas y resolución (Lectura de potenciómetros)', type: 'content', duration: '20 min', status: 'locked' }
             ]
         },
         { 

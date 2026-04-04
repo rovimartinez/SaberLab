@@ -375,6 +375,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setProfile(null);
     setSessionRejected(false);
+    clearPendingAccessData();
     setEnrolledCourses([]);
     setUnreadNotificationsCount(0);
     setPendingAccessRequestsCount(0);

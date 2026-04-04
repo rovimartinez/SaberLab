@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -28,7 +28,7 @@ import { normalizeLessonData } from '../lib/lessonSchema';
 const tabs = [
     { id: 'contenido', label: 'Contenido', icon: <BookOpen size={18} /> },
     { id: 'repaso', label: 'Repaso', icon: <Brain size={18} /> },
-    { id: 'simulador', label: 'Misiones', icon: <Rocket size={18} /> },
+    { id: 'simulador', label: 'Práctica', icon: <Rocket size={18} /> },
     { id: 'prueba', label: 'Prueba', icon: <ClipboardList size={18} /> }
 ];
 
@@ -44,6 +44,16 @@ const Lesson = () => {
     const { courseId, moduleId, lessonId } = useParams();
     const navigate = useNavigate();
 
+    const courseData = getCourseByIdentifier(courseId);
+    const courseCode = courseData ? courseData.abbr.toLowerCase() : courseId.toLowerCase();
+
+    // Identificador único de la lección para base de datos y búsqueda
+    const internalId = useMemo(() =>
+        lessonId && lessonId.includes('-')
+            ? lessonId
+            : `${courseCode}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`,
+        [courseCode, moduleId, lessonId]);
+
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('contenido');
@@ -53,9 +63,7 @@ const Lesson = () => {
     const [activeChallenge, setActiveChallenge] = useState(0);
     const [showSimulator, setShowSimulator] = useState(false);
     const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
-    const hasTrackedInitialTabRef = React.useRef(false);
-
-    const courseData = getCourseByIdentifier(courseId);
+    const hasTrackedInitialTabRef = useRef(false);
 
     useEffect(() => {
         if (courseId && courseData && courseId !== courseData.slug) {
@@ -66,19 +74,7 @@ const Lesson = () => {
     useEffect(() => {
         const loadLesson = async () => {
             setLoading(true);
-
             try {
-                const courseFallback = { name: 'Robotica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
-                const currentCourseData =
-                    courseData ||
-                    COURSES_DEFINITION.find((course) => course.slug === courseId || course.abbr.toLowerCase() === courseId.toLowerCase()) ||
-                    courseFallback;
-
-                const registryCourseId = currentCourseData ? currentCourseData.abbr.toLowerCase() : courseId.toLowerCase();
-                const internalId = lessonId && lessonId.includes('-')
-                    ? lessonId
-                    : `${registryCourseId}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`;
-
                 const data = await getLessonContent(internalId);
                 setLesson(data);
             } catch (error) {
@@ -89,20 +85,28 @@ const Lesson = () => {
         };
 
         loadLesson();
-    }, [courseData, courseId, lessonId, moduleId]);
+    }, [internalId]);
 
-    const courseCode = courseData ? courseData.abbr.toLowerCase() : courseId.toLowerCase();
-    const internalId = lessonId && lessonId.includes('-')
-        ? lessonId
-        : `${courseCode}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`;
     const lessonPath = getFullLessonPath(internalId);
     const moduleInfo = (lessonPath && lessonPath.module) || { name: 'Modulo 1' };
     const subject = (lessonPath && lessonPath.course) || { name: 'Robotica Educativa', color: '#a855f7', icon: <Bot />, abbr: 'RE' };
     const courseInfo = (lessonPath && lessonPath.lesson) || { title: 'Leccion' };
     const resolvedMissions = lessonMissionsMap[internalId] || [];
     const lessonKey = internalId;
-    const normalizedLesson = normalizeLessonData({ lesson, lessonKey, missions: resolvedMissions });
+
+    const normalizedLesson = useMemo(() =>
+        lesson
+            ? normalizeLessonData({ lesson, lessonKey, missions: resolvedMissions })
+            : { blocksByTab: {} },
+        [lesson, lessonKey, resolvedMissions]);
+
     const tabBlocks = normalizedLesson.blocksByTab?.[activeTab] || [];
+
+    const handleCompleteLesson = async () => {
+        if (!user) return;
+        console.log(`Lección ${lessonKey} completada por el usuario ${user.id}`);
+        // Aquí iría la llamada a supabase para guardar el progreso
+    };
 
     useEffect(() => {
         const handleScroll = () => {
@@ -278,6 +282,7 @@ const Lesson = () => {
                         <button
                             className="nav-btn nav-btn-complete"
                             style={{ background: subject.color, border: 'none' }}
+                            onClick={handleCompleteLesson}
                         >
                             <CheckCircle size={20} />
                             <span>Marcar como completada</span>

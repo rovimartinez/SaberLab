@@ -32,6 +32,12 @@ before update on public.enrollments
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists trg_evaluations_set_updated_at on public.evaluations;
+create trigger trg_evaluations_set_updated_at
+before update on public.evaluations
+for each row
+execute function public.set_updated_at();
+
 drop trigger if exists trg_student_profiles_set_updated_at on public.student_profiles;
 create trigger trg_student_profiles_set_updated_at
 before update on public.student_profiles
@@ -79,6 +85,9 @@ create index if not exists idx_notifications_user_created
 
 create index if not exists idx_evaluations_status_due_date
   on public.evaluations (status, due_date asc);
+
+create index if not exists idx_evaluations_key_lookup
+  on public.evaluations (evaluation_key);
 
 create index if not exists idx_student_lesson_progress_user_last_opened
   on public.student_lesson_progress (user_id, last_opened_at desc);

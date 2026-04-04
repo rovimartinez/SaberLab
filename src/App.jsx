@@ -12,6 +12,7 @@ import MyCourses from './pages/MyCourses';
 import Admin from './pages/Admin';
 import Notifications from './pages/Notifications';
 import Evaluations from './pages/Evaluations';
+import EvaluationPlayer from './pages/EvaluationPlayer';
 import Progress from './pages/Progress';
 import Resources from './pages/Resources';
 import Widgets from './pages/Widgets';
@@ -92,6 +93,7 @@ function AppRoutes() {
                     <Route path="my-courses/:courseId/:moduleId/:lessonId" element={<Lesson />} />
                     <Route path="notifications" element={<Notifications />} />
                     <Route path="evaluations" element={<Evaluations />} />
+                    <Route path="evaluations/:evaluationKey" element={<EvaluationPlayer />} />
                     <Route path="progress" element={<Progress />} />
                     <Route path="resources" element={<Resources />} />
                     <Route path="myapps" element={<Widgets />} />

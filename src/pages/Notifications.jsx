@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Trash2, Filter } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
+import AdminAccessRequestsBubble from '../components/layout/AdminAccessRequestsBubble';
 import './Notifications.css';
 
 const Notifications = () => {
-    const { user, refreshNotificationsCount } = useAuth();
+    const { user, profile, refreshNotificationsCount } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -209,6 +210,7 @@ const Notifications = () => {
             </div>
             </>
             )}
+            {profile?.role === 'admin' && <AdminAccessRequestsBubble />}
         </div>
     );
 };

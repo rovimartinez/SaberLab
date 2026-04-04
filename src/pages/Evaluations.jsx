@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
 import './Evaluations.css';
 
 const Evaluations = () => {
     const { user, enrolledCourses } = useAuth();
+    const navigate = useNavigate();
     const [evaluations, setEvaluations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -170,6 +172,11 @@ const Evaluations = () => {
                             <div 
                                 key={evaluation.id} 
                                 className="evaluation-card glass-panel"
+                                onClick={() => {
+                                    if (evaluation.evaluation_key) {
+                                        navigate(`/dashboard/evaluations/${evaluation.evaluation_key}`);
+                                    }
+                                }}
                             >
                                 <div className="evaluation-header">
                                     <div className="evaluation-type-badge" style={{ backgroundColor: `${color}20`, color: color }}>

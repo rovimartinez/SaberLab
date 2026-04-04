@@ -208,7 +208,9 @@ export const useLessonQuiz = ({
     }, [handleQuizAnswer]);
 
     useEffect(() => {
-        if (quizMode !== 'question' || selectedAnswer !== null) return undefined;
+        if (quizMode !== 'question' || selectedAnswer !== null || timeLeft <= 0) {
+            return undefined;
+        }
 
         timerRef.current = setTimeout(() => {
             setTimeLeft((prev) => {
@@ -224,7 +226,7 @@ export const useLessonQuiz = ({
         }, 1000);
 
         return () => clearTimeout(timerRef.current);
-    }, [quizMode, selectedAnswer]);
+    }, [quizMode, selectedAnswer, timeLeft]);
 
     const startQuiz = useCallback(() => {
         const start = async () => {

@@ -135,6 +135,37 @@ export const saveQuizQuestionEvents = async ({
   return data ?? [];
 };
 
+export const saveEvaluationProctoringEvent = async ({
+  sessionId,
+  userId,
+  evaluationKey,
+  lessonId,
+  eventType,
+  severity = 'info',
+  warningCount = 0,
+  payload = {}
+}) => {
+  if (!userId || !evaluationKey || !lessonId || !eventType) return null;
+
+  const { data, error } = await supabase
+    .from('student_evaluation_proctoring_events')
+    .insert({
+      session_id: sessionId ?? null,
+      user_id: userId,
+      evaluation_key: evaluationKey,
+      lesson_id: lessonId,
+      event_type: eventType,
+      severity,
+      warning_count: warningCount,
+      payload
+    })
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
 export const saveFlashcardEvent = async ({
   sessionId,
   userId,

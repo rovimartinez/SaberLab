@@ -29,7 +29,7 @@ export const LESSONS_REGISTRY = {
     },
     're-m1-l5': {
         id: 're-m1-l5',
-        title: 'Evaluacion teorica del modulo 1',
+        title: 'Entradas analogicas y resolucion',
         load: () => import('../lessons/RE/m1/l5').then(m => m.lessonData)
     },
     're-m2-l1': { id: 're-m2-l1', title: 'Sensores de Distancia', load: null },

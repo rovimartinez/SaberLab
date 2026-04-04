@@ -357,6 +357,7 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
   const terminalRef = useRef(null);
   const setupTextAreaRef = useRef(null);
   const loopTextAreaRef = useRef(null);
+  const loadChallengeRef = useRef(null);
   const missionAttemptIdRef = useRef(null);
   const missionAttemptStartedAtRef = useRef(null);
   const missionAttemptStatusRef = useRef('idle');
@@ -527,11 +528,50 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
   }, []);
 
+  const runHardwareSim = useCallback((loopInstructions, setupInstructions = []) => {
+    stopSim();
+    if (loopInstructions.length === 0) return;
+
+    const configuredPins = new Set();
+
+    setupInstructions.forEach((instruction) => {
+      if (!instruction?.includes('pinMode')) return;
+      if (instruction.includes('13')) configuredPins.add('13');
+      if (instruction.includes('12')) configuredPins.add('12');
+    });
+
+    let stepIdx = 0;
+    const execute = () => {
+      const inst = loopInstructions[stepIdx];
+      let waitTime = 50;
+
+      if (inst && inst.includes('digitalWrite')) {
+        const pin = inst.includes('13') ? '13' : '12';
+        const isHigh = inst.includes('HIGH');
+
+        if (configuredPins.size === 0 || configuredPins.has(pin)) {
+          if (pin === '13') setLed13On(isHigh);
+          if (pin === '12') setLed12On(isHigh);
+        }
+      } else if (inst && inst.includes('delay')) {
+        const match = inst.match(/\d+/);
+        if (match) waitTime = parseInt(match[0], 10);
+      }
+
+      stepIdx = (stepIdx + 1) % loopInstructions.length;
+      simInterval.current = setTimeout(execute, waitTime);
+    };
+
+    execute();
+  }, [stopSim]);
+
 
 
   const loadChallenge = useCallback(async (id) => {
     const newChallenge = challenges[id];
     if (!newChallenge) return;
+    
+    console.log('loadChallenge: Cargando desafio', id, newChallenge.title);
 
     if (missionAttemptIdRef.current && missionAttemptStatusRef.current === 'started') {
       await finalizeMissionAttempt({
@@ -571,8 +611,12 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
 
   useEffect(() => {
-    void loadChallenge(initialChallengeId);
-  }, [initialChallengeId, loadChallenge]);
+    loadChallengeRef.current = loadChallenge;
+  }, [loadChallenge]);
+
+  useEffect(() => {
+    void loadChallengeRef.current?.(initialChallengeId);
+  }, [initialChallengeId]);
 
   useEffect(() => () => {
     if (missionAttemptIdRef.current && missionAttemptStatusRef.current === 'started') {
@@ -589,74 +633,40 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
 
 
+  const handleDragStart = (e, piece) => {
+    e.dataTransfer.setData('piece', JSON.stringify(piece));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
   const handleDrop = (e, area, index) => {
-
-    if (challenge?.type !== 'drag') return;
-
-    const piece = JSON.parse(e.dataTransfer.getData('piece'));
-
-    if (area === 'setup') {
-
-      const newSlots = [...setupSlots];
-
-      newSlots[index] = piece.id;
-
-      setSetupSlots(newSlots);
-
-    } else {
-
-      const newSlots = [...loopSlots];
-
-      newSlots[index] = piece.id;
-
-      setLoopSlots(newSlots);
-
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (challenge?.type !== 'drag') {
+      return;
     }
 
-  }
-
-
-
-  const runHardwareSim = (loopInstructions) => {
-
-    stopSim();
-
-    if (loopInstructions.length === 0) return;
-
-    let stepIdx = 0;
-
-    const execute = () => {
-
-      const inst = loopInstructions[stepIdx];
-
-      let waitTime = 50;
-
-      if (inst.includes("digitalWrite")) {
-
-        const pin = inst.includes("13") ? "13" : "12";
-
-        const isHigh = inst.includes("HIGH");
-
-        if (pin === "13") setLed13On(isHigh);
-
-        if (pin === "12") setLed12On(isHigh);
-
-      } else if (inst.includes("delay")) {
-
-        const match = inst.match(/\d+/);
-
-        if (match) waitTime = parseInt(match[0], 10);
-
+    try {
+      const pieceData = e.dataTransfer.getData('piece');
+      
+      if (!pieceData) {
+        return;
       }
 
-      stepIdx = (stepIdx + 1) % loopInstructions.length;
+      const piece = JSON.parse(pieceData);
 
-      simInterval.current = setTimeout(execute, waitTime);
-
+      if (area === 'setup') {
+        const newSlots = [...setupSlots];
+        newSlots[index] = piece.id;
+        setSetupSlots(newSlots);
+      } else {
+        const newSlots = [...loopSlots];
+        newSlots[index] = piece.id;
+        setLoopSlots(newSlots);
+      }
+    } catch (err) {
+      console.error('Error en el drop:', err);
     }
-
-    execute();
-
   };
 
 
@@ -1017,20 +1027,20 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
         }
 
         let simLoopInstructions = [];
+        let simSetupInstructions = [];
 
         if (challenge?.type === 'drag') {
-
-          simLoopInstructions = (challenge.expected.loop || []).map(id => PIEZAS[id]?.text);
-
+          // Usar las piezas que el usuario colocó, no las esperadas
+          simLoopInstructions = (loopSlots.filter(Boolean)).map(id => PIEZAS[id]?.text);
+          simSetupInstructions = (setupSlots.filter(Boolean)).map(id => PIEZAS[id]?.text);
         } else {
-
           simLoopInstructions = result.loopStatements.map(statement => statement.replace(/;$/, ''));
-
+          simSetupInstructions = result.setupStatements ? result.setupStatements.map(statement => statement.replace(/;$/, '')) : [];
         }
 
         setLogs(prev => [...prev.slice(-10), '> Compilación exitosa!', '> Subiendo a Arduino...', '> ¡ÉXITO! Subido y ejecutando.']);
 
-        runHardwareSim(simLoopInstructions);
+        runHardwareSim(simLoopInstructions, simSetupInstructions);
 
       } else {
         if (challenge?.type === 'write') {
@@ -1284,7 +1294,7 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
                   <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>setup</span>() {'{'}</div>
                   {setupSlots.map((slot, i) => (
                     <div key={`setup-${i}`} style={{ height: '24px', display: 'flex', alignItems: 'flex-start', paddingTop: '2px', paddingLeft: '32px' }}>
-                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'setup', i)} style={{ height: '20px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '11px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic' }}>
+                      <div onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }} onDrop={(e) => handleDrop(e, 'setup', i)} style={{ height: '20px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '11px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic', userSelect: 'none' }}>
                         {slot ? PIEZAS[slot]?.text : `Inserta pieza aquí`}
                       </div>
                     </div>
@@ -1295,7 +1305,7 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
                   <div style={{ height: '24px', display: 'flex', alignItems: 'flex-start', lineHeight: '24px' }}><span style={{ color: '#d85c8b' }}>void</span>&nbsp;<span style={{ color: '#fac863' }}>loop</span>() {'{'}</div>
                   {loopSlots.map((slot, i) => (
                     <div key={`loop-${i}`} style={{ height: '24px', display: 'flex', alignItems: 'flex-start', paddingTop: '2px', paddingLeft: '32px' }}>
-                      <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'loop', i)} style={{ height: '20px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '11px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic' }}>
+                      <div onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }} onDrop={(e) => handleDrop(e, 'loop', i)} style={{ height: '20px', width: '100%', maxWidth: '320px', borderRadius: '6px', border: slot ? '1px solid #00979c' : '1px dashed #475569', display: 'flex', alignItems: 'center', padding: '0 12px', background: slot ? '#1c1c2e' : 'rgba(255,255,255,0.03)', color: slot ? '#4dd0e1' : '#64748b', fontSize: '11px', cursor: 'pointer', fontStyle: slot ? 'normal' : 'italic', userSelect: 'none' }}>
                         {slot ? PIEZAS[slot]?.text : `Inserta pieza aquí`}
                       </div>
                     </div>
@@ -1439,7 +1449,7 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
               {challenge?.piezas?.map(piece => (
 
-                <div key={piece.id} draggable onDragStart={(e) => e.dataTransfer.setData('piece', JSON.stringify(piece))} style={{ padding: '12px', background: '#1c1c2e', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', color: '#cbd5e1', cursor: 'grab', borderLeft: '4px solid #818cf8', transition: 'all 0.2s' }}>
+                <div key={piece.id} draggable onDragStart={(e) => handleDragStart(e, piece)} style={{ padding: '12px', background: '#1c1c2e', border: '1px solid #334155', borderRadius: '8px', fontSize: '11px', fontFamily: 'monospace', color: '#cbd5e1', cursor: 'grab', borderLeft: '4px solid #818cf8', transition: 'all 0.2s', userSelect: 'none' }}>
 
                   {piece.text}
 
@@ -1486,18 +1496,12 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
         </div>
 
       </div>
-
     </div>
 
   );
 
 };
 
-
-
 export default ArduinoExercisesSimulator;
-
-
-
 
 

@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
@@ -7,10 +8,24 @@ import './Layout.css';
 
 const LayoutContent = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const location = useLocation();
+    const isEvaluationRoute = /^\/dashboard\/evaluations\/[^/]+$/.test(location.pathname);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
     };
+
+    if (isEvaluationRoute) {
+        return (
+            <div className="app-layout">
+                <div className="main-content">
+                    <main className="page-content animate-fade-in">
+                        <Outlet />
+                    </main>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app-layout">
@@ -31,8 +46,6 @@ const LayoutContent = () => {
         </div>
     );
 };
-
-import { useState } from 'react';
 
 const Layout = () => {
     return (

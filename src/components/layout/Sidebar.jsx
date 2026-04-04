@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, UserPlus } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount } = useAuth();
+    const { user, profile, signOut, unreadNotificationsCount } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -46,7 +46,6 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         ...(isAdmin ? [{
             title: 'ADMIN',
             items: [
-                { name: 'Solicitudes', path: '/dashboard/requests', icon: <UserPlus size={18} />, badge: pendingAccessRequestsCount },
                 { name: 'Gestion de Cursos', path: '/dashboard/courses', icon: <GraduationCap size={18} /> },
                 { name: 'Plataforma', path: '/dashboard/admin', icon: <Shield size={18} /> }
             ]

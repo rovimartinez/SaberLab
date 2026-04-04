@@ -1,339 +1,184 @@
 import { createContentBlock, createFlashcardsBlock, createQuizBlock, defineLesson } from '../../../lib/lessonSchema';
 
 const lessonDefinition = {
-    title: 'Evaluacion teorica del modulo 1',
-    quizConfig: {
-        title: 'Evaluacion teorica del modulo 1',
-        timePerQuestion: 45,
-        requiredScorePercent: 80
-    },
+    title: 'Entradas analogicas y resolucion',
     content: `
         <div class="lesson-intro">
-            <p>Esta evaluacion integra los conceptos del modulo 1 de Robotica Educativa: hardware abierto, salidas digitales, variables, entradas digitales y monitor serie. No busca solo medir memoria; busca revelar <strong>patrones de comprension, duda y tiempo de respuesta</strong> para construir evidencia de aprendizaje.</p>
+            <p>Hasta ahora has trabajado con entradas que solo distinguen dos estados: <strong>HIGH</strong> o <strong>LOW</strong>. En esta leccion Arduino da un paso mas fino: aprendera a leer valores intermedios usando <strong>entradas analogicas</strong>, especialmente con el ejemplo clasico del <strong>potenciometro</strong>.</p>
         </div>
 
         <div class="theory-section">
-            <h3 id="re-5-1">5.1 Como interpretar esta evaluacion</h3>
-            <p>Cada pregunta guarda informacion importante para el analisis pedagogico:</p>
-            <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.18); border-radius: 18px; padding: 1.25rem;">
+            <h3 id="re-5-1">5.1 Que es una entrada analogica</h3>
+            <p>Una entrada analogica no se limita a dos estados. Permite medir una variacion continua de voltaje dentro de un rango, normalmente entre <code>0V</code> y <code>5V</code> en Arduino Uno.</p>
+            <div class="highlight-panel" style="background: rgba(59, 130, 246, 0.08); border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 12px; margin: 1rem 0;">
+                <p><strong>Idea clave:</strong> la realidad fisica muchas veces cambia poco a poco, no solo en dos estados extremos.</p>
+                <p style="margin-bottom: 0;"><strong>Ejemplos:</strong> posicion de una perilla, intensidad de luz, nivel de humedad o temperatura variable.</p>
+            </div>
+        </div>
+
+        <div class="theory-section">
+            <h3 id="re-5-2">5.2 El potenciometro como divisor de voltaje</h3>
+            <p>Un potenciometro es una resistencia variable con una perilla. Al girarlo, cambia la proporcion del voltaje disponible en su terminal central. Por eso es ideal para producir una senal analogica controlable.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.15); border-radius: 16px; padding: 1rem;">
+                    <h4 style="color: #10b981; margin-bottom: 0.5rem;">Conexion tipica</h4>
+                    <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6;">Un extremo a <code>5V</code>, el otro a <code>GND</code> y el pin central a una entrada analogica como <code>A0</code>.</p>
+                </div>
+                <div style="background: rgba(249, 115, 22, 0.06); border: 1px solid rgba(249, 115, 22, 0.15); border-radius: 16px; padding: 1rem;">
+                    <h4 style="color: #fb923c; margin-bottom: 0.5rem;">Comportamiento</h4>
+                    <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6;">Al girar la perilla, el voltaje del terminal central sube o baja de manera progresiva.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="theory-section">
+            <h3 id="re-5-3">5.3 Que hace analogRead()</h3>
+            <p>Arduino no guarda el voltaje como un decimal exacto en voltios. Lo convierte a un numero entero usando un convertidor analogico-digital. Esa lectura se obtiene con <code>analogRead(pin)</code>.</p>
+            <pre style="background: rgba(15, 23, 42, 0.72); padding: 1.25rem; border-radius: 18px; border: 1px solid rgba(255,255,255,0.06); overflow-x: auto;"><code style="color: #cbd5e1;">int lectura = analogRead(A0);</code></pre>
+            <p style="margin-top: 1rem;">En Arduino Uno, la lectura suele ir desde <code>0</code> hasta <code>1023</code>.</p>
+        </div>
+
+        <div class="theory-section">
+            <h3 id="re-5-4">5.4 Resolucion de 10 bits</h3>
+            <p>El ADC de Arduino Uno tiene una resolucion de <strong>10 bits</strong>. Eso significa que puede dividir el rango de entrada en <strong>1024 niveles posibles</strong>, desde 0 hasta 1023.</p>
+            <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.18); border-radius: 18px; padding: 1.25rem; margin-top: 1rem;">
                 <ul style="color: #cbd5e1; line-height: 1.8; padding-left: 1.2rem; margin: 0;">
-                    <li>Tiempo invertido por pregunta.</li>
-                    <li>Respuesta seleccionada y respuesta correcta.</li>
-                    <li>Objetivo cognitivo asociado a la pregunta.</li>
-                    <li>Concepto evaluado y nivel de dificultad.</li>
+                    <li><strong>0:</strong> voltaje muy cercano a 0V.</li>
+                    <li><strong>1023:</strong> voltaje muy cercano a 5V.</li>
+                    <li><strong>Valores intermedios:</strong> representan posiciones o niveles parciales.</li>
                 </ul>
             </div>
-            <p style="margin-top: 1rem;">Esa informacion sirve para detectar conceptos dominados, zonas de confusion, impulsividad, vacilacion y esfuerzo sostenido.</p>
+            <p style="margin-top: 1rem;">La resolucion define cuan fino puede distinguir el microcontrolador entre un nivel y otro.</p>
         </div>
 
         <div class="theory-section">
-            <h3 id="re-5-2">5.2 Competencias evaluadas</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div style="background: rgba(59, 130, 246, 0.07); border-radius: 16px; padding: 1rem; border: 1px solid rgba(59, 130, 246, 0.16);">
-                    <h4 style="color: #60a5fa; margin-bottom: 0.4rem;">Comprension conceptual</h4>
-                    <p style="color: #cbd5e1; line-height: 1.6; font-size: 0.92rem;">Arduino, estructura del sketch, variables, entradas y salida serial.</p>
-                </div>
-                <div style="background: rgba(16, 185, 129, 0.07); border-radius: 16px; padding: 1rem; border: 1px solid rgba(16, 185, 129, 0.16);">
-                    <h4 style="color: #34d399; margin-bottom: 0.4rem;">Aplicacion logica</h4>
-                    <p style="color: #cbd5e1; line-height: 1.6; font-size: 0.92rem;">Relacionar lectura, decision y accion dentro de un sistema interactivo.</p>
-                </div>
-                <div style="background: rgba(249, 115, 22, 0.07); border-radius: 16px; padding: 1rem; border: 1px solid rgba(249, 115, 22, 0.16);">
-                    <h4 style="color: #fb923c; margin-bottom: 0.4rem;">Diagnostico de errores</h4>
-                    <p style="color: #cbd5e1; line-height: 1.6; font-size: 0.92rem;">Identificar fallas comunes de cableado, sintaxis y monitoreo.</p>
-                </div>
-                <div style="background: rgba(244, 63, 94, 0.07); border-radius: 16px; padding: 1rem; border: 1px solid rgba(244, 63, 94, 0.16);">
-                    <h4 style="color: #fb7185; margin-bottom: 0.4rem;">Evidencia analitica</h4>
-                    <p style="color: #cbd5e1; line-height: 1.6; font-size: 0.92rem;">No solo importa acertar; tambien importa como responde el estudiante y cuanto tarda.</p>
-                </div>
+            <h3 id="re-5-5">5.5 Del dato a la interpretacion</h3>
+            <p>Leer un valor no basta; hay que interpretarlo. Por ejemplo, un potenciometro puede controlar brillo, velocidad, angulo o nivel de referencia en un proyecto.</p>
+            <pre style="background: rgba(15, 23, 42, 0.72); padding: 1.25rem; border-radius: 18px; border: 1px solid rgba(255,255,255,0.06); overflow-x: auto;"><code style="color: #cbd5e1;">void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int lectura = analogRead(A0);
+  Serial.println(lectura);
+  delay(200);
+}</code></pre>
+            <p style="margin-top: 1rem;">Con el Monitor Serie puedes observar como la lectura cambia suavemente al mover la perilla.</p>
+        </div>
+
+        <div class="theory-section">
+            <h3 id="re-5-6">5.6 Aplicaciones reales</h3>
+            <div style="background: rgba(255,255,255,0.04); border-radius: 18px; padding: 1.25rem; border: 1px solid rgba(255,255,255,0.06);">
+                <ul style="color: #cbd5e1; line-height: 1.8; padding-left: 1.2rem; margin: 0;">
+                    <li>Control manual de velocidad en un robot.</li>
+                    <li>Ajuste de brillo de un LED.</li>
+                    <li>Perillas de calibracion o sensibilidad.</li>
+                    <li>Lectura base para sensores analogicos como LDR o temperatura.</li>
+                </ul>
             </div>
-        </div>
-
-        <div class="theory-section">
-            <h3 id="re-5-3">5.3 Recomendaciones antes de iniciar</h3>
-            <ul style="color: #cbd5e1; line-height: 1.8; padding-left: 1.2rem;">
-                <li>Lee cada pregunta completa antes de mirar las opciones.</li>
-                <li>Relaciona la teoria con el comportamiento del hardware real o simulado.</li>
-                <li>Si dudas, piensa en el flujo: configurar, leer, decidir, actuar, observar.</li>
-                <li>Trabaja con calma: el sistema registrara tu tiempo por pregunta.</li>
-            </ul>
         </div>
     `,
     flashcards: [
-        { id: 'l5-f1', type: 'code', q: 'Que porcentaje minimo exige esta evaluacion para aprobar?', a: '80%', sub: 'Configurado como umbral del modulo', sectionId: 're-5-1' },
-        { id: 'l5-f2', type: 'code', q: 'Cuanto tiempo tiene cada pregunta?', a: '45 segundos', sub: 'Tiempo individual por item', sectionId: 're-5-1' },
-        { id: 'l5-f3', type: 'code', q: 'Que variable analitica se registra por pregunta?', a: 'Tiempo, acierto, opcion elegida y contexto cognitivo', sub: 'Base para analisis posterior', sectionId: 're-5-1' },
-        { id: 'l5-f4', type: 'hw', q: 'Que flujo general resume el modulo 1?', a: 'Configurar, leer, decidir, actuar y observar', sub: 'Integra hardware y pensamiento logico', sectionId: 're-5-2' },
-        { id: 'l5-f5', type: 'code', q: 'La evaluacion solo mide memoria?', a: 'No, tambien evidencia comprension y patrones de respuesta', sub: 'La nota final no cuenta toda la historia', sectionId: 're-5-2' }
+        { id: 'l5-f1', type: 'code', q: 'Que rango suele leer analogRead() en Arduino Uno?', a: 'De 0 a 1023', sub: 'Son 1024 niveles posibles', sectionId: 're-5-4' },
+        { id: 'l5-f2', type: 'hw', q: 'Que componente usamos como ejemplo de entrada analogica?', a: 'Potenciometro', sub: 'Produce un voltaje variable', sectionId: 're-5-2' },
+        { id: 'l5-f3', type: 'code', q: 'Que funcion se usa para leer A0?', a: 'analogRead(A0)', sub: 'Lee una entrada analogica', sectionId: 're-5-3' },
+        { id: 'l5-f4', type: 'hw', q: 'A que corresponde una lectura cercana a 0?', a: 'A un voltaje cercano a 0V', sub: 'Extremo bajo del rango', sectionId: 're-5-4' },
+        { id: 'l5-f5', type: 'hw', q: 'A que corresponde una lectura cercana a 1023?', a: 'A un voltaje cercano a 5V', sub: 'Extremo alto del rango', sectionId: 're-5-4' },
+        { id: 'l5-f6', type: 'code', q: 'Que resolucion tiene el ADC del Arduino Uno?', a: '10 bits', sub: 'Divide el rango en 1024 niveles', sectionId: 're-5-4' },
+        { id: 'l5-f7', type: 'hw', q: 'Como se conecta tipicamente un potenciometro?', a: 'A 5V, GND y A0 en el terminal central', sub: 'Funciona como divisor de voltaje', sectionId: 're-5-2' },
+        { id: 'l5-f8', type: 'code', q: 'Para que sirve el Monitor Serie aqui?', a: 'Para observar como cambia la lectura', sub: 'Ayuda a interpretar la senal', sectionId: 're-5-5' },
+        { id: 'l5-f9', type: 'hw', q: 'Una entrada analogica solo distingue HIGH y LOW?', a: 'No', sub: 'Puede medir niveles intermedios', sectionId: 're-5-1' },
+        { id: 'l5-f10', type: 'code', q: 'Que significa resolucion en este contexto?', a: 'Que tan fino distingue entre niveles', sub: 'Mas niveles, mas detalle', sectionId: 're-5-4' }
     ],
     questions: [
         {
             id: 're-m1-l5-q1',
-            q: 'Arduino se describe mejor como:',
-            options: ['Un sistema operativo para robots', 'Una plataforma de hardware y software libre', 'Una aplicacion exclusiva para celulares', 'Un lenguaje de programacion orientado a videojuegos'],
+            q: 'Que diferencia principal tiene una entrada analogica frente a una digital?',
+            options: ['La analogica solo detecta HIGH y LOW', 'La analogica mide variaciones continuas de voltaje', 'La digital usa mas memoria RAM', 'No hay diferencia real'],
             correct: 1,
-            objective: 'Reconocer la naturaleza de Arduino',
-            concept: 'arduino-plataforma',
+            objective: 'Distinguir entradas analogicas y digitales',
+            concept: 'entrada-analogica',
             difficulty: 'easy'
         },
         {
             id: 're-m1-l5-q2',
-            q: 'Cual es la funcion principal del bloque setup()?',
-            options: ['Repetirse infinitamente', 'Configurar lo que debe ocurrir una sola vez al inicio', 'Mostrar el puntaje final', 'Guardar datos en la nube'],
-            correct: 1,
-            objective: 'Diferenciar setup y loop',
-            concept: 'setup',
+            q: 'Que funcion se usa para leer una entrada como A0?',
+            options: ['digitalRead(A0)', 'analogWrite(A0)', 'analogRead(A0)', 'pinMode(A0)'],
+            correct: 2,
+            objective: 'Recordar la funcion de lectura analogica',
+            concept: 'analogread',
             difficulty: 'easy'
         },
         {
             id: 're-m1-l5-q3',
-            q: 'Que bloque se ejecuta una y otra vez mientras la placa tiene energia?',
-            options: ['setup()', 'pinMode()', 'loop()', 'delay()'],
-            correct: 2,
-            objective: 'Diferenciar setup y loop',
-            concept: 'loop',
+            q: 'En Arduino Uno, una lectura analogica normal va de:',
+            options: ['0 a 255', '0 a 1023', '1 a 100', '-5 a 5'],
+            correct: 1,
+            objective: 'Reconocer el rango del ADC de Arduino Uno',
+            concept: 'rango-analogico',
             difficulty: 'easy'
         },
         {
             id: 're-m1-l5-q4',
-            q: 'Para que se usa pinMode(13, OUTPUT)?',
-            options: ['Para leer un sensor analogico', 'Para declarar que el pin 13 trabajara como salida', 'Para iniciar el monitor serie', 'Para aumentar la corriente del puerto USB'],
+            q: 'Que componente se usa en esta leccion como ejemplo de entrada analogica?',
+            options: ['Servo motor', 'Potenciometro', 'Buzzer', 'Pulsador'],
             correct: 1,
-            objective: 'Aplicar configuracion de pines',
-            concept: 'pinmode',
+            objective: 'Identificar el componente central de la leccion',
+            concept: 'potenciometro',
             difficulty: 'easy'
         },
         {
             id: 're-m1-l5-q5',
-            q: 'Que ocurre cuando se ejecuta digitalWrite(13, HIGH)?',
-            options: ['El pin 13 entrega una senal alta', 'El pin 13 se vuelve analogo', 'El programa termina', 'Se borra la memoria del Arduino'],
-            correct: 0,
-            objective: 'Comprender salida digital',
-            concept: 'digitalwrite',
-            difficulty: 'easy'
+            q: 'Que significa que el ADC tenga 10 bits de resolucion?',
+            options: ['Que solo puede medir 10 voltios', 'Que puede dividir la entrada en 1024 niveles', 'Que funciona 10 veces por segundo', 'Que solo sirve con 10 sensores'],
+            correct: 1,
+            objective: 'Comprender la resolucion del convertidor analogico-digital',
+            concept: 'resolucion-10-bits',
+            difficulty: 'medium'
         },
         {
             id: 're-m1-l5-q6',
-            q: 'Que expresa delay(1000)?',
-            options: ['Esperar 1000 segundos', 'Esperar un segundo', 'Encender el LED 1000 veces', 'Leer el pin 1000'],
-            correct: 1,
-            objective: 'Interpretar tiempos en milisegundos',
-            concept: 'delay',
+            q: 'Una lectura cercana a 1023 suele indicar:',
+            options: ['Un voltaje cercano a 5V', 'Un error de compilacion', 'Que el pin esta apagado', 'Que la entrada es digital'],
+            correct: 0,
+            objective: 'Relacionar el valor alto con el voltaje de entrada',
+            concept: 'voltaje-maximo',
             difficulty: 'easy'
         },
         {
             id: 're-m1-l5-q7',
-            q: 'Cual es una buena razon para usar variables en lugar de repetir numeros literales?',
-            options: ['Porque las variables eliminan setup()', 'Porque facilitan cambios y hacen el codigo mas legible', 'Porque impiden usar comentarios', 'Porque solo asi funciona digitalRead()'],
+            q: 'Cual es la conexion tipica de un potenciometro en Arduino?',
+            options: ['Dos terminales a pines digitales y uno a RX', 'Un extremo a 5V, otro a GND y el central a A0', 'Todos los terminales a GND', 'Solo al pin 13'],
             correct: 1,
-            objective: 'Comprender valor pedagogico de las variables',
-            concept: 'variables',
-            difficulty: 'easy'
+            objective: 'Reconocer el cableado basico del potenciometro',
+            concept: 'conexion-potenciometro',
+            difficulty: 'medium'
         },
         {
             id: 're-m1-l5-q8',
-            q: 'Que tipo de dato es mas apropiado para guardar un numero entero como un pin?',
-            options: ['String', 'bool', 'int', 'char'],
-            correct: 2,
-            objective: 'Seleccionar tipos de datos basicos',
-            concept: 'tipos-int',
+            q: 'Para que puede servir un potenciometro en un proyecto de robotica?',
+            options: ['Solo para encender el puerto USB', 'Para ajustar velocidad, brillo o sensibilidad', 'Para reemplazar el microcontrolador', 'Para convertir salidas en entradas digitales'],
+            correct: 1,
+            objective: 'Transferir el concepto a usos practicos',
+            concept: 'aplicaciones-analogicas',
             difficulty: 'easy'
         },
         {
             id: 're-m1-l5-q9',
-            q: 'Que tipo de dato se usa para verdadero o falso?',
-            options: ['bool', 'float', 'long', 'String'],
-            correct: 0,
-            objective: 'Seleccionar tipos de datos basicos',
-            concept: 'tipos-bool',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q10',
-            q: 'Que ventaja ofrece comentar el codigo?',
-            options: ['Hace que el microcontrolador trabaje al doble de velocidad', 'Ayuda a humanos a entender la intencion del programa', 'Reemplaza las llaves del programa', 'Convierte un error en acierto'],
+            q: 'Que ayuda a observar como cambia la lectura del potenciometro en tiempo real?',
+            options: ['El bootloader', 'El Monitor Serie', 'Solo el LED integrado', 'La memoria flash'],
             correct: 1,
-            objective: 'Valorar comentarios como apoyo cognitivo',
-            concept: 'comentarios',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q11',
-            q: 'Una entrada digital sirve para:',
-            options: ['Emitir solo luz', 'Detectar un estado logico alto o bajo', 'Medir siempre temperatura', 'Aumentar el almacenamiento'],
-            correct: 1,
-            objective: 'Comprender entradas digitales',
-            concept: 'entrada-digital',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q12',
-            q: 'Que funcion se usa para leer el estado de un pulsador?',
-            options: ['analogWrite()', 'digitalRead()', 'Serial.begin()', 'pinMode()'],
-            correct: 1,
-            objective: 'Recordar lectura digital',
-            concept: 'digitalread',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q13',
-            q: 'Que riesgo existe si una entrada queda flotante?',
-            options: ['Lee valores inestables por ruido', 'Se convierte en memoria flash', 'Arduino deja de tener GND', 'Se rompe el puerto serial'],
-            correct: 0,
-            objective: 'Reconocer el estado flotante',
-            concept: 'pin-flotante',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q14',
-            q: 'Que ventaja practica tiene INPUT_PULLUP?',
-            options: ['Agrega una resistencia interna de referencia', 'Convierte salidas en entradas analogicas', 'Evita escribir codigo', 'Aumenta la frecuencia del reloj'],
-            correct: 0,
-            objective: 'Comprender INPUT_PULLUP',
-            concept: 'input-pullup',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q15',
-            q: 'Con INPUT_PULLUP, que lectura suele aparecer cuando el boton NO esta presionado?',
-            options: ['LOW', 'HIGH', '1023', 'Depende del delay'],
-            correct: 1,
-            objective: 'Aplicar logica invertida',
-            concept: 'input-pullup-logica',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q16',
-            q: 'El rebote mecanico de un pulsador puede provocar:',
-            options: ['Multiples cambios rapidos de lectura', 'Mas memoria RAM', 'Desaparicion del GND', 'Un salto automatico a loop()'],
-            correct: 0,
-            objective: 'Comprender el debouncing',
-            concept: 'rebote',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q17',
-            q: 'Cual describe mejor el patron de robotica interactiva visto en el modulo?',
-            options: ['Leer, decidir y actuar', 'Borrar, instalar y reiniciar', 'Pintar, exportar y renderizar', 'Compilar, soldar y formatear'],
-            correct: 0,
-            objective: 'Integrar flujo de control',
-            concept: 'leer-decidir-actuar',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q18',
-            q: 'Para que se usa Serial.begin(9600)?',
-            options: ['Para iniciar la comunicacion serial a cierta velocidad', 'Para apagar el puerto USB', 'Para leer entradas analogicas', 'Para declarar una variable'],
-            correct: 0,
-            objective: 'Comprender inicializacion serial',
-            concept: 'serial-begin',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q19',
-            q: 'Que representan los 9600 baudios?',
-            options: ['La cantidad de preguntas del examen', 'La velocidad de transmision de datos', 'La memoria libre del IDE', 'La resistencia del pulsador'],
-            correct: 1,
-            objective: 'Comprender baudios',
-            concept: 'baudios',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q20',
-            q: 'Que instruccion imprime texto y luego pasa a una nueva linea?',
-            options: ['Serial.begin()', 'Serial.println()', 'digitalWrite()', 'pinMode()'],
-            correct: 1,
-            objective: 'Diferenciar metodos de salida serial',
-            concept: 'serial-println',
-            difficulty: 'easy'
-        },
-        {
-            id: 're-m1-l5-q21',
-            q: 'Que utilidad pedagogica tiene el Monitor Serie?',
-            options: ['Permite ver el proceso interno del programa', 'Solo sirve para decorar la pantalla', 'Hace innecesario el uso de sensores', 'Reemplaza a las variables'],
-            correct: 0,
-            objective: 'Relacionar monitor serie con observacion cognitiva',
+            objective: 'Relacionar lectura analogica y observacion serial',
             concept: 'monitor-serie',
             difficulty: 'easy'
         },
         {
-            id: 're-m1-l5-q22',
-            q: 'Una buena practica al imprimir datos es:',
-            options: ['Enviar miles de mensajes por segundo sin etiqueta', 'Usar etiquetas y una frecuencia manejable', 'Imprimir solo cuando hay errores fatales', 'Quitar todos los delays del proyecto por costumbre'],
+            id: 're-m1-l5-q10',
+            q: 'En este contexto, que expresa mejor la palabra resolucion?',
+            options: ['La velocidad del procesador', 'La capacidad de distinguir pequenos cambios entre niveles', 'El tamano fisico del Arduino', 'La cantidad de cables del circuito'],
             correct: 1,
-            objective: 'Aplicar buenas practicas de impresion',
-            concept: 'buenas-practicas-serial',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q23',
-            q: 'Si la velocidad del codigo y la del Monitor Serie no coinciden, que suele pasar?',
-            options: ['La salida aparece ilegible', 'El LED cambia de color', 'Se activa INPUT_PULLUP automaticamente', 'Las variables se vuelven float'],
-            correct: 0,
-            objective: 'Diagnosticar un fallo serial comun',
-            concept: 'sincronia-serial',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q24',
-            q: 'Que tipo de informacion conviene guardar por pregunta en una evaluacion analitica?',
-            options: ['Solo el nombre del curso', 'Tiempo, respuesta elegida y si fue correcta', 'Solo la nota final del modulo', 'Unicamente la fecha de nacimiento'],
-            correct: 1,
-            objective: 'Comprender telemetria educativa basica',
-            concept: 'telemetria',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q25',
-            q: 'Por que registrar tiempo por pregunta puede ser valioso?',
-            options: ['Porque muestra patrones de duda, automatizacion o impulsividad', 'Porque reemplaza toda la teoria', 'Porque evita usar preguntas nuevas', 'Porque sube la nota automaticamente'],
-            correct: 0,
-            objective: 'Relacionar tiempo de respuesta con aprendizaje',
-            concept: 'tiempo-respuesta',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q26',
-            q: 'Si un estudiante falla una pregunta rapidamente, que tipo de inferencia podria explorarse luego?',
-            options: ['Posible respuesta impulsiva o conocimiento fragil', 'Que el computador se apago', 'Que la placa fisica estaba rota', 'Que la pregunta no existio'],
-            correct: 0,
-            objective: 'Introducir interpretacion analitica',
-            concept: 'impulsividad',
-            difficulty: 'hard'
-        },
-        {
-            id: 're-m1-l5-q27',
-            q: 'Si un estudiante tarda mucho y luego acierta, que patron podria sugerir?',
-            options: ['Procesamiento deliberado o recuperacion esforzada', 'Error de conexion USB', 'Que uso demasiados LEDs', 'Que no leyo la pregunta'],
-            correct: 0,
-            objective: 'Introducir interpretacion analitica',
-            concept: 'esfuerzo-cognitivo',
-            difficulty: 'hard'
-        },
-        {
-            id: 're-m1-l5-q28',
-            q: 'Que aporta asociar cada pregunta con un concepto como "input-pullup" o "serial-begin"?',
-            options: ['Permite detectar vacios por tema especifico', 'Obliga a usar solo preguntas faciles', 'Elimina la necesidad de docentes', 'Hace innecesaria la retroalimentacion'],
-            correct: 0,
-            objective: 'Comprender etiquetado conceptual',
-            concept: 'mapa-conceptual',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q29',
-            q: 'En una plataforma orientada al aprendizaje, por que no basta con guardar solo el puntaje final?',
-            options: ['Porque se pierde informacion del proceso y de los errores', 'Porque el puntaje nunca importa', 'Porque las preguntas no tienen opciones', 'Porque setup() deja de funcionar'],
-            correct: 0,
-            objective: 'Valorar datos de proceso sobre resultado unico',
-            concept: 'proceso-vs-resultado',
-            difficulty: 'medium'
-        },
-        {
-            id: 're-m1-l5-q30',
-            q: 'Cual de estas afirmaciones resume mejor el objetivo de esta evaluacion del modulo 1?',
-            options: ['Calificar memoria aislada sin contexto', 'Medir comprension y generar evidencia para mejorar el aprendizaje', 'Probar solo la velocidad del navegador', 'Sustituir todas las actividades practicas'],
-            correct: 1,
-            objective: 'Integrar sentido pedagogico de la evaluacion',
-            concept: 'evaluacion-analitica',
+            objective: 'Entender el sentido de resolucion en medicion analogica',
+            concept: 'resolucion',
             difficulty: 'medium'
         }
     ]

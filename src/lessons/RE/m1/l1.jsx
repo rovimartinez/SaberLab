@@ -261,35 +261,33 @@ const lessonDefinition = {
         <h3 id="re-1-6" style="color: #a855f7; margin: 2.5rem 0 1rem;">1.6 Código Base: Tu primer Blink</h3>
         <p style="margin-bottom: 2rem; line-height: 1.8; color: #cbd5e1;"> El código <strong>Blink</strong> es el "Hola Mundo" de los microcontroladores. Nos permite verificar que el software se comunica con el hardware correctamente.</p>
 
-        <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 2rem; align-items: start; margin-bottom: 2rem;">
-            
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #4ade80;">
-                    <code style="color: #4ade80; font-weight: bold; font-size: 1rem;">pinMode(pin, modo)</code>
-                    <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.5;">Define si un pin es entrada (INPUT) o salida (OUTPUT). Solo en setup().</p>
-                </div>
-
-                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #60a5fa;">
-                    <code style="color: #60a5fa; font-weight: bold; font-size: 1rem;">digitalWrite(pin, val)</code>
-                    <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.5;">Escribe HIGH (5V) o LOW (0V). Es el interruptor de energía.</p>
-                </div>
-
-                <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #fbbf24;">
-                    <code style="color: #fbbf24; font-weight: bold; font-size: 1rem;">delay(ms)</code>
-                    <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.5;">Pausa el programa en milisegundos (1000ms = 1 seg).</p>
-                </div>
-
-                <div style="background: rgba(59, 130, 246, 0.05); padding: 1.25rem; border-radius: 16px; border: 1px solid rgba(59, 130, 246, 0.1); margin-top: 0.5rem;">
-                    <h5 style="color: #60a5fa; margin: 0 0 0.5rem; font-size: 0.85rem; text-transform: uppercase; font-weight: 800;">Hardware Tip</h5>
-                    <p style="color: #cbd5e1; font-size: 0.8rem; line-height: 1.5; margin: 0;">
-                        El <strong>Pin 13</strong> controla el LED integrado (L). No necesitas cables para este paso.
-                    </p>
-                </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #4ade80;">
+                <code style="color: #4ade80; font-weight: bold; font-size: 1rem;">pinMode(pin, modo)</code>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.5;">Define si un pin es entrada (INPUT) o salida (OUTPUT). Solo en setup().</p>
             </div>
 
-            <div style="background: rgba(15, 23, 42, 0.4); padding: 1.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
-                <div id="arduino-simulator-container" style="width: 100%; display: flex; justify-content: center; align-items: center;"></div>
+            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #60a5fa;">
+                <code style="color: #60a5fa; font-weight: bold; font-size: 1rem;">digitalWrite(pin, val)</code>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.5;">Escribe HIGH (5V) o LOW (0V). Es el interruptor de energía.</p>
             </div>
+
+            <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); border-left: 4px solid #fbbf24;">
+                <code style="color: #fbbf24; font-weight: bold; font-size: 1rem;">delay(ms)</code>
+                <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.4rem; line-height: 1.5;">Pausa el programa en milisegundos (1000ms = 1 seg).</p>
+            </div>
+
+            <div style="background: rgba(59, 130, 246, 0.05); padding: 1rem; border-radius: 16px; border: 1px solid rgba(59, 130, 246, 0.1);">
+                <h5 style="color: #60a5fa; margin: 0 0 0.5rem; font-size: 0.85rem; text-transform: uppercase; font-weight: 800;">Hardware Tip</h5>
+                <p style="color: #cbd5e1; font-size: 0.8rem; line-height: 1.5; margin: 0;">
+                    El <strong>Pin 13</strong> controla el LED integrado (L). No necesitas cables para este paso.
+                </p>
+            </div>
+        </div>
+
+        <div style="background: rgba(15, 23, 42, 0.4); padding: 1.5rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
+            <div id="arduino-simulator-container" style="width: 100%; display: flex; justify-content: center; align-items: center;"></div>
+        </div>
 
         </div>
     `,
