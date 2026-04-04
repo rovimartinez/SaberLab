@@ -2,7 +2,7 @@ import { createContentBlock, createQuizBlock, defineLesson } from '../../../lib/
 
 const evaluationDefinition = {
     id: 're-m1-e1',
-    title: 'Evaluacion formal del modulo 1',
+    title: 'Evaluacion del modulo 1',
     courseId: 5,
     moduleId: 'm1',
     points: 60,
@@ -12,13 +12,13 @@ const evaluationDefinition = {
         maxWarnings: 3
     },
     quizConfig: {
-        title: 'Evaluacion formal del modulo 1',
+        title: 'Evaluacion del modulo 1',
         timePerQuestion: 45,
         requiredScorePercent: 80
     },
     content: `
         <div class="lesson-intro">
-            <p>Esta es la <strong>evaluacion formal del modulo 1 de Robotica Educativa</strong>. Integra los contenidos de hardware abierto, salidas digitales, variables, entradas digitales, monitor serie y entradas analogicas.</p>
+            <p>Esta es la <strong>evaluacion del modulo 1 de Robotica Educativa</strong>. Integra los contenidos de hardware abierto, salidas digitales, variables, entradas digitales, monitor serie y entradas analogicas.</p>
         </div>
 
         <div class="theory-section">

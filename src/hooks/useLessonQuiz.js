@@ -21,14 +21,15 @@ export const useLessonQuiz = ({
     const [currentQ, setCurrentQ] = useState(0);
     const [quizScore, setQuizScore] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
-    const [quizResponses, setQuizResponses] = useState([]);
+    const [userAnswers, setUserAnswers] = useState([]);
+    const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
 
     const timerRef = useRef(null);
     const questionStartedAtRef = useRef(null);
     const quizStartedAtRef = useRef(null);
     const sessionIdRef = useRef(null);
     const quizPersistedRef = useRef(false);
-    const handleQuizAnswerRef = useRef(() => {});
+    const handleQuizAnswerRef = useRef(() => { });
 
     const quizTimeLimit = quizConfig.timePerQuestion ?? 30;
     const requiredScorePercent = quizConfig.requiredScorePercent ?? 100;
@@ -152,12 +153,14 @@ export const useLessonQuiz = ({
                 setCurrentQ((prev) => prev + 1);
                 setTimeLeft(quizTimeLimit);
                 setSelectedAnswer(null);
+                setIsAnswerRevealed(false);
                 questionStartedAtRef.current = Date.now();
             } else {
                 void persistQuizAttempt(responsesSnapshot, scoreSnapshot);
+                setIsAnswerRevealed(false);
                 setQuizMode('result');
             }
-        }, 1500);
+        }, 800);
     }, [currentQ, lessonQuestions.length, persistQuizAttempt, quizTimeLimit]);
 
     const handleQuizAnswer = useCallback((optionIndex) => {
@@ -171,6 +174,7 @@ export const useLessonQuiz = ({
         const isCorrect = optionIndex !== -1 && optionIndex === currentQuestion.correct;
 
         setSelectedAnswer(optionIndex);
+        setIsAnswerRevealed(true);
 
         const responseRecord = {
             question_index: currentQ,
@@ -192,16 +196,16 @@ export const useLessonQuiz = ({
         };
 
         const nextScore = quizScore + (isCorrect ? 1 : 0);
-        const nextResponses = [...quizResponses, responseRecord];
+        const nextResponses = [...userAnswers, responseRecord];
 
-        setQuizResponses(nextResponses);
+        setUserAnswers(nextResponses);
 
         if (isCorrect) {
             setQuizScore((prev) => prev + 1);
         }
 
         proceedToNextQuizStep(nextResponses, nextScore);
-    }, [currentQ, lessonKey, lessonQuestions, proceedToNextQuizStep, quizResponses, quizScore, selectedAnswer, timeLeft]);
+    }, [currentQ, lessonKey, lessonQuestions, proceedToNextQuizStep, userAnswers, quizScore, selectedAnswer, timeLeft]);
 
     useEffect(() => {
         handleQuizAnswerRef.current = handleQuizAnswer;
@@ -260,7 +264,7 @@ export const useLessonQuiz = ({
             setQuizScore(0);
             setTimeLeft(quizTimeLimit);
             setSelectedAnswer(null);
-            setQuizResponses([]);
+            setUserAnswers([]);
         };
 
         void start();
@@ -293,7 +297,7 @@ export const useLessonQuiz = ({
             setCurrentQ(0);
             setQuizScore(0);
             setSelectedAnswer(null);
-            setQuizResponses([]);
+            setUserAnswers([]);
             setTimeLeft(quizTimeLimit);
             quizPersistedRef.current = false;
             sessionIdRef.current = null;
@@ -318,6 +322,8 @@ export const useLessonQuiz = ({
         selectedAnswer,
         setQuizMode,
         startQuiz,
-        timeLeft
+        timeLeft,
+        userAnswers,
+        isAnswerRevealed
     };
 };

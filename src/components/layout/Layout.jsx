@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -10,35 +10,40 @@ const LayoutContent = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const location = useLocation();
     const isEvaluationRoute = /^\/dashboard\/evaluations\/[^/]+$/.test(location.pathname);
+    
+    const [isEvaluationMode, setIsEvaluationMode] = useState(() => {
+        return localStorage.getItem('evaluationStarted') === 'true';
+    });
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const stored = localStorage.getItem('evaluationStarted');
+            setIsEvaluationMode(stored === 'true');
+        }, 200);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
     };
 
-    if (isEvaluationRoute) {
-        return (
-            <div className="app-layout">
-                <div className="main-content">
-                    <main className="page-content animate-fade-in">
-                        <Outlet />
-                    </main>
-                </div>
-            </div>
-        );
-    }
+    const showSidebar = !isEvaluationRoute || !isEvaluationMode;
 
     return (
         <div className="app-layout">
-            <Sidebar 
-                isOpen={isSidebarOpen} 
-                toggleSidebar={toggleSidebar}
-                closeSidebar={() => setIsSidebarOpen(false)} 
-            />
-            {isSidebarOpen && (
+            {showSidebar && (
+                <Sidebar 
+                    isOpen={isSidebarOpen} 
+                    toggleSidebar={toggleSidebar}
+                    closeSidebar={() => setIsSidebarOpen(false)} 
+                />
+            )}
+            {isSidebarOpen && showSidebar && (
                 <div className="mobile-overlay" onClick={() => setIsSidebarOpen(false)}></div>
             )}
             <div className="main-content">
-                <Topbar toggleSidebar={toggleSidebar} />
+                {(showSidebar || !isEvaluationRoute) && <Topbar toggleSidebar={toggleSidebar} />}
                 <main className="page-content animate-fade-in">
                     <Outlet />
                 </main>
