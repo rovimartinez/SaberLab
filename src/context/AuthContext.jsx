@@ -39,6 +39,23 @@ export const AuthProvider = ({ children }) => {
     setPendingAccessRequestsCount(0);
   };
 
+  const activateResolvedProfile = async (loggedInUser, resolvedProfile) => {
+    if (!loggedInUser || !resolvedProfile) return;
+
+    setSessionRejected(false);
+    clearPendingAccessData();
+    setProfile(resolvedProfile);
+
+    await loadEnrolledCourses(loggedInUser.id, resolvedProfile.role);
+    await loadNotificationsCount(loggedInUser.id);
+
+    if (resolvedProfile.role === 'admin') {
+      await loadPendingAccessRequestsCount();
+    } else {
+      setPendingAccessRequestsCount(0);
+    }
+  };
+
   const getAllCoursesWithProgress = () => (
     COURSES_DEFINITION.map((course) => ({
       ...course,
@@ -156,6 +173,51 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const getProfileForUser = async (loggedInUser) => {
+    if (!loggedInUser?.id) return null;
+
+    const normalizedEmail = loggedInUser.email?.trim().toLowerCase();
+
+    const { data: profileById, error: profileByIdError } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role')
+      .eq('id', loggedInUser.id)
+      .maybeSingle();
+
+    if (profileByIdError) {
+      console.error('Error consultando perfil por id:', profileByIdError);
+    }
+
+    if (profileById) {
+      return profileById;
+    }
+
+    if (!normalizedEmail) {
+      return null;
+    }
+
+    const { data: profileByEmail, error: profileByEmailError } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, role')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (profileByEmailError) {
+      console.error('Error consultando perfil por email:', profileByEmailError);
+      return null;
+    }
+
+    if (profileByEmail?.id && profileByEmail.id !== loggedInUser.id) {
+      console.warn('Perfil encontrado por email con id distinto al auth user.', {
+        authId: loggedInUser.id,
+        profileId: profileByEmail.id,
+        email: normalizedEmail
+      });
+    }
+
+    return profileByEmail ?? null;
+  };
+
   const validateSession = async (session) => {
     setLoading(true);
     const loggedInUser = session?.user ?? null;
@@ -171,27 +233,10 @@ export const AuthProvider = ({ children }) => {
 
     setUser(loggedInUser);
 
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, email, full_name, role')
-      .eq('id', loggedInUser.id)
-      .maybeSingle();
-
-    if (profileError) {
-      console.error('Error consultando perfil:', profileError);
-    }
+    const profileData = await getProfileForUser(loggedInUser);
 
     if (profileData) {
-      setSessionRejected(false);
-      clearPendingAccessData();
-      setProfile(profileData);
-      await loadEnrolledCourses(loggedInUser.id, profileData.role);
-      await loadNotificationsCount(loggedInUser.id);
-      if (profileData.role === 'admin') {
-        await loadPendingAccessRequestsCount();
-      } else {
-        setPendingAccessRequestsCount(0);
-      }
+      await activateResolvedProfile(loggedInUser, profileData);
       setLoading(false);
       return;
     }
@@ -225,16 +270,7 @@ export const AuthProvider = ({ children }) => {
         storePendingAccessData(loggedInUser, 'approved');
         setSessionRejected(false);
       } else {
-        setSessionRejected(false);
-        clearPendingAccessData();
-        setProfile(newProfile);
-        await loadEnrolledCourses(loggedInUser.id, newProfile.role);
-        await loadNotificationsCount(loggedInUser.id);
-        if (newProfile.role === 'admin') {
-          await loadPendingAccessRequestsCount();
-        } else {
-          setPendingAccessRequestsCount(0);
-        }
+        await activateResolvedProfile(loggedInUser, newProfile);
       }
 
       setLoading(false);
@@ -262,6 +298,34 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (!user || profile) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const retryProfileResolution = async () => {
+      const resolvedProfile = await getProfileForUser(user);
+
+      if (cancelled || !resolvedProfile) {
+        return;
+      }
+
+      await activateResolvedProfile(user, resolvedProfile);
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      void retryProfileResolution();
+    }, 600);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, user]);
+
+  useEffect(() => {
     if (profile?.role !== 'admin') {
       setPendingAccessRequestsCount(0);
       return undefined;
@@ -287,12 +351,23 @@ export const AuthProvider = ({ children }) => {
   }, [profile?.id, profile?.role]);
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
+
+    if (error) {
+      throw error;
+    }
+
+    if (data?.url && typeof window !== 'undefined') {
+      window.location.assign(data.url);
+      return data;
+    }
+
+    throw new Error('Supabase no devolvio una URL de autenticacion para Google.');
   };
 
   const signOut = async () => {

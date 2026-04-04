@@ -17,8 +17,21 @@ export const LESSONS_REGISTRY = {
         title: 'Semáforos y Variables',
         load: () => import('../lessons/RE/m1/l2').then(m => m.lessonData)
     },
-    're-m1-l3': { id: 're-m1-l3', title: 'Entradas Digitales (Pulsadores)', load: null },
-    're-m1-l4': { id: 're-m1-l4', title: 'El Monitor Serie', load: null },
+    're-m1-l3': {
+        id: 're-m1-l3',
+        title: 'Entradas digitales y pulsadores',
+        load: () => import('../lessons/RE/m1/l3').then(m => m.lessonData)
+    },
+    're-m1-l4': {
+        id: 're-m1-l4',
+        title: 'Monitor serie y depuracion inicial',
+        load: () => import('../lessons/RE/m1/l4').then(m => m.lessonData)
+    },
+    're-m1-l5': {
+        id: 're-m1-l5',
+        title: 'Evaluacion teorica del modulo 1',
+        load: () => import('../lessons/RE/m1/l5').then(m => m.lessonData)
+    },
     're-m2-l1': { id: 're-m2-l1', title: 'Sensores de Distancia', load: null },
     're-m2-l2': { id: 're-m2-l2', title: 'Sensores de Luz (LDR)', load: null },
     're-m2-l3': { id: 're-m2-l3', title: 'Sensores de Temperatura', load: null },
@@ -237,7 +250,8 @@ export const COURSES_DEFINITION = [
                     { id: 're-m1-l1', visible: true },
                     { id: 're-m1-l2', visible: true },
                     { id: 're-m1-l3', visible: true },
-                    { id: 're-m1-l4', visible: true }
+                    { id: 're-m1-l4', visible: true },
+                    { id: 're-m1-l5', visible: true }
                 ]
             },
             {

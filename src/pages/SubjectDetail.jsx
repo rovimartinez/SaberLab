@@ -54,9 +54,9 @@ const SubjectDetail = () => {
             lessons: [
                 { id: 'l1', title: 'Mi primer parpadeo (Entorno y Salidas Digitales)', type: 'content', duration: '15 min', status: 'completed' },
                 { id: 'l2', title: 'Semáforos y Variables', type: 'content', duration: '20 min', status: 'current' },
-                { id: 'l3', title: 'El Robot decide (Condicionales y Botones)', type: 'content', duration: '25 min', status: 'locked' },
-                { id: 'l4', title: 'Monitor Serial y el Bucle while', type: 'content', duration: '18 min', status: 'locked' },
-                { id: 'l5', title: 'Entradas Analógicas y Resolución', type: 'quiz', duration: '20 min', status: 'locked' }
+                { id: 'l3', title: 'Entradas digitales y pulsadores', type: 'content', duration: '25 min', status: 'locked' },
+                { id: 'l4', title: 'Monitor serie y depuracion inicial', type: 'content', duration: '18 min', status: 'locked' },
+                { id: 'l5', title: 'Evaluacion teorica del modulo 1', type: 'quiz', duration: '30 min', status: 'locked' }
             ]
         },
         { 
@@ -251,3 +251,4 @@ const SubjectDetail = () => {
 };
 
 export default SubjectDetail;
+

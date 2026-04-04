@@ -13,6 +13,9 @@ export const LESSONS_MAP = {
                 lessons: {
                     'l1': () => import('./RE/m1/l1').then(m => m.lessonData),
                     'l2': () => import('./RE/m1/l2').then(m => m.lessonData),
+                    'l3': () => import('./RE/m1/l3').then(m => m.lessonData),
+                    'l4': () => import('./RE/m1/l4').then(m => m.lessonData),
+                    'l5': () => import('./RE/m1/l5').then(m => m.lessonData),
                 }
             }
         }

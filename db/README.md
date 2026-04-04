@@ -7,9 +7,12 @@ Este proyecto espera una base de datos en Supabase con autenticacion, solicitude
 1. Crea un proyecto en Supabase.
 2. Ve a `SQL Editor`.
 3. Ejecuta [`supabase-setup.sql`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/supabase-setup.sql).
-4. Activa Google en `Authentication > Providers` si vas a usar login con Google.
-5. Copia `Project URL` y `anon/public key` a tu archivo `.env`.
-6. Crea un primer admin en `public.profiles` usando el `id` del usuario real que aparece en `Authentication > Users`.
+4. Ejecuta [`supabase-learning-analytics.sql`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/supabase-learning-analytics.sql).
+5. Ejecuta opcionalmente [`supabase-analytics-views.sql`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/supabase-analytics-views.sql) para vistas agregadas de aprendizaje.
+6. Ejecuta opcionalmente [`supabase-operational-hardening.sql`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/supabase-operational-hardening.sql) para triggers `updated_at` e indices adicionales.
+7. Activa Google en `Authentication > Providers` si vas a usar login con Google.
+8. Copia `Project URL` y `anon/public key` a tu archivo `.env`.
+9. Crea un primer admin en `public.profiles` usando el `id` del usuario real que aparece en `Authentication > Users`.
 
 ## Variables de entorno
 
@@ -38,6 +41,16 @@ VITE_SUPABASE_ANON_KEY=tu_anon_key
 - `user_progress`
 - `achievements`
 
+## Tablas analiticas adicionales
+
+- `student_learning_sessions`
+- `student_content_events`
+- `student_quiz_question_events`
+- `student_flashcard_events`
+- `student_mission_attempts`
+- `student_concept_mastery`
+- vista `v_student_concept_signals`
+
 ## Nota importante
 
 El SQL incluye politicas RLS basicas para que:
@@ -51,3 +64,9 @@ Si luego quieres, el siguiente paso puede ser afinar esto con triggers automáti
 - crear `profiles` al registrarse
 - crear `notifications.time` de forma consistente
 - sincronizar `user_progress` desde `student_lesson_progress`
+
+Tambien puedes revisar [`analytics-notes.md`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/analytics-notes.md) para la separacion entre capa operativa y capa analitica.
+
+Si quieres consultas listas para paneles, usa [`analytics-dashboard-queries.sql`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/analytics-dashboard-queries.sql).
+
+Si quieres revisar la consistencia entre frontend y esquema actual, consulta [`frontend-schema-audit.md`](/c:/Users/Elizabeth/.gemini/antigravity/scratch/school-platform/db/frontend-schema-audit.md).

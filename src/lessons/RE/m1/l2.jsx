@@ -1,4 +1,6 @@
-export const lessonData = {
+import { createContentBlock, createFlashcardsBlock, createQuizBlock, defineLesson } from '../../../lib/lessonSchema';
+
+const lessonDefinition = {
     title: 'Variables y Comentarios',
     content: `
         <div class="lesson-intro">
@@ -244,3 +246,32 @@ void loop() {
         }
     ]
 };
+
+export const lessonData = defineLesson({
+    ...lessonDefinition,
+    blocksByTab: {
+        contenido: [
+            createContentBlock({
+                id: 're-m1-l2-content',
+                content: lessonDefinition.content,
+                challenges: lessonDefinition.challenges,
+                hasSimulator: lessonDefinition.hasSimulator
+            })
+        ],
+        repaso: [
+            createFlashcardsBlock({
+                id: 're-m1-l2-review',
+                flashcards: lessonDefinition.flashcards,
+                lessonContent: lessonDefinition.content
+            })
+        ],
+        prueba: [
+            createQuizBlock({
+                id: 're-m1-l2-quiz',
+                title: lessonDefinition.title,
+                questions: lessonDefinition.questions,
+                quizConfig: lessonDefinition.quizConfig
+            })
+        ]
+    }
+});

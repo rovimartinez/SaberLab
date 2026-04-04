@@ -42,6 +42,7 @@ const Login = () => {
             await signInWithGoogle();
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
+            window.alert(error?.message || 'No se pudo iniciar sesion con Google. Revisa la configuracion de Supabase Auth.');
             setIsLoading(false);
         }
     };

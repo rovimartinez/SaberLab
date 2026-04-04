@@ -3,6 +3,9 @@
 
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useAuth } from '../../../context/useAuth';
+import { createMissionAttempt, updateMissionAttempt } from '../../../lib/learningAnalytics';
+import { ensureStudentProfile, upsertMissionProgress } from '../../../lib/studentProgress';
 
 import { Check, ArrowRight, Zap, Monitor, RefreshCcw, Terminal, ChevronDown, Activity, Plug, RotateCcw, Lightbulb } from 'lucide-react';
 
@@ -319,7 +322,8 @@ const LED = ({ color, isOn, label }) => {
 
 
 
-const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0, onClose }) => {
+const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0, lessonKey, onClose }) => {
+  const { user } = useAuth();
 
   const challenges = useMemo(() => {
     return (challengesData.length ? challengesData : legacyChallenges).map((challenge) => {
@@ -353,12 +357,98 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
   const terminalRef = useRef(null);
   const setupTextAreaRef = useRef(null);
   const loopTextAreaRef = useRef(null);
+  const missionAttemptIdRef = useRef(null);
+  const missionAttemptStartedAtRef = useRef(null);
+  const missionAttemptStatusRef = useRef('idle');
+  const missionAttemptNumberRef = useRef({});
 
 
 
   const simInterval = useRef(null);
 
   const challenge = challenges[currentId] || challenges[0];
+
+  const getCodeSnapshot = useCallback(() => {
+    if (challenge?.type === 'drag') {
+      return JSON.stringify({
+        type: 'drag',
+        setupSlots,
+        loopSlots
+      });
+    }
+
+    return JSON.stringify({
+      type: 'write',
+      setup: userCode.setup,
+      loop: userCode.loop
+    });
+  }, [challenge?.type, loopSlots, setupSlots, userCode.loop, userCode.setup]);
+
+  const finalizeMissionAttempt = useCallback(async ({
+    status,
+    score,
+    compileErrors,
+    feedback = {},
+    completed = false
+  }) => {
+    if (!missionAttemptIdRef.current) return;
+
+    try {
+      const durationMs = missionAttemptStartedAtRef.current ? Date.now() - missionAttemptStartedAtRef.current : null;
+      await updateMissionAttempt({
+        attemptId: missionAttemptIdRef.current,
+        status,
+        score,
+        durationMs,
+        compileErrors,
+        hintUsed: showHintSidebar || showHint,
+        codeSnapshot: getCodeSnapshot(),
+        feedback,
+        completedAt: completed ? new Date().toISOString() : null
+      });
+      missionAttemptStatusRef.current = status || missionAttemptStatusRef.current;
+    } catch (error) {
+      console.error('Error actualizando intento de mision:', error);
+    }
+  }, [getCodeSnapshot, showHint, showHintSidebar]);
+
+  const startMissionAttempt = useCallback(async (missionIndex) => {
+    const currentChallenge = challenges[missionIndex];
+    if (!user?.id || !lessonKey || !currentChallenge) return;
+
+    try {
+      await ensureStudentProfile(user);
+
+      const missionId = missionIndex + 1;
+      missionAttemptNumberRef.current[missionId] = (missionAttemptNumberRef.current[missionId] || 0) + 1;
+
+      const attempt = await createMissionAttempt({
+        userId: user.id,
+        lessonId: lessonKey,
+        missionId,
+        missionTitle: currentChallenge.title,
+        attemptNumber: missionAttemptNumberRef.current[missionId],
+        codeSnapshot: getCodeSnapshot(),
+        hintUsed: showHintSidebar || showHint,
+        feedback: {
+          mission_type: currentChallenge.type
+        }
+      });
+
+      missionAttemptIdRef.current = attempt?.id ?? null;
+      missionAttemptStartedAtRef.current = Date.now();
+      missionAttemptStatusRef.current = 'started';
+
+      await upsertMissionProgress({
+        user_id: user.id,
+        lesson_id: lessonKey,
+        mission_id: missionId,
+        status: 'in_progress'
+      });
+    } catch (error) {
+      console.error('Error creando intento de mision:', error);
+    }
+  }, [challenges, getCodeSnapshot, lessonKey, showHint, showHintSidebar, user]);
 
 
 
@@ -439,9 +529,20 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
 
 
-  const loadChallenge = useCallback((id) => {
+  const loadChallenge = useCallback(async (id) => {
     const newChallenge = challenges[id];
     if (!newChallenge) return;
+
+    if (missionAttemptIdRef.current && missionAttemptStatusRef.current === 'started') {
+      await finalizeMissionAttempt({
+        status: 'abandoned',
+        score: 0,
+        compileErrors: 0,
+        feedback: {
+          reason: 'challenge_switched'
+        }
+      });
+    }
 
     stopSim();
     setCurrentId(id);
@@ -460,13 +561,31 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
     setShowHintSidebar(false);
     setWriteErrorLines({ setup: [], loop: [] });
     setShowWriteErrors(false);
-  }, [challenges, stopSim]);
+    missionAttemptIdRef.current = null;
+    missionAttemptStartedAtRef.current = null;
+    missionAttemptStatusRef.current = 'idle';
+
+    await startMissionAttempt(id);
+  }, [challenges, finalizeMissionAttempt, startMissionAttempt, stopSim]);
 
 
 
   useEffect(() => {
-    loadChallenge(initialChallengeId);
+    void loadChallenge(initialChallengeId);
   }, [initialChallengeId, loadChallenge]);
+
+  useEffect(() => () => {
+    if (missionAttemptIdRef.current && missionAttemptStatusRef.current === 'started') {
+      void finalizeMissionAttempt({
+        status: 'abandoned',
+        score: 0,
+        compileErrors: 0,
+        feedback: {
+          reason: 'component_unmounted'
+        }
+      });
+    }
+  }, [finalizeMissionAttempt]);
 
 
 
@@ -933,7 +1052,91 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
 
 
-  const resetChallenge = () => loadChallenge(currentId);
+  const handleVerifyTracked = () => {
+    const result = challenge?.type === 'drag'
+      ? { success: verifyDragCode(), errors: [] }
+      : verifyWriteCode();
+
+    handleVerify();
+
+    window.setTimeout(() => {
+      void finalizeMissionAttempt({
+        status: 'submitted',
+        score: result.success ? 70 : 0,
+        compileErrors: result.success ? 0 : (challenge?.type === 'drag' ? 1 : result.errors.length),
+        feedback: {
+          action: 'verify',
+          success: result.success,
+          errors: result.errors || []
+        }
+      });
+    }, 550);
+  };
+
+  const handleUploadTracked = () => {
+    const result = challenge?.type === 'drag'
+      ? { success: verifyDragCode(), errors: [], loopStatements: [] }
+      : verifyWriteCode();
+
+    handleUpload();
+
+    window.setTimeout(() => {
+      if (result.success) {
+        void finalizeMissionAttempt({
+          status: 'completed',
+          score: 100,
+          compileErrors: 0,
+          completed: true,
+          feedback: {
+            action: 'upload',
+            success: true
+          }
+        });
+
+        if (user?.id && lessonKey) {
+          void upsertMissionProgress({
+            user_id: user.id,
+            lesson_id: lessonKey,
+            mission_id: currentId + 1,
+            status: 'completed',
+            score: 100
+          });
+        }
+
+        return;
+      }
+
+      void finalizeMissionAttempt({
+        status: 'submitted',
+        score: 0,
+        compileErrors: challenge?.type === 'drag' ? 1 : result.errors.length,
+        feedback: {
+          action: 'upload',
+          success: false,
+          errors: result.errors || []
+        }
+      });
+    }, 550);
+  };
+
+  const resetChallenge = () => {
+    void loadChallenge(currentId);
+  };
+
+  const handleClose = async () => {
+    if (missionAttemptIdRef.current && missionAttemptStatusRef.current === 'started') {
+      await finalizeMissionAttempt({
+        status: 'abandoned',
+        score: 0,
+        compileErrors: 0,
+        feedback: {
+          reason: 'simulator_closed'
+        }
+      });
+    }
+
+    onClose?.();
+  };
 
 
 
@@ -1036,13 +1239,13 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
             <div style={{ display: 'flex', gap: '8px' }}>
 
-              <button onClick={handleVerify} title="Verificar Código" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00979c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+              <button onClick={handleVerifyTracked} title="Verificar Código" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00979c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
 
                 <Check size={20} strokeWidth={3} />
 
               </button>
 
-              <button onClick={handleUpload} title="Subir y Ejecutar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00979c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+              <button onClick={handleUploadTracked} title="Subir y Ejecutar" style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#00979c', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
 
                 <ArrowRight size={20} strokeWidth={3} />
 
@@ -1278,7 +1481,7 @@ const ArduinoExercisesSimulator = ({ challengesData = [], initialChallengeId = 0
 
           </button>
 
-          {onClose && <button onClick={onClose} style={{ padding: '8px 32px', borderRadius: '8px', background: '#6366f1', color: 'white', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>Cerrar</button>}
+          {onClose && <button onClick={() => void handleClose()} style={{ padding: '8px 32px', borderRadius: '8px', background: '#6366f1', color: 'white', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>Cerrar</button>}
 
         </div>
 

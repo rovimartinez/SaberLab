@@ -39,6 +39,34 @@ create table if not exists public.courses (
   created_at timestamptz not null default now()
 );
 
+alter table public.courses
+  add column if not exists abbr text,
+  add column if not exists slug text,
+  add column if not exists name text,
+  add column if not exists color text,
+  add column if not exists created_at timestamptz not null default now();
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'courses_abbr_key'
+      and conrelid = 'public.courses'::regclass
+  ) then
+    alter table public.courses add constraint courses_abbr_key unique (abbr);
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'courses_slug_key'
+      and conrelid = 'public.courses'::regclass
+  ) then
+    alter table public.courses add constraint courses_slug_key unique (slug);
+  end if;
+end $$;
+
 create table if not exists public.groups (
   id text primary key,
   course_id bigint not null references public.courses (id) on delete cascade,

@@ -7,7 +7,7 @@ import ArduinoExercisesSimulator from './MisionLeccion';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-const MisionRoadMap = ({ missions = [] }) => {
+const MisionRoadMap = ({ missions = [], lessonKey }) => {
   const { user } = useAuth();
   const [progreso, setProgreso] = useState(missions.length || 0);
   const [mounted, setMounted] = useState(false);
@@ -597,7 +597,12 @@ const MisionRoadMap = ({ missions = [] }) => {
             
             {/* Content */}
             <div style={{ flex: 1, overflow: 'hidden', padding: '0' }}>
-               <ArduinoExercisesSimulator challengesData={missions} initialChallengeId={selectedChallengeId - 1} onClose={() => setSelectedChallengeId(null)} />
+               <ArduinoExercisesSimulator
+                 challengesData={missions}
+                 initialChallengeId={selectedChallengeId - 1}
+                 lessonKey={lessonKey}
+                 onClose={() => setSelectedChallengeId(null)}
+               />
             </div>
           </div>
         </div>

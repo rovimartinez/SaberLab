@@ -7,13 +7,66 @@ import './Login.css';
 
 const RequestAccess = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const [userData, setUserData] = useState(null);
     const [requestStatus, setRequestStatus] = useState(localStorage.getItem('pending_status') || 'pending');
 
     React.useEffect(() => {
+        let cancelled = false;
+
+        const resolveExistingProfile = async () => {
+            if (!user?.id && !user?.email) {
+                return;
+            }
+
+            const normalizedEmail = user?.email?.trim().toLowerCase();
+
+            const query = supabase
+                .from('profiles')
+                .select('id, email, role')
+                .limit(1);
+
+            let data = null;
+            let error = null;
+
+            if (user?.id) {
+                const response = await query.eq('id', user.id).maybeSingle();
+                data = response.data;
+                error = response.error;
+            }
+
+            if (!data && normalizedEmail) {
+                const response = await supabase
+                    .from('profiles')
+                    .select('id, email, role')
+                    .eq('email', normalizedEmail)
+                    .limit(1)
+                    .maybeSingle();
+                data = response.data;
+                error = error || response.error;
+            }
+
+            if (error) {
+                console.error('Error resolviendo perfil desde RequestAccess:', error);
+            }
+
+            if (!cancelled && data) {
+                localStorage.removeItem('pending_email');
+                localStorage.removeItem('pending_name');
+                localStorage.removeItem('pending_status');
+                navigate('/dashboard', { replace: true });
+            }
+        };
+
+        if (user && profile) {
+            navigate('/dashboard', { replace: true });
+            return;
+        }
+
+        void resolveExistingProfile();
+
         const pendingEmail = localStorage.getItem('pending_email');
         const pendingName = localStorage.getItem('pending_name');
 
@@ -31,7 +84,11 @@ const RequestAccess = () => {
                 email: pendingEmail
             });
         }
-    }, [user]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [navigate, profile, user]);
 
     const handleRequest = async () => {
         if (!userData) return;

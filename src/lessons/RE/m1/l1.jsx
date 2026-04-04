@@ -1,4 +1,6 @@
-export const lessonData = {
+import { createContentBlock, createFlashcardsBlock, createQuizBlock, defineLesson } from '../../../lib/lessonSchema';
+
+const lessonDefinition = {
     title: 'Mi primer parpadeo (Entorno y Salidas Digitales)',
     content: `
         <h3 id="re-1-1" style="color: #a855f7; margin: 1.5rem 0 1rem;">1.1 Introducción al Hardware Abierto</h3>
@@ -359,3 +361,31 @@ export const lessonData = {
         }
     ]
 };
+
+export const lessonData = defineLesson({
+    ...lessonDefinition,
+    blocksByTab: {
+        contenido: [
+            createContentBlock({
+                id: 're-m1-l1-content',
+                content: lessonDefinition.content,
+                hasSimulator: lessonDefinition.hasSimulator
+            })
+        ],
+        repaso: [
+            createFlashcardsBlock({
+                id: 're-m1-l1-review',
+                flashcards: lessonDefinition.flashcards,
+                lessonContent: lessonDefinition.content
+            })
+        ],
+        prueba: [
+            createQuizBlock({
+                id: 're-m1-l1-quiz',
+                title: lessonDefinition.title,
+                questions: lessonDefinition.questions,
+                quizConfig: lessonDefinition.quizConfig
+            })
+        ]
+    }
+});
