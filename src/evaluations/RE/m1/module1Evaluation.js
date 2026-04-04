@@ -13,7 +13,7 @@ const evaluationDefinition = {
     },
     quizConfig: {
         title: 'Evaluacion del modulo 1',
-        timePerQuestion: 45,
+        timePerQuestion: 5,
         requiredScorePercent: 80
     },
     content: `

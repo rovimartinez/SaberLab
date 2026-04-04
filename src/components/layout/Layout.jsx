@@ -10,6 +10,7 @@ const LayoutContent = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const location = useLocation();
     const isEvaluationRoute = /^\/dashboard\/evaluations\/[^/]+$/.test(location.pathname);
+    const isPracticeEvaluation = location.pathname.includes('re-m1-e2');
     
     const [isEvaluationMode, setIsEvaluationMode] = useState(() => {
         return localStorage.getItem('evaluationStarted') === 'true';
@@ -20,7 +21,6 @@ const LayoutContent = () => {
             const stored = localStorage.getItem('evaluationStarted');
             setIsEvaluationMode(stored === 'true');
         }, 200);
-
         return () => clearInterval(interval);
     }, []);
 
@@ -28,7 +28,7 @@ const LayoutContent = () => {
         setIsSidebarOpen(prev => !prev);
     };
 
-    const showSidebar = !isEvaluationRoute || !isEvaluationMode;
+    const showSidebar = !isEvaluationRoute || isPracticeEvaluation || !isEvaluationMode;
 
     return (
         <div className="app-layout">

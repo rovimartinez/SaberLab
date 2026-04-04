@@ -172,9 +172,17 @@ export const useLessonQuiz = ({
         const now = Date.now();
         const durationMs = questionStartedAtRef.current ? now - questionStartedAtRef.current : 0;
         const isCorrect = optionIndex !== -1 && optionIndex === currentQuestion.correct;
+        const nextScore = quizScore + (isCorrect ? 1 : 0);
 
         setSelectedAnswer(optionIndex);
         setIsAnswerRevealed(true);
+
+        // Asegurar que el array tenga la longitud correcta hasta la pregunta actual
+        const nextResponses = [...userAnswers];
+        // Asegurar que el array tenga elementos hasta currentQ
+        while (nextResponses.length <= currentQ) {
+            nextResponses.push(null);
+        }
 
         const responseRecord = {
             question_index: currentQ,
@@ -184,25 +192,20 @@ export const useLessonQuiz = ({
             selected_option_label: optionIndex >= 0 ? currentQuestion.options?.[optionIndex] ?? null : null,
             correct_option_index: currentQuestion.correct,
             correct_option_label: currentQuestion.options?.[currentQuestion.correct] ?? null,
-            is_correct: isCorrect,
-            timed_out: optionIndex === -1,
-            duration_ms: durationMs,
+            isCorrect: isCorrect,
+            timedOut: optionIndex === -1,
+            durationMs: durationMs,
             started_at: questionStartedAtRef.current ? new Date(questionStartedAtRef.current).toISOString() : null,
             answered_at: new Date(now).toISOString(),
-            remaining_seconds: timeLeft,
+            remainingSeconds: timeLeft,
             objective: currentQuestion.objective ?? null,
             concept: currentQuestion.concept ?? null,
             difficulty: currentQuestion.difficulty ?? null
         };
 
-        const nextScore = quizScore + (isCorrect ? 1 : 0);
-        const nextResponses = [...userAnswers, responseRecord];
-
+        nextResponses[currentQ] = responseRecord;
         setUserAnswers(nextResponses);
-
-        if (isCorrect) {
-            setQuizScore((prev) => prev + 1);
-        }
+        setQuizScore(nextScore);
 
         proceedToNextQuizStep(nextResponses, nextScore);
     }, [currentQ, lessonKey, lessonQuestions, proceedToNextQuizStep, userAnswers, quizScore, selectedAnswer, timeLeft]);
@@ -217,16 +220,11 @@ export const useLessonQuiz = ({
         }
 
         timerRef.current = setTimeout(() => {
-            setTimeLeft((prev) => {
-                if (prev <= 1) {
-                    setTimeout(() => {
-                        handleQuizAnswerRef.current(-1);
-                    }, 0);
-                    return 0;
-                }
-
-                return prev - 1;
-            });
+            if (timeLeft <= 1) {
+                handleQuizAnswerRef.current(-1);
+            } else {
+                setTimeLeft((prev) => prev - 1);
+            }
         }, 1000);
 
         return () => clearTimeout(timerRef.current);

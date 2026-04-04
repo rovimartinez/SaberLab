@@ -13,6 +13,8 @@ import Admin from './pages/Admin';
 import Notifications from './pages/Notifications';
 import Evaluations from './pages/Evaluations';
 import EvaluationPlayer from './pages/EvaluationPlayer';
+import EvaNoti from './pages/evanoti';
+import EvaExam from './pages/EvaExam';
 import Progress from './pages/Progress';
 import Resources from './pages/Resources';
 import Widgets from './pages/Widgets';
@@ -93,6 +95,8 @@ function AppRoutes() {
                     <Route path="my-courses/:courseId/:moduleId/:lessonId" element={<Lesson />} />
                     <Route path="notifications" element={<Notifications />} />
                     <Route path="evaluations" element={<Evaluations />} />
+                    <Route path="evaluations/re-m1-e2" element={<EvaNoti />} />
+                    <Route path="evaluations/re-m1-e2-play" element={<EvaExam />} />
                     <Route path="evaluations/:evaluationKey" element={<EvaluationPlayer />} />
                     <Route path="progress" element={<Progress />} />
                     <Route path="resources" element={<Resources />} />

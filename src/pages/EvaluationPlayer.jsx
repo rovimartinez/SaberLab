@@ -154,7 +154,7 @@ const EvaluationPlayer = () => {
 
             if (nextWarnings >= maxWarnings) {
                 setIsLocked(true);
-                setProctoringAlert('La evaluación fue bloqueada por cambios repetidos de foco o salida del modo seguro.');
+                setProctoringAlert('La evaluacion fue bloqueada por cambios repetidos de foco o salida del modo seguro.');
                 void logEvent('exam_locked', 'critical', {
                     reason: eventType,
                     final_warning_count: nextWarnings,
@@ -411,12 +411,10 @@ const EvaluationPlayer = () => {
             <div className="evaluation-player-shell">
                 <header className="evaluation-player-header glass-panel">
                     <div className="evaluation-player-topline">
-                        {quizMode !== 'question' && (
-                            <button className="evaluation-back-btn" onClick={() => navigate('/dashboard/evaluations')}>
-                                <ArrowLeft size={18} />
-                                Volver
-                            </button>
-                        )}
+                        <button className="evaluation-back-btn" onClick={() => navigate('/dashboard/evaluations')}>
+                            <ArrowLeft size={18} />
+                            Volver
+                        </button>
                         <div className="evaluation-course-pill">
                             {evaluationRecord.course?.name || 'Curso'}
                         </div>
@@ -432,28 +430,30 @@ const EvaluationPlayer = () => {
                         </div>
 
                         <div className="evaluation-header-metrics">
-                            <div className="evaluation-metric-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <ShieldAlert size={16} style={{ color: '#34d399' }} />
-                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Supervisión activa</span>
+                            <div className="evaluation-metric-card">
+                                <Clock3 size={18} />
+                                <div>
+                                    <span>Tiempo restante</span>
+                                    <strong>{formatTime(quizMode === 'intro' ? totalEvaluationSeconds : totalRemainingSeconds)}</strong>
                                 </div>
-                                {warningCount > 0 && (
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        padding: '0.25rem 0.5rem',
-                                        background: 'rgba(239, 68, 68, 0.15)',
-                                        color: '#f87171',
-                                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                                        borderRadius: '8px',
-                                        fontSize: '0.7rem',
-                                        fontWeight: '700'
-                                    }}>
-                                        <span>Infracciones: {warningCount}</span>
-                                    </div>
-                                )}
                             </div>
+                            <div className="evaluation-metric-card">
+                                <Flag size={18} />
+                                <div>
+                                    <span>Progreso</span>
+                                    <strong>{quizMode === 'intro' ? '0' : Math.min(currentQ + 1, quizQuestions.length)} / {quizQuestions.length}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="evaluation-progress-block">
+                        <div className="evaluation-progress-meta">
+                            <span>{progressPercent}% completado</span>
+                            <span>Pregunta {quizMode === 'intro' ? 0 : Math.min(currentQ + 1, quizQuestions.length)} de {quizQuestions.length}</span>
+                        </div>
+                        <div className="evaluation-progress-track">
+                            <div className="evaluation-progress-fill" style={{ width: `${progressPercent}%` }} />
                         </div>
                     </div>
                 </header>
@@ -509,12 +509,14 @@ const EvaluationPlayer = () => {
                                     // Si es pregunta anterior, buscar en userAnswers
                                     let isAnswered = false;
                                     let isCorrect = false;
+                                    let isSkipped = false;
                                     
                                     if (isCurrent) {
                                         // Pregunta actual: tiene respuesta si selectedAnswer no es null
                                         if (selectedAnswer !== null) {
                                             isAnswered = true;
                                             isCorrect = question.correct === selectedAnswer;
+                                            isSkipped = selectedAnswer === -1; // -1 significa timeout
                                         }
                                     } else if (index < currentQ) {
                                         // Preguntas anteriores: buscar en userAnswers por índice
@@ -522,6 +524,10 @@ const EvaluationPlayer = () => {
                                         if (answerData) {
                                             isAnswered = true;
                                             isCorrect = answerData.is_correct || answerData.isCorrect || answerData.correct;
+                                            isSkipped = answerData.timed_out === true;
+                                        } else {
+                                            // Si no hay respuesta, está saltada/sin responder
+                                            isSkipped = true;
                                         }
                                     }
 
@@ -529,7 +535,7 @@ const EvaluationPlayer = () => {
                                         <button
                                             key={question.id || `${evaluationKey}-question-${index + 1}`}
                                             type="button"
-                                            className={`evaluation-question-chip ${isCurrent && !isAnswered ? 'current' : ''} ${isAnswered ? (isCorrect ? 'answered' : 'wrong') : ''}`}
+                                            className={`evaluation-question-chip ${isCurrent && !isAnswered ? 'current' : ''} ${isAnswered ? (isCorrect ? 'answered' : 'wrong') : ''} ${isSkipped && !isAnswered ? 'skipped' : ''}`}
                                             disabled
                                         >
                                             {isAnswered ? (
@@ -544,27 +550,42 @@ const EvaluationPlayer = () => {
                         </aside>
 
                         <div className="evaluation-question-main glass-panel">
-                            {(proctoringAlert || isLocked) && (
-                                <div className="proctoring-modal-overlay">
-                                    <div className={`proctoring-modal glass-panel ${isLocked ? 'critical' : 'warning'}`}>
-                                        <button
-                                            className="close-proctoring-modal"
-                                            onClick={() => {
-                                                if (!isLocked) {
-                                                    setProctoringAlert('');
-                                                    restoreFullscreen();
-                                                }
-                                            }}
-                                        >
-                                            {isLocked ? <X size={20} /> : <X size={20} />}
+                            {(proctoringAlert || (requireFullscreen && !isFullscreen)) && (
+                                <div
+                                    className={`evaluation-proctoring-banner ${isLocked ? 'critical' : 'warning'}`}
+                                    onClick={restoreFullscreen}
+                                    style={{ cursor: !isFullscreen ? 'pointer' : 'default', padding: '1rem', borderRadius: '12px', background: isLocked ? 'rgba(239,68,68,0.1)' : 'rgba(245,158,11,0.1)', border: `1px solid ${isLocked ? '#ef4444' : '#f59e0b'}`, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}
+                                >
+                                    {isLocked ? <ShieldAlert size={18} /> : <AlertTriangle size={18} />}
+                                    <div style={{ flex: 1 }}>
+                                        {proctoringAlert ? <strong>{proctoringAlert}</strong> : <strong>Modo supervision activo. Permanece en pantalla completa.</strong>}
+                                        <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Advertencias: {warningCount} / {maxWarnings}</div>
+                                    </div>
+                                    {proctoringAlert && !isLocked && (
+                                        <button onClick={(e) => { e.stopPropagation(); setProctoringAlert(''); }} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer' }}>
+                                            <X size={16} />
                                         </button>
-                                        <div className="proctoring-modal-content">
-                                            {isLocked ? <ShieldAlert size={48} /> : <AlertTriangle size={48} />}
-                                            <h3>{isLocked ? 'Examen Bloqueado' : 'Advertencia de Supervisión'}</h3>
-                                            <p>{proctoringAlert || 'El intento quedó bloqueado por eventos de supervisión repetidos. El docente puede revisar el historial y decidir si autoriza un nuevo intento.'}</p>
+                                    )}
+                                </div>
+                            )}
 
-                                            {isLocked && (
-                                                <div className="evaluation-result-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+                            {proctoringAlert && (
+                                <div className="proctoring-modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+                                    <div className="proctoring-modal glass-panel" style={{ maxWidth: '400px', padding: '2rem', textAlign: 'center', border: `2px solid ${isLocked ? '#ef4444' : '#f59e0b'}`, background: '#1e293b', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', borderRadius: '16px' }}>
+                                        <button
+                                            onClick={() => !isLocked && setProctoringAlert('')}
+                                            style={{ position: 'absolute', top: '1rem', right: '1rem', background: `rgba(${isLocked ? '239,68,68' : '245,158,11'},0.2)`, border: `1px solid ${isLocked ? '#ef4444' : '#f59e0b'}`, color: isLocked ? '#ef4444' : '#f59e0b', cursor: isLocked ? 'default' : 'pointer', padding: '0.5rem', borderRadius: '8px' }}
+                                            disabled={isLocked}
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                                            {isLocked ? <ShieldAlert size={48} style={{ color: '#ef4444' }} /> : <AlertTriangle size={48} style={{ color: '#f59e0b' }} />}
+                                            <h3 style={{ margin: 0, fontSize: '1.25rem', color: isLocked ? '#ef4444' : '#f59e0b' }}>{isLocked ? 'Examen Bloqueado' : 'Advertencia de Supervisión'}</h3>
+                                            <p style={{ color: '#94a3b8', margin: 0 }}>{proctoringAlert || 'El intento quedó bloqueado por eventos de supervisión repetidos. El docente puede revisar el historial y decidir si autoriza un nuevo intento.'}</p>
+                                            
+                                            {isLocked ? (
+                                                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                                                     <button className="evaluation-ghost-btn" onClick={resetQuiz}>
                                                         Salir del intento
                                                     </button>
@@ -572,52 +593,54 @@ const EvaluationPlayer = () => {
                                                         Volver a evaluaciones
                                                     </button>
                                                 </div>
-                                            )}
-
-                                            {!isLocked && (
-                                                <div className="proctoring-progress-zone">
-                                                    <div className="proctoring-progress-labels">
-                                                        <span>Infracciones</span>
-                                                        <span>{warningCount} / {maxWarnings}</span>
+                                            ) : (
+                                                <>
+                                                    <div style={{ width: '100%', marginTop: '1rem' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>
+                                                            <span>Infracciones</span>
+                                                            <span>{warningCount} / {maxWarnings}</span>
+                                                        </div>
+                                                        <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                                                            <div style={{ width: `${(warningCount / maxWarnings) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #ef4444)', transition: 'width 0.3s ease' }}></div>
+                                                        </div>
                                                     </div>
-                                                    <div className="proctoring-progress-track">
-                                                        <div
-                                                            className="proctoring-progress-fill"
-                                                            style={{ width: `${(warningCount / maxWarnings) * 100}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {!isLocked && (
-                                                <button className="proctoring-continue-btn" onClick={() => {
-                                                    setProctoringAlert('');
-                                                    restoreFullscreen();
-                                                }}>
-                                                    Entendido, volver al examen
-                                                </button>
+                                                    <button 
+                                                        onClick={() => setProctoringAlert('')}
+                                                        style={{ marginTop: '1rem', padding: '0.75rem 1.5rem', background: 'rgba(245,158,11,0.2)', border: '1px solid #f59e0b', color: '#f59e0b', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                                    >
+                                                        Entendido, volver al examen
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {!isLocked && (
+                            {isLocked ? (
+                                <div className="evaluation-lock-screen">
+                                    <ShieldAlert size={42} />
+                                    <h2>Evaluacion bloqueada</h2>
+                                    <p>El intento quedo bloqueado por eventos de supervision repetidos. El docente puede revisar el historial y decidir si autoriza un nuevo intento.</p>
+                                    <div className="evaluation-result-actions">
+                                        <button className="evaluation-ghost-btn" onClick={resetQuiz}>
+                                            Salir del intento
+                                        </button>
+                                        <button className="evaluation-primary-btn" onClick={() => navigate('/dashboard/evaluations')}>
+                                            Volver a evaluaciones
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
                                 <>
-                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                                        <div className="evaluation-question-timer" style={{ 
-                                            background: 'rgba(139, 92, 246, 0.15)', 
-                                            border: '1px solid rgba(139, 92, 246, 0.3)',
-                                            padding: '0.75rem 1.5rem',
-                                            borderRadius: '12px',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem'
-                                        }}>
-                                            <Clock3 size={20} style={{ color: '#a78bfa' }} />
-                                            <span style={{ color: '#e2e8f0', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                                                {formatTime(timeLeft)}
-                                            </span>
+                                    <div className="evaluation-question-topbar">
+                                        <div className="evaluation-question-counter">
+                                            <span>Pregunta</span>
+                                            <strong>{currentQ + 1}</strong>
+                                        </div>
+                                        <div className="evaluation-question-timer">
+                                            <Clock3 size={16} />
+                                            <span>{formatTime(timeLeft)}</span>
                                         </div>
                                     </div>
 

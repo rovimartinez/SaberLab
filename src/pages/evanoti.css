@@ -1,0 +1,261 @@
+.notifications-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-title h1 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.notification-badge {
+    background: #f43f5e;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    min-width: 28px;
+    text-align: center;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f43f5e;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    overflow-x: auto;
+}
+
+.filter-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-tab.active {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.notification-item.unread {
+    background: rgba(139, 92, 246, 0.08);
+    border-left: 3px solid #8b5cf6;
+}
+
+.notification-item:hover {
+    transform: translateX(4px);
+}
+
+.notification-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.notification-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.notification-time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.notification-content p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.notification-item:hover .notification-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn.mark-read {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.action-btn.mark-read:hover {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.action-btn.delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f43f5e;
+}
+
+.action-btn.delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.unread-dot {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    width: 8px;
+    height: 8px;
+    background: #8b5cf6;
+    border-radius: 50%;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-state h3 {
+    margin: 1rem 0 0.5rem;
+    color: white;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .header-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .notification-actions {
+        opacity: 1;
+    }
+}

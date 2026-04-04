@@ -393,6 +393,13 @@
     opacity: 1 !important;
 }
 
+.evaluation-question-chip.skipped {
+    background: rgba(245, 158, 11, 0.2) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+    opacity: 1 !important;
+}
+
 .evaluation-question-topbar,
 .evaluation-question-footer {
     display: flex;
