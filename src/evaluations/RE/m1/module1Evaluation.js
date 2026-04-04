@@ -2,7 +2,7 @@ import { createContentBlock, createQuizBlock, defineLesson } from '../../../lib/
 
 const evaluationDefinition = {
     id: 're-m1-e1',
-    title: 'Evaluacion del modulo 1',
+        title: 'Evaluacion del modulo 1 - Robotica Educativa',
     courseId: 5,
     moduleId: 'm1',
     points: 60,
@@ -12,7 +12,7 @@ const evaluationDefinition = {
         maxWarnings: 3
     },
     quizConfig: {
-        title: 'Evaluacion del modulo 1',
+    title: 'Evaluacion del modulo 1 - Robotica Educativa',
         timePerQuestion: 5,
         requiredScorePercent: 80
     },

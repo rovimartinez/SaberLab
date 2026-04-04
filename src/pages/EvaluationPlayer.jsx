@@ -425,7 +425,7 @@ const EvaluationPlayer = () => {
                             <p className="evaluation-kicker">Evaluacion</p>
                             <h1>{evaluationData?.title || 'Evaluacion del modulo 1'}</h1>
                             <p className="evaluation-description">
-                                Modulo {String(evaluationRecord.module_id || evaluationData.moduleId || '').replace('m', '') || 'General'} · {quizQuestions.length} preguntas · {evaluationRecord.points} puntos
+                                Modulo 1 - Robotica Educativa · {quizQuestions.length} preguntas · {evaluationRecord.points} puntos
                             </p>
                         </div>
 

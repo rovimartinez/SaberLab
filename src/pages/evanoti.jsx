@@ -20,7 +20,7 @@ const EvaNoti = () => {
             </div>
 
             <div className="glass-panel" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
-                <h2 style={{ color: '#f8fafc', marginTop: 0 }}>Instrucciones</h2>
+                <h2 style={{ color: '#f8fafc', marginTop: 0 }}>Módulo 1 - Robótica Educativa</h2>
                 <ul style={{ color: '#cbd5e1', lineHeight: '1.8', paddingLeft: '1.2rem' }}>
                     <li>Lee con calma cada enunciado.</li>
                     <li>Relaciona las preguntas con el comportamiento del hardware.</li>

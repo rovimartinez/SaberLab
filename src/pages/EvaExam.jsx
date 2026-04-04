@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { module1EvaluationData } from '../evaluations/RE/m1/module1Evaluation';
+import QuestionNavigator from '../components/QuestionNavigator';
+import QuestionPanel from '../components/QuestionPanel';
 import './evanoti.css';
 
 const EvaExam = () => {
-    const navigate = useNavigate();
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState({});
+    const [timeLeft, setTimeLeft] = useState(5);
 
     const questions = module1EvaluationData.questions || [];
     const totalQuestions = questions.length;
+
+    useEffect(() => {
+        if (answers[currentQuestion] !== undefined) {
+            return;
+        }
+
+        if (timeLeft <= 0) {
+            if (currentQuestion < totalQuestions - 1) {
+                setCurrentQuestion(currentQuestion + 1);
+                setTimeLeft(5);
+            }
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            setTimeLeft(timeLeft - 1);
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [timeLeft, currentQuestion, answers, totalQuestions]);
 
     const handleAnswer = (optionIndex) => {
         setAnswers({ ...answers, [currentQuestion]: optionIndex });
@@ -19,145 +40,55 @@ const EvaExam = () => {
     const handleNext = () => {
         if (currentQuestion < totalQuestions - 1) {
             setCurrentQuestion(currentQuestion + 1);
+            setTimeLeft(5);
         }
     };
 
     const handlePrev = () => {
         if (currentQuestion > 0) {
             setCurrentQuestion(currentQuestion - 1);
+            setTimeLeft(5);
         }
     };
 
     const handleQuestionClick = (index) => {
         setCurrentQuestion(index);
+        setTimeLeft(5);
     };
 
     const currentQ = questions[currentQuestion];
+    const userAnswer = answers[currentQuestion];
 
     return (
         <div className="notifications-page">
             <div className="page-header">
                 <div className="header-title">
                     <Bell size={28} color="#facc15" />
-                    <h1>Examen</h1>
+                    <h1>Módulo 1 - Robótica Educativa</h1>
                 </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem', alignItems: 'start' }}>
-                <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                    <h3 style={{ color: '#f8fafc', marginTop: 0, marginBottom: '1rem', textAlign: 'center' }}>Preguntas ({totalQuestions})</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
-                        {[0, 5, 10, 15, 20, 25].map(startIndex => (
-                            <div key={startIndex} style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                                {questions.slice(startIndex, startIndex + 5).map((_, idx) => {
-                                    const qIndex = startIndex + idx;
-                                    const userAnswer = answers[qIndex];
-                                    const correctAnswer = questions[qIndex]?.correct;
-                                    const isAnswered = userAnswer !== undefined;
-                                    const isCorrect = userAnswer === correctAnswer;
-                                    const isCurrent = currentQuestion === qIndex;
-                                    
-                                    let borderColor = '#334155';
-                                    let bgColor = '#1e293b';
-                                    
-                                    if (isCurrent) {
-                                        borderColor = '#3b82f6';
-                                        bgColor = '#3b82f6';
-                                    } else if (isAnswered) {
-                                        if (isCorrect) {
-                                            borderColor = '#10b981';
-                                            bgColor = 'rgba(16, 185, 129, 0.2)';
-                                        } else {
-                                            borderColor = '#ef4444';
-                                            bgColor = 'rgba(239, 68, 68, 0.2)';
-                                        }
-                                    }
-                                    
-                                    return (
-                                        <button
-                                            key={qIndex}
-                                            onClick={() => handleQuestionClick(qIndex)}
-                                            style={{
-                                                width: '40px',
-                                                height: '40px',
-                                                border: `2px solid ${borderColor}`,
-                                                borderRadius: '8px',
-                                                background: bgColor,
-                                                color: '#fff',
-                                                cursor: 'pointer',
-                                                fontSize: '0.85rem',
-                                                fontWeight: '600',
-                                            }}
-                                        >
-                                            {qIndex + 1}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <QuestionNavigator 
+                    questions={questions}
+                    currentQuestion={currentQuestion}
+                    answers={answers}
+                    onQuestionClick={handleQuestionClick}
+                />
 
-                <div className="glass-panel" style={{ padding: '2rem' }}>
-                    <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#94a3b8' }}>Pregunta {currentQuestion + 1} de {totalQuestions}</span>
-                        <span style={{ color: '#94a3b8' }}>5s</span>
-                    </div>
+                <div>
+                    <QuestionPanel 
+                        currentQuestion={currentQuestion}
+                        totalQuestions={totalQuestions}
+                        question={currentQ}
+                        userAnswer={userAnswer}
+                        onAnswer={handleAnswer}
+                        timeLeft={timeLeft}
+                        answers={answers}
+                        questions={questions}
+                    />
 
-                    <h2 style={{ color: '#f8fafc', fontSize: '1.25rem', marginBottom: '1.5rem' }}>{currentQ?.q}</h2>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {currentQ?.options.map((option, index) => {
-                            const isSelected = answers[currentQuestion] === index;
-                            const isCorrect = currentQ?.correct === index;
-                            const showResult = isSelected;
-                            
-                            let borderColor = '#334155';
-                            let bgColor = '#1e293b';
-                            
-                            if (isSelected) {
-                                if (isCorrect) {
-                                    borderColor = '#10b981';
-                                    bgColor = 'rgba(16, 185, 129, 0.2)';
-                                } else {
-                                    borderColor = '#ef4444';
-                                    bgColor = 'rgba(239, 68, 68, 0.2)';
-                                }
-                            }
-                            
-                            return (
-                            <button
-                                key={index}
-                                onClick={() => handleAnswer(index)}
-                                style={{
-                                    padding: '1rem',
-                                    border: `2px solid ${borderColor}`,
-                                    borderRadius: '12px',
-                                    background: bgColor,
-                                    color: '#e2e8f0',
-                                    textAlign: 'left',
-                                    cursor: 'pointer',
-                                    fontSize: '0.95rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                }}
-                            >
-                                {option}
-                                {showResult && (
-                                    <span style={{ 
-                                        color: isCorrect ? '#10b981' : '#ef4444',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {isCorrect ? '✓' : '✗'}
-                                    </span>
-                                )}
-                            </button>
-                            );
-                        })}
-                    </div>
-
-                    <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between' }}>
                         <button
                             onClick={handlePrev}
                             disabled={currentQuestion === 0}
