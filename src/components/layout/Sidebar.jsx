@@ -5,7 +5,7 @@ import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, profile, signOut, unreadNotificationsCount } = useAuth();
+    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -31,7 +31,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             items: [
                 { name: 'Inicio', path: '/dashboard', icon: <Home size={18} /> },
                 { name: 'Mis Cursos', path: '/dashboard/my-courses', icon: <Layers size={18} /> },
-                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: unreadNotificationsCount },
+                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: pendingAccessRequestsCount },
                 { name: 'Evaluaciones', path: '/dashboard/evaluations', icon: <Target size={18} /> },
                 { name: 'Progreso', path: '/dashboard/progress', icon: <BarChart2 size={18} /> }
             ]
@@ -46,7 +46,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         ...(isAdmin ? [{
             title: 'ADMIN',
             items: [
-                { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> }
+                { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> },
             ]
         }] : [])
     ];

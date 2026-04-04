@@ -121,7 +121,10 @@ const AdminAccessRequestsBubble = () => {
         try {
             const { error } = await supabase
                 .from('access_requests')
-                .update({ status })
+                .update({ 
+                    status,
+                    updated_at: new Date().toISOString()
+                })
                 .eq('id', request.id);
 
             if (error) throw error;

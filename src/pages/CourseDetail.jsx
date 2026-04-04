@@ -20,16 +20,16 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             if (!course) return;
             setLoadingGroups(true);
             try {
-                const [groupsRes, ugRes] = await Promise.all([
+                const [groupsRes, enrollRes] = await Promise.all([
                     supabase.from('groups').select('*').eq('course_id', course.id),
-                    supabase.from('user_groups').select('user_id, group_id')
+                    supabase.from('enrollments').select('user_id, group_id')
                 ]);
                 
                 if (groupsRes.data) {
                     const studentCounts = {};
-                    if (ugRes.data) {
-                        ugRes.data.forEach(ug => {
-                            studentCounts[ug.group_id] = (studentCounts[ug.group_id] || 0) + 1;
+                    if (enrollRes.data) {
+                        enrollRes.data.forEach(e => {
+                            studentCounts[e.group_id] = (studentCounts[e.group_id] || 0) + 1;
                         });
                     }
                     const groupsWithCounts = groupsRes.data.map(g => ({
@@ -98,23 +98,28 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     }, []);
 
     const openStudentsModal = async (group) => {
-        const { data: ugData } = await supabase
-            .from('user_groups')
-            .select('user_id')
-            .eq('group_id', group.id);
+        const groupId = String(group.id);
         
-        if (!ugData || ugData.length === 0) {
+        // Buscar en enrollments en vez de user_groups
+        const { data: enrollData, error: enrollError } = await supabase
+            .from('enrollments')
+            .select('user_id')
+            .eq('group_id', groupId);
+        
+        console.log('enrollments result:', { enrollData, enrollError });
+        
+        if (!enrollData || enrollData.length === 0) {
             setStudentsList([]);
             setShowStudentsModal(true);
             return;
         }
 
         const students = [];
-        for (const ug of ugData) {
+        for (const e of enrollData) {
             const { data } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', ug.user_id)
+                .eq('id', e.user_id)
                 .single();
             if (data) students.push(data);
         }
@@ -653,13 +658,24 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                     display: 'flex', alignItems: 'center', gap: '0.75rem',
                                     padding: '0.5rem', borderBottom: '1px solid #334155'
                                 }}>
-                                    <div style={{
-                                        width: 32, height: 32, borderRadius: '50%', background: '#3b82f6',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        color: 'white', fontWeight: 'bold', fontSize: '0.875rem'
-                                    }}>
-                                        {(s.full_name || '?').charAt(0).toUpperCase()}
-                                    </div>
+                                    {s.avatar_url ? (
+                                        <img 
+                                            src={s.avatar_url} 
+                                            alt={s.full_name || 'Avatar'}
+                                            style={{
+                                                width: 32, height: 32, borderRadius: '50%',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                    ) : (
+                                        <div style={{
+                                            width: 32, height: 32, borderRadius: '50%', background: '#3b82f6',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'white', fontWeight: 'bold', fontSize: '0.875rem'
+                                        }}>
+                                            {(s.full_name || '?').charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                     <span style={{ color: 'white' }}>{s.full_name || 'Sin nombre'}</span>
                                 </div>
                             ))

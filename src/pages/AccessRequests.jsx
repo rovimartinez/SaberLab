@@ -79,7 +79,10 @@ const AccessRequests = () => {
 
             const { error: approveError } = await supabase
                 .from('access_requests')
-                .update({ status: 'approved' })
+                .update({ 
+                    status: 'approved',
+                    updated_at: new Date().toISOString()
+                })
                 .eq('id', request.id);
 
             if (approveError) throw approveError;

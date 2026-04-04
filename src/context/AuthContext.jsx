@@ -156,6 +156,14 @@ export const AuthProvider = ({ children }) => {
     if (!email) return null;
 
     const normalizedEmail = email.trim().toLowerCase();
+    console.log('Buscando solicitud para email:', normalizedEmail, '| Largo:', normalizedEmail.length);
+
+    // Primero verificar qué emails hay en la tabla
+    const { data: allRequests } = await supabase
+      .from('access_requests')
+      .select('email, status')
+      .limit(5);
+    console.log('Últimas solicitudes en BD:', allRequests);
 
     const { data, error } = await supabase
       .from('access_requests')
@@ -170,6 +178,7 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
 
+    console.log('Solicitud encontrada:', data);
     return data;
   };
 
@@ -244,6 +253,8 @@ export const AuthProvider = ({ children }) => {
     const requestData = await getLatestAccessRequest(loggedInUser.email);
 
     if (requestData?.status === 'approved') {
+      console.log('Solicitud aprobada encontrada:', requestData);
+      
       const googleName =
         loggedInUser.user_metadata?.full_name ||
         loggedInUser.user_metadata?.name ||
@@ -262,7 +273,9 @@ export const AuthProvider = ({ children }) => {
           { onConflict: 'id' }
         )
         .select('id, email, full_name, role')
-        .maybeSingle();
+        .single();
+
+      console.log('Upsert profile result:', { newProfile, newProfileError });
 
       if (newProfileError) {
         console.error('Error creando perfil luego de aprobacion:', newProfileError);
