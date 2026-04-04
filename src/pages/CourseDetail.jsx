@@ -48,35 +48,14 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     }, [course]);
 
     const [studentsModal, setStudentsModal] = useState({ isOpen: false, group: null, students: [] });
+    const [studentsList, setStudentsList] = useState([]);
+    const [showStudentsModal, setShowStudentsModal] = useState(false);
     const [editCourseModal, setEditCourseModal] = useState({ isOpen: false, name: '', teacher: '' });
     const [editGroupModal, setEditGroupModal] = useState({ isOpen: false, group: null, name: '', teacher: '' });
     const [codeModal, setCodeModal] = useState({ isOpen: false, group: null, code: null, codeId: null, expiresAt: null });
     const [copied, setCopied] = useState(false);
     const [newGroupModal, setNewGroupModal] = useState({ isOpen: false, name: '', teacher: '' });
     const [loadingGroups, setLoadingGroups] = useState(false);
-
-    // Cargar grupos de Supabase
-    useEffect(() => {
-        const loadGroups = async () => {
-            if (!course) return;
-            setLoadingGroups(true);
-            try {
-                const { data, error } = await supabase
-                    .from('groups')
-                    .select('*')
-                    .eq('course_id', course.id);
-                
-                if (!error && data) {
-                    setDbGroups(data);
-                }
-            } catch (err) {
-                console.error('Error cargando grupos:', err);
-            } finally {
-                setLoadingGroups(false);
-            }
-        };
-        loadGroups();
-    }, [course]);
 
     // Mostrar mensaje de carga si no hay curso
     if (!course) {
@@ -125,21 +104,23 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             .eq('group_id', group.id);
         
         if (!ugData || ugData.length === 0) {
-            setStudentsModal({ isOpen: true, group, students: [] });
+            setStudentsList([]);
+            setShowStudentsModal(true);
             return;
         }
 
-        const userIds = ugData.map(ug => ug.user_id);
-        const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('id, full_name, email, avatar_url')
-            .in('id', userIds);
+        const students = [];
+        for (const ug of ugData) {
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', ug.user_id)
+                .single();
+            if (data) students.push(data);
+        }
 
-        setStudentsModal({ 
-            isOpen: true, 
-            group, 
-            students: profilesData || [] 
-        });
+        setStudentsList(students);
+        setShowStudentsModal(true);
     };
 
     const openEditCourseModal = () => {
@@ -462,6 +443,9 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                         >
                                             {group.name}
                                         </span>
+                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>
+                                            ({group.studentCount || 0})
+                                        </span>
                                     </div>
                                     <div className="group-card-actions" style={{ justifyContent: 'center', gap: '0.5rem' }}>
                                         <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openStudentsModal(group)}>
@@ -639,6 +623,47 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                 Cancelar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Students Modal */}
+            {showStudentsModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 9999
+                }} onClick={() => setShowStudentsModal(false)}>
+                    <div style={{
+                        background: '#1e293b', padding: '1.5rem', borderRadius: '12px',
+                        maxWidth: '400px', width: '90%', maxHeight: '80vh', overflow: 'auto',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ color: 'white', margin: 0 }}>Estudiantes del Grupo</h3>
+                            <button onClick={() => setShowStudentsModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.25rem' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        {studentsList.length === 0 ? (
+                            <p style={{ color: '#94a3b8' }}>No hay estudiantes</p>
+                        ) : (
+                            studentsList.map(s => (
+                                <div key={s.id} style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                    padding: '0.5rem', borderBottom: '1px solid #334155'
+                                }}>
+                                    <div style={{
+                                        width: 32, height: 32, borderRadius: '50%', background: '#3b82f6',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        color: 'white', fontWeight: 'bold', fontSize: '0.875rem'
+                                    }}>
+                                        {(s.full_name || '?').charAt(0).toUpperCase()}
+                                    </div>
+                                    <span style={{ color: 'white' }}>{s.full_name || 'Sin nombre'}</span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}
