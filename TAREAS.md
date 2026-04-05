@@ -1,10 +1,10 @@
 # SaberLab - Lista de Tareas
 
-## 🔴 URGENTE (Alta Prioridad)
+## 🔴 REPARACIONES (Ahora)
 
-- [ ] 1. Completar lección - Guardar progreso en BD cuando estudiante marca "Marcar como completada"
+- [ ] 1. Evaluación Módulo 1 RE - Hacer que funcione correctamente (mostrar, tomar, guardar)
 - [ ] 2. Verificar visibilidad admin → estudiante - Test completo del flujo
-- [ ] 3. Corregir IDs de lecciones en visibilidad - Asegurar que se guarden con formato correcto (re-m1-l1)
+- [ ] 3. Completar lección - Guardar progreso en BD cuando estudiante marca "Marcar como completada"
 
 ---
 
@@ -39,6 +39,6 @@
 
 ## 📝 NOTAS
 
+- Evaluación Módulo 1 de RE está definida en código (src/evaluations/RE/m1/module1Evaluation.js)
 - Lecciones 1-5 de RE tienen contenido real (l1-l5)
 - El resto de lecciones están vacías (load: null)
-- Evaluaciones funcionan pero el sistema de proctoring está incompleto

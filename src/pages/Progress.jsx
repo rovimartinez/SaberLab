@@ -16,17 +16,17 @@ const Progress = () => {
         const fetchData = async () => {
             if (!user) return;
 
-            const { data: progressData } = await supabase
+            const { data: progressData, error: progressError } = await supabase
                 .from('progreso_usuario')
                 .select('*')
                 .eq('user_id', user.id)
-                .single();
+                .maybeSingle();
 
             if (progressData) {
                 setUserProgress(progressData);
             }
 
-            const { data: achievementsData } = await supabase
+            const { data: achievementsData, error: achievementsError } = await supabase
                 .from('logros')
                 .select('*')
                 .eq('user_id', user.id)

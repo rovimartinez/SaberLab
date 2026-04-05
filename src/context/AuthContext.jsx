@@ -184,14 +184,6 @@ export const AuthProvider = ({ children }) => {
     if (!email) return null;
 
     const normalizedEmail = email.trim().toLowerCase();
-    console.log('Buscando solicitud para email:', normalizedEmail, '| Largo:', normalizedEmail.length);
-
-    // Primero verificar qué emails hay en la tabla
-    const { data: allRequests } = await supabase
-      .from('solicitudes_acceso')
-      .select('email, status')
-      .limit(5);
-    console.log('Últimas solicitudes en BD:', allRequests);
 
     const { data, error } = await supabase
       .from('solicitudes_acceso')
@@ -206,7 +198,6 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
 
-    console.log('Solicitud encontrada:', data);
     return data;
   };
 
@@ -245,11 +236,8 @@ export const AuthProvider = ({ children }) => {
     }
 
     if (profileByEmail?.id && profileByEmail.id !== loggedInUser.id) {
-      console.warn('Perfil encontrado por email con id distinto al auth user.', {
-        authId: loggedInUser.id,
-        profileId: profileByEmail.id,
-        email: normalizedEmail
-      });
+      // Perfil encontrado pero con ID diferente - se usará el de auth
+      return profileByEmail;
     }
 
     return profileByEmail ?? null;
@@ -273,14 +261,10 @@ export const AuthProvider = ({ children }) => {
     const profileData = await getProfileForUser(loggedInUser);
 
     if (profileData) {
-      console.log('Perfil encontrado, verificando avatar:', { 
-        tieneAvatar: !!profileData.avatar_url, 
-        googleAvatar: loggedInUser.user_metadata?.avatar_url 
-      });
+      // Verificar y actualizar avatar si es necesario
       
       // Si el perfil no tiene avatar pero el usuario tiene uno de Google, actualizar
       if (!profileData.avatar_url && loggedInUser.user_metadata?.avatar_url) {
-        console.log('Actualizando avatar en perfil...');
         const { error: updateError } = await supabase
           .from('perfiles')
           .update({ avatar_url: loggedInUser.user_metadata.avatar_url })
@@ -288,8 +272,6 @@ export const AuthProvider = ({ children }) => {
         
         if (updateError) {
           console.error('Error actualizando avatar:', updateError);
-        } else {
-          console.log('Avatar actualizado exitosamente');
         }
       }
       await activateResolvedProfile(loggedInUser, profileData);
@@ -300,8 +282,6 @@ export const AuthProvider = ({ children }) => {
     const requestData = await getLatestAccessRequest(loggedInUser.email);
 
     if (requestData?.status === 'approved') {
-      console.log('Solicitud aprobada encontrada:', requestData);
-      
       const googleName =
         loggedInUser.user_metadata?.full_name ||
         loggedInUser.user_metadata?.name ||
@@ -324,8 +304,6 @@ export const AuthProvider = ({ children }) => {
         )
         .select('id, email, full_name, role')
         .single();
-
-      console.log('Upsert profile result:', { newProfile, newProfileError });
 
       if (newProfileError) {
         console.error('Error creando perfil luego de aprobacion:', newProfileError);

@@ -1,0 +1,6 @@
+Pregunta,Tipo,Opcion_A,Opcion_B,Opcion_C,Opcion_D,Respuesta_Correcta,Puntos,Concepto,Objetivo,Dificultad,Orden
+¿Qué es Arduino?,"multiple_choice","Una marca de pizzas","Una plataforma de hardware libre","Un lenguaje de programación","Un sistema operativo","Una plataforma de hardware libre",10,"hardware","Conocer plataformas de hardware","easy",1
+¿Qué pines digitales tiene Arduino UNO?,"multiple_choice","8 pines","13 pines","20 pines","28 pines","13 pines",10,"pins","Identificar pines de Arduino","medium",2
+¿Qué función se usa para configurar un pin como salida?,"multiple_choice","pinMode()","digitalWrite()","digitalRead()","analogWrite()","pinMode()",10,"functions","Usar funciones básicas de Arduino","easy",3
+¿Cuál es el voltaje de operación de Arduino UNO?,"multiple_choice","3.3V","5V","9V","12V","5V",10,"voltage","Conocer voltaje de operación","easy",4
+¿Qué sensor mide distancia?,"multiple_choice","DHT11","LM35","HC-SR04","MQ-2","HC-SR04",10,"sensors","Identificar sensores","medium",5

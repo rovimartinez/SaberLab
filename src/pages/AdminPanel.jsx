@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, Shield, ClipboardList, Users, Settings, Database } from 'lucide-react';
 import Courses from './Courses';
 import Admin from './Admin';
+import AdminEvaluations from './AdminEvaluations';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import './Admin.css';
 
@@ -165,11 +166,7 @@ const AdminPanel = () => {
             )}
 
             {activeCard === 'examenes' && (
-                <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-                    <ClipboardList size={48} style={{ color: 'var(--text-secondary)', marginBottom: '1rem', opacity: 0.5 }} />
-                    <h2 style={{ color: 'white', marginBottom: '0.5rem' }}>Gestión de Exámenes</h2>
-                    <p style={{ color: 'var(--text-secondary)' }}>Aquí podrás gestionar evaluaciones y ver resultados</p>
-                </div>
+                <AdminEvaluations />
             )}
         </div>
     );
