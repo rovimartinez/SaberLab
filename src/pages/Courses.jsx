@@ -12,7 +12,7 @@ const Courses = ({ courses, showHeader = true, embedded = false, onCourseSelect 
 
     useEffect(() => {
         const loadGroupCounts = async () => {
-            const { data } = await supabase.from('groups').select('course_id');
+            const { data } = await supabase.from('grupos').select('course_id');
             if (data) {
                 const counts = {};
                 data.forEach(g => {

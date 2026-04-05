@@ -44,8 +44,8 @@ const EvaluationPlayer = () => {
 
             try {
                 const { data, error } = await supabase
-                    .from('evaluations')
-                    .select('*, course:courses(*)')
+                    .from('evaluaciones')
+                    .select('*, course:cursos(*)')
                     .eq('evaluation_key', evaluationKey)
                     .maybeSingle();
 

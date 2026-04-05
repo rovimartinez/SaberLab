@@ -23,8 +23,8 @@ const Evaluations = () => {
             const courseIds = enrolledCourses.map(c => c.id);
             
             const { data, error } = await supabase
-                .from('evaluations')
-                .select('*, course:courses(*)')
+                .from('evaluaciones')
+                .select('*, course:cursos(*)')
                 .in('course_id', courseIds)
                 .order('due_date', { ascending: true });
 

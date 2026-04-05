@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { data: enrollments, error } = await supabase
-      .from('enrollments')
+      .from('inscripciones')
       .select('course_id')
       .eq('user_id', userId);
 
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadNotificationsCount = async (userId) => {
     const { count, error } = await supabase
-      .from('notifications')
+      .from('notificaciones')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('read', false);
@@ -137,15 +137,15 @@ export const AuthProvider = ({ children }) => {
     if (!courseIds || courseIds.length === 0) return;
     try {
       const { data } = await supabase
-        .from('course_lesson_visibility')
-        .select('course_id, lesson_id, visible')
+        .from('visibilidad_curso')
+        .select('course_id, lecciones')
         .in('course_id', courseIds);
       
       if (data && data.length > 0) {
         const visibilityMap = {};
         data.forEach(v => {
-          if (!visibilityMap[v.course_id]) visibilityMap[v.course_id] = {};
-          visibilityMap[v.course_id][v.lesson_id] = v.visible;
+          // lecciones es JSON: { 're-m1-l1': false, 're-m1-l2': true }
+          visibilityMap[v.course_id] = v.lecciones || {};
         });
         setLessonVisibility(prev => ({ ...prev, ...visibilityMap }));
       }
@@ -162,7 +162,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadPendingAccessRequestsCount = async () => {
     const { count, error } = await supabase
-      .from('access_requests')
+      .from('solicitudes_acceso')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending');
 
@@ -188,13 +188,13 @@ export const AuthProvider = ({ children }) => {
 
     // Primero verificar qué emails hay en la tabla
     const { data: allRequests } = await supabase
-      .from('access_requests')
+      .from('solicitudes_acceso')
       .select('email, status')
       .limit(5);
     console.log('Últimas solicitudes en BD:', allRequests);
 
     const { data, error } = await supabase
-      .from('access_requests')
+      .from('solicitudes_acceso')
       .select('*')
       .eq('email', normalizedEmail)
       .order('created_at', { ascending: false })
@@ -216,7 +216,7 @@ export const AuthProvider = ({ children }) => {
     const normalizedEmail = loggedInUser.email?.trim().toLowerCase();
 
     const { data: profileById, error: profileByIdError } = await supabase
-      .from('profiles')
+      .from('perfiles')
       .select('id, email, full_name, role')
       .eq('id', loggedInUser.id)
       .maybeSingle();
@@ -234,7 +234,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     const { data: profileByEmail, error: profileByEmailError } = await supabase
-      .from('profiles')
+      .from('perfiles')
       .select('id, email, full_name, role')
       .eq('email', normalizedEmail)
       .maybeSingle();
@@ -282,7 +282,7 @@ export const AuthProvider = ({ children }) => {
       if (!profileData.avatar_url && loggedInUser.user_metadata?.avatar_url) {
         console.log('Actualizando avatar en perfil...');
         const { error: updateError } = await supabase
-          .from('profiles')
+          .from('perfiles')
           .update({ avatar_url: loggedInUser.user_metadata.avatar_url })
           .eq('id', loggedInUser.id);
         
@@ -311,7 +311,7 @@ export const AuthProvider = ({ children }) => {
       const googleAvatar = loggedInUser.user_metadata?.avatar_url || null;
 
       const { data: newProfile, error: newProfileError } = await supabase
-        .from('profiles')
+        .from('perfiles')
         .upsert(
           {
             id: loggedInUser.id,

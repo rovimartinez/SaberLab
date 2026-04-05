@@ -17,7 +17,7 @@ const Progress = () => {
             if (!user) return;
 
             const { data: progressData } = await supabase
-                .from('user_progress')
+                .from('progreso_usuario')
                 .select('*')
                 .eq('user_id', user.id)
                 .single();
@@ -27,7 +27,7 @@ const Progress = () => {
             }
 
             const { data: achievementsData } = await supabase
-                .from('achievements')
+                .from('logros')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('unlocked_at', { ascending: false });

@@ -21,8 +21,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             setLoadingGroups(true);
             try {
                 const [groupsRes, enrollRes] = await Promise.all([
-                    supabase.from('groups').select('*').eq('course_id', course.id),
-                    supabase.from('enrollments').select('user_id, group_id')
+                    supabase.from('grupos').select('*').eq('course_id', course.id),
+                    supabase.from('inscripciones').select('user_id, group_id')
                 ]);
                 
                 if (groupsRes.data) {
@@ -64,14 +64,13 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             if (!course) return;
             try {
                 const { data } = await supabase
-                    .from('course_lesson_visibility')
-                    .select('lesson_id, visible')
-                    .eq('course_id', course.id);
+                    .from('visibilidad_curso')
+                    .select('lecciones')
+                    .eq('course_id', course.id)
+                    .single();
                 
-                if (data && data.length > 0) {
-                    const visibilityMap = {};
-                    data.forEach(v => { visibilityMap[v.lesson_id] = v.visible; });
-                    setLessonVisibility(visibilityMap);
+                if (data?.lecciones) {
+                    setLessonVisibility(data.lecciones);
                 }
             } catch (err) {
                 console.error('Error cargando visibilidad:', err);
@@ -80,15 +79,16 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         loadLessonVisibility();
     }, [course]);
 
-    // Helper para obtener visibilidad de una lección (usa estado local primero, luego BD)
+    // Helper para obtener visibilidad de una lección
     const getLessonVisibility = (lessonId) => {
-        if (lessonVisibility.hasOwnProperty(lessonId)) {
-            return lessonVisibility[lessonId];
+        // Normalizar ID igual que al guardar
+        const abbr = course?.abbr?.toLowerCase() || 're';
+        const normalizedId = lessonId.includes('-') ? lessonId : `${abbr}-m1-${lessonId}`;
+        
+        if (lessonVisibility.hasOwnProperty(normalizedId)) {
+            return lessonVisibility[normalizedId];
         }
-        // Valor por defecto de la definición local
-        const module = courseModules.find(m => m.lessons.some(l => l.id === lessonId));
-        const lesson = module?.lessons.find(l => l.id === lessonId);
-        return lesson?.visible !== false;
+        return true; // Por defecto todas visibles
     };
 
     // Mostrar mensaje de carga si no hay curso
@@ -136,7 +136,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         
         // Buscar en enrollments en vez de user_groups
         const { data: enrollData, error: enrollError } = await supabase
-            .from('enrollments')
+            .from('inscripciones')
             .select('user_id')
             .eq('group_id', groupId);
         
@@ -151,7 +151,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         const students = [];
         for (const e of enrollData) {
             const { data } = await supabase
-                .from('profiles')
+                .from('perfiles')
                 .select('*')
                 .eq('id', e.user_id)
                 .single();
@@ -173,7 +173,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
 
     const handleUpdateCourse = async () => {
         const { error } = await supabase
-            .from('courses')
+            .from('cursos')
             .update({ 
                 name: editCourseModal.name,
                 teacher: editCourseModal.teacher 
@@ -197,7 +197,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
 
     const handleUpdateGroup = async () => {
         const { error } = await supabase
-            .from('groups')
+            .from('grupos')
             .update({
                 name: editGroupModal.name,
                 teacher: editGroupModal.teacher
@@ -218,8 +218,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         const confirmed = window.confirm('¿Estás seguro de eliminar este grupo? Se eliminarán todos los estudiantes asignados a este grupo.');
         if (!confirmed) return;
 
-        await supabase.from('user_groups').delete().eq('group_id', editGroupModal.group.id);
-        const { error } = await supabase.from('groups').delete().eq('id', editGroupModal.group.id);
+        await supabase.from('grupos_usuario').delete().eq('group_id', editGroupModal.group.id);
+        const { error } = await supabase.from('grupos').delete().eq('id', editGroupModal.group.id);
 
         if (!error) {
             setDbGroups(prev => prev.filter(g => g.id !== editGroupModal.group.id));
@@ -229,7 +229,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
 
     const removeStudentFromGroup = async (studentId, groupId) => {
         const { error } = await supabase
-            .from('user_groups')
+            .from('grupos_usuario')
             .delete()
             .eq('user_id', studentId)
             .eq('group_id', groupId);
@@ -287,7 +287,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             
             // Guardar en Supabase
             const { error } = await supabase
-                .from('groups')
+                .from('grupos')
                 .insert({
                     id: newGroupId,
                     course_id: course.id,
@@ -321,7 +321,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         if (!modalState?.codeId) return;
 
         const { error } = await supabase
-            .from('group_codes')
+            .from('codigos_grupo')
             .delete()
             .eq('id', modalState.codeId);
 
@@ -343,7 +343,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
 
         // Guardar código en Supabase
         const { data, error } = await supabase
-            .from('group_codes')
+            .from('codigos_grupo')
             .insert({
                 group_id: group.id,
                 code: code,
@@ -381,16 +381,34 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const toggleLessonVisibility = async (moduleId, lessonId) => {
         const newVisibility = !getLessonVisibility(lessonId);
         
-        // Guardar en Supabase
+        // Normalizar ID: 'l1' -> 're-m1-l1'
+        const abbr = course.abbr?.toLowerCase() || 're';
+        const normalizedId = lessonId.includes('-') ? lessonId : `${abbr}-${moduleId}-${lessonId}`;
+        
+        console.log('Toggle:', { courseId: course.id, lessonId, normalizedId, newVisibility });
+        
+        // Actualizar JSON en Supabase
+        const newLecciones = { ...lessonVisibility, [normalizedId]: newVisibility };
+        console.log('Guardando:', JSON.stringify(newLecciones));
+        
         try {
             const { data, error } = await supabase
-                .from('course_lesson_visibility')
+                .from('visibilidad_curso')
                 .upsert({
                     course_id: course.id,
-                    lesson_id: lessonId,
-                    visible: newVisibility,
+                    lecciones: newLecciones,
                     updated_at: new Date().toISOString()
-                }, { onConflict: 'course_id,lesson_id' });
+                }, { onConflict: 'course_id' });
+            
+            console.log('Resultado:', { data, error });
+            
+            // Verificar que se guardó
+            const { data: check } = await supabase
+                .from('visibilidad_curso')
+                .select('lecciones')
+                .eq('course_id', course.id)
+                .single();
+            console.log('Verificación BD:', check);
         } catch (err) {
             console.error('Error guardando visibilidad:', err);
         }
@@ -405,7 +423,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             } : m
         );
         setCourseModules(updatedModules);
-        setLessonVisibility(prev => ({ ...prev, [lessonId]: newVisibility }));
+        setLessonVisibility(newLecciones);
         updateCourse({
             ...course,
             modules: updatedModules
@@ -417,17 +435,25 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         const allVisible = module?.lessons.every(l => getLessonVisibility(l.id));
         const newVisibility = !allVisible;
         
-        // Guardar cada lección en Supabase
+        // Normalizar IDs
+        const abbr = course.abbr?.toLowerCase() || 're';
+        const normalizedModuleId = moduleId.includes('-') ? moduleId : `${abbr}-${moduleId}`;
+        
+        // Actualizar JSON con todas las lecciones del módulo
+        const newLecciones = { ...lessonVisibility };
+        module.lessons.forEach(l => {
+            const normalizedId = l.id.includes('-') ? l.id : `${normalizedModuleId.split('-').slice(0,2).join('-')}-${l.id}`;
+            newLecciones[normalizedId] = newVisibility;
+        });
+        
         try {
-            const upserts = module.lessons.map(l => ({
-                course_id: course.id,
-                lesson_id: l.id,
-                visible: newVisibility,
-                updated_at: new Date().toISOString()
-            }));
             await supabase
-                .from('course_lesson_visibility')
-                .upsert(upserts, { onConflict: 'course_id,lesson_id' });
+                .from('visibilidad_curso')
+                .upsert({
+                    course_id: course.id,
+                    lecciones: newLecciones,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'course_id' });
         } catch (err) {
             console.error('Error guardando visibilidad:', err);
         }
@@ -440,10 +466,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             } : m
         );
         setCourseModules(updatedModules);
-        // Actualizar mapa de visibilidad
-        const newVisibilityMap = { ...lessonVisibility };
-        module.lessons.forEach(l => { newVisibilityMap[l.id] = newVisibility; });
-        setLessonVisibility(newVisibilityMap);
+        setLessonVisibility(newLecciones);
         updateCourse({
             ...course,
             modules: updatedModules

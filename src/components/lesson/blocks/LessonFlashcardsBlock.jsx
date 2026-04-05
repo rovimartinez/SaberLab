@@ -38,7 +38,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
         try {
             setLoading(true);
             const { data } = await supabase
-                .from('student_flashcards')
+                .from('tarjetas_estudiante')
                 .select('card_id, status')
                 .eq('user_id', user.id)
                 .eq('lesson_id', lessonKey);
@@ -293,7 +293,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
 
         if (user?.id && lessonKey) {
             try {
-                await supabase.from('student_flashcards').upsert({
+                await supabase.from('tarjetas_estudiante').upsert({
                     user_id: user.id,
                     lesson_id: lessonKey,
                     card_id: card.id,

@@ -80,7 +80,7 @@ const AdminAccessRequestsBubble = () => {
 
         const loadRequests = async () => {
             const { data, error } = await supabase
-                .from('access_requests')
+                .from('solicitudes_acceso')
                 .select('*')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: false });
@@ -120,7 +120,7 @@ const AdminAccessRequestsBubble = () => {
 
         try {
             const { error } = await supabase
-                .from('access_requests')
+                .from('solicitudes_acceso')
                 .update({ 
                     status,
                     updated_at: new Date().toISOString()

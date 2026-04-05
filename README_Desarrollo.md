@@ -24,31 +24,40 @@
 - Foto de Google si está disponible (avatar_url)
 - Sin divisores en el modal
 
-### 6. Visibilidad de Lecciones
-- Creada tabla `course_lesson_visibility` en Supabase para persistir configuración de visibilidad por curso
-- CourseDetail ahora guarda cambios de visibilidad en BD (upsert)
-- AuthContext carga visibilidad de lecciones al iniciar sesión (tanto para admin como estudiantes)
-- SubjectDetail filtra lecciones según configuración: muestra todas con ícono de candado si están ocultas
-- CourseSidebar también marca lecciones ocultas como bloqueadas
-- Normalización de IDs de lecciones: 'l1' -> 're-m1-l1' para consistencia con BD
+### 5. Visibilidad de Lecciones (JSON)
+- Tabla `visibilidad_curso` con estructura JSON: una fila por curso con objeto de lecciones
+- Ejemplo: `{"re-m1-l1": false, "re-m1-l2": true}`
+- CourseDetail guarda/leer visibilidad con IDs normalizados (re-m1-l1)
+- AuthContext carga visibilidad al iniciar sesión
+- SubjectDetail filtra lecciones: muestra todas con ícono de candado si están ocultas
+- Table old `visibilidad_leccion_curso` ya no se usa
+
+### 6. Rename tablas a Español
+- Todas las tablas principales renombradas a español
+- Código actualizado para usar nombres en español
+- Tablas: perfiles, solicitudes_acceso, notificaciones, cursos, grupos, codigos_grupo, inscripciones, evaluaciones, visibilidad_curso, grupos_usuario, progreso_usuario, logros, tarjetas_estudiante
+
+### 7. Tabla cursos en BD
+- Creada tabla `cursos` en BD para futura gestión (actualmente vacía/referencia)
+- Los cursos siguen definidos en código (`coursesData.jsx`)
+- Cuando haya 100+ cursos, migrar a BD para gestión desde admin
 
 ---
 
 ## 🔴 Pendiente / Para continuar
 
-### 1. VISIBILIDAD DE LECCIONES (PRIORIDAD)
-**Problema actual:** En CourseDetail (admin), se puede configurar si una lección es visible o no, pero estos cambios solo se guardan en el estado local (React). Cuando un estudiante entra al curso, carga la definición original que no tiene esos cambios.
+### 1. Migrar cursos a BD (futuro)
+- Con 100+ cursos, conviene mover definición de cursos a BD
+- Actualmente definidos en `coursesData.jsx`
+- Crear tabla `cursos` con estructura completa (módulos, lecciones)
 
-**Solución requerida:**
-- Crear tabla en Supabase para guardar la configuración de visibilidad por curso
-- Guardar cambios cuando se toggla visibilidad en CourseDetail
-- Cargar configuración al inicio del curso en el componente del estudiante
-- Aplicar filtros para mostrar/ocultar lecciones según configuración
+### 2. Completar lección
+- Al presionar "Marcar como completada" en Lesson.jsx, solo hace console.log
+- Necesita guardar en Supabase (tabla `progreso_usuario` o nueva tabla)
 
-### 2. Mejoras pendientes
-- revisar si hay otros datos que se guardan localmente y deberían persistir
-- verificar consistencia de datos entre admin y estudiante
-- **Completar lección:** Al presionar "Marcar como completada" en Lesson.jsx, actualmente solo hace console.log. Necesita guardar en Supabase (tablas: student_lesson_progress, user_progress, o similar)
+### 3. Revisar datos locales
+- Revisar si hay otros datos que se guardan localmente y deberían persistir
+- Verificar consistencia de datos entre admin y estudiante
 
 ---
 
@@ -64,23 +73,37 @@
 
 ---
 
-## 🗄️ Tablas de Supabase usadas
+## 🗄️ Tablas de Supabase usadas (ESPAÑOL)
 
-- `profiles` - Perfiles de usuarios (incluye avatar_url)
-- `access_requests` - Solicitudes de acceso
-- `notifications` - Notificaciones
-- `courses` - Cursos
-- `groups` - Grupos de cursos
-- `group_codes` - Códigos para unirse a grupos
-- `enrollments` - Inscripciones de estudiantes
-- `course_lesson_visibility` - Configuración de visibilidad de lecciones por curso
-- `evaluations` - Evaluaciones
+- `perfiles` - Perfiles de usuarios (incluye avatar_url)
+- `solicitudes_acceso` - Solicitudes de acceso
+- `notificaciones` - Notificaciones
+- `cursos` - Cursos (actualmente vacío, cursos definidos en código)
+- `grupos` - Grupos de cursos
+- `codigos_grupo` - Códigos para unirse a grupos
+- `inscripciones` - Inscripciones de estudiantes
+- `evaluaciones` - Evaluaciones
+- `visibilidad_curso` - Configuración de visibilidad de lecciones (JSON por curso)
+- `grupos_usuario` - Relación usuario-grupo
+- `progreso_usuario` - Progreso del estudiante
+- `logros` - Logros
+- `tarjetas_estudiante` - Flashcards del estudiante
+
+## 🗄️ Tablas pendientes (sin uso aún)
+
+- `student_profiles`
+- `student_lesson_progress`
+- `student_quiz_attempts`
+- `student_mission_progress`
+- Tablas analíticas
 
 ---
 
 ## 🔧 Notas técnicas
 
-- Los cursos están definidos localmente en `coursesData.jsx`, no en la BD
-- Los estudiantes se asignan a grupos mediante enrollments (no user_groups)
+- Los cursos están definidos localmente en `coursesData.jsx`, no en la BD (por ahora)
+- Los estudiantes se asignan a grupos mediante `inscripciones` (no grupos_usuario)
 - Los avatares de Google vienen de `user_metadata.avatar_url` en Supabase Auth
-- RLS policies importantes: access_requests, profiles
+- Visibilidad de lecciones se guarda en JSON dentro de `visibilidad_curso`
+- Tablas principales en español (perfiles, solicitudes_acceso, etc.)
+- Políticas RLS activas en todas las tablas

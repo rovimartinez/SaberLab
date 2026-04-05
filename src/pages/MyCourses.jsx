@@ -42,7 +42,7 @@ const MyCourses = () => {
         try {
             // Buscar el código en la tabla group_codes (solo el código, sin joins)
             const { data: codeData, error: codeError } = await supabase
-                .from('group_codes')
+                .from('codigos_grupo')
                 .select('*')
                 .eq('code', joinCode.trim().toUpperCase())
                 .single();
@@ -57,7 +57,7 @@ const MyCourses = () => {
 
             // Buscar el grupo
             const { data: groupData, error: groupError } = await supabase
-                .from('groups')
+                .from('grupos')
                 .select('*')
                 .eq('id', codeData.group_id)
                 .single();
@@ -68,7 +68,7 @@ const MyCourses = () => {
 
             // Buscar el curso usando el course_id del grupo
             const { data: courseData, error: courseError } = await supabase
-                .from('courses')
+                .from('cursos')
                 .select('*')
                 .eq('id', groupData.course_id)
                 .single();
@@ -82,7 +82,7 @@ const MyCourses = () => {
 
             // Verificar si ya está inscrito
             const { data: existingEnrollment } = await supabase
-                .from('enrollments')
+                .from('inscripciones')
                 .select('*')
                 .eq('user_id', user.id)
                 .eq('course_id', course.id)
@@ -100,7 +100,7 @@ const MyCourses = () => {
             });
 
             const { error: enrollmentError } = await supabase
-                .from('enrollments')
+                .from('inscripciones')
                 .insert({
                     user_id: user.id,
                     course_id: course.id,

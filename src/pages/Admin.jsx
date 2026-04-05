@@ -22,10 +22,10 @@ const Admin = ({ showHeader = true, showTabs = true, section }) => {
             setLoading(true);
             
             const [usersRes, coursesRes, groupsRes, ugRes] = await Promise.all([
-                supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-                supabase.from('courses').select('*').order('name'),
-                supabase.from('groups').select('*').order('name'),
-                supabase.from('user_groups').select('*')
+                supabase.from('perfiles').select('*').order('created_at', { ascending: false }),
+                supabase.from('cursos').select('*').order('name'),
+                supabase.from('grupos').select('*').order('name'),
+                supabase.from('grupos_usuario').select('*')
             ]);
             
             if (usersRes.data) setUsers(usersRes.data);

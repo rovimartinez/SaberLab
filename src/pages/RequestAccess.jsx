@@ -24,7 +24,7 @@ const RequestAccess = () => {
             const normalizedEmail = user?.email?.trim().toLowerCase();
 
             const query = supabase
-                .from('profiles')
+                .from('perfiles')
                 .select('id, email, role')
                 .limit(1);
 
@@ -39,7 +39,7 @@ const RequestAccess = () => {
 
             if (!data && normalizedEmail) {
                 const response = await supabase
-                    .from('profiles')
+                    .from('perfiles')
                     .select('id, email, role')
                     .eq('email', normalizedEmail)
                     .limit(1)
@@ -99,7 +99,7 @@ const RequestAccess = () => {
             const normalizedEmail = userData.email.trim().toLowerCase();
 
             const { data: existingRequest, error: requestLookupError } = await supabase
-                .from('access_requests')
+                .from('solicitudes_acceso')
                 .select('id, status')
                 .eq('email', normalizedEmail)
                 .order('created_at', { ascending: false })
@@ -122,7 +122,7 @@ const RequestAccess = () => {
 
             if (existingRequest?.id) {
                 const { error: updateError } = await supabase
-                    .from('access_requests')
+                    .from('solicitudes_acceso')
                     .update({
                         name: userData.name,
                         email: normalizedEmail,
@@ -133,7 +133,7 @@ const RequestAccess = () => {
                 if (updateError) throw updateError;
             } else {
                 const { error: insertError } = await supabase
-                    .from('access_requests')
+                    .from('solicitudes_acceso')
                     .insert({
                         name: userData.name,
                         email: normalizedEmail,

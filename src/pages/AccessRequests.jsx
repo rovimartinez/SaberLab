@@ -16,7 +16,7 @@ const AccessRequests = () => {
 
     const loadRequests = async () => {
         const { data, error } = await supabase
-            .from('access_requests')
+            .from('solicitudes_acceso')
             .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
@@ -70,7 +70,7 @@ const AccessRequests = () => {
             const normalizedEmail = request.email.trim().toLowerCase();
 
             const { data: existingProfile, error: existingProfileError } = await supabase
-                .from('profiles')
+                .from('perfiles')
                 .select('id')
                 .eq('email', normalizedEmail)
                 .maybeSingle();
@@ -78,7 +78,7 @@ const AccessRequests = () => {
             if (existingProfileError) throw existingProfileError;
 
             const { error: approveError } = await supabase
-                .from('access_requests')
+                .from('solicitudes_acceso')
                 .update({ 
                     status: 'approved',
                     updated_at: new Date().toISOString()
@@ -111,7 +111,7 @@ const AccessRequests = () => {
     const handleReject = async (request) => {
         try {
             const { error } = await supabase
-                .from('access_requests')
+                .from('solicitudes_acceso')
                 .update({ status: 'rejected' })
                 .eq('id', request.id);
 

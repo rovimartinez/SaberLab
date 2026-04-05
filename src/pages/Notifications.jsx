@@ -16,7 +16,7 @@ const Notifications = () => {
 
         const fetchNotifications = async () => {
             const { data, error } = await supabase
-                .from('notifications')
+                .from('notificaciones')
                 .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
@@ -37,7 +37,7 @@ const Notifications = () => {
     });
 
     const markAsRead = async (id) => {
-        await supabase.from('notifications').update({ read: true }).eq('id', id);
+        await supabase.from('notificaciones').update({ read: true }).eq('id', id);
         setNotifications(notifications.map(n => 
             n.id === id ? { ...n, read: true } : n
         ));
@@ -47,14 +47,14 @@ const Notifications = () => {
     const markAllAsRead = async () => {
         const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
         if (unreadIds.length > 0) {
-            await supabase.from('notifications').update({ read: true }).in('id', unreadIds);
+            await supabase.from('notificaciones').update({ read: true }).in('id', unreadIds);
             setNotifications(notifications.map(n => ({ ...n, read: true })));
             refreshNotificationsCount();
         }
     };
 
     const deleteNotification = async (id) => {
-        await supabase.from('notifications').delete().eq('id', id);
+        await supabase.from('notificaciones').delete().eq('id', id);
         setNotifications(notifications.filter(n => n.id !== id));
         refreshNotificationsCount();
     };
@@ -62,7 +62,7 @@ const Notifications = () => {
     const clearAll = async () => {
         const allIds = notifications.map(n => n.id);
         if (allIds.length > 0) {
-            await supabase.from('notifications').delete().in('id', allIds);
+            await supabase.from('notificaciones').delete().in('id', allIds);
             setNotifications([]);
             refreshNotificationsCount();
         }
