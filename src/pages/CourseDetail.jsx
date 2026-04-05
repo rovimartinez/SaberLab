@@ -121,6 +121,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                 .select('*')
                 .eq('id', e.user_id)
                 .single();
+            console.log('Profile fetch for student:', { user_id: e.user_id, data });
             if (data) students.push(data);
         }
 
@@ -656,15 +657,15 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                             studentsList.map(s => (
                                 <div key={s.id} style={{
                                     display: 'flex', alignItems: 'center', gap: '0.75rem',
-                                    padding: '0.5rem', borderBottom: '1px solid #334155'
+                                    padding: '0.5rem'
                                 }}>
                                     {s.avatar_url ? (
                                         <img 
                                             src={s.avatar_url} 
                                             alt={s.full_name || 'Avatar'}
                                             style={{
-                                                width: 32, height: 32, borderRadius: '50%',
-                                                objectFit: 'cover'
+                                                width: 32, height: 32, borderRadius: '4px',
+                                                objectFit: 'cover', background: 'white'
                                             }}
                                         />
                                     ) : (

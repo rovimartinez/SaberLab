@@ -142,11 +142,11 @@ const MyCourses = () => {
             </div>
 
             {enrolledCourses.length > 0 ? (
-                <div className="courses-grid">
+                <div className="courses-grid my-courses-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     {enrolledCourses.map((course) => {
                         const icon = getCourseIcon(course.abbr);
                         const color = getCourseColor(course.abbr);
-                        const lessons = course.lessons || 0;
+                        const lessons = course.modules ? course.modules.reduce((acc, m) => acc + (m.lessons?.length || 0), 0) : 0;
                         
                         return (
                         <div 

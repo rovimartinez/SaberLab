@@ -245,6 +245,25 @@ export const AuthProvider = ({ children }) => {
     const profileData = await getProfileForUser(loggedInUser);
 
     if (profileData) {
+      console.log('Perfil encontrado, verificando avatar:', { 
+        tieneAvatar: !!profileData.avatar_url, 
+        googleAvatar: loggedInUser.user_metadata?.avatar_url 
+      });
+      
+      // Si el perfil no tiene avatar pero el usuario tiene uno de Google, actualizar
+      if (!profileData.avatar_url && loggedInUser.user_metadata?.avatar_url) {
+        console.log('Actualizando avatar en perfil...');
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ avatar_url: loggedInUser.user_metadata.avatar_url })
+          .eq('id', loggedInUser.id);
+        
+        if (updateError) {
+          console.error('Error actualizando avatar:', updateError);
+        } else {
+          console.log('Avatar actualizado exitosamente');
+        }
+      }
       await activateResolvedProfile(loggedInUser, profileData);
       setLoading(false);
       return;
@@ -261,6 +280,8 @@ export const AuthProvider = ({ children }) => {
         loggedInUser.email?.split('@')[0] ||
         'Estudiante';
 
+      const googleAvatar = loggedInUser.user_metadata?.avatar_url || null;
+
       const { data: newProfile, error: newProfileError } = await supabase
         .from('profiles')
         .upsert(
@@ -268,6 +289,7 @@ export const AuthProvider = ({ children }) => {
             id: loggedInUser.id,
             email: loggedInUser.email?.trim().toLowerCase(),
             full_name: googleName,
+            avatar_url: googleAvatar,
             role: 'student'
           },
           { onConflict: 'id' }

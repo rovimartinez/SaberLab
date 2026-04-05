@@ -8,7 +8,7 @@ import './Admin.css';
 
 const AdminPanel = () => {
     const navigate = useNavigate();
-    const [activeCard, setActiveCard] = useState('plataforma');
+    const [activeCard, setActiveCard] = useState('cursos');
     const [activeSubPanel, setActiveSubPanel] = useState('usuarios');
     const [courses, setCourses] = useState(COURSES_DEFINITION);
 
