@@ -3,11 +3,13 @@ import { NavLink, Link } from 'react-router-dom';
 import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
+import { supabase } from '../../lib/supabase';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount } = useAuth();
+    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [publishedEvaluationsCount, setPublishedEvaluationsCount] = useState(0);
     const menuRef = useRef(null);
 
     const isAdmin = profile?.role === 'admin';
@@ -24,6 +26,37 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        const fetchPublishedEvaluationsCount = async () => {
+            if (!isAdmin && (!user || enrolledCourses.length === 0)) {
+                setPublishedEvaluationsCount(0);
+                return;
+            }
+
+            try {
+                let query = supabase
+                    .from('evaluaciones')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_published', true);
+
+                // Para estudiantes, solo contar evaluaciones de cursos inscritos
+                if (!isAdmin) {
+                    const courseIds = enrolledCourses.map(c => c.id);
+                    query = query.in('course_id', courseIds);
+                }
+
+                const { count, error } = await query;
+
+                if (error) throw error;
+                setPublishedEvaluationsCount(count || 0);
+            } catch (error) {
+                console.error('Error fetching published evaluations count:', error);
+            }
+        };
+
+        fetchPublishedEvaluationsCount();
+    }, [isAdmin, user, enrolledCourses]);
 
     const navCategories = [
         {
@@ -81,7 +114,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             {category.items.map((item) => {
                                 const renderIcon = () => (
-                                    <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', minWidth: '24px', justifyContent: 'center' }}>
+                                    <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', minWidth: '24px', justifyContent: 'center', position: 'relative' }}>
                                         <div style={{
                                             color: item.path === '/dashboard' ? '#ff6b6b'
                                                 : item.path?.includes('courses') ? '#4ade80'
@@ -94,6 +127,18 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                         }}>
                                             {item.icon}
                                         </div>
+                                        {item.name === 'Evaluaciones' && publishedEvaluationsCount > 0 && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '-2px',
+                                                right: '-2px',
+                                                width: '8px',
+                                                height: '8px',
+                                                backgroundColor: '#22c55e',
+                                                borderRadius: '50%',
+                                                border: '1px solid #1f2937'
+                                            }} />
+                                        )}
                                     </span>
                                 );
 

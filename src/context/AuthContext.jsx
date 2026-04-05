@@ -290,28 +290,50 @@ export const AuthProvider = ({ children }) => {
 
       const googleAvatar = loggedInUser.user_metadata?.avatar_url || null;
 
-      const { data: newProfile, error: newProfileError } = await supabase
+      // Primero intentar insertar el perfil
+      const { data: insertProfile, error: insertError } = await supabase
         .from('perfiles')
-        .upsert(
-          {
-            id: loggedInUser.id,
-            email: loggedInUser.email?.trim().toLowerCase(),
-            full_name: googleName,
-            avatar_url: googleAvatar,
-            role: 'student'
-          },
-          { onConflict: 'id' }
-        )
+        .insert({
+          id: loggedInUser.id,
+          email: loggedInUser.email?.trim().toLowerCase(),
+          full_name: googleName,
+          avatar_url: googleAvatar,
+          role: 'student'
+        })
         .select('id, email, full_name, role')
         .single();
 
-      if (newProfileError) {
-        console.error('Error creando perfil luego de aprobacion:', newProfileError);
-        resetAccessState();
-        storePendingAccessData(loggedInUser, 'approved');
-        setSessionRejected(false);
+      if (insertError) {
+        // Si falla por conflicto (probablemente email ya existe), actualizar el perfil existente
+        if (insertError.code === '23505') { // unique_violation
+          const { data: updateProfile, error: updateError } = await supabase
+            .from('perfiles')
+            .update({
+              id: loggedInUser.id,
+              full_name: googleName,
+              avatar_url: googleAvatar,
+              role: 'student'
+            })
+            .eq('email', loggedInUser.email?.trim().toLowerCase())
+            .select('id, email, full_name, role')
+            .single();
+
+          if (updateError) {
+            console.error('Error actualizando perfil luego de aprobacion:', updateError);
+            resetAccessState();
+            storePendingAccessData(loggedInUser, 'approved');
+            setSessionRejected(false);
+          } else {
+            await activateResolvedProfile(loggedInUser, updateProfile);
+          }
+        } else {
+          console.error('Error creando perfil luego de aprobacion:', insertError);
+          resetAccessState();
+          storePendingAccessData(loggedInUser, 'approved');
+          setSessionRejected(false);
+        }
       } else {
-        await activateResolvedProfile(loggedInUser, newProfile);
+        await activateResolvedProfile(loggedInUser, insertProfile);
       }
 
       setLoading(false);

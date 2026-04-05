@@ -3,39 +3,60 @@ import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
+import { getCourseById } from '../data/coursesData.jsx';
 import './Evaluations.css';
 
 const Evaluations = () => {
-    const { user, enrolledCourses } = useAuth();
+    const { user, enrolledCourses, profile } = useAuth();
     const navigate = useNavigate();
     const [evaluations, setEvaluations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
 
+    const isAdmin = profile?.role === 'admin';
+
     useEffect(() => {
         const fetchEvaluations = async () => {
-            if (!user || enrolledCourses.length === 0) {
+            if (!user) {
                 setEvaluations([]);
                 setLoading(false);
                 return;
             }
 
-            const courseIds = enrolledCourses.map(c => c.id);
-            
-            const { data, error } = await supabase
+            let query = supabase
                 .from('evaluaciones')
-                .select('*, course:cursos(*)')
-                .in('course_id', courseIds)
+                .select('*')
                 .order('due_date', { ascending: true });
 
+            // Para estudiantes, filtrar por cursos inscritos
+            // Para admins, mostrar todas las evaluaciones publicadas
+            if (!isAdmin) {
+                if (enrolledCourses.length === 0) {
+                    setEvaluations([]);
+                    setLoading(false);
+                    return;
+                }
+                const courseIds = enrolledCourses.map(c => c.id);
+                query = query.in('course_id', courseIds);
+            } else {
+                query = query.eq('is_published', true);
+            }
+            
+            const { data, error } = await query;
+
             if (!error && data) {
-                setEvaluations(data);
+                // Agregar información del curso a cada evaluación
+                const evaluationsWithCourse = data.map(evalItem => ({
+                    ...evalItem,
+                    course: getCourseById(evalItem.course_id)
+                }));
+                setEvaluations(evaluationsWithCourse);
             }
             setLoading(false);
         };
 
         fetchEvaluations();
-    }, [user, enrolledCourses]);
+    }, [user, enrolledCourses, isAdmin]);
 
     const filteredEvaluations = evaluations.filter(e => {
         if (filter === 'all') return true;

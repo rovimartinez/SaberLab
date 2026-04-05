@@ -180,9 +180,15 @@ const AdminEvaluations = () => {
             updatedQuestions.push(newQuestion);
         }
 
-        await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
+        const { error } = await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
+        if (error) {
+            console.error('Error guardando pregunta:', error);
+            alert(`Error guardando pregunta: ${error.message}`);
+            return;
+        }
         setLocalQuestions(updatedQuestions);
         setQuestions(updatedQuestions);
+        await fetchData(); // Refrescar lista
         resetForm();
     };
 
@@ -287,18 +293,30 @@ const AdminEvaluations = () => {
 
     const updateQuestion = async (questionId, updates) => {
         const updatedQuestions = localQuestions.map(q => q.id === questionId ? { ...q, ...updates } : q);
-        await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
+        const { error } = await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
+        if (error) {
+            console.error('Error actualizando pregunta:', error);
+            alert(`Error actualizando pregunta: ${error.message}`);
+            return;
+        }
         setLocalQuestions(updatedQuestions);
         setQuestions(updatedQuestions);
+        await fetchData(); // Refrescar lista
     };
 
     const deleteQuestion = async (questionId) => {
         if (showDeleteConfirm === questionId) {
             const updatedQuestions = localQuestions.filter(q => q.id !== questionId);
-            await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
+            const { error } = await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
+            if (error) {
+                console.error('Error eliminando pregunta:', error);
+                alert(`Error eliminando pregunta: ${error.message}`);
+                return;
+            }
             setLocalQuestions(updatedQuestions);
             setQuestions(updatedQuestions);
             setShowDeleteConfirm(null);
+            await fetchData(); // Refrescar lista
         } else {
             setShowDeleteConfirm(questionId);
             setTimeout(() => setShowDeleteConfirm(null), 3000);
@@ -429,7 +447,9 @@ const AdminEvaluations = () => {
                                     <p style={{ fontSize: '0.875rem', color: '#64748b', fontWeight: 500 }}>{view === 'list' ? 'Configura los reactivos de tu examen' : 'Sube tu archivo Excel o CSV'}</p>
                                 </div>
                             </div>
-                            <button onClick={() => { setShowQuestionsModal(false); resetEvaluationForm(); }} style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '9999px', cursor: 'pointer' }}><X size={20} style={{ color: '#64748b' }} /></button>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button onClick={() => { setShowQuestionsModal(false); resetEvaluationForm(); }} style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '9999px', cursor: 'pointer' }}><X size={20} style={{ color: '#64748b' }} /></button>
+                            </div>
                         </div>
 
                         <div style={{ padding: '2rem', minHeight: '460px', overflowY: 'auto' }}>
@@ -449,7 +469,7 @@ const AdminEvaluations = () => {
                                                     <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>{q.question_type}</span>
                                                     <button onClick={() => deleteQuestion(q.id)} style={{ marginLeft: 'auto', padding: '0.25rem', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
                                                 </div>
-                                                <input type="text" value={q.question_text} onChange={(e) => { const updated = [...localQuestions]; updated[idx].question_text = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); setQuestions(localQuestions); }} style={{ width: '100%', padding: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem', color: 'white', fontSize: '0.875rem', marginBottom: '0.75rem' }} />
+                                                <input type="text" value={q.question_text} onChange={(e) => { const updated = [...localQuestions]; updated[idx].question_text = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { const { error } = await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(localQuestions); await fetchData(); } }} style={{ width: '100%', padding: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem', color: 'white', fontSize: '0.875rem', marginBottom: '0.75rem' }} />
                                                 {q.question_type === 'opcion_multiple' && (
                                                     <div style={{ display: 'grid', gap: '0.5rem' }}>
                                                         {(Array.isArray(q.options) ? q.options : []).map((opt, optIdx) => {
@@ -462,11 +482,18 @@ const AdminEvaluations = () => {
                                                                             const updated = [...localQuestions]; 
                                                                             updated[idx].correct_answer = letter; 
                                                                             setLocalQuestions(updated); 
-                                                                            await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); 
+                                                                            const { error } = await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id);
+                                                                            if (error) {
+                                                                                console.error('Error guardando cambios:', error);
+                                                                                alert(`Error guardando cambios: ${error.message}`);
+                                                                            } else {
+                                                                                setQuestions(updated);
+                                                                                await fetchData();
+                                                                            }
                                                                         }}
                                                                         style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.25rem', background: isCorrect ? 'rgba(34,197,94,0.2)' : '#0f172a', border: `1px solid ${isCorrect ? '#22c55e' : '#334155'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isCorrect ? '#4ade80' : '#64748b', fontSize: '0.75rem', cursor: 'pointer' }}
                                                                     >{letter}</button>
-                                                                    <input type="text" value={opt} onChange={(e) => { const updated = [...localQuestions]; updated[idx].options[optIdx] = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); }} style={{ flex: 1, padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
+                                                                    <input type="text" value={opt} onChange={(e) => { const updated = [...localQuestions]; updated[idx].options[optIdx] = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { const { error } = await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(localQuestions); await fetchData(); } }} style={{ flex: 1, padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
                                                                 </div>
                                                             );
                                                         })}
@@ -474,14 +501,14 @@ const AdminEvaluations = () => {
                                                 )}
                                                 {q.question_type === 'verdadero_falso' && (
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Verdadero'; setLocalQuestions(updated); await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Verdadero' ? 'rgba(34,197,94,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Verdadero' ? '#22c55e' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Verdadero' ? '#4ade80' : '#64748b', cursor: 'pointer' }}>✓ Verdadero</button>
-                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Falso'; setLocalQuestions(updated); await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Falso' ? 'rgba(239,68,68,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Falso' ? '#ef4444' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Falso' ? '#f87171' : '#64748b', cursor: 'pointer' }}>✗ Falso</button>
+                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Verdadero'; setLocalQuestions(updated); const { error } = await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(updated); await fetchData(); } }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Verdadero' ? 'rgba(34,197,94,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Verdadero' ? '#22c55e' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Verdadero' ? '#4ade80' : '#64748b', cursor: 'pointer' }}>✓ Verdadero</button>
+                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Falso'; setLocalQuestions(updated); const { error } = await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(updated); await fetchData(); } }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Falso' ? 'rgba(239,68,68,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Falso' ? '#ef4444' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Falso' ? '#f87171' : '#64748b', cursor: 'pointer' }}>✗ Falso</button>
                                                     </div>
                                                 )}
                                                 {q.question_type === 'escribir' && (
                                                     <div>
                                                         <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>Respuesta esperada:</label>
-                                                        <input type="text" value={q.correct_answer || ''} onChange={(e) => { const updated = [...localQuestions]; updated[idx].correct_answer = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); }} style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
+                                                        <input type="text" value={q.correct_answer || ''} onChange={(e) => { const updated = [...localQuestions]; updated[idx].correct_answer = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { const { error } = await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(localQuestions); await fetchData(); } }} style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
                                                     </div>
                                                 )}
                                             </div>
@@ -644,11 +671,17 @@ const AdminEvaluations = () => {
                                                 <button onClick={async () => { 
                                                     const currentQuestions = questions || [];
                                                     const newQuestions = [...currentQuestions, ...importPreview];
-                                                    await supabase.from('evaluaciones').update({ questions: newQuestions }).eq('id', selectedEval.id);
+                                                    const { error } = await supabase.from('evaluaciones').update({ questions: newQuestions }).eq('id', selectedEval.id);
+                                                    if (error) {
+                                                        console.error('Error importando preguntas:', error);
+                                                        alert(`Error importando preguntas: ${error.message}`);
+                                                        return;
+                                                    }
                                                     setQuestions(newQuestions);
                                                     setLocalQuestions(newQuestions);
                                                     setImportPreview(null);
                                                     setView('list');
+                                                    await fetchData(); // Refrescar lista
                                                 }} style={{ flex: 1, padding: '0.75rem', background: '#2563eb', border: 'none', borderRadius: '0.5rem', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Importar</button>
                                                 <button onClick={() => { setImportPreview(null); }} style={{ flex: 1, padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '0.5rem', color: '#94a3b8', cursor: 'pointer' }}>Cancelar</button>
                                             </div>
