@@ -25,33 +25,28 @@ VITE_SUPABASE_URL=tu_project_url
 VITE_SUPABASE_ANON_KEY=tu_anon_key
 ```
 
-## Tablas esperadas por el frontend
+## Tablas usadas actualmente (ESPAÑOL)
 
-- `profiles`
-- `access_requests`
-- `notifications`
-- `courses`
-- `groups`
-- `group_codes`
-- `enrollments`
-- `evaluations`
-- `student_profiles`
-- `student_lesson_progress`
-- `student_quiz_attempts`
-- `student_mission_progress`
-- `student_flashcards`
-- `user_progress`
-- `achievements`
+- `perfiles` - Perfiles de usuarios
+- `solicitudes_acceso` - Solicitudes de acceso
+- `notificaciones` - Notificaciones
+- `cursos` - Cursos
+- `grupos` - Grupos de cursos
+- `codigos_grupo` - Códigos para unirse a grupos
+- `inscripciones` - Inscripciones de estudiantes
+- `evaluaciones` - Evaluaciones
+- `grupos_usuario` - Relación usuario-grupo
+- `progreso_usuario` - Progreso del estudiante
+- `logros` - Logros/Logros
+- `tarjetas_estudiante` - Flashcards del estudiante
+- `visibilidad_leccion_curso` - Configuración de visibilidad de lecciones
 
-## Tablas analiticas adicionales
+## Tablas pendientes (sin uso aún)
 
-- `student_learning_sessions`
-- `student_content_events`
-- `student_quiz_question_events`
-- `student_flashcard_events`
-- `student_mission_attempts`
-- `student_concept_mastery`
-- vista `v_student_concept_signals`
+- `student_profiles` - Perfiles de estudiante
+- `student_lesson_progress` - Progreso de lecciones
+- `student_quiz_attempts` - Intentos de quiz
+- `student_mission_progress` - Progreso de misiones
 
 ## Nota importante
 

@@ -40,12 +40,13 @@ const lessonMissionsMap = {
 };
 
 const Lesson = () => {
-    const { user } = useAuth();
+    const { user, lessonVisibility } = useAuth();
     const { courseId, moduleId, lessonId } = useParams();
     const navigate = useNavigate();
 
     const courseData = getCourseByIdentifier(courseId);
     const courseCode = courseData ? courseData.abbr.toLowerCase() : courseId.toLowerCase();
+    const courseVisibility = lessonVisibility[courseData?.id] || {};
 
     // Identificador único de la lección para base de datos y búsqueda
     const internalId = useMemo(() =>
@@ -178,6 +179,7 @@ const Lesson = () => {
                 currentLessonId={internalId}
                 isOpen={isRightSidebarOpen}
                 toggleSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+                lessonVisibility={courseVisibility}
             />
 
             <div

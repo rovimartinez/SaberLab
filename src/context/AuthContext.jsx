@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [lessonVisibility, setLessonVisibility] = useState({}); // { courseId: { lessonId: visible } }
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [pendingAccessRequestsCount, setPendingAccessRequestsCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,9 @@ export const AuthProvider = ({ children }) => {
   const loadEnrolledCourses = async (userId, role = 'student') => {
     if (role === 'admin') {
       setEnrolledCourses(getAllCoursesWithProgress());
+      // Cargar visibilidad para todos los cursos (IDs 1-6)
+      const allCourseIds = [1, 2, 3, 4, 5, 6];
+      await loadLessonVisibility(allCourseIds);
       return;
     }
 
@@ -103,6 +107,9 @@ export const AuthProvider = ({ children }) => {
       });
 
       setEnrolledCourses(coursesWithProgress);
+      
+      // Cargar visibilidad de lecciones para estos cursos
+      await loadLessonVisibility(courseIds);
     } else {
       setEnrolledCourses([]);
     }
@@ -123,6 +130,27 @@ export const AuthProvider = ({ children }) => {
   const refreshEnrolledCourses = async () => {
     if (user) {
       await loadEnrolledCourses(user.id, profile?.role);
+    }
+  };
+
+  const loadLessonVisibility = async (courseIds) => {
+    if (!courseIds || courseIds.length === 0) return;
+    try {
+      const { data } = await supabase
+        .from('course_lesson_visibility')
+        .select('course_id, lesson_id, visible')
+        .in('course_id', courseIds);
+      
+      if (data && data.length > 0) {
+        const visibilityMap = {};
+        data.forEach(v => {
+          if (!visibilityMap[v.course_id]) visibilityMap[v.course_id] = {};
+          visibilityMap[v.course_id][v.lesson_id] = v.visible;
+        });
+        setLessonVisibility(prev => ({ ...prev, ...visibilityMap }));
+      }
+    } catch (err) {
+      console.error('Error cargando visibilidad de lecciones:', err);
     }
   };
 
@@ -417,7 +445,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, sessionRejected, setSessionRejected, signInWithGoogle, signOut, enrolledCourses, unreadNotificationsCount, pendingAccessRequestsCount, refreshNotificationsCount, refreshEnrolledCourses, refreshPendingAccessRequestsCount }}>
+    <AuthContext.Provider value={{ user, profile, loading, sessionRejected, setSessionRejected, signInWithGoogle, signOut, enrolledCourses, lessonVisibility, unreadNotificationsCount, pendingAccessRequestsCount, refreshNotificationsCount, refreshEnrolledCourses, refreshPendingAccessRequestsCount }}>
       {children}
     </AuthContext.Provider>
   );

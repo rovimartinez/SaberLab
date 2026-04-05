@@ -24,11 +24,13 @@
 - Foto de Google si está disponible (avatar_url)
 - Sin divisores en el modal
 
-### 5. Misc
-- Favicon con logo de SaberLab
-- Badge de solicitudes pendientes en "Notificaciones" del sidebar
-- Arreglado inicio de sesión para que abra "Gestión de Cursos" por defecto
-- Creada columna updated_at en access_requests y profiles
+### 6. Visibilidad de Lecciones
+- Creada tabla `course_lesson_visibility` en Supabase para persistir configuración de visibilidad por curso
+- CourseDetail ahora guarda cambios de visibilidad en BD (upsert)
+- AuthContext carga visibilidad de lecciones al iniciar sesión (tanto para admin como estudiantes)
+- SubjectDetail filtra lecciones según configuración: muestra todas con ícono de candado si están ocultas
+- CourseSidebar también marca lecciones ocultas como bloqueadas
+- Normalización de IDs de lecciones: 'l1' -> 're-m1-l1' para consistencia con BD
 
 ---
 
@@ -46,6 +48,7 @@
 ### 2. Mejoras pendientes
 - revisar si hay otros datos que se guardan localmente y deberían persistir
 - verificar consistencia de datos entre admin y estudiante
+- **Completar lección:** Al presionar "Marcar como completada" en Lesson.jsx, actualmente solo hace console.log. Necesita guardar en Supabase (tablas: student_lesson_progress, user_progress, o similar)
 
 ---
 
@@ -65,10 +68,13 @@
 
 - `profiles` - Perfiles de usuarios (incluye avatar_url)
 - `access_requests` - Solicitudes de acceso
+- `notifications` - Notificaciones
+- `courses` - Cursos
 - `groups` - Grupos de cursos
-- `enrollments` - Inscripciones de estudiantes
 - `group_codes` - Códigos para unirse a grupos
-- `courses` - Cursos (definidos localmente, no en BD)
+- `enrollments` - Inscripciones de estudiantes
+- `course_lesson_visibility` - Configuración de visibilidad de lecciones por curso
+- `evaluations` - Evaluaciones
 
 ---
 

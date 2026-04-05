@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp, BookOpen, Layers, CheckCircle2, FileText, X, Lo
 import { LESSONS_REGISTRY } from '../../data/coursesData';
 import './CourseSidebar.css';
 
-const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar }) => {
+const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lessonVisibility = {} }) => {
     const navigate = useNavigate();
     const [expandedModules, setExpandedModules] = useState({});
 
@@ -49,6 +49,15 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar }) => {
     // Mock progress logic for demonstration
     // In a real app, this would come from the database (user_progress table)
     const getLessonStatus = (lessonId) => {
+        // Normalizar ID de lección: 'l1' -> 're-m1-l1'
+        const normalizedId = lessonId.includes('-') 
+            ? lessonId 
+            : `${subject.abbr.toLowerCase()}-m1-${lessonId}`;
+        
+        // Filtrar lecciones ocultas
+        const visibility = lessonVisibility[normalizedId];
+        if (visibility === false) return 'locked';
+
         // Find flat list of all lessons to determine order
         const allLessons = subject.modules.flatMap(m => m.lessons.map(l => l.id));
         const currentIdx = allLessons.indexOf(currentLessonId);

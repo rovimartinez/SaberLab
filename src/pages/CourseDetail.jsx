@@ -56,6 +56,40 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const [copied, setCopied] = useState(false);
     const [newGroupModal, setNewGroupModal] = useState({ isOpen: false, name: '', teacher: '' });
     const [loadingGroups, setLoadingGroups] = useState(false);
+    const [lessonVisibility, setLessonVisibility] = useState({}); // { lessonId: true/false }
+
+    // Cargar visibilidad de lecciones desde Supabase
+    useEffect(() => {
+        const loadLessonVisibility = async () => {
+            if (!course) return;
+            try {
+                const { data } = await supabase
+                    .from('course_lesson_visibility')
+                    .select('lesson_id, visible')
+                    .eq('course_id', course.id);
+                
+                if (data && data.length > 0) {
+                    const visibilityMap = {};
+                    data.forEach(v => { visibilityMap[v.lesson_id] = v.visible; });
+                    setLessonVisibility(visibilityMap);
+                }
+            } catch (err) {
+                console.error('Error cargando visibilidad:', err);
+            }
+        };
+        loadLessonVisibility();
+    }, [course]);
+
+    // Helper para obtener visibilidad de una lección (usa estado local primero, luego BD)
+    const getLessonVisibility = (lessonId) => {
+        if (lessonVisibility.hasOwnProperty(lessonId)) {
+            return lessonVisibility[lessonId];
+        }
+        // Valor por defecto de la definición local
+        const module = courseModules.find(m => m.lessons.some(l => l.id === lessonId));
+        const lesson = module?.lessons.find(l => l.id === lessonId);
+        return lesson?.visible !== false;
+    };
 
     // Mostrar mensaje de carga si no hay curso
     if (!course) {
@@ -344,33 +378,72 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         }
     };
 
-    const toggleLessonVisibility = (moduleId, lessonId) => {
+    const toggleLessonVisibility = async (moduleId, lessonId) => {
+        const newVisibility = !getLessonVisibility(lessonId);
+        
+        // Guardar en Supabase
+        try {
+            const { data, error } = await supabase
+                .from('course_lesson_visibility')
+                .upsert({
+                    course_id: course.id,
+                    lesson_id: lessonId,
+                    visible: newVisibility,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'course_id,lesson_id' });
+        } catch (err) {
+            console.error('Error guardando visibilidad:', err);
+        }
+
+        // Actualizar estado local
         const updatedModules = courseModules.map(m => 
             m.id === moduleId ? {
                 ...m,
                 lessons: m.lessons.map(l => 
-                    l.id === lessonId ? { ...l, visible: !l.visible } : l
+                    l.id === lessonId ? { ...l, visible: newVisibility } : l
                 )
             } : m
         );
         setCourseModules(updatedModules);
+        setLessonVisibility(prev => ({ ...prev, [lessonId]: newVisibility }));
         updateCourse({
             ...course,
             modules: updatedModules
         });
     };
 
-    const toggleModuleVisibility = (moduleId) => {
+    const toggleModuleVisibility = async (moduleId) => {
         const module = courseModules.find(m => m.id === moduleId);
-        const allVisible = module?.lessons.every(l => l.visible);
+        const allVisible = module?.lessons.every(l => getLessonVisibility(l.id));
+        const newVisibility = !allVisible;
         
+        // Guardar cada lección en Supabase
+        try {
+            const upserts = module.lessons.map(l => ({
+                course_id: course.id,
+                lesson_id: l.id,
+                visible: newVisibility,
+                updated_at: new Date().toISOString()
+            }));
+            await supabase
+                .from('course_lesson_visibility')
+                .upsert(upserts, { onConflict: 'course_id,lesson_id' });
+        } catch (err) {
+            console.error('Error guardando visibilidad:', err);
+        }
+
+        // Actualizar estado local
         const updatedModules = courseModules.map(m => 
             m.id === moduleId ? {
                 ...m,
-                lessons: m.lessons.map(l => ({ ...l, visible: !allVisible }))
+                lessons: m.lessons.map(l => ({ ...l, visible: newVisibility }))
             } : m
         );
         setCourseModules(updatedModules);
+        // Actualizar mapa de visibilidad
+        const newVisibilityMap = { ...lessonVisibility };
+        module.lessons.forEach(l => { newVisibilityMap[l.id] = newVisibility; });
+        setLessonVisibility(newVisibilityMap);
         updateCourse({
             ...course,
             modules: updatedModules
@@ -481,7 +554,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                         <div className="modules-list">
                             {courseModules.map((module, idx) => (
                                 <div key={module.id} className="module-card">
-                                    <div className="module-card-header" onClick={() => toggleExpandModule(module.id)}>
+                                        <div className="module-card-header" onClick={() => toggleExpandModule(module.id)}>
                                         <div className="module-card-info">
                                             <span className="module-card-number">{idx + 1}</span>
                                             <span className="module-card-name">{module.name}</span>
@@ -489,36 +562,38 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                         <div className="module-card-actions">
                                             <button 
                                                 className={`visibility-btn ${
-                                                    module.lessons.every(l => l.visible) ? 'all' : 
-                                                    module.lessons.some(l => l.visible) ? 'partial' : 'none'
+                                                    module.lessons.every(l => getLessonVisibility(l.id)) ? 'all' : 
+                                                    module.lessons.some(l => getLessonVisibility(l.id)) ? 'partial' : 'none'
                                                 }`}
                                                 onClick={(e) => { e.stopPropagation(); toggleModuleVisibility(module.id); }}
                                             >
                                                 <Eye size={18} />
                                             </button>
                                             <span className={`module-visibility-count ${
-                                                module.lessons.every(l => l.visible) ? 'all' : 
-                                                module.lessons.some(l => l.visible) ? 'partial' : 'none'
+                                                module.lessons.every(l => getLessonVisibility(l.id)) ? 'all' : 
+                                                module.lessons.some(l => getLessonVisibility(l.id)) ? 'partial' : 'none'
                                             }`}>
-                                                {module.lessons.filter(l => l.visible).length}/{module.lessons.length}
+                                                {module.lessons.filter(l => getLessonVisibility(l.id)).length}/{module.lessons.length}
                                             </span>
                                             <span className={`expand-arrow ${expandedModules[module.id] ? 'expanded' : ''}`}>▼</span>
                                         </div>
                                     </div>
                                     {expandedModules[module.id] && (
                                         <div className="module-card-lessons">
-                                            {module.lessons.map((lesson) => (
-                                                <div key={lesson.id} className={`lesson-item ${lesson.visible ? 'visible' : 'hidden'}`}>
+                                            {module.lessons.map((lesson) => {
+                                                const isVisible = getLessonVisibility(lesson.id);
+                                                return (
+                                                <div key={lesson.id} className={`lesson-item ${isVisible ? 'visible' : 'hidden'}`}>
                                                     <span className="lesson-name">{getLessonInfo(lesson.id).title}</span>
                                                     <button 
-                                                        className={`visibility-btn ${lesson.visible ? 'is-visible' : ''}`}
+                                                        className={`visibility-btn ${isVisible ? 'is-visible' : ''}`}
                                                         onClick={() => toggleLessonVisibility(module.id, lesson.id)}
                                                     >
-                                                        {lesson.visible ? <Eye size={16} /> : <EyeOff size={16} />}
-                                                        <span>{lesson.visible ? 'Visible' : 'Oculto'}</span>
+                                                        {isVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                        <span>{isVisible ? 'Visible' : 'Oculto'}</span>
                                                     </button>
                                                 </div>
-                                            ))}
+                                            )})}
                                         </div>
                                     )}
                                 </div>

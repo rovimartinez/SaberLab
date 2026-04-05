@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, Code, FlaskConical, Box, Brain } from 'lucide-react';
-import { getCourseByIdentifier } from '../data/coursesData.jsx';
+import { getCourseByIdentifier, getLessonInfo } from '../data/coursesData.jsx';
+import { useAuth } from '../context/useAuth';
 import './SubjectDetail.css';
 
 // eslint-disable-next-line no-unused-vars
@@ -32,8 +33,18 @@ const getIcon = (type, status) => {
 const SubjectDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { lessonVisibility, enrolledCourses } = useAuth();
     const realCourse = getCourseByIdentifier(id) || getCourseByIdentifier('RE');
     const abbr = realCourse.abbr;
+    const courseId = realCourse.id;
+    const courseVisibility = lessonVisibility[courseId] || {};
+    
+    // Normalizar ID de lección: 'l1' -> 're-m1-l1'
+    const normalizeLessonId = (lessonId, moduleId) => {
+        if (lessonId.includes('-')) return lessonId; // Ya tiene formato completo
+        return `${abbr.toLowerCase()}-${moduleId}-${lessonId}`;
+    };
+    
     const subject = {
         ...realCourse,
         bg: `${realCourse.color}15`,
@@ -47,65 +58,13 @@ const SubjectDetail = () => {
         }
     }, [id, realCourse, navigate]);
 
-    const modules = abbr === 'RE' ? [
-        { 
-            id: 'm1', 
-            name: 'Módulo 1: Fundamentos y Lógica Digital', 
-            lessons: [
-                { id: 'l1', title: 'Mi primer parpadeo (Entorno y Salidas Digitales)', type: 'content', duration: '15 min', status: 'completed' },
-                { id: 'l2', title: 'Semáforos y Variables', type: 'content', duration: '20 min', status: 'current' },
-                { id: 'l3', title: 'Entradas digitales y pulsadores', type: 'content', duration: '25 min', status: 'locked' },
-                { id: 'l4', title: 'Monitor serie y depuracion inicial', type: 'content', duration: '18 min', status: 'locked' },
-                { id: 'l5', title: 'Entradas analógicas y resolución (Lectura de potenciómetros)', type: 'content', duration: '20 min', status: 'locked' }
-            ]
-        },
-        { 
-            id: 'm2', 
-            name: 'Módulo 2: Potencia, Movimiento y Ciclos', 
-            lessons: [
-                { id: 'l6', title: 'Modulación PWM y el Bucle for', type: 'content', duration: '20 min', status: 'locked' },
-                { id: 'l7', title: 'Servomotores y Abstracción con Librerías', type: 'content', duration: '25 min', status: 'locked' },
-                { id: 'l8', title: 'Motores DC y el Puente H', type: 'content', duration: '20 min', status: 'locked' },
-                { id: 'l9', title: 'Gestión de Energía y Seguridad Eléctrica', type: 'content', duration: '15 min', status: 'locked' },
-                { id: 'l10', title: 'Programación Modular (Funciones)', type: 'quiz', duration: '30 min', status: 'locked' }
-            ]
-        },
-        { 
-            id: 'm3', 
-            name: 'Módulo 3: Percepción y Algoritmos Autónomos', 
-            lessons: [
-                { id: 'l11', title: 'Sensor Ultrasonido (HC-SR04)', type: 'content', duration: '20 min', status: 'locked' },
-                { id: 'l12', title: 'Infrarrojos y Operadores Lógicos', type: 'content', duration: '18 min', status: 'locked' },
-                { id: 'l13', title: 'Sensores de Entorno', type: 'content', duration: '15 min', status: 'locked' }
-            ]
-        },
-        { 
-            id: 'm4', 
-            name: 'Módulo 4: Construcción y Didáctica', 
-            lessons: [
-                { id: 'l14', title: 'Diseño Mecánico y Ensamblaje', type: 'content', duration: '25 min', status: 'locked' },
-                { id: 'l15', title: 'Proyecto Integrador: El Robot Autónomo', type: 'quiz', duration: '60 min', status: 'locked' },
-                { id: 'l16', title: 'Documentación Técnica y Pedagógica', type: 'content', duration: '20 min', status: 'locked' }
-            ]
-        }
-    ] : [
-        { 
-            id: 'm1', 
-            name: 'Módulo 1: Fundamentos', 
-            lessons: [
-                { id: 'l1', title: 'Introducción a Conceptos', type: 'content', duration: '12 min', status: 'completed' },
-                { id: 'l2', title: 'Principios Básicos', type: 'content', duration: '8 min', status: 'completed' },
-                { id: 'l3', title: 'Ejercicios Prácticos', type: 'quiz', duration: '15 min', status: 'current' },
-                { id: 'l4', title: 'Aplicaciones Avanzadas', type: 'content', duration: '20 min', status: 'locked' },
-                { id: 'l5', title: 'Evaluación Final', type: 'quiz', duration: '30 min', status: 'locked' }
-            ]
-        }
-    ];
-
+    // Usar módulos reales de coursesData en vez del array hardcodeado
+    const courseModules = realCourse?.modules || [];
+    
     const [expandedModules, setExpandedModules] = useState(() => {
         const initialState = { m1: true };
-        modules.forEach(m => {
-            if (m.lessons.some(l => l.status === 'current')) {
+        courseModules.forEach(m => {
+            if (m.lessons?.some(l => l.status === 'current')) {
                 initialState[m.id] = true;
             }
         });
@@ -159,7 +118,7 @@ const SubjectDetail = () => {
                         <h2 className="section-title-premium">Plan de Estudios</h2>
                     </div>
                     <div className="modules-list" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {modules.map((module) => (
+                        {courseModules.map((module) => (
                             <div key={module.id} className="module-card-improved glass-panel">
                                 <div 
                                     className="module-header-action"
@@ -176,31 +135,40 @@ const SubjectDetail = () => {
                                 </div>
                                 {expandedModules[module.id] && (
                                     <div className="lessons-list-premium">
-                                        {module.lessons.map((lesson) => (
-                                            <div key={lesson.id} className={`lesson-item-improved ${lesson.status}`}>
-                                                <div className="lesson-indicator-line" style={{ background: lesson.status === 'current' ? subject.color : 'transparent' }}></div>
-                                                <div className="lesson-icon-circle" style={{ color: lesson.status === 'current' ? subject.color : undefined }}>
-                                                    {getIcon(lesson.type, lesson.status)}
+                                        {module.lessons.filter(lesson => {
+                                            const normalizedId = normalizeLessonId(lesson.id, module.id);
+                                            const visibility = courseVisibility[normalizedId];
+                                            // Mostrar todas las lecciones, pero marcar las ocultas
+                                            return visibility === undefined || visibility === true || visibility === false;
+                                        }).map((lesson) => {
+                                            const normalizedId = normalizeLessonId(lesson.id, module.id);
+                                            const visibility = courseVisibility[normalizedId];
+                                            const isHidden = visibility === false;
+                                            const lessonInfo = getLessonInfo(lesson.id);
+                                            return (
+                                            <div key={lesson.id} className="lesson-item-improved">
+                                                <div className="lesson-indicator-line"></div>
+                                                <div className="lesson-icon-circle">
+                                                    {isHidden ? <Lock size={20} /> : <FileText size={20} />}
                                                 </div>
                                                 <div className="lesson-main-info">
-                                                    <h4 className="lesson-title-text">{lesson.title}</h4>
-                                                    <span className="lesson-subtitle">{lesson.type === 'content' ? 'Lección Teórica' : 'Evaluación'} • {lesson.duration}</span>
+                                                    <h4 className="lesson-title-text" style={isHidden ? { opacity: 0.5 } : {}}>{lessonInfo.title || lesson.id}</h4>
                                                 </div>
                                                 <div className="lesson-action-area">
-                                                    {lesson.status !== 'locked' ? (
+                                                    {isHidden ? (
+                                                        <div className="locked-badge"><Lock size={14} /></div>
+                                                    ) : (
                                                         <button 
-                                                            className={`lesson-btn ${lesson.status === 'completed' ? 'revisit' : 'start'}`} 
-                                                            style={lesson.status === 'current' ? { background: subject.color } : {}}
+                                                            className="lesson-btn start"
+                                                            style={{ background: subject.color, color: 'white', border: 'none' }}
                                                             onClick={() => navigate(`/dashboard/my-courses/${subject.slug}/${module.id}/${lesson.id}`)}
                                                         >
-                                                            {lesson.status === 'completed' ? 'Ver de nuevo' : 'Comenzar'}
+                                                            <PlayCircle size={14} />
                                                         </button>
-                                                    ) : (
-                                                        <div className="locked-badge"><Lock size={14} /> Bloqueado</div>
                                                     )}
                                                 </div>
                                             </div>
-                                        ))}
+                                        )})}
                                     </div>
                                 )}
                             </div>

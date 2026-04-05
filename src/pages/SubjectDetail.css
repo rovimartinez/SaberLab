@@ -236,17 +236,20 @@
 }
 
 .lesson-btn {
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 6px;
     font-weight: 700;
     font-size: 0.75rem;
     cursor: pointer;
     border: 1px solid transparent;
     transition: all 0.3s ease;
-    width: 115px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     justify-content: center;
     align-items: center;
+    background: var(--accent-blue);
+    color: white;
 }
 
 .lesson-action-area {
@@ -275,12 +278,18 @@
 .locked-badge {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    padding: 3px 8px;
+    justify-content: center;
+    padding: 6px 10px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 5px;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    color: var(--text-secondary);
+}
+
+.locked-badge svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* Sidebar Improved */
