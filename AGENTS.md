@@ -8,6 +8,7 @@
 - **CSS centralizado** - Todos los archivos movidos a `src/styles/`
 - **Nombres de componentes corregidos** - exports ahora coinciden con nombres de funciones
 - **Sidebar mostrando Display Name** - Usa `userMetadata.name` (nombre de Google)
+- **Corregido error "Cargando" al cambiar pestañas** - Error en BD: columna `first_name` no existía
 
 ---
 

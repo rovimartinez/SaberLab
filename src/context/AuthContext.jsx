@@ -208,7 +208,7 @@ export const AuthProvider = ({ children }) => {
 
     const { data: profileById, error: profileByIdError } = await supabase
       .from('perfiles')
-      .select('id, email, full_name, first_name, last_name, role, avatar_url')
+      .select('id, email, full_name, role')
       .eq('id', loggedInUser.id)
       .maybeSingle();
 
@@ -226,7 +226,7 @@ export const AuthProvider = ({ children }) => {
 
     const { data: profileByEmail, error: profileByEmailError } = await supabase
       .from('perfiles')
-      .select('id, email, full_name, first_name, last_name, role, avatar_url')
+      .select('id, email, full_name, role')
       .eq('email', normalizedEmail)
       .maybeSingle();
 
@@ -244,8 +244,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const validateSession = async (session) => {
-    setLoading(true);
     const loggedInUser = session?.user ?? null;
+
+    // Only show loading if we don't have a user yet (initial load)
+    if (!user) {
+      setLoading(true);
+    }
 
     if (!loggedInUser) {
       setUser(null);
@@ -300,7 +304,7 @@ export const AuthProvider = ({ children }) => {
           avatar_url: googleAvatar,
           role: 'student'
         })
-        .select('id, email, full_name, first_name, last_name, role, avatar_url')
+        .select('id, email, full_name, role')
         .single();
 
       if (insertError) {
@@ -315,7 +319,7 @@ export const AuthProvider = ({ children }) => {
               role: 'student'
             })
             .eq('email', loggedInUser.email?.trim().toLowerCase())
-            .select('id, email, full_name, first_name, last_name, role, avatar_url')
+            .select('id, email, full_name, role')
             .single();
 
           if (updateError) {
