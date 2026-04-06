@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, Code, FlaskConical, Box, Brain } from 'lucide-react';
 import { getCourseByIdentifier, getLessonInfo } from '../data/coursesData.jsx';
 import { useAuth } from '../context/useAuth';
-import './SubjectDetail.css';
+import '../styles/SubjectDetail.css';
 
 // eslint-disable-next-line no-unused-vars
 const subjectData = {

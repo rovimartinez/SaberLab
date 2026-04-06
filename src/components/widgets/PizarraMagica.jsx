@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Eraser, Trash2, PenLine, Palette, Download, X, Wand2, Type, Minus, Maximize2, Minimize2, Ghost, Square, Circle, Triangle, Shapes, ArrowRight, Diamond, AppWindow, RotateCcw, MousePointer2 } from 'lucide-react';
-import './PizarraMagica.css';
+import '../../styles/PizarraMagica.css';
 
 const colors = ['#ffffff', '#a855f7', '#3b82f6', '#ec4899', '#f59e0b', '#10b981'];
 

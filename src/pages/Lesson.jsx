@@ -11,7 +11,7 @@ import {
     Rocket
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import './Lesson.css';
+import '../styles/Lesson.css';
 import { l1Missions } from '../lessons/RE/m1/l1.missions';
 import { l2Missions } from '../lessons/RE/m1/l2.missions';
 import { l3Missions } from '../lessons/RE/m1/l3.missions';

@@ -2,25 +2,24 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'rea
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import Layout from './components/layout/Layout';
-import Dashboard from './pages/Dashboard';
+import PanelInicio from './pages/PanelInicio';
 import SubjectDetail from './pages/SubjectDetail';
 import Lesson from './pages/Lesson';
 import Login from './pages/Login';
-import Courses from './pages/Courses';
+import PanelMisCursos from './pages/PanelMisCursos';
 import CourseDetail from './pages/CourseDetail';
 import MyCourses from './pages/MyCourses';
-import Admin from './pages/Admin';
-import Notifications from './pages/Notifications';
-import Evaluations from './pages/Evaluations';
+import PanelPlataforma from './pages/PanelPlataforma';
+import PanelNotificaciones from './pages/PanelNotificaciones';
+import PanelEvaluaciones from './pages/PanelEvaluaciones';
+import EvaluationInstruction from './pages/EvaluationInstruction';
 import EvaluationPlayer from './pages/EvaluationPlayer';
-import EvaNoti from './pages/evanoti';
-import EvaExam from './pages/EvaExam';
-import Progress from './pages/Progress';
-import Resources from './pages/Resources';
-import Widgets from './pages/Widgets';
+import PanelProgreso from './pages/PanelProgreso';
+import PanelRecursos from './pages/PanelRecursos';
+import PanelWidgets from './pages/PanelWidgets';
 import SettingsPage from './pages/Settings';
 import AccessRequests from './pages/AccessRequests';
-import AdminPanel from './pages/AdminPanel';
+import PanelGestion from './pages/PanelGestion';
 import Landing from './pages/Landing';
 import RequestAccess from './pages/RequestAccess';
 import './index.css';
@@ -84,25 +83,24 @@ function AppRoutes() {
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/request-access" element={<RequestAccess />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                    <Route index element={<Dashboard />} />
+                    <Route index element={<PanelInicio />} />
                     <Route path="my-courses" element={<MyCourses />} />
-                    <Route path="courses" element={<AdminRoute><Courses courses={courses} /></AdminRoute>} />
+                    <Route path="courses" element={<AdminRoute><PanelMisCursos courses={courses} /></AdminRoute>} />
                     <Route path="course/:id" element={<CourseDetail courses={courses} setCourses={setCourses} />} />
-                    <Route path="admin" element={<AdminRoute><Admin /></AdminRoute>} />
-                    <Route path="admin-panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+                    <Route path="admin" element={<AdminRoute><PanelPlataforma /></AdminRoute>} />
+                    <Route path="admin-panel" element={<AdminRoute><PanelGestion /></AdminRoute>} />
                     <Route path="requests" element={<AdminRoute><AccessRequests /></AdminRoute>} />
                     <Route path="learn/:id" element={<RedirectToMyCourses />} />
                     <Route path="learn/:courseId/:moduleId/:lessonId" element={<RedirectLessonToMyCourses />} />
                     <Route path="my-courses/:id" element={<SubjectDetail />} />
                     <Route path="my-courses/:courseId/:moduleId/:lessonId" element={<Lesson />} />
-                    <Route path="notifications" element={<Notifications />} />
-                    <Route path="evaluations" element={<Evaluations />} />
-                    <Route path="evaluations/re-m1-e2" element={<EvaNoti />} />
-                    <Route path="evaluations/re-m1-e2-play" element={<EvaExam />} />
-                    <Route path="evaluations/:evaluationKey" element={<EvaluationPlayer />} />
-                    <Route path="progress" element={<Progress />} />
-                    <Route path="resources" element={<Resources />} />
-                    <Route path="myapps" element={<Widgets />} />
+                    <Route path="notifications" element={<PanelNotificaciones />} />
+                    <Route path="evaluations" element={<PanelEvaluaciones />} />
+                    <Route path="evaluations/:evaluationKey" element={<EvaluationInstruction />} />
+                    <Route path="evaluations/:evaluationKey/play" element={<EvaluationPlayer />} />
+                    <Route path="progress" element={<PanelProgreso />} />
+                    <Route path="resources" element={<PanelRecursos />} />
+                    <Route path="myapps" element={<PanelWidgets />} />
                     <Route path="settings" element={<SettingsPage />} />
                 </Route>
             </Routes>

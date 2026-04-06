@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
 import { AppsProvider } from '../../context/AppsContext';
-import './Layout.css';
+import '../../styles/Layout.css';
 
 const LayoutContent = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);

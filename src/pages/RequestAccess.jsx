@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Mail, Shield, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/useAuth';
-import './Login.css';
+import '../styles/Login.css';
 
 const RequestAccess = () => {
     const navigate = useNavigate();

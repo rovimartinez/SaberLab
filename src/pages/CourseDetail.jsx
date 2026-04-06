@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus, Edit2, X, Key } from 'lucide-react';
 import { getLessonInfo } from '../data/coursesData.jsx';
 import { supabase } from '../lib/supabase';
-import './CourseDetail.css';
+import '../styles/CourseDetail.css';
 
 const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }) => {
     const { id } = useParams();

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Search, Shield, Settings, UserPlus, MoreVertical, Edit2, Trash2, Plus, X } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
 import { supabase } from '../lib/supabase';
-import './Admin.css';
+import '../styles/PanelPlataforma.css';
 
-const Admin = ({ showHeader = true, showTabs = true, section }) => {
+const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const [internalActiveTab, setInternalActiveTab] = useState('users');
     const activeTab = section || internalActiveTab;
     const setActiveTab = section ? () => {} : setInternalActiveTab;
@@ -422,4 +422,4 @@ const Admin = ({ showHeader = true, showTabs = true, section }) => {
     );
 };
 
-export default Admin;
+export default PanelPlataforma;

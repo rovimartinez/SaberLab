@@ -4,7 +4,7 @@ import { GraduationCap, Zap, Code, FlaskConical, Box, Bot, Brain, Play, BookOpen
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
-import './Courses.css';
+import '../styles/PanelMisCursos.css';
 
 const getCourseIcon = (abbr) => {
     const def = COURSES_DEFINITION.find(c => c.abbr === abbr);

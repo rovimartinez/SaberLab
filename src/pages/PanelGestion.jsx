@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Shield, ClipboardList, Users, Settings, Database } from 'lucide-react';
-import Courses from './Courses';
-import Admin from './Admin';
-import AdminEvaluations from './AdminEvaluations';
+import PanelMisCursos from './PanelMisCursos';
+import PanelPlataforma from './PanelPlataforma';
+import PanelExamenes from './PanelExamenes';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
-import './Admin.css';
+import '../styles/PanelPlataforma.css';
 
-const AdminPanel = () => {
+const PanelGestion = () => {
     const navigate = useNavigate();
     const [activeCard, setActiveCard] = useState('cursos');
     const [activeSubPanel, setActiveSubPanel] = useState('usuarios');
@@ -100,7 +100,7 @@ const AdminPanel = () => {
             </div>
 
             {activeCard === 'cursos' && (
-                <Courses courses={courses} showHeader={false} embedded={true} />
+                <PanelMisCursos courses={courses} showHeader={false} embedded={true} />
             )}
 
             {activeCard === 'plataforma' && (
@@ -160,16 +160,16 @@ const AdminPanel = () => {
                         </button>
                     </div>
 
-                    {activeSubPanel === 'usuarios' && <Admin showHeader={false} showTabs={false} section="users" />}
-                    {activeSubPanel === 'catalogos' && <Admin showHeader={false} showTabs={false} section="settings" />}
+                    {activeSubPanel === 'usuarios' && <PanelPlataforma showHeader={false} showTabs={false} section="users" />}
+                    {activeSubPanel === 'catalogos' && <PanelPlataforma showHeader={false} showTabs={false} section="settings" />}
                 </>
             )}
 
             {activeCard === 'examenes' && (
-                <AdminEvaluations />
+                <PanelExamenes />
             )}
         </div>
     );
 };
 
-export default AdminPanel;
+export default PanelGestion;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Settings, User, Bell, Shield, Palette, Moon, Sun, Globe, Smartphone, Mail, Lock, Save, Camera } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import './Settings.css';
+import '../styles/Settings.css';
 
 const SettingsPage = () => {
     const { user } = useAuth();

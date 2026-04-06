@@ -1,0 +1,108 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Bell } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import '../styles/EvaluationInstruction.css';
+
+const EvaluationInstruction = () => {
+    const { evaluationKey } = useParams();
+    const navigate = useNavigate();
+    const [evaluation, setEvaluation] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchEvaluation = async () => {
+            if (!evaluationKey) {
+                setLoading(false);
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('evaluaciones')
+                .select('*')
+                .eq('evaluation_key', evaluationKey)
+                .single();
+
+            if (data) {
+                setEvaluation(data);
+            }
+            setLoading(false);
+        };
+
+        fetchEvaluation();
+    }, [evaluationKey]);
+
+    const handleStartExam = () => {
+        if (evaluation) {
+            navigate(`/dashboard/evaluations/${evaluation.evaluation_key}/play`);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="notifications-page">
+                <div className="page-header">
+                    <div className="header-title">
+                        <Bell size={28} color="#facc15" />
+                        <h1>Cargando...</h1>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!evaluation) {
+        return (
+            <div className="notifications-page">
+                <div className="page-header">
+                    <div className="header-title">
+                        <Bell size={28} color="#facc15" />
+                        <h1>Evaluación no encontrada</h1>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const questionsCount = evaluation.questions?.length || 0;
+
+    return (
+        <div className="notifications-page">
+            <div className="page-header">
+                <div className="header-title">
+                    <Bell size={28} color="#facc15" />
+                    <h1>Examen</h1>
+                </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
+                <h2 style={{ color: '#f8fafc', marginTop: 0 }}>{evaluation.title}</h2>
+                <p style={{ color: '#cbd5e1', marginBottom: '1rem' }}>{evaluation.description}</p>
+                <ul style={{ color: '#cbd5e1', lineHeight: '1.8', paddingLeft: '1.2rem' }}>
+                    <li>Tienes {questionsCount} preguntas</li>
+                    <li>Tiempo límite: {evaluation.time_limit} minutos</li>
+                    <li>Puntaje máximo: {evaluation.points} puntos</li>
+                </ul>
+                <button 
+                    onClick={handleStartExam}
+                    style={{
+                        background: 'linear-gradient(135deg, #f43f5e, #fb7185)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '1rem 2rem',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        marginTop: '1rem',
+                        width: '100%',
+                    }}
+                >
+                    Comenzar evaluación
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default EvaluationInstruction;

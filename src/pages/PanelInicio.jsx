@@ -3,7 +3,7 @@ import { Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, Zap, B
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
-import './Dashboard.css';
+import '../styles/PanelInicio.css';
 
 const getCourseIcon = (abbr) => {
     const def = COURSES_DEFINITION.find(c => c.abbr === abbr);
@@ -18,7 +18,7 @@ const getCourseColor = (abbr) => {
     return def?.color || '#6366f1';
 };
 
-const Dashboard = () => {
+const PanelInicio = () => {
     const { user, enrolledCourses } = useAuth();
 
     const fullName = user?.user_metadata?.full_name?.split(' ')[0] || 'Estudiante';
@@ -242,4 +242,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default PanelInicio;

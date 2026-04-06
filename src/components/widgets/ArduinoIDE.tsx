@@ -5,7 +5,7 @@ import {
   Check, ArrowRight, ChevronDown, Trash2, Search, X, 
   Cable, Pencil, Cpu, Loader2, Zap, ZapOff, Usb 
 } from 'lucide-react';
-import './ArduinoIDE.css';
+import '../../styles/ArduinoIDE.css';
 
 const ARDUINO_TEAL = '#00979d';
 const ARDUINO_TEAL_LIGHT = '#22c7cf';

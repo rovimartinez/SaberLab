@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Layers, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import CourseDetail from './CourseDetail';
-import './Courses.css';
+import '../styles/PanelMisCursos.css';
 
-const Courses = ({ courses, showHeader = true, embedded = false, onCourseSelect }) => {
+const PanelMisCursos = ({ courses, showHeader = true, embedded = false, onCourseSelect }) => {
     const navigate = useNavigate();
     const [groupCounts, setGroupCounts] = useState({});
     const [selectedCourse, setSelectedCourse] = useState(null);
@@ -102,4 +102,4 @@ const Courses = ({ courses, showHeader = true, embedded = false, onCourseSelect 
     );
 };
 
-export default Courses;
+export default PanelMisCursos;

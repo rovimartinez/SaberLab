@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import { useWhiteboard } from './useWhiteboard';
-import { WidgetsOverlay } from '../pages/Widgets';
+import { WidgetsOverlay } from '../pages/PanelWidgets';
 
 export const AppsContext = createContext();
 

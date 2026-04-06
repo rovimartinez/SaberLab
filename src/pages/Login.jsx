@@ -3,7 +3,7 @@ import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Mail, ChevronLeft } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
-import './Login.css';
+import '../styles/Login.css';
 
 const GoogleIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

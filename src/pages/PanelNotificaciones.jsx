@@ -3,9 +3,9 @@ import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Tra
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
 import AdminAccessRequestsBubble from '../components/layout/AdminAccessRequestsBubble';
-import './Notifications.css';
+import '../styles/PanelNotificaciones.css';
 
-const Notifications = () => {
+const PanelNotificaciones = () => {
     const { user, profile, refreshNotificationsCount } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -215,4 +215,4 @@ const Notifications = () => {
     );
 };
 
-export default Notifications;
+export default PanelNotificaciones;

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Rocket, Cpu, Gamepad2, ChevronRight, Code } from 'lucide-react';
-import './Landing.css';
+import '../styles/Landing.css';
 
 const Landing = () => {
   const navigate = useNavigate();

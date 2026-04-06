@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { FolderOpen, FileText, Video, Download, Search, Filter, ExternalLink, Book, Link as LinkIcon } from 'lucide-react';
-import './Resources.css';
+import '../styles/PanelRecursos.css';
 
-const Resources = () => {
+const PanelRecursos = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -241,4 +241,4 @@ const Resources = () => {
     );
 };
 
-export default Resources;
+export default PanelRecursos;

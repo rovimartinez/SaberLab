@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
 import { getCourseById } from '../data/coursesData.jsx';
-import './Evaluations.css';
+import '../styles/PanelEvaluaciones.css';
 
-const Evaluations = () => {
+const PanelEvaluaciones = () => {
     const { user, enrolledCourses, profile } = useAuth();
     const navigate = useNavigate();
     const [evaluations, setEvaluations] = useState([]);
@@ -238,4 +238,4 @@ const Evaluations = () => {
     );
 };
 
-export default Evaluations;
+export default PanelEvaluaciones;

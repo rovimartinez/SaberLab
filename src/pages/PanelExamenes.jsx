@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 
-const AdminEvaluations = () => {
+const PanelExamenes = () => {
     const [evaluations, setEvaluations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -448,7 +448,13 @@ const AdminEvaluations = () => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={() => { setShowQuestionsModal(false); resetEvaluationForm(); }} style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '9999px', cursor: 'pointer' }}><X size={20} style={{ color: '#64748b' }} /></button>
+                                <button onClick={async () => { 
+                                    const { data: evalData } = await supabase.from('evaluaciones').select('questions').eq('id', selectedEval.id).single();
+                                    setQuestions(evalData?.questions || []);
+                                    setLocalQuestions(evalData?.questions || []);
+                                    setShowQuestionsModal(false); 
+                                    resetEvaluationForm(); 
+                                }} style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '9999px', cursor: 'pointer' }}><X size={20} style={{ color: '#64748b' }} /></button>
                             </div>
                         </div>
 
@@ -786,4 +792,4 @@ const AdminEvaluations = () => {
     );
 };
 
-export default AdminEvaluations;
+export default PanelExamenes;

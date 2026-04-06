@@ -9,7 +9,7 @@ import Calculadora from '../components/widgets/Calculadora';
 import Conversor from '../components/widgets/Conversor';
 import Reloj from '../components/widgets/Reloj';
 import LeyDeOhm from '../components/widgets/LeyDeOhm';
-import './Widgets.css';
+import '../styles/PanelWidgets.css';
 
 const FloatingGadget = ({ gadget, children, onClose, width = 360, height = 450, defaultMaximized = false }) => {
     const [position, setPosition] = useState({
@@ -193,8 +193,8 @@ export const WidgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
 
 
 
-const Widgets = () => <Navigate to="/dashboard" replace />;
+const PanelWidgets = () => <Navigate to="/dashboard" replace />;
 
-export default Widgets;
+export default PanelWidgets;
 
 

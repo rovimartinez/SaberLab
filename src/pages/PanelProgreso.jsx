@@ -3,9 +3,9 @@ import { TrendingUp, Target, Award, Calendar, BookOpen, Clock, ChevronRight, Fla
 import { useAuth } from '../context/useAuth';
 import { supabase } from '../lib/supabase';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
-import './Progress.css';
+import '../styles/PanelProgreso.css';
 
-const Progress = () => {
+const PanelProgreso = () => {
     const { user, enrolledCourses } = useAuth();
     const [loading, setLoading] = useState(true);
     const [userProgress, setUserProgress] = useState(null);
@@ -350,4 +350,4 @@ const Progress = () => {
     );
 };
 
-export default Progress;
+export default PanelProgreso;

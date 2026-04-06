@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, BookOpen, Layers, CheckCircle2, FileText, X, Lock, PlayCircle, Circle } from 'lucide-react';
 import { LESSONS_REGISTRY } from '../../data/coursesData';
-import './CourseSidebar.css';
+import '../../styles/CourseSidebar.css';
 
 const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lessonVisibility = {} }) => {
     const navigate = useNavigate();

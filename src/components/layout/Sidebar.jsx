@@ -14,8 +14,11 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
 
     const isAdmin = profile?.role === 'admin';
     const userMetadata = user?.user_metadata || {};
-    const avatarUrl = userMetadata.avatar_url;
-    const fullName = profile?.full_name || userMetadata.full_name || user?.email?.split('@')[0] || 'Estudiante';
+    const avatarUrl = profile?.avatar_url || userMetadata.avatar_url;
+    const googleName = userMetadata.name || userMetadata.full_name || '';
+    const firstName = profile?.first_name || userMetadata.given_name || googleName.split(' ')[0] || '';
+    const lastName = profile?.last_name || userMetadata.family_name || googleName.split(' ').slice(1).join(' ') || '';
+    const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : profile?.full_name || googleName || user?.email?.split('@')[0] || 'Estudiante';
 
     useEffect(() => {
         const handleClickOutside = (event) => {
