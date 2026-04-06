@@ -14,6 +14,27 @@ const EvaluationPlayer = () => {
     const [evaluation, setEvaluation] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [examStarted, setExamStarted] = useState(false);
+
+    useEffect(() => {
+        if (!evaluationKey) return;
+        
+        const savedTime = localStorage.getItem('exam_time_left');
+        const savedAnswers = localStorage.getItem('exam_answers');
+        const started = localStorage.getItem('exam_started');
+        
+        if (started && savedTime) {
+            setTimeLeft(parseInt(savedTime, 10));
+            setExamStarted(true);
+        }
+        if (savedAnswers) {
+            try {
+                setAnswers(JSON.parse(savedAnswers));
+            } catch (e) {
+                console.error('Error parsing saved answers:', e);
+            }
+        }
+    }, [evaluationKey]);
 
     useEffect(() => {
         const fetchEvaluation = async () => {
@@ -29,7 +50,7 @@ const EvaluationPlayer = () => {
                 setEvaluation(data);
                 const questionsData = data.questions || [];
                 setQuestions(questionsData);
-                if (data.time_limit) {
+                if (data.time_limit && !examStarted) {
                     setTimeLeft(data.time_limit * 60);
                 }
             }
@@ -37,7 +58,7 @@ const EvaluationPlayer = () => {
         };
 
         fetchEvaluation();
-    }, [evaluationKey]);
+    }, [evaluationKey, examStarted]);
 
     const totalQuestions = questions.length;
 
@@ -50,6 +71,8 @@ const EvaluationPlayer = () => {
     useEffect(() => {
         if (timeLeft <= 0) {
             alert('Tiempo agotado');
+            localStorage.removeItem('exam_time_left');
+            localStorage.removeItem('exam_started');
             return;
         }
 
@@ -60,9 +83,25 @@ const EvaluationPlayer = () => {
         return () => clearTimeout(timer);
     }, [timeLeft]);
 
+    useEffect(() => {
+        if (examStarted && timeLeft > 0) {
+            localStorage.setItem('exam_time_left', timeLeft.toString());
+        }
+    }, [timeLeft, examStarted]);
+
+    useEffect(() => {
+        if (Object.keys(answers).length > 0) {
+            localStorage.setItem('exam_answers', JSON.stringify(answers));
+        }
+    }, [answers]);
+
     const handleAnswer = (optionIndex) => {
         setAnswers({ ...answers, [currentQuestion]: optionIndex });
     };
+
+    useEffect(() => {
+        localStorage.setItem(`exam_answers_${evaluationKey}`, JSON.stringify(answers));
+    }, [answers, evaluationKey]);
 
     const handleNext = () => {
         if (currentQuestion < totalQuestions - 1) {

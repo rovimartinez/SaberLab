@@ -246,8 +246,13 @@ export const AuthProvider = ({ children }) => {
   const validateSession = async (session) => {
     const loggedInUser = session?.user ?? null;
 
-    // Only show loading if we don't have a user yet (initial load)
-    if (!user) {
+    // Skip if we already have a valid session
+    if (user && profile && loggedInUser?.id === user.id) {
+      return;
+    }
+
+    // Only show loading on initial load or when session is cleared
+    if (!user || !loggedInUser) {
       setLoading(true);
     }
 

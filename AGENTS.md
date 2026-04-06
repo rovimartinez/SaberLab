@@ -9,21 +9,29 @@
 - **Nombres de componentes corregidos** - exports ahora coinciden con nombres de funciones
 - **Sidebar mostrando Display Name** - Usa `userMetadata.name` (nombre de Google)
 - **Corregido error "Cargando" al cambiar pestañas** - Error en BD: columna `first_name` no existía
+- Optimizado loading para no mostrar "Cargando" en cada cambio de pestaña
 
 ---
 
 ## 🔴 PENDIENTES (Prioridad)
 
 ### Alta
-1. **Completar lección** - Lesson.jsx solo hace console.log, necesita guardar en BD
-2. **Verificar que visibilidad funcione** - Test completo admin → estudiante
+1. **Corregir Evaluación/Examen** (varios bugs):
+   - Las preguntas del examen no aparecen
+   - Contador de correctas está al máximo (sin hacer nada)
+   - El tiempo se reinicia al cambiar de pestaña (localStorage no funciona)
+   - Necesita buscar dónde editar nombre, descripción e instrucciones del examen
+
+2. **Completar lección** - Lesson.jsx solo hace console.log, necesita guardar en BD
+
+3. **Verificar que visibilidad funcione** - Test completo admin → estudiante
 
 ### Media  
-3. Migrar cursos a BD cuando sean 100+
-4. Probar sistema de evaluaciones completo (estudiante presenta examen)
+4. Migrar cursos a BD cuando sean 100+
+5. Probar sistema de evaluaciones completo (estudiante presenta examen)
 
 ### Baja
-5. Tablas pendientes sin uso (student_lesson_progress, etc.)
+6. Tablas pendientes sin uso (student_lesson_progress, etc.)
 
 ---
 
@@ -47,10 +55,18 @@
 - `EvaNoti` → `EvaluationInstruction`
 - `EvaExam` → `EvaluationPlayer`
 
-### Hoy - Sidebar，显示正确的用户名
+### Hoy - Sidebar 显示正确的用户名
 - Ahora usa `userMetadata.name` (Display Name de Google)
 - Fallback a `userMetadata.full_name`
 - Muestra `first_name` + `last_name` desde tabla `perfiles` si están disponibles
+
+### Hoy - "Cargando" al cambiar pestañas
+- Optimizado AuthContext para no mostrar loading en cada refresh de token
+- Corregido error de columna inexistente en BD (`first_name`)
+
+### Hoy - Examen (EvaluationPlayer)
+- Intentado persistir tiempo en localStorage
+- No funciona correctamente aún
 
 ### Ayer - Renombrar archivos del panel (Panel-*)
 - Dashboard.jsx → PanelInicio.jsx
@@ -82,7 +98,7 @@
 | Visibilidad lecciones | ✅ JSON en BD |
 | Insripciones | ✅ BD |
 | Grupos | ✅ BD |
-| Evaluaciones | ✅ JSON en BD |
+| Evaluaciones | ⚠️ Con bugs (ver arriba) |
 | Progreso estudiante | ⚠️ Solo console.log |
 
 ---
@@ -97,3 +113,4 @@
 - Archivos renombrados con prefijo "Panel" para identificar secciones del menú
 - CSS centralizado en `src/styles/`
 - Sidebar muestra `userMetadata.name` (Display Name de Google)
+- Evaluación (examen) tiene bugs: preguntas no aparecen, contador incorrecto, tiempo no persiste
