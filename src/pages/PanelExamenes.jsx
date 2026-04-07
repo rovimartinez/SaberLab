@@ -412,6 +412,20 @@ const PanelExamenes = () => {
                         </div>
                         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
                             <input type="text" placeholder="Título" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required style={{ padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: 'white' }} />
+                            <textarea placeholder="Descripción" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{ padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: 'white', minHeight: '80px' }} />
+                            <textarea placeholder="Instrucciones para el estudiante" value={formData.instructions} onChange={e => setFormData({...formData, instructions: e.target.value})} style={{ padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: 'white', minHeight: '80px' }} />
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem' }}>Límite de tiempo (minutos)</label>
+                                    <input type="number" placeholder="Minutos" value={formData.time_limit} onChange={e => setFormData({...formData, time_limit: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: 'white' }} />
+                                </div>
+                                <div>
+                                    <label style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem' }}>Puntaje mínimo aprobatorio</label>
+                                    <input type="number" placeholder="70" value={formData.passing_score} onChange={e => setFormData({...formData, passing_score: e.target.value})} style={{ width: '100%', padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: 'white' }} />
+                                </div>
+                            </div>
+
                             <select value={String(formData.course_id)} onChange={e => {
                                 const selectedCourse = e.target.value;
                                 const modules = getModulesForCourse(selectedCourse);

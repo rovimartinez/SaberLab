@@ -77,11 +77,15 @@ const EvaluationInstruction = () => {
 
             <div className="glass-panel" style={{ padding: '2rem', marginBottom: '1.5rem' }}>
                 <h2 style={{ color: '#f8fafc', marginTop: 0 }}>{evaluation.title}</h2>
-                <p style={{ color: '#cbd5e1', marginBottom: '1rem' }}>{evaluation.description}</p>
-                <ul style={{ color: '#cbd5e1', lineHeight: '1.8', paddingLeft: '1.2rem' }}>
-                    <li>Tienes {questionsCount} preguntas</li>
-                    <li>Tiempo límite: {evaluation.time_limit} minutos</li>
-                    <li>Puntaje máximo: {evaluation.points} puntos</li>
+                <p style={{ color: '#cbd5e1', marginBottom: '1rem', fontStyle: 'italic' }}>{evaluation.description}</p>
+                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                    <h3 style={{ color: '#facc15', fontSize: '0.9rem', marginTop: 0, textTransform: 'uppercase' }}>Instrucciones</h3>
+                    <p style={{ color: '#e2e8f0', whiteSpace: 'pre-wrap' }}>{evaluation.instructions || 'Lee con atención cada pregunta y selecciona la respuesta correcta. Asegúrate de tener una conexión estable.'}</p>
+                </div>
+                <ul style={{ color: '#cbd5e1', lineHeight: '1.8', paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
+                    <li><strong style={{ color: 'white' }}>Total de preguntas:</strong> {questionsCount} preguntas</li>
+                    <li><strong style={{ color: 'white' }}>Tiempo límite:</strong> {evaluation.time_limit} minutos</li>
+                    <li><strong style={{ color: 'white' }}>Puntaje mínimo para aprobar:</strong> {evaluation.passing_score}%</li>
                 </ul>
                 <button 
                     onClick={handleStartExam}

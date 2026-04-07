@@ -8,7 +8,9 @@ const QuestionNavigator = ({
 }) => {
     const totalQuestions = questions.length;
 
-    const correctCount = questions.filter((q, idx) => answers[idx] === q.correct).length;
+    const correctCount = questions.filter((q, idx) => 
+        answers[idx] !== undefined && answers[idx] === q.correct
+    ).length;
     const incorrectCount = Object.keys(answers).filter(idx => 
         answers[idx] !== undefined && answers[idx] !== questions[idx]?.correct
     ).length;

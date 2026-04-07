@@ -49,24 +49,27 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lesson
     // Mock progress logic for demonstration
     // In a real app, this would come from the database (user_progress table)
     const getLessonStatus = (lessonId) => {
-        // Normalizar ID de lección: 'l1' -> 're-m1-l1'
+        // Normalizar ID de lección
         const normalizedId = lessonId.includes('-') 
             ? lessonId 
             : `${subject.abbr.toLowerCase()}-m1-${lessonId}`;
         
-        // Filtrar lecciones ocultas
+        // Prioridad 1: Visibilidad explícita en BD
         const visibility = lessonVisibility[normalizedId];
         if (visibility === false) return 'locked';
 
-        // Find flat list of all lessons to determine order
+        // Prioridad 2: Lección actual
+        if (lessonId === currentLessonId) return 'active';
+
+        // Prioridad 3: Orden de las lecciones para progreso sugerido
         const allLessons = subject.modules.flatMap(m => m.lessons.map(l => l.id));
         const currentIdx = allLessons.indexOf(currentLessonId);
         const thisIdx = allLessons.indexOf(lessonId);
 
         if (thisIdx < currentIdx) return 'completed';
-        if (thisIdx === currentIdx) return 'active';
-        if (thisIdx === currentIdx + 1) return 'available';
-        return 'locked';
+        
+        // Si no está bloqueada por visibilidad, está disponible
+        return 'available';
     };
 
     return (

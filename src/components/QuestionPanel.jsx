@@ -5,8 +5,7 @@ const QuestionPanel = ({
     totalQuestions, 
     question, 
     userAnswer, 
-    onAnswer,
-    timeLeft = 5
+    onAnswer
 }) => {
     const isAnswered = userAnswer !== undefined;
     
@@ -14,12 +13,6 @@ const QuestionPanel = ({
         <div className="glass-panel" style={{ padding: '2rem' }}>
             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#94a3b8' }}>Pregunta {currentQuestion + 1} de {totalQuestions}</span>
-                <span style={{ 
-                    color: timeLeft <= 2 ? '#ef4444' : '#94a3b8',
-                    fontWeight: 'bold'
-                }}>
-                    {timeLeft}s
-                </span>
             </div>
 
             <h2 style={{ color: '#f8fafc', fontSize: '1.25rem', marginBottom: '1.5rem' }}>{question?.q}</h2>

@@ -105,8 +105,26 @@ const Lesson = () => {
 
     const handleCompleteLesson = async () => {
         if (!user) return;
-        console.log(`Lección ${lessonKey} completada por el usuario ${user.id}`);
-        // Aquí iría la llamada a supabase para guardar el progreso
+        try {
+            const { error } = await supabase
+                .from('progreso_usuario')
+                .upsert({
+                    user_id: user.id,
+                    course_id: courseData?.id,
+                    lesson_id: lessonKey,
+                    progress: 100,
+                    completed: true,
+                    updated_at: new Date().toISOString()
+                }, { 
+                    onConflict: 'user_id, lesson_id' 
+                });
+
+            if (error) throw error;
+            alert('¡Lección completada con éxito!');
+        } catch (error) {
+            console.error('Error saving lesson progress:', error);
+            alert('Error al guardar el progreso');
+        }
     };
 
     useEffect(() => {
