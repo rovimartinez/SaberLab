@@ -1,0 +1,8 @@
+name = "saberlab"
+compatibility_date = "2026-07-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "saberlab-db"
+database_id = "e22c2627-da4f-49e3-8281-79b2e0960063"

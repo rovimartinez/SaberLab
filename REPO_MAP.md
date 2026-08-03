@@ -3,9 +3,25 @@
 Mapa de repositorio. Antes de leer/editar código, consulta aquí para ubicar archivos. Mantener actualizado al crear/renombrar/eliminar símbolos o archivos.
 
 ## Stack
-React 19 + Vite 7 + React Router 7 · Supabase (JS client) · Firebase · lucide-react · canvas-confetti · xlsx. Lint: `npm run lint` · Build: `npm run build`.
+React 19 + Vite 7 + React Router 7 · Supabase (JS client) · Firebase · lucide-react · canvas-confetti · xlsx · jose (JWT en Functions). Lint: `npm run lint` · Build: `npm run build`.
 
 ---
+
+## Estructura Cloudflare (migración D1)
+
+```
+wrangler.toml                # Config Pages + binding D1 (BD: saberlab-db, id e22c2627-…)
+migrations/
+└── 0001_init.sql            # Esquema SQLite/D1 (perfiles, cursos, evaluaciones, etc.)
+functions/
+├── api/
+│   ├── _middleware.js       # Verifica JWT (Supabase) en todas las rutas /api/*
+│   ├── _lib/auth.js         # verifySession(request, env) — jose + JWKS
+│   ├── profile.js           # GET /api/profile → SELECT perfil + cursos del usuario
+│   └── attempts.js          # POST /api/attempts → INSERT intentos_evaluacion
+.dev.vars                    # Variables locales para Functions (SUPABASE_URL) — ignorada por git
+src/lib/api.js               # Wrapper fetch del frontend (sustituye a supabase.js para datos)
+```
 
 ## Árbol de directorios (src/)
 
@@ -26,7 +42,7 @@ src/
 │   └── QuestionNavigator.jsx # Navegador de preguntas
 ├── context/                  # AuthContext, AppsContext, WhiteboardContext + hooks useAuth/useApps/useWhiteboard
 ├── hooks/                    # useLessonQuiz, usePlatformSettings
-├── lib/                      # supabase client, lessonSchema, learningAnalytics, studentProgress
+├── lib/                      # supabase (cliente), api.js (wrapper fetch D1), lessonSchema, learningAnalytics, studentProgress
 ├── lessons/                  # Contenido de lecciones (lazy). RE/m1: l1..l5 + l*.missions
 ├── evaluations/              # Evaluaciones por curso. RE/m1/module1Evaluation
 └── styles/                   # CSS centralizado (un archivo por página/componente)
@@ -76,6 +92,7 @@ src/
 - `lessonSchema.js` — `createContentBlock`, `createFlashcardsBlock`, `createQuizBlock`, `createMissionsBlock`, `defineLesson`, `normalizeLessonData`.
 - `learningAnalytics.js` — `createLearningSession`, `completeLearningSession`, `saveQuizQuestionEvents`, `saveEvaluationProctoringEvent`, `saveFlashcardEvent`, `saveContentEvent`, `createMissionAttempt`, `updateMissionAttempt`, `upsertConceptMasteryFromQuizResponses`.
 - `studentProgress.js` — `ensureStudentProfile`, `fetchLessonProgress`, `upsertLessonProgress`, `saveQuizAttempt`, `fetchMissionProgress`, `upsertMissionProgress`.
+- `api.js` — `api(path, options)` wrapper fetch hacia `/api/*` (incluye token Bearer automático).
 
 ## Datos de cursos y lecciones
 
