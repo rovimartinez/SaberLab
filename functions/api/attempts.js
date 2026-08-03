@@ -1,6 +1,21 @@
-export async function onRequestPost({ request, env, data }) {
-  const userId = data.user.id;
+export async function onRequestGet({ request, env, data }) {
+  const url = new URL(request.url);
+  const evaluationKey = url.searchParams.get('evaluation_key');
 
+  if (evaluationKey) {
+    const { results } = await env.DB.prepare(
+      'SELECT * FROM intentos_evaluacion WHERE user_id = ? AND evaluation_key = ? ORDER BY created_at DESC'
+    ).bind(data.user.id, evaluationKey).all();
+    return Response.json(results);
+  }
+
+  const { results } = await env.DB.prepare(
+    'SELECT * FROM intentos_evaluacion WHERE user_id = ? ORDER BY created_at DESC'
+  ).bind(data.user.id).all();
+  return Response.json(results);
+}
+
+export async function onRequestPost({ request, env, data }) {
   let body;
   try {
     body = await request.json();
@@ -8,23 +23,59 @@ export async function onRequestPost({ request, env, data }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { evaluation_id, respuestas, score } = body;
-  if (!evaluation_id || !Array.isArray(respuestas) || typeof score !== 'number') {
-    return Response.json({ error: 'Datos incompletos' }, { status: 400 });
+  const { evaluation_key, answers, score, passed, completed_at } = body;
+  if (!evaluation_key) {
+    return Response.json({ error: 'Falta evaluation_key' }, { status: 400 });
   }
 
-  const { meta, error } = await env.DB.prepare(
-    `INSERT INTO intentos_evaluacion (evaluacion_id, user_id, respuestas, score, created_at)
-     VALUES (?, ?, ?, ?, datetime('now'))`
-  ).bind(evaluation_id, userId, JSON.stringify(respuestas), score).run();
+  const answersJson = answers !== undefined ? JSON.stringify(answers) : null;
+  const isFinal = completed_at != null;
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+  // Coincide con la lógica del frontend:
+  // - auto-guardado busca el intento incompleto (completed_at IS NULL)
+  // - finalizar busca cualquier intento existente
+  let existing;
+  if (isFinal) {
+    existing = await env.DB.prepare(
+      'SELECT id FROM intentos_evaluacion WHERE user_id = ? AND evaluation_key = ? ORDER BY id DESC LIMIT 1'
+    ).bind(data.user.id, evaluation_key).first();
+  } else {
+    existing = await env.DB.prepare(
+      'SELECT id FROM intentos_evaluacion WHERE user_id = ? AND evaluation_key = ? AND completed_at IS NULL ORDER BY id DESC LIMIT 1'
+    ).bind(data.user.id, evaluation_key).first();
   }
 
-  const intento = await env.DB.prepare(
-    `SELECT * FROM intentos_evaluacion WHERE id = ?`
-  ).bind(meta.last_row_id).first();
+  let row;
+  if (existing) {
+    await env.DB.prepare(
+      `UPDATE intentos_evaluacion SET
+         answers = COALESCE(?, answers),
+         score = COALESCE(?, score),
+         passed = COALESCE(?, passed),
+         completed_at = COALESCE(?, completed_at)
+       WHERE id = ?`
+    ).bind(
+      answersJson ?? null,
+      typeof score === 'number' ? score : null,
+      typeof passed === 'boolean' ? (passed ? 1 : 0) : null,
+      completed_at ?? null,
+      existing.id
+    ).run();
+    row = await env.DB.prepare('SELECT * FROM intentos_evaluacion WHERE id = ?').bind(existing.id).first();
+  } else {
+    const { meta } = await env.DB.prepare(
+      `INSERT INTO intentos_evaluacion (user_id, evaluation_key, answers, score, passed, completed_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+    ).bind(
+      data.user.id,
+      evaluation_key,
+      answersJson,
+      typeof score === 'number' ? score : 0,
+      passed ? 1 : 0,
+      completed_at ?? null
+    ).run();
+    row = await env.DB.prepare('SELECT * FROM intentos_evaluacion WHERE id = ?').bind(meta.last_row_id).first();
+  }
 
-  return Response.json({ id: meta.last_row_id, intento }, { status: 201 });
+  return Response.json(row);
 }

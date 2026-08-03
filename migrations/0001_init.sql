@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS inscripciones (
 CREATE TABLE IF NOT EXISTS grupos (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   course_id INTEGER REFERENCES cursos(id),
-  name      TEXT NOT NULL
+  name      TEXT NOT NULL,
+  teacher   TEXT
 );
 
 CREATE TABLE IF NOT EXISTS grupos_usuario (
