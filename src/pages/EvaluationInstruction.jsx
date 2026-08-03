@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import '../styles/EvaluationInstruction.css';
 
@@ -9,6 +9,19 @@ const EvaluationInstruction = () => {
     const navigate = useNavigate();
     const [evaluation, setEvaluation] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isResuming, setIsResuming] = useState(false);
+
+    useEffect(() => {
+        const started = localStorage.getItem(`exam_started_${evaluationKey}`);
+        const endTime = localStorage.getItem(`exam_end_time_${evaluationKey}`);
+        
+        if (started === 'true' && endTime) {
+            const now = Math.floor(Date.now() / 1000);
+            if (parseInt(endTime, 10) > now) {
+                setIsResuming(true);
+            }
+        }
+    }, [evaluationKey]);
 
     useEffect(() => {
         const fetchEvaluation = async () => {
@@ -90,19 +103,36 @@ const EvaluationInstruction = () => {
                 <button 
                     onClick={handleStartExam}
                     style={{
-                        background: 'linear-gradient(135deg, #f43f5e, #fb7185)',
+                        background: isResuming 
+                            ? 'linear-gradient(135deg, #3b82f6, #3b82f6)' 
+                            : 'linear-gradient(135deg, #f43f5e, #fb7185)',
                         color: 'white',
                         border: 'none',
-                        padding: '1rem 2rem',
+                        padding: '1.2rem 2rem',
                         borderRadius: '12px',
                         cursor: 'pointer',
-                        fontSize: '1rem',
+                        fontSize: '1.1rem',
                         fontWeight: '600',
                         marginTop: '1rem',
                         width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.75rem',
+                        transition: 'transform 0.2s ease, filter 0.2s ease',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
                     }}
+                    onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}
                 >
-                    Comenzar evaluación
+                    {isResuming ? (
+                        <>
+                            <Clock size={20} />
+                            Continuar evaluación
+                        </>
+                    ) : (
+                        'Comenzar evaluación'
+                    )}
                 </button>
             </div>
         </div>

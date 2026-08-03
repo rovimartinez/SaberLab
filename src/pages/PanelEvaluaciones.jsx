@@ -7,58 +7,36 @@ import { getCourseById } from '../data/coursesData.jsx';
 import '../styles/PanelEvaluaciones.css';
 
 const PanelEvaluaciones = () => {
-    const { user, enrolledCourses, profile } = useAuth();
+    const { user, enrolledCourses, profile, evaluations, refreshEvaluations } = useAuth();
     const navigate = useNavigate();
-    const [evaluations, setEvaluations] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!evaluations || evaluations.length === 0);
     const [filter, setFilter] = useState('all');
 
     const isAdmin = profile?.role === 'admin';
 
     useEffect(() => {
-        const fetchEvaluations = async () => {
+        const checkData = async () => {
             if (!user) {
-                setEvaluations([]);
                 setLoading(false);
                 return;
             }
 
-            let query = supabase
-                .from('evaluaciones')
-                .select('*')
-                .order('due_date', { ascending: true });
-
-            // Para estudiantes, filtrar por cursos inscritos
-            // Para admins, mostrar todas las evaluaciones publicadas
-            if (!isAdmin) {
-                if (enrolledCourses.length === 0) {
-                    setEvaluations([]);
-                    setLoading(false);
-                    return;
-                }
-                const courseIds = enrolledCourses.map(c => c.id);
-                query = query.in('course_id', courseIds);
-            } else {
-                query = query.eq('is_published', true);
-            }
-            
-            const { data, error } = await query;
-
-            if (!error && data) {
-                // Agregar información del curso a cada evaluación
-                const evaluationsWithCourse = data.map(evalItem => ({
-                    ...evalItem,
-                    course: getCourseById(evalItem.course_id)
-                }));
-                setEvaluations(evaluationsWithCourse);
+            // Si no hay evaluaciones, intentar cargar
+            if (evaluations.length === 0) {
+                await refreshEvaluations();
             }
             setLoading(false);
         };
 
-        fetchEvaluations();
-    }, [user, enrolledCourses, isAdmin]);
+        checkData();
+    }, [user, evaluations.length, refreshEvaluations]);
 
-    const filteredEvaluations = evaluations.filter(e => {
+    const processedEvaluations = evaluations.map(evalItem => ({
+        ...evalItem,
+        course: evalItem.course || getCourseById(evalItem.course_id)
+    }));
+
+    const filteredEvaluations = processedEvaluations.filter(e => {
         if (filter === 'all') return true;
         return e.status === filter;
     });

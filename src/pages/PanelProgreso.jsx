@@ -6,9 +6,9 @@ import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import '../styles/PanelProgreso.css';
 
 const PanelProgreso = () => {
-    const { user, enrolledCourses } = useAuth();
-    const [loading, setLoading] = useState(true);
-    const [userProgress, setUserProgress] = useState(null);
+    const { user, enrolledCourses, userProgress: cachedProgress, refreshUserProgress } = useAuth();
+    const [loading, setLoading] = useState(!cachedProgress);
+    const [userProgress, setUserProgress] = useState(cachedProgress);
     const [achievements, setAchievements] = useState([]);
     const [timeRange, setTimeRange] = useState('week');
 
@@ -16,17 +16,14 @@ const PanelProgreso = () => {
         const fetchData = async () => {
             if (!user) return;
 
-            const { data: progressData, error: progressError } = await supabase
-                .from('progreso_usuario')
-                .select('*')
-                .eq('user_id', user.id)
-                .maybeSingle();
-
-            if (progressData) {
-                setUserProgress(progressData);
+            if (!cachedProgress) {
+                await refreshUserProgress();
+            } else {
+                setUserProgress(cachedProgress);
             }
 
-            const { data: achievementsData, error: achievementsError } = await supabase
+            // Los logros si se cargan localmente por ahora
+            const { data: achievementsData } = await supabase
                 .from('logros')
                 .select('*')
                 .eq('user_id', user.id)
@@ -40,7 +37,7 @@ const PanelProgreso = () => {
         };
 
         fetchData();
-    }, [user]);
+    }, [user, cachedProgress, refreshUserProgress]);
 
     const overallProgress = userProgress?.overall_progress || 0;
     const streakDays = userProgress?.streak_days || 0;

@@ -5,8 +5,9 @@ import { supabase } from '../lib/supabase';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 
 const PanelExamenes = () => {
-    const [evaluations, setEvaluations] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { evaluations: cachedEvaluations, refreshEvaluations } = useAuth();
+    const [evaluations, setEvaluations] = useState(cachedEvaluations || []);
+    const [loading, setLoading] = useState(!cachedEvaluations || cachedEvaluations.length === 0);
     const [showModal, setShowModal] = useState(false);
     const [editingEval, setEditingEval] = useState(null);
     const [showQuestionsModal, setShowQuestionsModal] = useState(false);
@@ -42,7 +43,14 @@ const PanelExamenes = () => {
         { id: 'escribir', label: 'Escribir', icon: <Type className="w-4 h-4" /> },
     ];
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { 
+        if (cachedEvaluations && cachedEvaluations.length > 0) {
+            setEvaluations(cachedEvaluations);
+            setLoading(false);
+        } else {
+            fetchData(); 
+        }
+    }, [cachedEvaluations]);
 
     const fetchData = async () => {
         setLoading(true);

@@ -6,29 +6,19 @@ import AdminAccessRequestsBubble from '../components/layout/AdminAccessRequestsB
 import '../styles/PanelNotificaciones.css';
 
 const PanelNotificaciones = () => {
-    const { user, profile, refreshNotificationsCount } = useAuth();
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { user, profile, notifications: cachedNotifications, refreshNotifications } = useAuth();
+    const [notifications, setNotifications] = useState(cachedNotifications || []);
+    const [loading, setLoading] = useState(!cachedNotifications || (cachedNotifications.length === 0 && !user));
     const [filter, setFilter] = useState('all');
 
     useEffect(() => {
-        if (!user) return;
-
-        const fetchNotifications = async () => {
-            const { data, error } = await supabase
-                .from('notificaciones')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            if (!error && data) {
-                setNotifications(data);
-            }
+        if (cachedNotifications && cachedNotifications.length > 0) {
+            setNotifications(cachedNotifications);
             setLoading(false);
-        };
-
-        fetchNotifications();
-    }, [user]);
+        } else if (user) {
+            refreshNotifications().finally(() => setLoading(false));
+        }
+    }, [cachedNotifications, user]);
 
     const filteredNotifications = notifications.filter(n => {
         if (filter === 'all') return true;
@@ -41,7 +31,7 @@ const PanelNotificaciones = () => {
         setNotifications(notifications.map(n => 
             n.id === id ? { ...n, read: true } : n
         ));
-        refreshNotificationsCount();
+        refreshNotifications();
     };
 
     const markAllAsRead = async () => {
@@ -49,14 +39,14 @@ const PanelNotificaciones = () => {
         if (unreadIds.length > 0) {
             await supabase.from('notificaciones').update({ read: true }).in('id', unreadIds);
             setNotifications(notifications.map(n => ({ ...n, read: true })));
-            refreshNotificationsCount();
+            refreshNotifications();
         }
     };
 
     const deleteNotification = async (id) => {
         await supabase.from('notificaciones').delete().eq('id', id);
         setNotifications(notifications.filter(n => n.id !== id));
-        refreshNotificationsCount();
+        refreshNotifications();
     };
 
     const clearAll = async () => {
@@ -64,7 +54,7 @@ const PanelNotificaciones = () => {
         if (allIds.length > 0) {
             await supabase.from('notificaciones').delete().in('id', allIds);
             setNotifications([]);
-            refreshNotificationsCount();
+            refreshNotifications();
         }
     };
 
