@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { api, setToken, clearToken } from '../lib/api';
 
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 
@@ -99,52 +100,48 @@ export const AuthProvider = ({ children }) => {
     if (role === 'admin') {
       const allCourses = getAllCoursesWithProgress();
       setEnrolledCourses(allCourses);
-      // Cargar visibilidad para todos los cursos (IDs 1-6)
-      const allCourseIds = [1, 2, 3, 4, 5, 6];
-      await loadLessonVisibility(allCourseIds);
+      // Cargar visibilidad para todos los cursos
+      await loadLessonVisibility();
       return allCourses;
     }
 
-    const { data: enrollments, error } = await supabase
-      .from('inscripciones')
-      .select('course_id')
-      .eq('user_id', userId);
+    try {
+      const { profile: p, courses } = await api('/profile');
 
-    if (error) {
-      console.error('Error cargando cursos:', error);
-      return;
-    }
+      if (courses && courses.length > 0) {
+        const courseIds = courses.map((course) => course.id);
 
-    if (enrollments && enrollments.length > 0) {
-      const courseIds = enrollments.map((enrollment) => enrollment.course_id);
+        const coursesWithProgress = courseIds.map((courseId) => {
+          const courseDef = COURSES_DEFINITION.find((course) => course.id === courseId);
+          if (!courseDef) {
+            return {
+              id: courseId,
+              name: 'Curso Desconocido',
+              abbr: '??',
+              slug: 'unknown',
+              progress: 0
+            };
+          }
 
-      const coursesWithProgress = courseIds.map((courseId) => {
-        const courseDef = COURSES_DEFINITION.find((course) => course.id === courseId);
-        if (!courseDef) {
           return {
-            id: courseId,
-            name: 'Curso Desconocido',
-            abbr: '??',
-            slug: 'unknown',
-            progress: 0
+            ...courseDef,
+            progress: 0,
+            lastLesson: 'Sin iniciar'
           };
-        }
+        });
 
-        return {
-          ...courseDef,
-          progress: 0,
-          lastLesson: 'Sin iniciar'
-        };
-      });
-
-      setEnrolledCourses(coursesWithProgress);
-      
-      // Cargar visibilidad de lecciones para estos cursos
-      await loadLessonVisibility(courseIds);
-      return coursesWithProgress;
-    } else {
-      setEnrolledCourses([]);
-      return [];
+        setEnrolledCourses(coursesWithProgress);
+        
+        // Cargar visibilidad de lecciones para estos cursos
+        await loadLessonVisibility(courseIds);
+        return coursesWithProgress;
+      } else {
+        setEnrolledCourses([]);
+        return [];
+      }
+    } catch (err) {
+      console.error('Error cargando cursos:', err);
+      return;
     }
   };
 
@@ -185,21 +182,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loadLessonVisibility = async (courseIds) => {
-    if (!courseIds || courseIds.length === 0) return;
+  const loadLessonVisibility = async () => {
     try {
-      const { data } = await supabase
-        .from('visibilidad_curso')
-        .select('course_id, lecciones')
-        .in('course_id', courseIds);
-      
-      if (data && data.length > 0) {
-        const visibilityMap = {};
-        data.forEach(v => {
-          // lecciones es JSON: { 're-m1-l1': false, 're-m1-l2': true }
-          visibilityMap[v.course_id] = v.lecciones || {};
-        });
-        setLessonVisibility(prev => ({ ...prev, ...visibilityMap }));
+      const { visibility } = await api('/visibility');
+      if (visibility && Object.keys(visibility).length > 0) {
+        setLessonVisibility(visibility);
       }
     } catch (err) {
       console.error('Error cargando visibilidad de lecciones:', err);
@@ -339,161 +326,77 @@ export const AuthProvider = ({ children }) => {
     return profileByEmail ?? null;
   };
 
-  const validateSession = async (session, currentUserState, currentProfileState) => {
+  const validateSession = async (token) => {
     try {
-        const loggedInUser = session?.user ?? null;
-
-        // Skip if we already have a valid session with the same user
-        if (currentUserState && currentProfileState && loggedInUser?.id === currentUserState.id) {
-          return;
-        }
-
-        // Only show loading on initial load or when session is cleared
-        if (!loggedInUser) {
-          setUser(null);
-          setSessionRejected(false);
-          resetAccessState();
-          clearPendingAccessData();
-          setLoading(false);
-          return;
-        }
-
-        // If we have a user but no profile (or different user), we need to load it
-        if (!currentUserState || loggedInUser.id !== currentUserState.id) {
-            setLoading(true);
-        }
-
-        setUser(loggedInUser);
-
-        const profileData = await getProfileForUser(loggedInUser);
-
-        if (profileData) {
-          // Actualizar avatar si es necesario...
-          if (!profileData.avatar_url && loggedInUser.user_metadata?.avatar_url) {
-            try {
-              await supabase
-                .from('perfiles')
-                .update({ avatar_url: loggedInUser.user_metadata.avatar_url })
-                .eq('id', loggedInUser.id);
-            } catch (e) {
-              console.error('Error updating avatar:', e);
-            }
-          }
-          await activateResolvedProfile(loggedInUser, profileData);
-          return;
-        }
-
-        const requestData = await getLatestAccessRequest(loggedInUser.email);
-
-        if (requestData?.status === 'approved') {
-          const googleName = loggedInUser.user_metadata?.full_name || loggedInUser.user_metadata?.name || loggedInUser.email?.split('@')[0] || 'Estudiante';
-          const googleAvatar = loggedInUser.user_metadata?.avatar_url || null;
-
-          const { data: insertProfile, error: insertError } = await supabase
-            .from('perfiles')
-            .insert({
-              id: loggedInUser.id,
-              email: loggedInUser.email?.trim().toLowerCase(),
-              full_name: googleName,
-              avatar_url: googleAvatar,
-              role: 'student'
-            })
-            .select('id, email, full_name, role')
-            .single();
-
-          if (insertError) {
-            if (insertError.code === '23505') {
-              const { data: updateProfile, error: updateError } = await supabase
-                .from('perfiles')
-                .update({
-                  id: loggedInUser.id,
-                  full_name: googleName,
-                  avatar_url: googleAvatar,
-                  role: 'student'
-                })
-                .eq('email', loggedInUser.email?.trim().toLowerCase())
-                .select('id, email, full_name, role')
-                .single();
-
-              if (!updateError) await activateResolvedProfile(loggedInUser, updateProfile);
-            } else {
-                storePendingAccessData(loggedInUser, 'approved');
-            }
-          } else {
-            await activateResolvedProfile(loggedInUser, insertProfile);
-          }
-          return;
-        }
-
+      if (!token) {
+        setUser(null);
+        setSessionRejected(false);
         resetAccessState();
-        const pendingStatus = requestData?.status || 'pending';
-        storePendingAccessData(loggedInUser, pendingStatus);
-        setSessionRejected(pendingStatus === 'rejected');
-    } catch (err) {
-        console.error('Session validation error:', err);
+        clearPendingAccessData();
+        setLoading(false);
+        return;
+      }
+
+      const { profile: p } = await api('/auth/me');
+      if (!p) {
         setUser(null);
         setProfile(null);
-    } finally {
+        setSessionRejected(false);
+        resetAccessState();
+        clearPendingAccessData();
         setLoading(false);
+        return;
+      }
+
+      const loggedInUser = {
+        id: p.id,
+        email: p.email,
+        user_metadata: {
+          name: p.full_name,
+          full_name: p.full_name,
+          avatar_url: p.avatar_url
+        }
+      };
+
+      setUser(loggedInUser);
+      await activateResolvedProfile(loggedInUser, p);
+    } catch (err) {
+      console.error('Session validation error:', err);
+      clearToken();
+      setUser(null);
+      setProfile(null);
+      setSessionRejected(false);
+      resetAccessState();
+      clearPendingAccessData();
+    } finally {
+      setLoading(false);
     }
   };
 
   // --- EFFECTS ---
 
   useEffect(() => {
-    // Obtenemos la sesion inicial
-    supabase.auth.getSession()
-        .then((result) => {
-            const session = result?.data?.session ?? null;
-            validateSession(session, null, null);
-        })
-        .catch(err => {
-            console.error('Initial session error:', err);
-            setLoading(false);
-        });
+    const initSession = async () => {
+      // Si venimos de Google OAuth, el token llega en el hash: #/auth?token=...
+      const rawHash = window.location.hash;
+      let token = localStorage.getItem('saberlab-token');
 
-    const res = supabase.auth.onAuthStateChange((_event, session) => {
-      if (_event === 'TOKEN_REFRESHED' && userRef.current) return;
-      validateSession(session, userRef.current, profileRef.current);
-    });
-
-    const subscription = res?.data?.subscription ?? res?.data ?? res;
-
-    return () => {
-        if (subscription && typeof subscription.unsubscribe === 'function') {
-            subscription.unsubscribe();
+      if (rawHash.includes('token=')) {
+        const params = new URLSearchParams(rawHash.slice(rawHash.indexOf('?') + 1));
+        token = params.get('token');
+        if (token) {
+          setToken(token);
+          // Limpiar el hash para no dejar el token en la URL
+          window.history.replaceState(null, '', window.location.pathname);
         }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!user || profile) {
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    const retryProfileResolution = async () => {
-      const resolvedProfile = await getProfileForUser(user);
-
-      if (cancelled || !resolvedProfile) {
-        return;
       }
 
-      await activateResolvedProfile(user, resolvedProfile);
+      await validateSession(token);
     };
 
-    const timeoutId = window.setTimeout(() => {
-      void retryProfileResolution();
-    }, 600);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-    };
+    initSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, user]);
+  }, []);
 
   useEffect(() => {
     if (profile?.role !== 'admin') {
@@ -501,47 +404,23 @@ export const AuthProvider = ({ children }) => {
       return undefined;
     }
 
-    refreshPendingAccessRequestsCount();
-
-    const channel = supabase
-      .channel(`admin-access-requests-${profile.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'access_requests' },
-        () => {
-          refreshPendingAccessRequestsCount();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+    const poll = async () => {
+      await refreshPendingAccessRequestsCount();
     };
+
+    poll();
+    const interval = setInterval(poll, 15000);
+
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id, profile?.role]);
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    if (data?.url && typeof window !== 'undefined') {
-      window.location.assign(data.url);
-      return data;
-    }
-
-    throw new Error('Supabase no devolvio una URL de autenticacion para Google.');
+    window.location.assign('/api/auth/start');
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    clearToken();
     setUser(null);
     setProfile(null);
     setSessionRejected(false);
@@ -549,6 +428,7 @@ export const AuthProvider = ({ children }) => {
     setEnrolledCourses([]);
     setUnreadNotificationsCount(0);
     setPendingAccessRequestsCount(0);
+    resetAccessState();
   };
 
   return (

@@ -1,24 +1,27 @@
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify } from 'jose';
 
-let cachedJwks = null;
+function getSecretKey(env) {
+  return new TextEncoder().encode(env.JWT_SECRET);
+}
+
+export async function createSessionToken(user, env) {
+  return await new SignJWT({ email: user.email, role: user.role ?? 'student' })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setSubject(user.id)
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .setIssuer('saberlab')
+    .sign(getSecretKey(env));
+}
 
 export async function verifySession(request, env) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
-
-  const supabaseUrl = env.SUPABASE_URL ?? env.VITE_SUPABASE_URL;
-  if (!supabaseUrl) return null;
-
-  if (!cachedJwks) {
-    cachedJwks = createRemoteJWKSet(new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`));
-  }
-
+  const header = request.headers.get('Authorization');
+  if (!header?.startsWith('Bearer ')) return null;
   try {
-    const { payload } = await jwtVerify(authHeader.slice(7), cachedJwks, {
-      issuer: `${supabaseUrl}/auth/v1`,
-      audience: 'authenticated',
+    const { payload } = await jwtVerify(header.slice(7), getSecretKey(env), {
+      issuer: 'saberlab',
     });
-    return { id: payload.sub, email: payload.email };
+    return { id: payload.sub, email: payload.email, role: payload.role ?? null };
   } catch {
     return null;
   }

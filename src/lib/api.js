@@ -1,18 +1,33 @@
 const API_BASE = '/api';
 
+export const TOKEN_KEY = 'saberlab-token';
+
 function getAccessToken() {
   try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.includes('sb-') && key.includes('-auth-token')) {
-        const session = JSON.parse(localStorage.getItem(key));
-        return session?.access_token ?? null;
-      }
-    }
+    return localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
-  return null;
+}
+
+export function setToken(token) {
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    /* sin soporte de storage */
+  }
+}
+
+export function clearToken() {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* sin soporte de storage */
+  }
+}
+
+export function getToken() {
+  return getAccessToken();
 }
 
 export async function api(path, options = {}) {

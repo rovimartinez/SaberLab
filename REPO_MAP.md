@@ -10,18 +10,34 @@ React 19 + Vite 7 + React Router 7 · Supabase (JS client) · Firebase · lucide
 ## Estructura Cloudflare (migración D1)
 
 ```
-wrangler.toml                # Config Pages + binding D1 (BD: saberlab-db, id e22c2627-…)
+wrangler.toml                # Config Pages + binding D1 (BD: saberlab-db, id e22c2627-…) — SOLO local (gitignored)
 migrations/
 └── 0001_init.sql            # Esquema SQLite/D1 (perfiles, cursos, evaluaciones, etc.)
 functions/
 ├── api/
-│   ├── _middleware.js       # Verifica JWT (Supabase) en todas las rutas /api/*
-│   ├── _lib/auth.js         # verifySession(request, env) — jose + JWKS
+│   ├── _middleware.js       # Guard 401 en /api/* (excepto auth/start y auth/callback)
+│   ├── _lib/auth.js         # createSessionToken + verifySession — JWT HS256 propio con jose
+│   ├── auth/start.js        # GET /api/auth/start → redirect a Google OAuth
+│   ├── auth/callback.js     # GET /api/auth/callback → intercambio código, upsert perfil en D1, emite token
+│   ├── auth/me.js           # GET /api/auth/me → perfil desde token (restaurar sesión)
 │   ├── profile.js           # GET /api/profile → SELECT perfil + cursos del usuario
+│   ├── visibility.js        # GET /api/visibility → mapa de visibilidad de lecciones por curso
 │   └── attempts.js          # POST /api/attempts → INSERT intentos_evaluacion
-.dev.vars                    # Variables locales para Functions (SUPABASE_URL) — ignorada por git
-src/lib/api.js               # Wrapper fetch del frontend (sustituye a supabase.js para datos)
+.dev.vars                    # Variables locales para Functions (gitignored)
+src/lib/api.js               # Wrapper fetch del frontend (api/setToken/clearToken/getToken)
 ```
+
+## Variables de entorno
+
+| Variable | Dónde | Ejemplo |
+|----------|-------|---------|
+| `GOOGLE_CLIENT_ID` | Cloudflare + .dev.vars | `…apps.googleusercontent.com` |
+| `GOOGLE_CLIENT_SECRET` | Cloudflare (secret) + .dev.vars | `GOCSPX-…` |
+| `JWT_SECRET` | Cloudflare (secret) + .dev.vars | frase secreta propia |
+| `APP_URL` | Cloudflare + .dev.vars | `https://saberlab.pages.dev` |
+| `ADMIN_EMAIL` | Cloudflare + .dev.vars | email del admin (se le asigna rol admin) |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Cloudflare (env de build) | aún usados por datos sin migrar |
+
 
 ## Árbol de directorios (src/)
 

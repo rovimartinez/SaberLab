@@ -7,7 +7,7 @@ import '../styles/Login.css';
 
 const RequestAccess = () => {
     const navigate = useNavigate();
-    const { user, profile } = useAuth();
+    const { user, profile, signOut } = useAuth();
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const [userData, setUserData] = useState(null);
@@ -195,7 +195,7 @@ const RequestAccess = () => {
                             {getMessageByStatus()}
                         </p>
                         <button
-                            onClick={() => supabase.auth.signOut().then(() => navigate('/login'))}
+                            onClick={() => signOut().then(() => navigate('/login'))}
                             className="btn btn-secondary"
                             style={{ marginTop: '1.5rem' }}
                         >
@@ -278,7 +278,7 @@ const RequestAccess = () => {
                 </button>
 
                 <button
-                    onClick={() => supabase.auth.signOut().then(() => navigate('/login'))}
+                    onClick={() => signOut().then(() => navigate('/login'))}
                     style={{
                         width: '100%',
                         marginTop: '1rem',
