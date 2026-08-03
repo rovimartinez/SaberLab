@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus, Edit2, X, Key } from 'lucide-react';
 import { getLessonInfo } from '../data/coursesData.jsx';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import '../styles/CourseDetail.css';
 
 const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }) => {
@@ -13,28 +13,19 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const [activeTab, setActiveTab] = useState('groups');
     const [expandedModules, setExpandedModules] = useState({});
     const [courseModules, setCourseModules] = useState([]);
-    const [dbGroups, setDbGroups] = useState([]); // Grupos desde Supabase
-    // Cargar grupos y estudiantes de Supabase
+    const [dbGroups, setDbGroups] = useState([]); // Grupos desde BD
+    const [groupsReload, setGroupsReload] = useState(0);
+    // Cargar grupos y estudiantes
     useEffect(() => {
         const loadGroups = async () => {
             if (!course) return;
             setLoadingGroups(true);
             try {
-                const [groupsRes, enrollRes] = await Promise.all([
-                    supabase.from('grupos').select('*').eq('course_id', course.id),
-                    supabase.from('inscripciones').select('user_id, group_id')
-                ]);
-                
-                if (groupsRes.data) {
-                    const studentCounts = {};
-                    if (enrollRes.data) {
-                        enrollRes.data.forEach(e => {
-                            studentCounts[e.group_id] = (studentCounts[e.group_id] || 0) + 1;
-                        });
-                    }
-                    const groupsWithCounts = groupsRes.data.map(g => ({
+                const { data: groups } = await api(`/groups?course_id=${course.id}`);
+                if (groups) {
+                    const groupsWithCounts = groups.map(g => ({
                         ...g,
-                        studentCount: studentCounts[g.id] || 0
+                        studentCount: g.studentCount || 0
                     }));
                     setDbGroups(groupsWithCounts);
                 }
@@ -45,7 +36,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             }
         };
         loadGroups();
-    }, [course]);
+    }, [course, groupsReload]);
 
     const [studentsModal, setStudentsModal] = useState({ isOpen: false, group: null, students: [] });
     const [studentsList, setStudentsList] = useState([]);
@@ -56,24 +47,20 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const [copied, setCopied] = useState(false);
     const [newGroupModal, setNewGroupModal] = useState({ isOpen: false, name: '', teacher: '' });
     const [loadingGroups, setLoadingGroups] = useState(false);
+    const [savingGroup, setSavingGroup] = useState(false);
+    const [groupSaveStatus, setGroupSaveStatus] = useState('');
     const [lessonVisibility, setLessonVisibility] = useState({}); // { lessonId: true/false }
 
-    // Cargar visibilidad de lecciones desde Supabase
+    // Cargar visibilidad de lecciones
     useEffect(() => {
         const loadLessonVisibility = async () => {
             if (!course) return;
             try {
-                const { data } = await supabase
-                    .from('visibilidad_curso')
-                    .select('lecciones')
-                    .eq('course_id', course.id)
-                    .single();
-                
-                if (data?.lecciones) {
-                    setLessonVisibility(data.lecciones);
-                }
+                const { data } = await api('/visibility');
+                setLessonVisibility((data && data[course.id]) || {});
             } catch (err) {
                 console.error('Error cargando visibilidad:', err);
+                setLessonVisibility({});
             }
         };
         loadLessonVisibility();
@@ -100,11 +87,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         );
     }
 
-    // Combinar grupos locales con los de BD
-    const allGroups = [...(course?.groups || []), ...dbGroups];
-    const uniqueGroups = allGroups.filter((g, index, self) => 
-        index === self.findIndex((gg) => gg.id === g.id)
-    );
+    // Mostrar solo grupos cargados desde la BD
+    const uniqueGroups = dbGroups;
 
     const courseRef = useRef(course);
     useEffect(() => {
@@ -134,32 +118,9 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const openStudentsModal = async (group) => {
         const groupId = String(group.id);
         
-        // Buscar en enrollments en vez de user_groups
-        const { data: enrollData, error: enrollError } = await supabase
-            .from('inscripciones')
-            .select('user_id')
-            .eq('group_id', groupId);
+        const { data } = await api(`/groups?group_id=${encodeURIComponent(groupId)}`);
         
-        console.log('enrollments result:', { enrollData, enrollError });
-        
-        if (!enrollData || enrollData.length === 0) {
-            setStudentsList([]);
-            setShowStudentsModal(true);
-            return;
-        }
-
-        const students = [];
-        for (const e of enrollData) {
-            const { data } = await supabase
-                .from('perfiles')
-                .select('*')
-                .eq('id', e.user_id)
-                .single();
-            console.log('Profile fetch for student:', { user_id: e.user_id, data });
-            if (data) students.push(data);
-        }
-
-        setStudentsList(students);
+        setStudentsList(data || []);
         setShowStudentsModal(true);
     };
 
@@ -172,13 +133,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     };
 
     const handleUpdateCourse = async () => {
-        const { error } = await supabase
-            .from('cursos')
-            .update({ 
-                name: editCourseModal.name,
-                teacher: editCourseModal.teacher 
-            })
-            .eq('id', course.id);
+        const { error } = await api('/admin/courses', {
+            method: 'POST',
+            body: { id: course.id, name: editCourseModal.name }
+        });
 
         if (!error) {
             updateCourse({ ...course, name: editCourseModal.name, teacher: editCourseModal.teacher });
@@ -196,13 +154,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     };
 
     const handleUpdateGroup = async () => {
-        const { error } = await supabase
-            .from('grupos')
-            .update({
-                name: editGroupModal.name,
-                teacher: editGroupModal.teacher
-            })
-            .eq('id', editGroupModal.group.id);
+        const { error } = await api('/groups', {
+            method: 'POST',
+            body: { id: editGroupModal.group.id, name: editGroupModal.name, teacher: editGroupModal.teacher }
+        });
 
         if (!error) {
             setDbGroups(prev => prev.map(g => 
@@ -214,25 +169,25 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         }
     };
 
-    const handleDeleteGroup = async () => {
+    const handleDeleteGroup = async (group) => {
+        if (!group?.id) return;
+
         const confirmed = window.confirm('¿Estás seguro de eliminar este grupo? Se eliminarán todos los estudiantes asignados a este grupo.');
         if (!confirmed) return;
 
-        await supabase.from('grupos_usuario').delete().eq('group_id', editGroupModal.group.id);
-        const { error } = await supabase.from('grupos').delete().eq('id', editGroupModal.group.id);
+        await api(`/groups?id=${group.id}`, { method: 'DELETE' });
 
-        if (!error) {
-            setDbGroups(prev => prev.filter(g => g.id !== editGroupModal.group.id));
+        setDbGroups(prev => prev.filter(g => g.id !== group.id));
+        if (editGroupModal.group?.id === group.id) {
             setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
         }
     };
 
     const removeStudentFromGroup = async (studentId, groupId) => {
-        const { error } = await supabase
-            .from('grupos_usuario')
-            .delete()
-            .eq('user_id', studentId)
-            .eq('group_id', groupId);
+        const { error } = await api('/groups', {
+            method: 'PATCH',
+            body: { group_id: groupId, user_id: studentId }
+        });
 
         if (!error) {
             setStudentsModal(prev => ({
@@ -249,10 +204,6 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
 
     const getExpiresAt = useCallback(() => {
         return Date.now() + 5 * 60 * 1000;
-    }, []);
-
-    const getNewGroupId = useCallback(() => {
-        return `g${Date.now()}`;
     }, []);
 
     if (!course) {
@@ -274,61 +225,60 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     };
 
     const openNewGroupModal = () => {
+        setGroupSaveStatus('');
         setNewGroupModal({ isOpen: true, name: '', teacher: '' });
     };
 
     const closeNewGroupModal = () => {
+        setGroupSaveStatus('');
         setNewGroupModal({ isOpen: false, name: '', teacher: '' });
     };
 
     const handleCreateGroup = async () => {
-        if (newGroupModal.name.trim() && newGroupModal.teacher.trim()) {
-            const newGroupId = getNewGroupId();
-            
-            // Guardar en Supabase
-            const { error } = await supabase
-                .from('grupos')
-                .insert({
-                    id: newGroupId,
+        if (!newGroupModal.name.trim()) {
+            alert('El nombre del grupo es obligatorio');
+            return;
+        }
+        setSavingGroup(true);
+        try {
+            const { data, error } = await api('/groups', {
+                method: 'POST',
+                body: {
                     course_id: course.id,
                     name: newGroupModal.name.trim(),
-                    teacher: newGroupModal.teacher.trim()
-                });
+                    teacher: newGroupModal.teacher.trim() || null
+                }
+            });
 
             if (error) {
                 console.error('Error creando grupo:', error);
-                alert('Error al crear grupo');
+                alert('Error al crear grupo: ' + (error.message || 'Error desconocido'));
                 return;
             }
 
-            // También guardar en estado local
-            const newGroup = {
-                id: newGroupId,
-                name: newGroupModal.name.trim(),
-                teacher: newGroupModal.teacher.trim(),
-                students: []
-            };
-            updateCourse({ ...course, groups: [...course.groups, newGroup] });
+            if (data) {
+                setDbGroups(prev => [...prev, data]);
+                setGroupsReload(x => x + 1);
+                setGroupSaveStatus('Grupo guardado en la BD');
+            }
             closeNewGroupModal();
+        } catch (err) {
+            console.error('Error creando grupo:', err);
+            setGroupSaveStatus('Error al guardar el grupo');
+            alert('Error al crear grupo');
+        } finally {
+            setSavingGroup(false);
         }
     };
 
     const deleteGroup = (groupId) => {
-        updateCourse({ ...course, groups: course.groups.filter(g => g.id !== groupId) });
+        setDbGroups(prev => prev.filter(g => g.id !== groupId));
     };
 
     const removeCodeFromDatabase = async (modalState) => {
         if (!modalState?.codeId) return;
 
-        const { error } = await supabase
-            .from('codigos_grupo')
-            .delete()
-            .eq('id', modalState.codeId);
-
-        if (error) {
-            console.error('Error eliminando cÃ³digo:', error);
-            return;
-        }
+        await api(`/codes?id=${modalState.codeId}`, { method: 'DELETE' });
 
         setCodeModal((current) =>
             current.codeId === modalState.codeId
@@ -341,16 +291,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         const code = generateCode(course.name);
         const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutos
 
-        // Guardar código en Supabase
-        const { data, error } = await supabase
-            .from('codigos_grupo')
-            .insert({
-                group_id: group.id,
-                code: code,
-                expires_at: expiresAt
-            })
-            .select('id')
-            .single();
+        const { data, error } = await api('/codes', {
+            method: 'POST',
+            body: { group_id: group.id, code, expires_at: expiresAt }
+        });
 
         if (error) {
             console.error('Error guardando código:', error);
@@ -387,28 +331,14 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         
         console.log('Toggle:', { courseId: course.id, lessonId, normalizedId, newVisibility });
         
-        // Actualizar JSON en Supabase
+        // Guardar visibilidad en BD
         const newLecciones = { ...lessonVisibility, [normalizedId]: newVisibility };
-        console.log('Guardando:', JSON.stringify(newLecciones));
         
         try {
-            const { data, error } = await supabase
-                .from('visibilidad_curso')
-                .upsert({
-                    course_id: course.id,
-                    lecciones: newLecciones,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'course_id' });
-            
-            console.log('Resultado:', { data, error });
-            
-            // Verificar que se guardó
-            const { data: check } = await supabase
-                .from('visibilidad_curso')
-                .select('lecciones')
-                .eq('course_id', course.id)
-                .single();
-            console.log('Verificación BD:', check);
+            await api('/visibility', {
+                method: 'POST',
+                body: { course_id: course.id, lecciones: newLecciones }
+            });
         } catch (err) {
             console.error('Error guardando visibilidad:', err);
         }
@@ -447,13 +377,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         });
         
         try {
-            await supabase
-                .from('visibilidad_curso')
-                .upsert({
-                    course_id: course.id,
-                    lecciones: newLecciones,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'course_id' });
+            await api('/visibility', {
+                method: 'POST',
+                body: { course_id: course.id, lecciones: newLecciones }
+            });
         } catch (err) {
             console.error('Error guardando visibilidad:', err);
         }
@@ -555,6 +482,9 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                         </button>
                                         <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openCodeModal(group)}>
                                             <Key size={14} />
+                                        </button>
+                                        <button className="btn btn-small btn-danger" style={{ padding: '0.5rem 0.75rem' }} onClick={() => handleDeleteGroup(group)}>
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                 </div>
@@ -709,7 +639,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                         </div>
 
                         <div className="form-group">
-                            <label>Docente Encargado</label>
+                            <label>Docente Encargado <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(opcional)</span></label>
                             <input
                                 type="text"
                                 placeholder="Nombre del docente"
@@ -719,14 +649,19 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                         </div>
 
                         <div className="modal-actions">
-                            <button className="btn btn-primary" onClick={handleCreateGroup} disabled={!newGroupModal.name.trim() || !newGroupModal.teacher.trim()}>
+                            <button className="btn btn-primary" onClick={handleCreateGroup} disabled={!newGroupModal.name.trim() || savingGroup}>
                                 <Plus size={18} />
-                                Crear Grupo
+                                {savingGroup ? 'Guardando en la BD...' : 'Crear Grupo'}
                             </button>
-                            <button className="btn btn-secondary" onClick={closeNewGroupModal}>
+                            <button className="btn btn-secondary" onClick={closeNewGroupModal} disabled={savingGroup}>
                                 Cancelar
                             </button>
                         </div>
+                        {groupSaveStatus && (
+                            <div style={{ marginTop: '0.75rem', color: savingGroup ? '#f59e0b' : '#34d399' }}>
+                                {groupSaveStatus}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
