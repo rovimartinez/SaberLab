@@ -37,7 +37,7 @@ export default function ParallelCircuitDemo() {
                         <span>Simulación Interactiva: Ramas Independientes y Flujo de Electrones</span>
                     </h4>
                     <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
-                        Observa los electrones circulando por cada rama. Si quemas el Foco 2, su filamento se rompe y cesa su flujo, pero las ramas 1 y 3 siguen con corriente y brillo total.
+                        La base de cada foco está montada directamente sobre el cable conductor. Si quemas el Foco 2, su filamento se rompe y cesa su flujo, pero las demás ramas siguen encendidas.
                     </p>
                 </div>
 
@@ -191,36 +191,39 @@ export default function ParallelCircuitDemo() {
                             </text>
                         </g>
 
-                        {/* ══════════════ RAMA 1: FOCO 1 ══════════════ */}
+                        {/* ══════════════ RAMA 1: FOCO 1 (Base en el cable, foco de costado) ══════════════ */}
                         <g transform="translate(180, 35)">
                             {/* Etiqueta superior */}
-                            <text x="0" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 1</text>
+                            <text x="14" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 1</text>
 
-                            {/* Cable superior */}
-                            <line x1="0" y1="0" x2="0" y2="70" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            {/* Cable superior entrando a la base */}
+                            <line x1="0" y1="0" x2="0" y2="80" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                            {/* Brillo */}
+                            {/* Base / Portalámparas montado sobre el cable */}
+                            <rect x="-8" y="80" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
+                            <line x1="-7" y1="88" x2="7" y2="88" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="96" x2="7" y2="96" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="104" x2="7" y2="104" stroke="#475569" strokeWidth="1" />
+                            <circle cx="0" cy="80" r="2.5" fill="#38bdf8" />
+                            <circle cx="0" cy="112" r="2.5" fill="#38bdf8" />
+
+                            {/* Foco de Costado hacia la derecha */}
                             {isBranch1Active && (
-                                <circle cx="0" cy="94" r="28" fill="url(#bulbGlowGradPar)" />
+                                <circle cx="28" cy="96" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
                             )}
+                            <circle cx="28" cy="96" r="16" fill={isBranch1Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch1Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
+                            <path d="M 22 86 Q 28 82 34 84" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                            {/* Postes que salen de la base horizontalmente */}
+                            <line x1="8" y1="91" x2="24" y2="91" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                            <line x1="8" y1="101" x2="24" y2="101" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                            {/* Filamento incandescente */}
+                            <path d="M 24 91 Q 30 94 31 96 Q 30 98 24 101" stroke={isBranch1Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
 
-                            {/* Cristal del foco */}
-                            <circle cx="0" cy="94" r="16" fill={isBranch1Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch1Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
-                            {/* Reflejo de cristal */}
-                            <path d="M -10 88 Q -8 83 -2 81" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                            {/* Postes de soporte */}
-                            <line x1="-7" y1="110" x2="-5" y2="94" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                            <line x1="7" y1="110" x2="5" y2="94" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                            {/* Filamento de tungsteno intacto */}
-                            <path d="M -5 94 Q -2 88 0 89 Q 2 88 5 94" stroke={isBranch1Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
-                            {/* Casquillo / Portalámparas */}
-                            <rect x="-12" y="108" width="24" height="9" rx="2" fill="#334155" stroke="#64748b" strokeWidth="1" />
-
-                            {/* Cable inferior */}
-                            <line x1="0" y1="117" x2="0" y2="135" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            {/* Cable inferior saliendo de la base */}
+                            <line x1="0" y1="112" x2="0" y2="135" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
                             {/* Cápsula de Medición */}
-                            <g transform="translate(0, 145)">
+                            <g transform="translate(14, 145)">
                                 <rect x="-36" y="-9" width="72" height="18" rx="9" fill="#090e1a" stroke="#38bdf8" strokeWidth="1.2" />
                                 <text x="0" y="3.5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="900" fontFamily="monospace">
                                     {isBranch1Active ? '12V · 1.0A' : '0V · 0A'}
@@ -238,54 +241,52 @@ export default function ParallelCircuitDemo() {
                             style={{ cursor: 'pointer' }}
                         >
                             {/* Etiqueta superior */}
-                            <text x="0" y="16" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#fbbf24'} fontSize="9.5" fontWeight="900">
+                            <text x="14" y="16" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#fbbf24'} fontSize="9.5" fontWeight="900">
                                 {isBulb2Burned ? 'Foco 2 (QUEMADO)' : 'Foco 2'}
                             </text>
 
-                            {/* Cable superior */}
-                            <line x1="0" y1="0" x2="0" y2="70" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            {/* Cable superior entrando a la base */}
+                            <line x1="0" y1="0" x2="0" y2="80" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
+                            {/* Base / Portalámparas montado sobre el cable */}
+                            <rect x="-8" y="80" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
+                            <line x1="-7" y1="88" x2="7" y2="88" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="96" x2="7" y2="96" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="104" x2="7" y2="104" stroke="#475569" strokeWidth="1" />
+                            <circle cx="0" cy="80" r="2.5" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} />
+                            <circle cx="0" cy="112" r="2.5" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} />
+
+                            {/* Foco de Costado */}
                             {!isBulb2Burned ? (
                                 <>
-                                    {/* Brillo */}
                                     {isBranch2Active && (
-                                        <circle cx="0" cy="94" r="28" fill="url(#bulbGlowGradPar)" />
+                                        <circle cx="28" cy="96" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
                                     )}
-                                    {/* Cristal */}
-                                    <circle cx="0" cy="94" r="16" fill={isBranch2Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch2Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
-                                    {/* Reflejo */}
-                                    <path d="M -10 88 Q -8 83 -2 81" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                                    {/* Postes */}
-                                    <line x1="-7" y1="110" x2="-5" y2="94" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                    <line x1="7" y1="110" x2="5" y2="94" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                    {/* Filamento intacto */}
-                                    <path d="M -5 94 Q -2 88 0 89 Q 2 88 5 94" stroke={isBranch2Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
+                                    <circle cx="28" cy="96" r="16" fill={isBranch2Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch2Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
+                                    <path d="M 22 86 Q 28 82 34 84" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                                    <line x1="8" y1="91" x2="24" y2="91" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                    <line x1="8" y1="101" x2="24" y2="101" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                    <path d="M 24 91 Q 30 94 31 96 Q 30 98 24 101" stroke={isBranch2Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
                                 </>
                             ) : (
                                 <>
-                                    {/* Cristal apagado */}
-                                    <circle cx="0" cy="94" r="16" fill="rgba(15,23,42,0.85)" stroke="#ef4444" strokeWidth="1.6" strokeDasharray="3 2" />
-                                    {/* Mancha negra de humo */}
-                                    <circle cx="0" cy="90" r="10" fill="url(#smokeBurnGradPar)" />
-                                    {/* Postes oscurecidos */}
-                                    <line x1="-7" y1="110" x2="-5" y2="94" stroke="#475569" strokeWidth="1.4" />
-                                    <line x1="7" y1="110" x2="5" y2="94" stroke="#475569" strokeWidth="1.4" />
-                                    {/* ── FILAMENTO ROTO / FUNDIDO ── */}
-                                    <path d="M -5 94 Q -4 90 -3 92" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-                                    <circle cx="-3" cy="92" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
-                                    <path d="M 5 94 Q 4 90 3 92" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-                                    <circle cx="3" cy="92" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
+                                    <circle cx="28" cy="96" r="16" fill="rgba(15,23,42,0.85)" stroke="#ef4444" strokeWidth="1.6" strokeDasharray="3 2" />
+                                    <circle cx="28" cy="96" r="10" fill="url(#smokeBurnGradPar)" />
+                                    <line x1="8" y1="91" x2="24" y2="91" stroke="#475569" strokeWidth="1.4" />
+                                    <line x1="8" y1="101" x2="24" y2="101" stroke="#475569" strokeWidth="1.4" />
+                                    {/* Filamento roto */}
+                                    <path d="M 24 91 Q 27 92 28 93" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                                    <circle cx="28" cy="93" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
+                                    <path d="M 24 101 Q 27 100 28 99" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                                    <circle cx="28" cy="99" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
                                 </>
                             )}
 
-                            {/* Casquillo */}
-                            <rect x="-12" y="108" width="24" height="9" rx="2" fill="#334155" stroke="#64748b" strokeWidth="1" />
-
-                            {/* Cable inferior */}
-                            <line x1="0" y1="117" x2="0" y2="135" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            {/* Cable inferior saliendo de la base */}
+                            <line x1="0" y1="112" x2="0" y2="135" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
                             {/* Cápsula de Medición */}
-                            <g transform="translate(0, 145)">
+                            <g transform="translate(14, 145)">
                                 <rect x="-36" y="-9" width="72" height="18" rx="9" fill="#090e1a" stroke={isBulb2Burned ? '#ef4444' : '#38bdf8'} strokeWidth="1.2" />
                                 <text x="0" y="3.5" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} fontSize="8" fontWeight="900" fontFamily="monospace">
                                     {isBranch2Active ? '12V · 1.0A' : '0V · 0A'}
@@ -299,24 +300,29 @@ export default function ParallelCircuitDemo() {
                         {/* ══════════════ RAMA 3: FOCO 3 (OPCIONAL) ══════════════ */}
                         {numBranches === 3 && (
                             <g transform="translate(460, 35)">
-                                <text x="0" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 3</text>
+                                <text x="14" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 3</text>
 
-                                <line x1="0" y1="0" x2="0" y2="70" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                                <line x1="0" y1="0" x2="0" y2="80" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+
+                                <rect x="-8" y="80" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
+                                <line x1="-7" y1="88" x2="7" y2="88" stroke="#475569" strokeWidth="1" />
+                                <line x1="-7" y1="96" x2="7" y2="96" stroke="#475569" strokeWidth="1" />
+                                <line x1="-7" y1="104" x2="7" y2="104" stroke="#475569" strokeWidth="1" />
+                                <circle cx="0" cy="80" r="2.5" fill="#38bdf8" />
+                                <circle cx="0" cy="112" r="2.5" fill="#38bdf8" />
 
                                 {isBranch3Active && (
-                                    <circle cx="0" cy="94" r="28" fill="url(#bulbGlowGradPar)" />
+                                    <circle cx="28" cy="96" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
                                 )}
+                                <circle cx="28" cy="96" r="16" fill={isBranch3Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch3Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
+                                <path d="M 22 86 Q 28 82 34 84" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                                <line x1="8" y1="91" x2="24" y2="91" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                <line x1="8" y1="101" x2="24" y2="101" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                <path d="M 24 91 Q 30 94 31 96 Q 30 98 24 101" stroke={isBranch3Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
 
-                                <circle cx="0" cy="94" r="16" fill={isBranch3Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch3Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
-                                <path d="M -10 88 Q -8 83 -2 81" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                                <line x1="-7" y1="110" x2="-5" y2="94" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                <line x1="7" y1="110" x2="5" y2="94" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                <path d="M -5 94 Q -2 88 0 89 Q 2 88 5 94" stroke={isBranch3Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
-                                <rect x="-12" y="108" width="24" height="9" rx="2" fill="#334155" stroke="#64748b" strokeWidth="1" />
+                                <line x1="0" y1="112" x2="0" y2="135" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                                <line x1="0" y1="117" x2="0" y2="135" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
-
-                                <g transform="translate(0, 145)">
+                                <g transform="translate(14, 145)">
                                     <rect x="-36" y="-9" width="72" height="18" rx="9" fill="#090e1a" stroke="#38bdf8" strokeWidth="1.2" />
                                     <text x="0" y="3.5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="900" fontFamily="monospace">
                                         {isBranch3Active ? '12V · 1.0A' : '0V · 0A'}
@@ -345,7 +351,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 180 35 L 180 128 L 180 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 180 35 L 180 80 L 180 112 L 180 195 L 40 195 L 40 35 Z"
                                     />
                                 </circle>
                                 <text textAnchor="middle" fill="#0f172a" fontSize="6.5" fontWeight="900" dy="2.5">
@@ -353,7 +359,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 180 35 L 180 128 L 180 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 180 35 L 180 80 L 180 112 L 180 195 L 40 195 L 40 35 Z"
                                     />
                                     −
                                 </text>
@@ -368,7 +374,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.1}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 320 35 L 320 128 L 320 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 320 35 L 320 80 L 320 112 L 320 195 L 40 195 L 40 35 Z"
                                     />
                                 </circle>
                                 <text textAnchor="middle" fill="#0f172a" fontSize="6.5" fontWeight="900" dy="2.5">
@@ -376,7 +382,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.1}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 320 35 L 320 128 L 320 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 320 35 L 320 80 L 320 112 L 320 195 L 40 195 L 40 35 Z"
                                     />
                                     −
                                 </text>
@@ -391,7 +397,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.2}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 460 35 L 460 128 L 460 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 460 35 L 460 80 L 460 112 L 460 195 L 40 195 L 40 35 Z"
                                     />
                                 </circle>
                                 <text textAnchor="middle" fill="#0f172a" fontSize="6.5" fontWeight="900" dy="2.5">
@@ -399,7 +405,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.2}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 460 35 L 460 128 L 460 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 460 35 L 460 80 L 460 112 L 460 195 L 40 195 L 40 35 Z"
                                     />
                                     −
                                 </text>
