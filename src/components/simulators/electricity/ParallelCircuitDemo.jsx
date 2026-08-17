@@ -193,37 +193,37 @@ export default function ParallelCircuitDemo() {
 
                         {/* ══════════════ RAMA 1: FOCO 1 (Base en el cable, foco de costado) ══════════════ */}
                         <g transform="translate(180, 35)">
-                            {/* Etiqueta superior */}
-                            <text x="14" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 1</text>
+                            {/* Etiqueta superior desplazada a la derecha sobre el foco */}
+                            <text x="28" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 1</text>
 
                             {/* Cable superior entrando a la base */}
-                            <line x1="0" y1="0" x2="0" y2="80" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            <line x1="0" y1="0" x2="0" y2="66" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                            {/* Base / Portalámparas montado sobre el cable */}
-                            <rect x="-8" y="80" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
-                            <line x1="-7" y1="88" x2="7" y2="88" stroke="#475569" strokeWidth="1" />
-                            <line x1="-7" y1="96" x2="7" y2="96" stroke="#475569" strokeWidth="1" />
-                            <line x1="-7" y1="104" x2="7" y2="104" stroke="#475569" strokeWidth="1" />
-                            <circle cx="0" cy="80" r="2.5" fill="#38bdf8" />
-                            <circle cx="0" cy="112" r="2.5" fill="#38bdf8" />
+                            {/* Base / Portalámparas montado sobre el cable (subido a y=66) */}
+                            <rect x="-8" y="66" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
+                            <line x1="-7" y1="74" x2="7" y2="74" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="82" x2="7" y2="82" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="90" x2="7" y2="90" stroke="#475569" strokeWidth="1" />
+                            <circle cx="0" cy="66" r="2.5" fill="#38bdf8" />
+                            <circle cx="0" cy="98" r="2.5" fill="#38bdf8" />
 
-                            {/* Foco de Costado hacia la derecha */}
+                            {/* Foco de Costado hacia la derecha (subido a cy=82) */}
                             {isBranch1Active && (
-                                <circle cx="28" cy="96" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
+                                <circle cx="28" cy="82" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
                             )}
-                            <circle cx="28" cy="96" r="16" fill={isBranch1Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch1Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
-                            <path d="M 22 86 Q 28 82 34 84" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                            <circle cx="28" cy="82" r="16" fill={isBranch1Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch1Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
+                            <path d="M 22 72 Q 28 68 34 70" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
                             {/* Postes que salen de la base horizontalmente */}
-                            <line x1="8" y1="91" x2="24" y2="91" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                            <line x1="8" y1="101" x2="24" y2="101" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                            <line x1="8" y1="77" x2="24" y2="77" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                            <line x1="8" y1="87" x2="24" y2="87" stroke={isBranch1Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
                             {/* Filamento incandescente */}
-                            <path d="M 24 91 Q 30 94 31 96 Q 30 98 24 101" stroke={isBranch1Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
+                            <path d="M 24 77 Q 30 80 31 82 Q 30 84 24 87" stroke={isBranch1Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
 
                             {/* Cable inferior saliendo de la base */}
-                            <line x1="0" y1="112" x2="0" y2="135" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            <line x1="0" y1="98" x2="0" y2="121" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                            {/* Cápsula de Medición */}
-                            <g transform="translate(14, 145)">
+                            {/* Cápsula de Medición (subida a y=130) */}
+                            <g transform="translate(14, 130)">
                                 <rect x="-36" y="-9" width="72" height="18" rx="9" fill="#090e1a" stroke="#38bdf8" strokeWidth="1.2" />
                                 <text x="0" y="3.5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="900" fontFamily="monospace">
                                     {isBranch1Active ? '12V · 1.0A' : '0V · 0A'}
@@ -231,7 +231,7 @@ export default function ParallelCircuitDemo() {
                             </g>
 
                             {/* Cable hasta el riel */}
-                            <line x1="0" y1="154" x2="0" y2="160" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            <line x1="0" y1="139" x2="0" y2="160" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
                         </g>
 
                         {/* ══════════════ RAMA 2: FOCO 2 (QUEMABLE) ══════════════ */}
@@ -240,53 +240,53 @@ export default function ParallelCircuitDemo() {
                             onClick={() => setIsBulb2Burned(!isBulb2Burned)}
                             style={{ cursor: 'pointer' }}
                         >
-                            {/* Etiqueta superior */}
-                            <text x="14" y="16" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#fbbf24'} fontSize="9.5" fontWeight="900">
+                            {/* Etiqueta superior desplazada a la derecha sobre el foco */}
+                            <text x="28" y="16" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#fbbf24'} fontSize="9.5" fontWeight="900">
                                 {isBulb2Burned ? 'Foco 2 (QUEMADO)' : 'Foco 2'}
                             </text>
 
                             {/* Cable superior entrando a la base */}
-                            <line x1="0" y1="0" x2="0" y2="80" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            <line x1="0" y1="0" x2="0" y2="66" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                            {/* Base / Portalámparas montado sobre el cable */}
-                            <rect x="-8" y="80" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
-                            <line x1="-7" y1="88" x2="7" y2="88" stroke="#475569" strokeWidth="1" />
-                            <line x1="-7" y1="96" x2="7" y2="96" stroke="#475569" strokeWidth="1" />
-                            <line x1="-7" y1="104" x2="7" y2="104" stroke="#475569" strokeWidth="1" />
-                            <circle cx="0" cy="80" r="2.5" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} />
-                            <circle cx="0" cy="112" r="2.5" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} />
+                            {/* Base / Portalámparas montado sobre el cable (subido a y=66) */}
+                            <rect x="-8" y="66" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
+                            <line x1="-7" y1="74" x2="7" y2="74" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="82" x2="7" y2="82" stroke="#475569" strokeWidth="1" />
+                            <line x1="-7" y1="90" x2="7" y2="90" stroke="#475569" strokeWidth="1" />
+                            <circle cx="0" cy="66" r="2.5" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} />
+                            <circle cx="0" cy="98" r="2.5" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} />
 
-                            {/* Foco de Costado */}
+                            {/* Foco de Costado (subido a cy=82) */}
                             {!isBulb2Burned ? (
                                 <>
                                     {isBranch2Active && (
-                                        <circle cx="28" cy="96" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
+                                        <circle cx="28" cy="82" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
                                     )}
-                                    <circle cx="28" cy="96" r="16" fill={isBranch2Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch2Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
-                                    <path d="M 22 86 Q 28 82 34 84" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                                    <line x1="8" y1="91" x2="24" y2="91" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                    <line x1="8" y1="101" x2="24" y2="101" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                    <path d="M 24 91 Q 30 94 31 96 Q 30 98 24 101" stroke={isBranch2Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
+                                    <circle cx="28" cy="82" r="16" fill={isBranch2Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch2Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
+                                    <path d="M 22 72 Q 28 68 34 70" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                                    <line x1="8" y1="77" x2="24" y2="77" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                    <line x1="8" y1="87" x2="24" y2="87" stroke={isBranch2Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                    <path d="M 24 77 Q 30 80 31 82 Q 30 84 24 87" stroke={isBranch2Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
                                 </>
                             ) : (
                                 <>
-                                    <circle cx="28" cy="96" r="16" fill="rgba(15,23,42,0.85)" stroke="#ef4444" strokeWidth="1.6" strokeDasharray="3 2" />
-                                    <circle cx="28" cy="96" r="10" fill="url(#smokeBurnGradPar)" />
-                                    <line x1="8" y1="91" x2="24" y2="91" stroke="#475569" strokeWidth="1.4" />
-                                    <line x1="8" y1="101" x2="24" y2="101" stroke="#475569" strokeWidth="1.4" />
+                                    <circle cx="28" cy="82" r="16" fill="rgba(15,23,42,0.85)" stroke="#ef4444" strokeWidth="1.6" strokeDasharray="3 2" />
+                                    <circle cx="28" cy="82" r="10" fill="url(#smokeBurnGradPar)" />
+                                    <line x1="8" y1="77" x2="24" y2="77" stroke="#475569" strokeWidth="1.4" />
+                                    <line x1="8" y1="87" x2="24" y2="87" stroke="#475569" strokeWidth="1.4" />
                                     {/* Filamento roto */}
-                                    <path d="M 24 91 Q 27 92 28 93" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-                                    <circle cx="28" cy="93" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
-                                    <path d="M 24 101 Q 27 100 28 99" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
-                                    <circle cx="28" cy="99" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
+                                    <path d="M 24 77 Q 27 78 28 79" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                                    <circle cx="28" cy="79" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
+                                    <path d="M 24 87 Q 27 86 28 85" stroke="#71717a" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+                                    <circle cx="28" cy="85" r="1.5" fill="#18181b" stroke="#71717a" strokeWidth="0.8" />
                                 </>
                             )}
 
                             {/* Cable inferior saliendo de la base */}
-                            <line x1="0" y1="112" x2="0" y2="135" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            <line x1="0" y1="98" x2="0" y2="121" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                            {/* Cápsula de Medición */}
-                            <g transform="translate(14, 145)">
+                            {/* Cápsula de Medición (subida a y=130) */}
+                            <g transform="translate(14, 130)">
                                 <rect x="-36" y="-9" width="72" height="18" rx="9" fill="#090e1a" stroke={isBulb2Burned ? '#ef4444' : '#38bdf8'} strokeWidth="1.2" />
                                 <text x="0" y="3.5" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#38bdf8'} fontSize="8" fontWeight="900" fontFamily="monospace">
                                     {isBranch2Active ? '12V · 1.0A' : '0V · 0A'}
@@ -294,42 +294,42 @@ export default function ParallelCircuitDemo() {
                             </g>
 
                             {/* Cable hasta el riel */}
-                            <line x1="0" y1="154" x2="0" y2="160" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                            <line x1="0" y1="139" x2="0" y2="160" stroke={isBranch2Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
                         </g>
 
                         {/* ══════════════ RAMA 3: FOCO 3 (OPCIONAL) ══════════════ */}
                         {numBranches === 3 && (
                             <g transform="translate(460, 35)">
-                                <text x="14" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 3</text>
+                                <text x="28" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 3</text>
 
-                                <line x1="0" y1="0" x2="0" y2="80" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                                <line x1="0" y1="0" x2="0" y2="66" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                                <rect x="-8" y="80" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
-                                <line x1="-7" y1="88" x2="7" y2="88" stroke="#475569" strokeWidth="1" />
-                                <line x1="-7" y1="96" x2="7" y2="96" stroke="#475569" strokeWidth="1" />
-                                <line x1="-7" y1="104" x2="7" y2="104" stroke="#475569" strokeWidth="1" />
-                                <circle cx="0" cy="80" r="2.5" fill="#38bdf8" />
-                                <circle cx="0" cy="112" r="2.5" fill="#38bdf8" />
+                                <rect x="-8" y="66" width="16" height="32" rx="3" fill="#334155" stroke="#64748b" strokeWidth="1.2" />
+                                <line x1="-7" y1="74" x2="7" y2="74" stroke="#475569" strokeWidth="1" />
+                                <line x1="-7" y1="82" x2="7" y2="82" stroke="#475569" strokeWidth="1" />
+                                <line x1="-7" y1="90" x2="7" y2="90" stroke="#475569" strokeWidth="1" />
+                                <circle cx="0" cy="66" r="2.5" fill="#38bdf8" />
+                                <circle cx="0" cy="98" r="2.5" fill="#38bdf8" />
 
                                 {isBranch3Active && (
-                                    <circle cx="28" cy="96" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
+                                    <circle cx="28" cy="82" r="26" fill="url(#bulbGlowGradPar)" opacity="0.9" />
                                 )}
-                                <circle cx="28" cy="96" r="16" fill={isBranch3Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch3Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
-                                <path d="M 22 86 Q 28 82 34 84" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                                <line x1="8" y1="91" x2="24" y2="91" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                <line x1="8" y1="101" x2="24" y2="101" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
-                                <path d="M 24 91 Q 30 94 31 96 Q 30 98 24 101" stroke={isBranch3Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
+                                <circle cx="28" cy="82" r="16" fill={isBranch3Active ? '#fef08a' : 'rgba(255,255,255,0.06)'} stroke={isBranch3Active ? '#facc15' : '#64748b'} strokeWidth="1.6" />
+                                <path d="M 22 72 Q 28 68 34 70" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                                <line x1="8" y1="77" x2="24" y2="77" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                <line x1="8" y1="87" x2="24" y2="87" stroke={isBranch3Active ? '#f59e0b' : '#64748b'} strokeWidth="1.4" />
+                                <path d="M 24 77 Q 30 80 31 82 Q 30 84 24 87" stroke={isBranch3Active ? '#ffffff' : '#94a3b8'} strokeWidth="1.8" fill="none" />
 
-                                <line x1="0" y1="112" x2="0" y2="135" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                                <line x1="0" y1="98" x2="0" y2="121" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
-                                <g transform="translate(14, 145)">
+                                <g transform="translate(14, 130)">
                                     <rect x="-36" y="-9" width="72" height="18" rx="9" fill="#090e1a" stroke="#38bdf8" strokeWidth="1.2" />
                                     <text x="0" y="3.5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="900" fontFamily="monospace">
                                         {isBranch3Active ? '12V · 1.0A' : '0V · 0A'}
                                     </text>
                                 </g>
 
-                                <line x1="0" y1="154" x2="0" y2="160" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
+                                <line x1="0" y1="139" x2="0" y2="160" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
                             </g>
                         )}
 
