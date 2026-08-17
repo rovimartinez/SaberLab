@@ -17,8 +17,11 @@ import CircuitStatesSimulator from '../../simulators/electricity/CircuitStatesSi
 import PracticalLabL1 from '../../simulators/electricity/PracticalLabL1';
 import PracticalLabL2 from '../../simulators/electricity/PracticalLabL2';
 import PracticalLabL3 from '../../simulators/electricity/PracticalLabL3';
+import PracticalLabL4 from '../../simulators/electricity/PracticalLabL4';
 import SeriesCircuitDemo from '../../simulators/electricity/SeriesCircuitDemo';
 import SeriesCalculationVisualizer from '../../simulators/electricity/SeriesCalculationVisualizer';
+import ParallelCircuitDemo from '../../simulators/electricity/ParallelCircuitDemo';
+import ParallelCalculationVisualizer from '../../simulators/electricity/ParallelCalculationVisualizer';
 import HorsepowerSimulator from '../../simulators/electricity/HorsepowerSimulator';
 
 const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) => {
@@ -132,6 +135,13 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
             );
 
             mountInto(
+                'practical-lab-l4-container',
+                <div style={{ width: '100%' }}>
+                    <PracticalLabL4 />
+                </div>
+            );
+
+            mountInto(
                 'series-circuit-demo-container',
                 <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                     <SeriesCircuitDemo />
@@ -142,6 +152,20 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
                 'series-calculation-visualizer-container',
                 <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                     <SeriesCalculationVisualizer />
+                </div>
+            );
+
+            mountInto(
+                'parallel-circuit-demo-container',
+                <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+                    <ParallelCircuitDemo />
+                </div>
+            );
+
+            mountInto(
+                'parallel-calculation-visualizer-container',
+                <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+                    <ParallelCalculationVisualizer />
                 </div>
             );
 

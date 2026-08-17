@@ -1,0 +1,257 @@
+import { useState } from 'react';
+import { Power, Flame, RotateCcw, Lightbulb, Zap, Split } from 'lucide-react';
+import '../../../styles/ElectricitySimulators.css';
+
+export default function ParallelCircuitDemo() {
+    const [isSwitchClosed, setIsSwitchClosed] = useState(true);
+    const [isBulb2Burned, setIsBulb2Burned] = useState(false);
+    const [numBranches, setNumBranches] = useState(3); // 2 o 3 ramas
+    const [batteryVoltage, setBatteryVoltage] = useState(12);
+
+    // En paralelo, cada rama es independiente si el interruptor principal está cerrado
+    const isBranch1Active = isSwitchClosed;
+    const isBranch2Active = isSwitchClosed && !isBulb2Burned;
+    const isBranch3Active = isSwitchClosed && numBranches === 3;
+
+    // Conteo de ramas activas y corriente total
+    const activeBranchesCount = (isBranch1Active ? 1 : 0) + (isBranch2Active ? 1 : 0) + (isBranch3Active ? 1 : 0);
+    const currentPerBranch = 1.0; // 1A por bombillo a 12V
+    const totalCurrent = isSwitchClosed ? activeBranchesCount * currentPerBranch : 0;
+
+    return (
+        <div className="sim-card" style={{ maxWidth: '820px', margin: '0 auto' }}>
+            <div className="sim-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#f59e0b' }}>
+                        <Split size={20} color="#f59e0b" />
+                        <span>Simulación Interactiva: Ramas Independientes y Prueba de Foco Quemado</span>
+                    </h4>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+                        A diferencia del circuito serie, si un bombillo se quema en paralelo, las demás ramas siguen recibiendo 12V y permanecen encendidas con brillo total.
+                    </p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        className="sim-btn sim-btn-secondary"
+                        onClick={() => {
+                            setIsSwitchClosed(true);
+                            setIsBulb2Burned(false);
+                            setNumBranches(3);
+                        }}
+                        style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                        <RotateCcw size={13} />
+                        <span>Restablecer</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="sim-card-body" style={{ padding: '1.25rem' }}>
+                {/* Panel Superior de Controles */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(15,23,42,0.6)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                            className={`sim-btn ${isSwitchClosed ? 'sim-btn-primary' : 'sim-btn-secondary'}`}
+                            onClick={() => setIsSwitchClosed(!isSwitchClosed)}
+                            style={{ padding: '7px 14px', fontSize: '0.82rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                            <Power size={15} />
+                            <span>Interruptor General: {isSwitchClosed ? 'CERRADO (ON)' : 'ABIERTO (OFF)'}</span>
+                        </button>
+
+                        <button
+                            className="sim-btn sim-btn-secondary"
+                            onClick={() => setIsBulb2Burned(!isBulb2Burned)}
+                            style={{
+                                padding: '7px 14px',
+                                fontSize: '0.82rem',
+                                fontWeight: 800,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                color: isBulb2Burned ? '#34d399' : '#f87171',
+                                border: isBulb2Burned ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)',
+                                background: isBulb2Burned ? 'rgba(52, 211, 153, 0.1)' : 'rgba(239, 68, 68, 0.1)'
+                            }}
+                        >
+                            <Flame size={15} />
+                            <span>{isBulb2Burned ? 'Reparar Foco 2' : '💥 Quemar Foco 2'}</span>
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', fontSize: '0.82rem', color: '#94a3b8' }}>
+                        <span>Ramas activas:</span>
+                        <button
+                            className={`sim-btn ${numBranches === 2 ? 'sim-btn-primary' : 'sim-btn-secondary'}`}
+                            onClick={() => setNumBranches(2)}
+                            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                        >
+                            2 Ramas
+                        </button>
+                        <button
+                            className={`sim-btn ${numBranches === 3 ? 'sim-btn-primary' : 'sim-btn-secondary'}`}
+                            onClick={() => setNumBranches(3)}
+                            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                        >
+                            3 Ramas
+                        </button>
+                    </div>
+                </div>
+
+                {/* Lienzo SVG del Circuito en Paralelo */}
+                <div style={{
+                    background: 'linear-gradient(180deg, #090e1a 0%, #0f172a 100%)',
+                    borderRadius: '16px',
+                    border: '1.5px solid rgba(255,255,255,0.08)',
+                    padding: '1rem',
+                    textAlign: 'center'
+                }}>
+                    <svg viewBox="0 0 460 220" width="100%" height="240" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <radialGradient id="bulbGlowPar" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+                                <stop offset="50%" stopColor="#eab308" stopOpacity="0.8" />
+                                <stop offset="100%" stopColor="#ca8a04" stopOpacity="0" />
+                            </radialGradient>
+                            <linearGradient id="batGradPar" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#0284c7" />
+                                <stop offset="100%" stopColor="#0369a1" />
+                            </linearGradient>
+                        </defs>
+
+                        {/* Rieles Principales Superior e Inferior */}
+                        <line x1="50" y1="35" x2={numBranches === 3 ? "390" : "280"} y2="35" stroke="#475569" strokeWidth="3" />
+                        <line x1="50" y1="185" x2={numBranches === 3 ? "390" : "280"} y2="185" stroke="#475569" strokeWidth="3" />
+
+                        {/* Batería / Fuente a la izquierda */}
+                        <g transform="translate(30, 80)">
+                            <line x1="20" y1="-45" x2="20" y2="0" stroke="#475569" strokeWidth="3" />
+                            <line x1="20" y1="55" x2="20" y2="105" stroke="#475569" strokeWidth="3" />
+                            <rect x="5" y="0" width="30" height="55" rx="5" fill="url(#batGradPar)" stroke="#38bdf8" strokeWidth="1.5" />
+                            <rect x="14" y="-5" width="12" height="5" rx="1.5" fill="#ef4444" />
+                            <text x="20" y="20" textAnchor="middle" fill="#ef4444" fontSize="13" fontWeight="900">+</text>
+                            <text x="20" y="46" textAnchor="middle" fill="#0f172a" fontSize="15" fontWeight="900">−</text>
+                            <text x="-15" y="32" textAnchor="middle" fill="#38bdf8" fontSize="11" fontWeight="900">12V</text>
+                        </g>
+
+                        {/* Interruptor en Riel Superior */}
+                        <g transform="translate(100, 35)">
+                            <circle cx="-15" cy="0" r="4" fill="#38bdf8" />
+                            <circle cx="15" cy="0" r="4" fill="#38bdf8" />
+                            {isSwitchClosed ? (
+                                <line x1="-15" y1="0" x2="15" y2="0" stroke="#34d399" strokeWidth="3" />
+                            ) : (
+                                <line x1="-15" y1="0" x2="10" y2="-16" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+                            )}
+                            <text x="0" y="-12" textAnchor="middle" fill={isSwitchClosed ? '#34d399' : '#ef4444'} fontSize="8" fontWeight="800">
+                                {isSwitchClosed ? 'ON' : 'OFF'}
+                            </text>
+                        </g>
+
+                        {/* Rama 1: Bombillo 1 */}
+                        <g transform="translate(170, 35)">
+                            <line x1="0" y1="0" x2="0" y2="45" stroke="#475569" strokeWidth="2.5" />
+                            {/* Brillo */}
+                            {isBranch1Active && (
+                                <circle cx="0" cy="75" r="28" fill="url(#bulbGlowPar)" opacity="0.85" />
+                            )}
+                            {/* Cristal del foco */}
+                            <circle cx="0" cy="75" r="16" fill={isBranch1Active ? '#fef08a' : '#1e293b'} stroke="#cbd5e1" strokeWidth="1.5" />
+                            {/* Filamento */}
+                            <path d="M -6 80 L -3 70 L 3 70 L 6 80" fill="none" stroke={isBranch1Active ? '#ea580c' : '#64748b'} strokeWidth="1.5" />
+                            <rect x="-8" y="90" width="16" height="8" rx="2" fill="#94a3b8" />
+                            <line x1="0" y1="98" x2="0" y2="150" stroke="#475569" strokeWidth="2.5" />
+
+                            <text x="24" y="72" fill="#fbbf24" fontSize="9" fontWeight="900">Foco 1</text>
+                            <text x="24" y="86" fill="#38bdf8" fontSize="8" fontWeight="800">
+                                {isBranch1Active ? '12V · 1.0A' : '0V · 0A'}
+                            </text>
+                        </g>
+
+                        {/* Rama 2: Bombillo 2 (Con opción de quemarse) */}
+                        <g transform="translate(280, 35)">
+                            <line x1="0" y1="0" x2="0" y2="45" stroke="#475569" strokeWidth="2.5" />
+                            {/* Brillo */}
+                            {isBranch2Active && (
+                                <circle cx="0" cy="75" r="28" fill="url(#bulbGlowPar)" opacity="0.85" />
+                            )}
+                            {/* Cristal del foco */}
+                            <circle cx="0" cy="75" r="16" fill={isBranch2Active ? '#fef08a' : '#1e293b'} stroke={isBulb2Burned ? '#ef4444' : '#cbd5e1'} strokeWidth="1.5" strokeDasharray={isBulb2Burned ? '3 2' : 'none'} />
+                            {/* Filamento roto si está quemado */}
+                            {isBulb2Burned ? (
+                                <g stroke="#ef4444" strokeWidth="1.5">
+                                    <line x1="-5" y1="80" x2="-2" y2="72" />
+                                    <line x1="5" y1="80" x2="2" y2="72" />
+                                    <circle cx="0" cy="68" r="2" fill="#ef4444" />
+                                </g>
+                            ) : (
+                                <path d="M -6 80 L -3 70 L 3 70 L 6 80" fill="none" stroke={isBranch2Active ? '#ea580c' : '#64748b'} strokeWidth="1.5" />
+                            )}
+                            <rect x="-8" y="90" width="16" height="8" rx="2" fill="#94a3b8" />
+                            <line x1="0" y1="98" x2="0" y2="150" stroke="#475569" strokeWidth="2.5" />
+
+                            <text x="24" y="72" fill={isBulb2Burned ? '#ef4444' : '#fbbf24'} fontSize="9" fontWeight="900">
+                                {isBulb2Burned ? 'Foco 2 (QUEMADO)' : 'Foco 2'}
+                            </text>
+                            <text x="24" y="86" fill="#38bdf8" fontSize="8" fontWeight="800">
+                                {isBranch2Active ? '12V · 1.0A' : '0V · 0A'}
+                            </text>
+                        </g>
+
+                        {/* Rama 3: Bombillo 3 (Opcional) */}
+                        {numBranches === 3 && (
+                            <g transform="translate(390, 35)">
+                                <line x1="0" y1="0" x2="0" y2="45" stroke="#475569" strokeWidth="2.5" />
+                                {isBranch3Active && (
+                                    <circle cx="0" cy="75" r="28" fill="url(#bulbGlowPar)" opacity="0.85" />
+                                )}
+                                <circle cx="0" cy="75" r="16" fill={isBranch3Active ? '#fef08a' : '#1e293b'} stroke="#cbd5e1" strokeWidth="1.5" />
+                                <path d="M -6 80 L -3 70 L 3 70 L 6 80" fill="none" stroke={isBranch3Active ? '#ea580c' : '#64748b'} strokeWidth="1.5" />
+                                <rect x="-8" y="90" width="16" height="8" rx="2" fill="#94a3b8" />
+                                <line x1="0" y1="98" x2="0" y2="150" stroke="#475569" strokeWidth="2.5" />
+
+                                <text x="24" y="72" fill="#fbbf24" fontSize="9" fontWeight="900">Foco 3</text>
+                                <text x="24" y="86" fill="#38bdf8" fontSize="8" fontWeight="800">
+                                    {isBranch3Active ? '12V · 1.0A' : '0V · 0A'}
+                                </text>
+                            </g>
+                        )}
+
+                        {/* Medidor de Corriente Total IT */}
+                        <g transform="translate(135, 185)">
+                            <rect x="-40" y="-12" width="80" height="24" rx="12" fill="#090e1a" stroke="#34d399" strokeWidth="1.5" />
+                            <polygon points="-28,4 -20,0 -28,-4" fill="#34d399" />
+                            <text x="-12" y="4" textAnchor="start" fill="#34d399" fontSize="10" fontWeight="900" fontFamily="monospace">
+                                IT = {totalCurrent.toFixed(1)} A
+                            </text>
+                        </g>
+                    </svg>
+                </div>
+
+                {/* Caja de Conclusiones Pedagógicas */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginTop: '1rem' }}>
+                    <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '12px', padding: '10px' }}>
+                        <div style={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.82rem', marginBottom: '2px' }}>🔋 Voltaje en cada Foco:</div>
+                        <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 900 }}>12.0 V (Constante)</div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '2px' }}>Cada rama recibe la totalidad de la fuente.</div>
+                    </div>
+
+                    <div style={{ background: 'rgba(52, 211, 153, 0.08)', border: '1px solid rgba(52, 211, 153, 0.25)', borderRadius: '12px', padding: '10px' }}>
+                        <div style={{ color: '#34d399', fontWeight: 800, fontSize: '0.82rem', marginBottom: '2px' }}>⚡ Corriente Total Suministrada:</div>
+                        <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 900 }}>{totalCurrent.toFixed(1)} A</div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '2px' }}>Suma de corrientes según LCK: {activeBranchesCount} × 1.0 A.</div>
+                    </div>
+
+                    <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '12px', padding: '10px' }}>
+                        <div style={{ color: '#fbbf24', fontWeight: 800, fontSize: '0.82rem', marginBottom: '2px' }}>💡 Comportamiento de Falla:</div>
+                        <div style={{ color: isBulb2Burned ? '#34d399' : '#cbd5e1', fontSize: '0.82rem', fontWeight: 800 }}>
+                            {isBulb2Burned ? '¡Las demás ramas siguen encendidas!' : 'Todas las ramas funcionan'}
+                        </div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '2px' }}>Independencia garantizada.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
