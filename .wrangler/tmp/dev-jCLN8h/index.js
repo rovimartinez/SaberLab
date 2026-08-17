@@ -1,7 +1,9 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
-// api/admin/courses.js
+// .wrangler/dist/index.js
+var __defProp2 = Object.defineProperty;
+var __name2 = /* @__PURE__ */ __name((target, value) => __defProp2(target, "name", { value, configurable: true }), "__name");
 async function onRequestPost({ request, env, data }) {
   if (data.user.role !== "admin") {
     return Response.json({ error: "Solo administradores" }, { status: 403 });
@@ -29,8 +31,7 @@ async function onRequestPost({ request, env, data }) {
   return Response.json({ success: true, course: body });
 }
 __name(onRequestPost, "onRequestPost");
-
-// api/admin/plataforma.js
+__name2(onRequestPost, "onRequestPost");
 async function onRequestGet({ env, data }) {
   if (data.user.role !== "admin") {
     return Response.json({ error: "Solo administradores" }, { status: 403 });
@@ -77,8 +78,7 @@ async function onRequestGet({ env, data }) {
   });
 }
 __name(onRequestGet, "onRequestGet");
-
-// ../node_modules/jose/dist/webapi/lib/buffer_utils.js
+__name2(onRequestGet, "onRequestGet");
 var encoder = new TextEncoder();
 var decoder = new TextDecoder();
 var strictDecoder = new TextDecoder("utf-8", { fatal: true });
@@ -94,6 +94,7 @@ function concat(...buffers) {
   return buf;
 }
 __name(concat, "concat");
+__name2(concat, "concat");
 function encode(string) {
   const bytes = new Uint8Array(string.length);
   for (let i = 0; i < string.length; i++) {
@@ -106,15 +107,15 @@ function encode(string) {
   return bytes;
 }
 __name(encode, "encode");
-
-// ../node_modules/jose/dist/webapi/lib/crypto_key.js
-var unusable = /* @__PURE__ */ __name((name, prop = "algorithm.name") => new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name}`), "unusable");
+__name2(encode, "encode");
+var unusable = /* @__PURE__ */ __name2((name, prop = "algorithm.name") => new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name}`), "unusable");
 function checkUsage(key, usage) {
   if (usage && !key.usages.includes(usage)) {
     throw new TypeError(`CryptoKey does not support this operation, its usages must include ${usage}.`);
   }
 }
 __name(checkUsage, "checkUsage");
+__name2(checkUsage, "checkUsage");
 function checkModulusLength(alg, key) {
   const { modulusLength } = key.algorithm;
   if (typeof modulusLength !== "number" || modulusLength < 2048) {
@@ -122,6 +123,7 @@ function checkModulusLength(alg, key) {
   }
 }
 __name(checkModulusLength, "checkModulusLength");
+__name2(checkModulusLength, "checkModulusLength");
 function checkCryptoKey(key, expected, usage) {
   const algorithm = key.algorithm;
   if (algorithm.name !== expected.name) {
@@ -139,8 +141,7 @@ function checkCryptoKey(key, expected, usage) {
   checkUsage(key, usage);
 }
 __name(checkCryptoKey, "checkCryptoKey");
-
-// ../node_modules/jose/dist/webapi/lib/invalid_key_input.js
+__name2(checkCryptoKey, "checkCryptoKey");
 function message(msg, actual, ...types) {
   if (types.length > 2) {
     const last = types.pop();
@@ -162,12 +163,14 @@ function message(msg, actual, ...types) {
   return msg;
 }
 __name(message, "message");
-var withAlg = /* @__PURE__ */ __name((alg, actual, ...types) => message(`Key for the ${alg} algorithm must be `, actual, ...types), "withAlg");
-
-// ../node_modules/jose/dist/webapi/util/errors.js
+__name2(message, "message");
+var withAlg = /* @__PURE__ */ __name2((alg, actual, ...types) => message(`Key for the ${alg} algorithm must be `, actual, ...types), "withAlg");
 var JOSEError = class extends Error {
   static {
     __name(this, "JOSEError");
+  }
+  static {
+    __name2(this, "JOSEError");
   }
   static code = "ERR_JOSE_GENERIC";
   code = "ERR_JOSE_GENERIC";
@@ -180,6 +183,9 @@ var JOSEError = class extends Error {
 var JWTClaimValidationFailed = class extends JOSEError {
   static {
     __name(this, "JWTClaimValidationFailed");
+  }
+  static {
+    __name2(this, "JWTClaimValidationFailed");
   }
   static code = "ERR_JWT_CLAIM_VALIDATION_FAILED";
   code = "ERR_JWT_CLAIM_VALIDATION_FAILED";
@@ -197,6 +203,9 @@ var JWTExpired = class extends JOSEError {
   static {
     __name(this, "JWTExpired");
   }
+  static {
+    __name2(this, "JWTExpired");
+  }
   static code = "ERR_JWT_EXPIRED";
   code = "ERR_JWT_EXPIRED";
   claim;
@@ -213,12 +222,18 @@ var JOSEAlgNotAllowed = class extends JOSEError {
   static {
     __name(this, "JOSEAlgNotAllowed");
   }
+  static {
+    __name2(this, "JOSEAlgNotAllowed");
+  }
   static code = "ERR_JOSE_ALG_NOT_ALLOWED";
   code = "ERR_JOSE_ALG_NOT_ALLOWED";
 };
 var JOSENotSupported = class extends JOSEError {
   static {
     __name(this, "JOSENotSupported");
+  }
+  static {
+    __name2(this, "JOSENotSupported");
   }
   static code = "ERR_JOSE_NOT_SUPPORTED";
   code = "ERR_JOSE_NOT_SUPPORTED";
@@ -227,12 +242,18 @@ var JWSInvalid = class extends JOSEError {
   static {
     __name(this, "JWSInvalid");
   }
+  static {
+    __name2(this, "JWSInvalid");
+  }
   static code = "ERR_JWS_INVALID";
   code = "ERR_JWS_INVALID";
 };
 var JWTInvalid = class extends JOSEError {
   static {
     __name(this, "JWTInvalid");
+  }
+  static {
+    __name2(this, "JWTInvalid");
   }
   static code = "ERR_JWT_INVALID";
   code = "ERR_JWT_INVALID";
@@ -241,15 +262,16 @@ var JWSSignatureVerificationFailed = class extends JOSEError {
   static {
     __name(this, "JWSSignatureVerificationFailed");
   }
+  static {
+    __name2(this, "JWSSignatureVerificationFailed");
+  }
   static code = "ERR_JWS_SIGNATURE_VERIFICATION_FAILED";
   code = "ERR_JWS_SIGNATURE_VERIFICATION_FAILED";
   constructor(message2 = "signature verification failed", options) {
     super(message2, options);
   }
 };
-
-// ../node_modules/jose/dist/webapi/lib/is_key_like.js
-var isCryptoKey = /* @__PURE__ */ __name((key) => {
+var isCryptoKey = /* @__PURE__ */ __name2((key) => {
   if (key?.[Symbol.toStringTag] === "CryptoKey")
     return true;
   try {
@@ -258,10 +280,8 @@ var isCryptoKey = /* @__PURE__ */ __name((key) => {
     return false;
   }
 }, "isCryptoKey");
-var isKeyObject = /* @__PURE__ */ __name((key) => key?.[Symbol.toStringTag] === "KeyObject", "isKeyObject");
-var isKeyLike = /* @__PURE__ */ __name((key) => isCryptoKey(key) || isKeyObject(key), "isKeyLike");
-
-// ../node_modules/jose/dist/webapi/lib/base64.js
+var isKeyObject = /* @__PURE__ */ __name2((key) => key?.[Symbol.toStringTag] === "KeyObject", "isKeyObject");
+var isKeyLike = /* @__PURE__ */ __name2((key) => isCryptoKey(key) || isKeyObject(key), "isKeyLike");
 function encodeBase64(input) {
   if (Uint8Array.prototype.toBase64) {
     return input.toBase64();
@@ -274,6 +294,7 @@ function encodeBase64(input) {
   return btoa(arr.join(""));
 }
 __name(encodeBase64, "encodeBase64");
+__name2(encodeBase64, "encodeBase64");
 function decodeBase64(encoded) {
   if (Uint8Array.fromBase64) {
     return Uint8Array.fromBase64(encoded);
@@ -286,8 +307,7 @@ function decodeBase64(encoded) {
   return bytes;
 }
 __name(decodeBase64, "decodeBase64");
-
-// ../node_modules/jose/dist/webapi/util/base64url.js
+__name2(decodeBase64, "decodeBase64");
 var invalid = "The input to be decoded is not correctly encoded.";
 function decode(input) {
   if (Uint8Array.fromBase64) {
@@ -314,6 +334,7 @@ function decode(input) {
   }
 }
 __name(decode, "decode");
+__name2(decode, "decode");
 function encode2(input) {
   let unencoded = input;
   if (typeof unencoded === "string") {
@@ -324,9 +345,8 @@ function encode2(input) {
   }
   return encodeBase64(unencoded).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
-__name(encode2, "encode");
-
-// ../node_modules/jose/dist/webapi/lib/type_checks.js
+__name(encode2, "encode2");
+__name2(encode2, "encode");
 function isObject(input) {
   if (typeof input !== "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]") {
     return false;
@@ -342,6 +362,7 @@ function isObject(input) {
   return prototype === proto;
 }
 __name(isObject, "isObject");
+__name2(isObject, "isObject");
 function isDisjoint(...headers) {
   const parameters = /* @__PURE__ */ new Set();
   for (const header of headers) {
@@ -357,18 +378,18 @@ function isDisjoint(...headers) {
   return true;
 }
 __name(isDisjoint, "isDisjoint");
-var isJWK = /* @__PURE__ */ __name((key) => isObject(key) && typeof key.kty === "string", "isJWK");
-var isPrivateJWK = /* @__PURE__ */ __name((key) => key.kty !== "oct" && (key.kty === "AKP" && typeof key.priv === "string" || typeof key.d === "string"), "isPrivateJWK");
-var isPublicJWK = /* @__PURE__ */ __name((key) => key.kty !== "oct" && key.d === void 0 && key.priv === void 0, "isPublicJWK");
-var isSecretJWK = /* @__PURE__ */ __name((key) => key.kty === "oct" && typeof key.k === "string", "isSecretJWK");
-
-// ../node_modules/jose/dist/webapi/lib/helpers.js
+__name2(isDisjoint, "isDisjoint");
+var isJWK = /* @__PURE__ */ __name2((key) => isObject(key) && typeof key.kty === "string", "isJWK");
+var isPrivateJWK = /* @__PURE__ */ __name2((key) => key.kty !== "oct" && (key.kty === "AKP" && typeof key.priv === "string" || typeof key.d === "string"), "isPrivateJWK");
+var isPublicJWK = /* @__PURE__ */ __name2((key) => key.kty !== "oct" && key.d === void 0 && key.priv === void 0, "isPublicJWK");
+var isSecretJWK = /* @__PURE__ */ __name2((key) => key.kty === "oct" && typeof key.k === "string", "isSecretJWK");
 function assertNotSet(value, name) {
   if (value) {
     throw new TypeError(`${name} can only be called once`);
   }
 }
 __name(assertNotSet, "assertNotSet");
+__name2(assertNotSet, "assertNotSet");
 function decodeBase64url(value, label, ErrorClass) {
   try {
     return decode(value);
@@ -377,6 +398,7 @@ function decodeBase64url(value, label, ErrorClass) {
   }
 }
 __name(decodeBase64url, "decodeBase64url");
+__name2(decodeBase64url, "decodeBase64url");
 function encodeBase64url(value, label, ErrorClass) {
   try {
     return encode(value);
@@ -385,6 +407,7 @@ function encodeBase64url(value, label, ErrorClass) {
   }
 }
 __name(encodeBase64url, "encodeBase64url");
+__name2(encodeBase64url, "encodeBase64url");
 function parseJoseHeader(b64, ErrorClass, message2) {
   let parsed;
   try {
@@ -398,8 +421,7 @@ function parseJoseHeader(b64, ErrorClass, message2) {
   return parsed;
 }
 __name(parseJoseHeader, "parseJoseHeader");
-
-// ../node_modules/jose/dist/webapi/lib/jwk_to_key.js
+__name2(parseJoseHeader, "parseJoseHeader");
 async function jwkToKey(entry, jwk) {
   if (jwk.kty === "RSA" && "oth" in jwk && jwk.oth !== void 0) {
     throw new JOSENotSupported('RSA JWK "oth" (Other Primes Info) Parameter value is not supported');
@@ -417,10 +439,9 @@ async function jwkToKey(entry, jwk) {
   return crypto.subtle.importKey("jwk", keyData, algorithm, jwk.ext ?? !isPrivate, jwk.key_ops ?? entry.usages[isPrivate ? 1 : 0]);
 }
 __name(jwkToKey, "jwkToKey");
-
-// ../node_modules/jose/dist/webapi/lib/key.js
-var tag = /* @__PURE__ */ __name((key) => key[Symbol.toStringTag], "tag");
-var jwkMatchesOp = /* @__PURE__ */ __name((entry, key, usage) => {
+__name2(jwkToKey, "jwkToKey");
+var tag = /* @__PURE__ */ __name2((key) => key[Symbol.toStringTag], "tag");
+var jwkMatchesOp = /* @__PURE__ */ __name2((entry, key, usage) => {
   const { alg } = entry;
   if (key.use !== void 0) {
     const expected = usage === "sign" || usage === "verify" ? "sig" : "enc";
@@ -470,6 +491,7 @@ function checkKeyType(entry, key, usage) {
   return isCryptoKey(key) ? [CRYPTO, key] : [KEYOBJECT, key];
 }
 __name(checkKeyType, "checkKeyType");
+__name2(checkKeyType, "checkKeyType");
 var BYTES = 0;
 var CRYPTO = 1;
 var KEYOBJECT = 2;
@@ -494,8 +516,9 @@ function cached(key, alg, value) {
   return value ?? entry?.[alg];
 }
 __name(cached, "cached");
-var handleJWK = /* @__PURE__ */ __name(async (key, jwk, entry) => cached(key, entry.alg) ?? cached(key, entry.alg, await jwkToKey(entry, { ...jwk, alg: entry.alg })), "handleJWK");
-var handleKeyObject = /* @__PURE__ */ __name((keyObject, entry) => {
+__name2(cached, "cached");
+var handleJWK = /* @__PURE__ */ __name2(async (key, jwk, entry) => cached(key, entry.alg) ?? cached(key, entry.alg, await jwkToKey(entry, { ...jwk, alg: entry.alg })), "handleJWK");
+var handleKeyObject = /* @__PURE__ */ __name2((keyObject, entry) => {
   const hit = cached(keyObject, entry.alg);
   if (hit)
     return hit;
@@ -538,8 +561,7 @@ async function prepareKey(entry, key, usage) {
   }
 }
 __name(prepareKey, "prepareKey");
-
-// ../node_modules/jose/dist/webapi/lib/key_descriptor.js
+__name2(prepareKey, "prepareKey");
 function table(entries) {
   const out = { __proto__: null };
   for (const alg in entries) {
@@ -548,8 +570,7 @@ function table(entries) {
   return out;
 }
 __name(table, "table");
-
-// ../node_modules/jose/dist/webapi/lib/options.js
+__name2(table, "table");
 var JWS_RECOGNIZED = { __proto__: null, b64: true };
 function validateAlgorithms(option, algorithms) {
   if (algorithms !== void 0 && (!Array.isArray(algorithms) || algorithms.some((s) => typeof s !== "string"))) {
@@ -561,6 +582,7 @@ function validateAlgorithms(option, algorithms) {
   return new Set(algorithms);
 }
 __name(validateAlgorithms, "validateAlgorithms");
+__name2(validateAlgorithms, "validateAlgorithms");
 function validateCritDuplicates(Err, protectedHeader) {
   const { crit } = protectedHeader ?? {};
   if (Array.isArray(crit) && new Set(crit).size !== crit.length) {
@@ -568,6 +590,7 @@ function validateCritDuplicates(Err, protectedHeader) {
   }
 }
 __name(validateCritDuplicates, "validateCritDuplicates");
+__name2(validateCritDuplicates, "validateCritDuplicates");
 function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) {
   if (joseHeader.crit !== void 0 && protectedHeader?.crit === void 0) {
     throw new Err('"crit" (Critical) Header Parameter MUST be integrity protected');
@@ -593,8 +616,7 @@ function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader,
   return protectedHeader.crit;
 }
 __name(validateCrit, "validateCrit");
-
-// ../node_modules/jose/dist/webapi/lib/signing.js
+__name2(validateCrit, "validateCrit");
 async function getSigKey(entry, key, usage) {
   if (key instanceof Uint8Array) {
     return crypto.subtle.importKey("raw", key, entry.subtle, false, [
@@ -607,12 +629,14 @@ async function getSigKey(entry, key, usage) {
   return key;
 }
 __name(getSigKey, "getSigKey");
+__name2(getSigKey, "getSigKey");
 async function sign(entry, key, data) {
   const cryptoKey = await getSigKey(entry, key, "sign");
   const signature = await crypto.subtle.sign(entry.signing, cryptoKey, data);
   return new Uint8Array(signature);
 }
 __name(sign, "sign");
+__name2(sign, "sign");
 async function verify(entry, key, signature, data) {
   const cryptoKey = await getSigKey(entry, key, "verify");
   try {
@@ -622,14 +646,14 @@ async function verify(entry, key, signature, data) {
   }
 }
 __name(verify, "verify");
-
-// ../node_modules/jose/dist/webapi/lib/jws_algorithms.js
+__name2(verify, "verify");
 var sig = [["verify"], ["sign"]];
 function hmac(bits) {
   const subtle = { name: "HMAC", hash: `SHA-${bits}` };
   return { kty: ["oct"], secret: true, subtle, signing: subtle, usages: sig };
 }
 __name(hmac, "hmac");
+__name2(hmac, "hmac");
 function rsa(bits, saltLength) {
   const name = saltLength ? "RSA-PSS" : "RSASSA-PKCS1-v1_5";
   const subtle = { name, hash: `SHA-${bits}` };
@@ -642,6 +666,7 @@ function rsa(bits, saltLength) {
   };
 }
 __name(rsa, "rsa");
+__name2(rsa, "rsa");
 function ecdsa(crv, bits) {
   return {
     kty: ["EC"],
@@ -652,6 +677,7 @@ function ecdsa(crv, bits) {
   };
 }
 __name(ecdsa, "ecdsa");
+__name2(ecdsa, "ecdsa");
 function eddsa() {
   const subtle = { name: "Ed25519" };
   return {
@@ -663,6 +689,7 @@ function eddsa() {
   };
 }
 __name(eddsa, "eddsa");
+__name2(eddsa, "eddsa");
 function mldsa(bits) {
   const name = `ML-DSA-${bits}`;
   const subtle = { name };
@@ -674,6 +701,7 @@ function mldsa(bits) {
   };
 }
 __name(mldsa, "mldsa");
+__name2(mldsa, "mldsa");
 var JWS = table({
   HS256: hmac(256),
   HS384: hmac(384),
@@ -701,12 +729,12 @@ function jwsAlgorithm(alg) {
   return entry;
 }
 __name(jwsAlgorithm, "jwsAlgorithm");
-
-// ../node_modules/jose/dist/webapi/lib/jws_verify.js
+__name2(jwsAlgorithm, "jwsAlgorithm");
 function prepareVerify(options) {
   return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
 }
 __name(prepareVerify, "prepareVerify");
+__name2(prepareVerify, "prepareVerify");
 async function verifySignature(jws, shared, key) {
   const { protected: encodedProtected, header, payload: inputPayload } = jws;
   let parsedProt = {};
@@ -768,6 +796,7 @@ async function verifySignature(jws, shared, key) {
   return [payload, parsedProt, b64, k, resolvedKey];
 }
 __name(verifySignature, "verifySignature");
+__name2(verifySignature, "verifySignature");
 async function verifyCompact(jws, shared, key) {
   if (jws instanceof Uint8Array) {
     jws = decoder.decode(jws);
@@ -782,9 +811,8 @@ async function verifyCompact(jws, shared, key) {
   return verifySignature({ payload, protected: protectedHeader, signature }, shared, key);
 }
 __name(verifyCompact, "verifyCompact");
-
-// ../node_modules/jose/dist/webapi/lib/jwt_claims_set.js
-var epoch = /* @__PURE__ */ __name((date) => Math.floor(date.getTime() / 1e3), "epoch");
+__name2(verifyCompact, "verifyCompact");
+var epoch = /* @__PURE__ */ __name2((date) => Math.floor(date.getTime() / 1e3), "epoch");
 var multipliers = {
   s: 1,
   m: 60,
@@ -808,6 +836,7 @@ function secs(str) {
   return numericDate2;
 }
 __name(secs, "secs");
+__name2(secs, "secs");
 function validateInput(label, input) {
   if (!Number.isFinite(input)) {
     throw new TypeError(`Invalid ${label} input`);
@@ -815,6 +844,7 @@ function validateInput(label, input) {
   return input;
 }
 __name(validateInput, "validateInput");
+__name2(validateInput, "validateInput");
 function numericDate(value, label) {
   if (typeof value === "number")
     return validateInput(label, value);
@@ -823,13 +853,14 @@ function numericDate(value, label) {
   return epoch(/* @__PURE__ */ new Date()) + secs(value);
 }
 __name(numericDate, "numericDate");
-var normalizeTyp = /* @__PURE__ */ __name((value) => {
+__name2(numericDate, "numericDate");
+var normalizeTyp = /* @__PURE__ */ __name2((value) => {
   if (value.includes("/")) {
     return value.toLowerCase();
   }
   return `application/${value.toLowerCase()}`;
 }, "normalizeTyp");
-var checkAudiencePresence = /* @__PURE__ */ __name((audPayload, audOption) => {
+var checkAudiencePresence = /* @__PURE__ */ __name2((audPayload, audOption) => {
   if (typeof audPayload === "string") {
     return audOption.includes(audPayload);
   }
@@ -848,10 +879,12 @@ function validateNumericDate(payload, claim, required = false) {
   return value;
 }
 __name(validateNumericDate, "validateNumericDate");
+__name2(validateNumericDate, "validateNumericDate");
 function unexpectedClaim(payload, claim) {
   throw new JWTClaimValidationFailed(`unexpected "${claim}" claim value`, payload, claim, checkFailed);
 }
 __name(unexpectedClaim, "unexpectedClaim");
+__name2(unexpectedClaim, "unexpectedClaim");
 function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   let payload;
   try {
@@ -928,9 +961,13 @@ function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
   return payload;
 }
 __name(validateClaimsSet, "validateClaimsSet");
+__name2(validateClaimsSet, "validateClaimsSet");
 var JWTClaimsBuilder = class {
   static {
     __name(this, "JWTClaimsBuilder");
+  }
+  static {
+    __name2(this, "JWTClaimsBuilder");
   }
   #payload;
   constructor(payload) {
@@ -979,8 +1016,6 @@ var JWTClaimsBuilder = class {
     }
   }
 };
-
-// ../node_modules/jose/dist/webapi/jwt/verify.js
 async function jwtVerify(jwt, key, options) {
   const verified = await verifyCompact(jwt, prepareVerify(options), key);
   if (!verified[2]) {
@@ -994,12 +1029,12 @@ async function jwtVerify(jwt, key, options) {
   return result;
 }
 __name(jwtVerify, "jwtVerify");
-
-// ../node_modules/jose/dist/webapi/lib/jws_sign.js
+__name2(jwtVerify, "jwtVerify");
 function unencodedPayload(protectedHeader) {
   return protectedHeader?.b64 === false && Array.isArray(protectedHeader.crit) && protectedHeader.crit.includes("b64");
 }
 __name(unencodedPayload, "unencodedPayload");
+__name2(unencodedPayload, "unencodedPayload");
 async function createSignature(input, key) {
   const { protectedHeader, unprotectedHeader } = input;
   if (!protectedHeader && !unprotectedHeader) {
@@ -1060,11 +1095,13 @@ async function createSignature(input, key) {
   return jws;
 }
 __name(createSignature, "createSignature");
-
-// ../node_modules/jose/dist/webapi/jws/flattened/sign.js
+__name2(createSignature, "createSignature");
 var FlattenedSign = class {
   static {
     __name(this, "FlattenedSign");
+  }
+  static {
+    __name2(this, "FlattenedSign");
   }
   #payload;
   #protectedHeader;
@@ -1094,11 +1131,12 @@ var FlattenedSign = class {
     }, key);
   }
 };
-
-// ../node_modules/jose/dist/webapi/jws/compact/sign.js
 var CompactSign = class {
   static {
     __name(this, "CompactSign");
+  }
+  static {
+    __name2(this, "CompactSign");
   }
   #flattened;
   #protectedHeader;
@@ -1118,11 +1156,12 @@ var CompactSign = class {
     return `${jws.protected}.${jws.payload}.${jws.signature}`;
   }
 };
-
-// ../node_modules/jose/dist/webapi/jwt/sign.js
 var SignJWT = class {
   static {
     __name(this, "SignJWT");
+  }
+  static {
+    __name2(this, "SignJWT");
   }
   #protectedHeader;
   #jwt;
@@ -1170,16 +1209,16 @@ var SignJWT = class {
     return sig2.sign(key, options);
   }
 };
-
-// api/_lib/auth.js
 function getSecretKey(env) {
   return new TextEncoder().encode(env.JWT_SECRET);
 }
 __name(getSecretKey, "getSecretKey");
+__name2(getSecretKey, "getSecretKey");
 async function createSessionToken(user, env) {
   return await new SignJWT({ email: user.email, role: user.role ?? "student" }).setProtectedHeader({ alg: "HS256" }).setSubject(user.id).setIssuedAt().setExpirationTime("7d").setIssuer("saberlab").sign(getSecretKey(env));
 }
 __name(createSessionToken, "createSessionToken");
+__name2(createSessionToken, "createSessionToken");
 async function verifySession(request, env) {
   const header = request.headers.get("Authorization");
   if (!header?.startsWith("Bearer ")) return null;
@@ -1193,8 +1232,7 @@ async function verifySession(request, env) {
   }
 }
 __name(verifySession, "verifySession");
-
-// api/auth/callback.js
+__name2(verifySession, "verifySession");
 async function onRequestGet2({ request, env }) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -1267,9 +1305,8 @@ async function onRequestGet2({ request, env }) {
     return new Response(`Auth callback error: ${err.message || err}`, { status: 500 });
   }
 }
-__name(onRequestGet2, "onRequestGet");
-
-// api/auth/me.js
+__name(onRequestGet2, "onRequestGet2");
+__name2(onRequestGet2, "onRequestGet");
 async function onRequestGet3({ env, data }) {
   const userId = data.user.id;
   const profile = await env.DB.prepare(
@@ -1280,9 +1317,8 @@ async function onRequestGet3({ env, data }) {
   }
   return Response.json({ profile });
 }
-__name(onRequestGet3, "onRequestGet");
-
-// api/auth/start.js
+__name(onRequestGet3, "onRequestGet3");
+__name2(onRequestGet3, "onRequestGet");
 async function onRequestGet4({ request, env }) {
   const origin = request.headers.get("origin") || env.APP_URL || "http://localhost:5173";
   const appUrl = new URL(origin).origin;
@@ -1298,15 +1334,13 @@ async function onRequestGet4({ request, env }) {
   });
   return Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`, 302);
 }
-__name(onRequestGet4, "onRequestGet");
-
-// api/achievements.js
+__name(onRequestGet4, "onRequestGet4");
+__name2(onRequestGet4, "onRequestGet");
 async function onRequestGet5() {
   return Response.json([]);
 }
-__name(onRequestGet5, "onRequestGet");
-
-// api/attempts.js
+__name(onRequestGet5, "onRequestGet5");
+__name2(onRequestGet5, "onRequestGet");
 async function onRequestGet6({ request, env, data }) {
   const url = new URL(request.url);
   const evaluationKey = url.searchParams.get("evaluation_key");
@@ -1321,7 +1355,8 @@ async function onRequestGet6({ request, env, data }) {
   ).bind(data.user.id).all();
   return Response.json(results);
 }
-__name(onRequestGet6, "onRequestGet");
+__name(onRequestGet6, "onRequestGet6");
+__name2(onRequestGet6, "onRequestGet");
 async function onRequestPost2({ request, env, data }) {
   let body;
   try {
@@ -1378,9 +1413,8 @@ async function onRequestPost2({ request, env, data }) {
   }
   return Response.json(row);
 }
-__name(onRequestPost2, "onRequestPost");
-
-// api/codes.js
+__name(onRequestPost2, "onRequestPost2");
+__name2(onRequestPost2, "onRequestPost");
 async function onRequestGet7({ request, env, data }) {
   await ensureCodesSchema(env);
   const url = new URL(request.url);
@@ -1392,7 +1426,8 @@ async function onRequestGet7({ request, env, data }) {
   const { results } = await env.DB.prepare("SELECT * FROM codigos_grupo ORDER BY created_at DESC").all();
   return Response.json(results);
 }
-__name(onRequestGet7, "onRequestGet");
+__name(onRequestGet7, "onRequestGet7");
+__name2(onRequestGet7, "onRequestGet");
 async function onRequestPost3({ request, env, data }) {
   await ensureCodesSchema(env);
   if (data.user.role !== "admin") {
@@ -1415,7 +1450,8 @@ async function onRequestPost3({ request, env, data }) {
   const row = await env.DB.prepare("SELECT * FROM codigos_grupo WHERE id = ?").bind(meta.last_row_id).first();
   return Response.json(row);
 }
-__name(onRequestPost3, "onRequestPost");
+__name(onRequestPost3, "onRequestPost3");
+__name2(onRequestPost3, "onRequestPost");
 async function onRequestDelete({ request, env, data }) {
   await ensureCodesSchema(env);
   if (data.user.role !== "admin") {
@@ -1430,6 +1466,7 @@ async function onRequestDelete({ request, env, data }) {
   return Response.json({ success: true });
 }
 __name(onRequestDelete, "onRequestDelete");
+__name2(onRequestDelete, "onRequestDelete");
 async function ensureCodesSchema(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS codigos_grupo (
@@ -1442,8 +1479,7 @@ async function ensureCodesSchema(env) {
   `).run();
 }
 __name(ensureCodesSchema, "ensureCodesSchema");
-
-// api/evaluations.js
+__name2(ensureCodesSchema, "ensureCodesSchema");
 async function onRequestGet8({ request, env }) {
   const url = new URL(request.url);
   const evaluationKey = url.searchParams.get("key");
@@ -1464,7 +1500,8 @@ async function onRequestGet8({ request, env }) {
   const { results } = await env.DB.prepare("SELECT * FROM evaluaciones ORDER BY created_at DESC").all();
   return Response.json(results.map(parseEvaluationRow));
 }
-__name(onRequestGet8, "onRequestGet");
+__name(onRequestGet8, "onRequestGet8");
+__name2(onRequestGet8, "onRequestGet");
 async function onRequestPost4({ request, env }) {
   await ensureEvaluationsSchema(env);
   let body;
@@ -1531,7 +1568,8 @@ async function onRequestPost4({ request, env }) {
   const row = await env.DB.prepare("SELECT * FROM evaluaciones WHERE id = ?").bind(meta.last_row_id).first();
   return Response.json(parseEvaluationRow(row));
 }
-__name(onRequestPost4, "onRequestPost");
+__name(onRequestPost4, "onRequestPost4");
+__name2(onRequestPost4, "onRequestPost");
 async function onRequestDelete2({ request, env }) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
@@ -1541,7 +1579,8 @@ async function onRequestDelete2({ request, env }) {
   await env.DB.prepare("DELETE FROM evaluaciones WHERE id = ?").bind(id).run();
   return Response.json({ success: true });
 }
-__name(onRequestDelete2, "onRequestDelete");
+__name(onRequestDelete2, "onRequestDelete2");
+__name2(onRequestDelete2, "onRequestDelete");
 function parseEvaluationRow(row) {
   if (!row) return null;
   return {
@@ -1551,6 +1590,7 @@ function parseEvaluationRow(row) {
   };
 }
 __name(parseEvaluationRow, "parseEvaluationRow");
+__name2(parseEvaluationRow, "parseEvaluationRow");
 function safeParseJSON(value) {
   try {
     return JSON.parse(value);
@@ -1559,6 +1599,7 @@ function safeParseJSON(value) {
   }
 }
 __name(safeParseJSON, "safeParseJSON");
+__name2(safeParseJSON, "safeParseJSON");
 async function ensureEvaluationsSchema(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS evaluaciones (
@@ -1586,8 +1627,7 @@ async function ensureEvaluationsSchema(env) {
   }
 }
 __name(ensureEvaluationsSchema, "ensureEvaluationsSchema");
-
-// api/groups.js
+__name2(ensureEvaluationsSchema, "ensureEvaluationsSchema");
 async function onRequestGet9({ request, env, data }) {
   await ensureGroupsSchema(env);
   const url = new URL(request.url);
@@ -1621,7 +1661,8 @@ async function onRequestGet9({ request, env, data }) {
   ).all();
   return Response.json(results);
 }
-__name(onRequestGet9, "onRequestGet");
+__name(onRequestGet9, "onRequestGet9");
+__name2(onRequestGet9, "onRequestGet");
 async function onRequestPost5({ request, env, data }) {
   await ensureGroupsSchema(env);
   if (data.user.role !== "admin") {
@@ -1657,7 +1698,8 @@ async function onRequestPost5({ request, env, data }) {
   const row = await env.DB.prepare("SELECT * FROM grupos WHERE id = ?").bind(meta.last_row_id).first();
   return Response.json(row);
 }
-__name(onRequestPost5, "onRequestPost");
+__name(onRequestPost5, "onRequestPost5");
+__name2(onRequestPost5, "onRequestPost");
 async function onRequestPatch({ request, env, data }) {
   await ensureGroupsSchema(env);
   if (data.user.role !== "admin") {
@@ -1680,6 +1722,7 @@ async function onRequestPatch({ request, env, data }) {
   return Response.json({ success: true });
 }
 __name(onRequestPatch, "onRequestPatch");
+__name2(onRequestPatch, "onRequestPatch");
 async function onRequestDelete3({ request, env, data }) {
   await ensureGroupsSchema(env);
   if (data.user.role !== "admin") {
@@ -1699,7 +1742,8 @@ async function onRequestDelete3({ request, env, data }) {
   ).bind(isNaN(numId) ? id : numId, id, id).run();
   return Response.json({ success: true, deleted_id: id });
 }
-__name(onRequestDelete3, "onRequestDelete");
+__name(onRequestDelete3, "onRequestDelete3");
+__name2(onRequestDelete3, "onRequestDelete");
 async function ensureGroupsSchema(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS grupos (
@@ -1718,8 +1762,7 @@ async function ensureGroupsSchema(env) {
   `).run();
 }
 __name(ensureGroupsSchema, "ensureGroupsSchema");
-
-// api/lesson-progress.js
+__name2(ensureGroupsSchema, "ensureGroupsSchema");
 async function onRequestGet10({ request, env, data }) {
   await ensureLessonProgressSchema(env);
   const url = new URL(request.url);
@@ -1736,7 +1779,8 @@ async function onRequestGet10({ request, env, data }) {
   ).bind(data.user.id).all();
   return Response.json((results || []).map(parseLessonProgressRow));
 }
-__name(onRequestGet10, "onRequestGet");
+__name(onRequestGet10, "onRequestGet10");
+__name2(onRequestGet10, "onRequestGet");
 async function onRequestPost6({ request, env, data }) {
   await ensureLessonProgressSchema(env);
   let body;
@@ -1802,7 +1846,8 @@ async function onRequestPost6({ request, env, data }) {
     completed_at: completedAt
   });
 }
-__name(onRequestPost6, "onRequestPost");
+__name(onRequestPost6, "onRequestPost6");
+__name2(onRequestPost6, "onRequestPost");
 async function ensureLessonProgressSchema(env) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS progreso_lecciones (
@@ -1817,6 +1862,7 @@ async function ensureLessonProgressSchema(env) {
   `).run();
 }
 __name(ensureLessonProgressSchema, "ensureLessonProgressSchema");
+__name2(ensureLessonProgressSchema, "ensureLessonProgressSchema");
 function parseLessonProgressRow(row) {
   return {
     user_id: row.user_id,
@@ -1828,8 +1874,7 @@ function parseLessonProgressRow(row) {
   };
 }
 __name(parseLessonProgressRow, "parseLessonProgressRow");
-
-// api/notifications.js
+__name2(parseLessonProgressRow, "parseLessonProgressRow");
 async function onRequestGet11({ env, data }) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS notificaciones (
@@ -1846,7 +1891,8 @@ async function onRequestGet11({ env, data }) {
   ).bind(data.user.id).all();
   return Response.json(results);
 }
-__name(onRequestGet11, "onRequestGet");
+__name(onRequestGet11, "onRequestGet11");
+__name2(onRequestGet11, "onRequestGet");
 async function onRequestPost7({ request, env, data }) {
   let body;
   try {
@@ -1867,7 +1913,8 @@ async function onRequestPost7({ request, env, data }) {
   ).bind(data.user.id, ...body.ids).run();
   return Response.json({ success: true });
 }
-__name(onRequestPost7, "onRequestPost");
+__name(onRequestPost7, "onRequestPost7");
+__name2(onRequestPost7, "onRequestPost");
 async function onRequestDelete4({ request, env, data }) {
   let body;
   try {
@@ -1888,9 +1935,8 @@ async function onRequestDelete4({ request, env, data }) {
   ).bind(data.user.id, ...body.ids).run();
   return Response.json({ success: true });
 }
-__name(onRequestDelete4, "onRequestDelete");
-
-// api/profile.js
+__name(onRequestDelete4, "onRequestDelete4");
+__name2(onRequestDelete4, "onRequestDelete");
 async function onRequestGet12({ env, data }) {
   const userId = data.user.id;
   const profile = await env.DB.prepare(
@@ -1908,9 +1954,8 @@ async function onRequestGet12({ env, data }) {
   ).bind(userId).all();
   return Response.json({ profile, courses });
 }
-__name(onRequestGet12, "onRequestGet");
-
-// api/progress.js
+__name(onRequestGet12, "onRequestGet12");
+__name2(onRequestGet12, "onRequestGet");
 async function onRequestGet13({ env, data }) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS progreso_usuario (
@@ -1928,7 +1973,8 @@ async function onRequestGet13({ env, data }) {
     return Response.json({ overall_progress: 0, streak_days: 0, total_hours: 0, lessons_completed: 0 });
   }
 }
-__name(onRequestGet13, "onRequestGet");
+__name(onRequestGet13, "onRequestGet13");
+__name2(onRequestGet13, "onRequestGet");
 async function onRequestPost8({ request, env, data }) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS progreso_usuario (
@@ -1961,9 +2007,8 @@ async function onRequestPost8({ request, env, data }) {
   `).bind(userId, JSON.stringify(merged)).run();
   return Response.json(merged);
 }
-__name(onRequestPost8, "onRequestPost");
-
-// api/requests.js
+__name(onRequestPost8, "onRequestPost8");
+__name2(onRequestPost8, "onRequestPost");
 async function onRequestGet14({ request, env, data }) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS solicitudes_acceso (
@@ -1994,7 +2039,8 @@ async function onRequestGet14({ request, env, data }) {
   ).all();
   return Response.json(results);
 }
-__name(onRequestGet14, "onRequestGet");
+__name(onRequestGet14, "onRequestGet14");
+__name2(onRequestGet14, "onRequestGet");
 async function onRequestPost9({ request, env, data }) {
   let body;
   try {
@@ -2012,7 +2058,8 @@ async function onRequestPost9({ request, env, data }) {
   ).bind(name || null, email.trim().toLowerCase(), status).run();
   return Response.json({ success: true });
 }
-__name(onRequestPost9, "onRequestPost");
+__name(onRequestPost9, "onRequestPost9");
+__name2(onRequestPost9, "onRequestPost");
 async function onRequestPatch2({ request, env, data }) {
   let body;
   try {
@@ -2042,9 +2089,8 @@ async function onRequestPatch2({ request, env, data }) {
   ).bind(name || null, normalizedEmail || null, status || null, id).run();
   return Response.json({ success: true });
 }
-__name(onRequestPatch2, "onRequestPatch");
-
-// api/visibility.js
+__name(onRequestPatch2, "onRequestPatch2");
+__name2(onRequestPatch2, "onRequestPatch");
 async function onRequestGet15({ env }) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS visibilidad_curso (
@@ -2065,7 +2111,8 @@ async function onRequestGet15({ env }) {
   });
   return Response.json(visibilityMap);
 }
-__name(onRequestGet15, "onRequestGet");
+__name(onRequestGet15, "onRequestGet15");
+__name2(onRequestGet15, "onRequestGet");
 async function onRequestPost10({ request, env, data }) {
   if (data.user.role !== "admin") {
     return Response.json({ error: "Solo administradores" }, { status: 403 });
@@ -2087,9 +2134,8 @@ async function onRequestPost10({ request, env, data }) {
   ).bind(course_id, JSON.stringify(lecciones ?? {})).run();
   return Response.json({ success: true });
 }
-__name(onRequestPost10, "onRequestPost");
-
-// api/_middleware.js
+__name(onRequestPost10, "onRequestPost10");
+__name2(onRequestPost10, "onRequestPost");
 var PUBLIC_PATHS = ["/api/auth/start", "/api/auth/callback"];
 async function onRequest(context) {
   const url = new URL(context.request.url);
@@ -2116,8 +2162,7 @@ async function onRequest(context) {
   return context.next();
 }
 __name(onRequest, "onRequest");
-
-// ../.wrangler/tmp/pages-dqfaJx/functionsRoutes-0.7901395782601442.mjs
+__name2(onRequest, "onRequest");
 var routes = [
   {
     routePath: "/api/admin/courses",
@@ -2344,8 +2389,6 @@ var routes = [
     modules: []
   }
 ];
-
-// ../node_modules/path-to-regexp/dist.es2015/index.js
 function lexer(str) {
   var tokens = [];
   var i = 0;
@@ -2430,6 +2473,7 @@ function lexer(str) {
   return tokens;
 }
 __name(lexer, "lexer");
+__name2(lexer, "lexer");
 function parse(str, options) {
   if (options === void 0) {
     options = {};
@@ -2440,18 +2484,18 @@ function parse(str, options) {
   var key = 0;
   var i = 0;
   var path = "";
-  var tryConsume = /* @__PURE__ */ __name(function(type) {
+  var tryConsume = /* @__PURE__ */ __name2(function(type) {
     if (i < tokens.length && tokens[i].type === type)
       return tokens[i++].value;
   }, "tryConsume");
-  var mustConsume = /* @__PURE__ */ __name(function(type) {
+  var mustConsume = /* @__PURE__ */ __name2(function(type) {
     var value2 = tryConsume(type);
     if (value2 !== void 0)
       return value2;
     var _a2 = tokens[i], nextType = _a2.type, index = _a2.index;
     throw new TypeError("Unexpected ".concat(nextType, " at ").concat(index, ", expected ").concat(type));
   }, "mustConsume");
-  var consumeText = /* @__PURE__ */ __name(function() {
+  var consumeText = /* @__PURE__ */ __name2(function() {
     var result2 = "";
     var value2;
     while (value2 = tryConsume("CHAR") || tryConsume("ESCAPED_CHAR")) {
@@ -2459,7 +2503,7 @@ function parse(str, options) {
     }
     return result2;
   }, "consumeText");
-  var isSafe = /* @__PURE__ */ __name(function(value2) {
+  var isSafe = /* @__PURE__ */ __name2(function(value2) {
     for (var _i = 0, delimiter_1 = delimiter; _i < delimiter_1.length; _i++) {
       var char2 = delimiter_1[_i];
       if (value2.indexOf(char2) > -1)
@@ -2467,7 +2511,7 @@ function parse(str, options) {
     }
     return false;
   }, "isSafe");
-  var safePattern = /* @__PURE__ */ __name(function(prefix2) {
+  var safePattern = /* @__PURE__ */ __name2(function(prefix2) {
     var prev = result[result.length - 1];
     var prevText = prefix2 || (prev && typeof prev === "string" ? prev : "");
     if (prev && !prevText) {
@@ -2530,12 +2574,14 @@ function parse(str, options) {
   return result;
 }
 __name(parse, "parse");
+__name2(parse, "parse");
 function match(str, options) {
   var keys = [];
   var re = pathToRegexp(str, keys, options);
   return regexpToFunction(re, keys, options);
 }
 __name(match, "match");
+__name2(match, "match");
 function regexpToFunction(re, keys, options) {
   if (options === void 0) {
     options = {};
@@ -2549,7 +2595,7 @@ function regexpToFunction(re, keys, options) {
       return false;
     var path = m[0], index = m.index;
     var params = /* @__PURE__ */ Object.create(null);
-    var _loop_1 = /* @__PURE__ */ __name(function(i2) {
+    var _loop_1 = /* @__PURE__ */ __name2(function(i2) {
       if (m[i2] === void 0)
         return "continue";
       var key = keys[i2 - 1];
@@ -2568,14 +2614,17 @@ function regexpToFunction(re, keys, options) {
   };
 }
 __name(regexpToFunction, "regexpToFunction");
+__name2(regexpToFunction, "regexpToFunction");
 function escapeString(str) {
   return str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 }
 __name(escapeString, "escapeString");
+__name2(escapeString, "escapeString");
 function flags(options) {
   return options && options.sensitive ? "" : "i";
 }
 __name(flags, "flags");
+__name2(flags, "flags");
 function regexpToRegexp(path, keys) {
   if (!keys)
     return path;
@@ -2596,6 +2645,7 @@ function regexpToRegexp(path, keys) {
   return path;
 }
 __name(regexpToRegexp, "regexpToRegexp");
+__name2(regexpToRegexp, "regexpToRegexp");
 function arrayToRegexp(paths, keys, options) {
   var parts = paths.map(function(path) {
     return pathToRegexp(path, keys, options).source;
@@ -2603,10 +2653,12 @@ function arrayToRegexp(paths, keys, options) {
   return new RegExp("(?:".concat(parts.join("|"), ")"), flags(options));
 }
 __name(arrayToRegexp, "arrayToRegexp");
+__name2(arrayToRegexp, "arrayToRegexp");
 function stringToRegexp(path, keys, options) {
   return tokensToRegexp(parse(path, options), keys, options);
 }
 __name(stringToRegexp, "stringToRegexp");
+__name2(stringToRegexp, "stringToRegexp");
 function tokensToRegexp(tokens, keys, options) {
   if (options === void 0) {
     options = {};
@@ -2662,6 +2714,7 @@ function tokensToRegexp(tokens, keys, options) {
   return new RegExp(route, flags(options));
 }
 __name(tokensToRegexp, "tokensToRegexp");
+__name2(tokensToRegexp, "tokensToRegexp");
 function pathToRegexp(path, keys, options) {
   if (path instanceof RegExp)
     return regexpToRegexp(path, keys);
@@ -2670,8 +2723,7 @@ function pathToRegexp(path, keys, options) {
   return stringToRegexp(path, keys, options);
 }
 __name(pathToRegexp, "pathToRegexp");
-
-// ../node_modules/wrangler/templates/pages-template-worker.ts
+__name2(pathToRegexp, "pathToRegexp");
 var escapeRegex = /[.+?^${}()|[\]\\]/g;
 function* executeRequest(request) {
   const requestPath = new URL(request.url).pathname;
@@ -2722,13 +2774,14 @@ function* executeRequest(request) {
   }
 }
 __name(executeRequest, "executeRequest");
+__name2(executeRequest, "executeRequest");
 var pages_template_worker_default = {
   async fetch(originalRequest, env, workerContext) {
     let request = originalRequest;
     const handlerIterator = executeRequest(request);
     let data = {};
     let isFailOpen = false;
-    const next = /* @__PURE__ */ __name(async (input, init) => {
+    const next = /* @__PURE__ */ __name2(async (input, init) => {
       if (input !== void 0) {
         let url = input;
         if (typeof input === "string") {
@@ -2755,7 +2808,7 @@ var pages_template_worker_default = {
           },
           env,
           waitUntil: workerContext.waitUntil.bind(workerContext),
-          passThroughOnException: /* @__PURE__ */ __name(() => {
+          passThroughOnException: /* @__PURE__ */ __name2(() => {
             isFailOpen = true;
           }, "passThroughOnException")
         };
@@ -2783,7 +2836,7 @@ var pages_template_worker_default = {
     }
   }
 };
-var cloneResponse = /* @__PURE__ */ __name((response) => (
+var cloneResponse = /* @__PURE__ */ __name2((response) => (
   // https://fetch.spec.whatwg.org/#null-body-status
   new Response(
     [101, 204, 205, 304].includes(response.status) ? null : response.body,
@@ -2791,7 +2844,7 @@ var cloneResponse = /* @__PURE__ */ __name((response) => (
   )
 ), "cloneResponse");
 
-// ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
+// node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
   try {
     return await middlewareCtx.next(request, env);
@@ -2809,43 +2862,13 @@ var drainBody = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "drainBody");
 var middleware_ensure_req_body_drained_default = drainBody;
 
-// ../node_modules/wrangler/templates/middleware/middleware-miniflare3-json-error.ts
-function reduceError(e) {
-  return {
-    name: e?.name,
-    message: e?.message ?? String(e),
-    stack: e?.stack,
-    cause: e?.cause === void 0 ? void 0 : reduceError(e.cause)
-  };
-}
-__name(reduceError, "reduceError");
-var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx) => {
-  try {
-    return await middlewareCtx.next(request, env);
-  } catch (e) {
-    const error = reduceError(e);
-    const body = JSON.stringify(error);
-    const headers = {
-      "Content-Type": "application/json",
-      "MF-Experimental-Error-Stack": "true"
-    };
-    const encoded = encodeURIComponent(body);
-    if (encoded.length <= 8192) {
-      headers["MF-Experimental-Error-Stack-Payload"] = encoded;
-    }
-    return new Response(body, { status: 500, headers });
-  }
-}, "jsonError");
-var middleware_miniflare3_json_error_default = jsonError;
-
-// ../.wrangler/tmp/bundle-ySS898/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-bnwxMQ/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
-  middleware_ensure_req_body_drained_default,
-  middleware_miniflare3_json_error_default
+  middleware_ensure_req_body_drained_default
 ];
 var middleware_insertion_facade_default = pages_template_worker_default;
 
-// ../node_modules/wrangler/templates/middleware/common.ts
+// node_modules/wrangler/templates/middleware/common.ts
 var __facade_middleware__ = [];
 function __facade_register__(...args) {
   __facade_middleware__.push(...args.flat());
@@ -2870,7 +2893,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// ../.wrangler/tmp/bundle-ySS898/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-bnwxMQ/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
@@ -2972,4 +2995,4 @@ export {
   __INTERNAL_WRANGLER_MIDDLEWARE__,
   middleware_loader_entry_default as default
 };
-//# sourceMappingURL=functionsWorker-0.11590678173256297.mjs.map
+//# sourceMappingURL=index.js.map

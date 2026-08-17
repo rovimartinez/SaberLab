@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus, Edit2, X, Key } from 'lucide-react';
+import { ArrowLeft, Layers, BookOpen, Settings, Users, Plus, Trash2, FileCode, Check, Copy, Eye, EyeOff, FolderPlus, Edit2, X, Key, Database } from 'lucide-react';
 import { getLessonInfo } from '../data/coursesData.jsx';
 import { api } from '../lib/api';
 import '../styles/CourseDetail.css';
@@ -15,6 +15,12 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const [courseModules, setCourseModules] = useState([]);
     const [dbGroups, setDbGroups] = useState([]); // Grupos desde BD
     const [groupsReload, setGroupsReload] = useState(0);
+    const [dbToast, setDbToast] = useState(null); // { type, title, message, dbId }
+
+    const showDbToast = (type, title, message, dbId = null) => {
+        setDbToast({ type, title, message, dbId });
+        setTimeout(() => setDbToast(null), 4500);
+    };
     // Cargar grupos y estudiantes
     useEffect(() => {
         const loadGroups = async () => {
@@ -154,36 +160,42 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     };
 
     const handleUpdateGroup = async () => {
-        const { error } = await api('/groups', {
+        if (!editGroupModal.name.trim() || !editGroupModal.group?.id) return;
+
+        const { data, error } = await api('/groups', {
             method: 'POST',
-            body: { id: editGroupModal.group.id, name: editGroupModal.name, teacher: editGroupModal.teacher }
+            body: { id: editGroupModal.group.id, name: editGroupModal.name.trim(), teacher: editGroupModal.teacher?.trim() || null }
         });
 
-        if (!error) {
-            setDbGroups(prev => prev.map(g => 
-                g.id === editGroupModal.group.id
-                    ? { ...g, name: editGroupModal.name, teacher: editGroupModal.teacher }
-                    : g
-            ));
-            setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
+        if (error) {
+            console.error('Error al actualizar grupo en BD:', error);
+            showDbToast('error', 'Error en BD', error.message || 'No autorizado');
+            return;
         }
+
+        const updated = data || { id: editGroupModal.group.id, name: editGroupModal.name, teacher: editGroupModal.teacher };
+        setDbGroups(prev => prev.map(g => g.id === editGroupModal.group.id ? { ...g, ...updated } : g));
+        setGroupsReload(x => x + 1);
+        showDbToast('success', 'Grupo Actualizado en BD', `El grupo "${editGroupModal.name}" fue actualizado correctamente en la BD.`, editGroupModal.group.id);
+        setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
     };
 
     const handleDeleteGroup = async (group) => {
         if (!group?.id) return;
 
-        const confirmed = window.confirm('¿Estás seguro de eliminar este grupo? Se eliminarán todos los estudiantes asignados a este grupo.');
+        const confirmed = window.confirm(`¿Estás seguro de eliminar el grupo "${group.name}" (#DB-${group.id}) de la base de datos?`);
         if (!confirmed) return;
 
         const { error } = await api(`/groups?id=${group.id}`, { method: 'DELETE' });
         if (error) {
-            console.error('Error al eliminar grupo:', error);
-            alert('Error al eliminar grupo: ' + (error.message || 'No autorizado'));
+            console.error('Error al eliminar grupo en BD:', error);
+            showDbToast('error', 'Error al eliminar en BD', error.message || 'No autorizado');
             return;
         }
 
         setDbGroups(prev => prev.filter(g => g.id !== group.id));
         setGroupsReload(x => x + 1);
+        showDbToast('success', 'Grupo Eliminado de BD', `El grupo "${group.name}" (#DB-${group.id}) fue borrado permanentemente de la base de datos.`);
         if (editGroupModal.group?.id === group.id) {
             setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
         }
@@ -257,21 +269,20 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             });
 
             if (error) {
-                console.error('Error creando grupo:', error);
-                alert('Error al crear grupo: ' + (error.message || 'Error desconocido'));
+                console.error('Error creando grupo en BD:', error);
+                showDbToast('error', 'Error al guardar en BD', error.message || 'Error desconocido');
                 return;
             }
 
-            if (data) {
+            if (data && data.id) {
                 setDbGroups(prev => [...prev, data]);
                 setGroupsReload(x => x + 1);
-                setGroupSaveStatus('Grupo guardado en la BD');
+                showDbToast('success', 'Grupo Creado en BD', `El grupo "${data.name}" fue creado y guardado en la BD con ID #${data.id}`, data.id);
             }
             closeNewGroupModal();
         } catch (err) {
-            console.error('Error creando grupo:', err);
-            setGroupSaveStatus('Error al guardar el grupo');
-            alert('Error al crear grupo');
+            console.error('Error creando grupo en BD:', err);
+            showDbToast('error', 'Error de conexión', 'No se pudo comunicar con la base de datos');
         } finally {
             setSavingGroup(false);
         }
@@ -468,28 +479,38 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                         </div>
                         <div className="groups-list">
                             {uniqueGroups.map((group) => (
-                                <div key={group.id} className="group-card" style={{ padding: '1rem', gap: '0.75rem', textAlign: 'center' }}>
-                                    <div className="group-card-info" style={{ alignItems: 'center' }}>
+                                <div key={group.id} className="group-card" style={{ padding: '1.1rem 1rem', gap: '0.75rem', textAlign: 'center', position: 'relative' }}>
+                                    <div style={{ position: 'absolute', top: '8px', right: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                                            #DB-{group.id}
+                                        </span>
+                                    </div>
+                                    <div className="group-card-info" style={{ alignItems: 'center', marginTop: '6px' }}>
                                         <span 
                                             className="group-card-name" 
                                             onDoubleClick={() => openEditGroupModal(group)}
                                             title="Doble clic para editar"
-                                            style={{ cursor: 'pointer' }}
+                                            style={{ cursor: 'pointer', fontSize: '1rem', fontWeight: 800 }}
                                         >
                                             {group.name}
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '0.25rem' }}>
-                                            ({group.studentCount || 0})
+                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                                            ({group.studentCount || 0} estudiantes)
                                         </span>
+                                        {group.teacher && (
+                                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>
+                                                Prof. {group.teacher}
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="group-card-actions" style={{ justifyContent: 'center', gap: '0.5rem' }}>
-                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openStudentsModal(group)}>
+                                    <div className="group-card-actions" style={{ justifyContent: 'center', gap: '0.5rem', marginTop: '4px' }}>
+                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openStudentsModal(group)} title="Ver Estudiantes">
                                             <Users size={14} />
                                         </button>
-                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openCodeModal(group)}>
+                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openCodeModal(group)} title="Generar Código">
                                             <Key size={14} />
                                         </button>
-                                        <button className="btn btn-small btn-danger" style={{ padding: '0.5rem 0.75rem' }} onClick={() => handleDeleteGroup(group)}>
+                                        <button className="btn btn-small btn-danger" style={{ padding: '0.5rem 0.75rem' }} onClick={() => handleDeleteGroup(group)} title="Eliminar Grupo de BD">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -497,7 +518,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                             ))}
                             {uniqueGroups.length === 0 && (
                                 <div className="empty-state">
-                                    <p>No hay grupos creados</p>
+                                    <p>No hay grupos creados en la base de datos</p>
                                 </div>
                             )}
                         </div>
@@ -721,6 +742,65 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                             ))
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* Floating DB Toast Notification */}
+            {dbToast && (
+                <div style={{
+                    position: 'fixed',
+                    bottom: '24px',
+                    right: '24px',
+                    zIndex: 99999,
+                    background: dbToast.type === 'success' ? '#0f172a' : '#450a0a',
+                    border: `1.5px solid ${dbToast.type === 'success' ? '#10b981' : '#ef4444'}`,
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6)',
+                    borderRadius: '14px',
+                    padding: '14px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    maxWidth: '420px',
+                    color: 'white'
+                }}>
+                    <div style={{
+                        background: dbToast.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                        borderRadius: '50%',
+                        padding: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: dbToast.type === 'success' ? '#34d399' : '#f87171',
+                        flexShrink: 0
+                    }}>
+                        <Database size={22} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{
+                            color: dbToast.type === 'success' ? '#34d399' : '#f87171',
+                            fontWeight: 800,
+                            fontSize: '0.92rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}>
+                            <span>{dbToast.title}</span>
+                            {dbToast.dbId && (
+                                <span style={{ fontSize: '0.7rem', background: '#0284c7', color: 'white', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                                    #DB-{dbToast.dbId}
+                                </span>
+                            )}
+                        </div>
+                        <div style={{ color: '#cbd5e1', fontSize: '0.8rem', marginTop: '2px', lineHeight: 1.4 }}>
+                            {dbToast.message}
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setDbToast(null)}
+                        style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                    >
+                        <X size={16} />
+                    </button>
                 </div>
             )}
         </div>

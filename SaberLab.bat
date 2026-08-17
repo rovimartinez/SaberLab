@@ -17,7 +17,7 @@ if defined PORT_BUSY (
 
 echo Iniciando SaberLab...
 start "Vite - Frontend" cmd /k "npm.cmd run dev:frontend"
-start "Wrangler - Functions" cmd /k "npx wrangler pages dev public --port 8788"
+start "Wrangler - D1 Cloud Direct" cmd /k "npx wrangler pages functions build functions --outdir .wrangler/dist && npx wrangler dev .wrangler/dist/index.js --port 8788 --remote"
 
 echo Esperando a que Vite y Wrangler esten listos...
 timeout /t 15 /nobreak >nul
