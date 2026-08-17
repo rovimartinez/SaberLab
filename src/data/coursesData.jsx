@@ -392,13 +392,14 @@ export const getCourseBySlug = (slug) => COURSES_DEFINITION.find(c => c.slug ===
 export const getCourseByAbbr = (abbr) => COURSES_DEFINITION.find(c => c.abbr === abbr);
 export const getCourseById = (id) => COURSES_DEFINITION.find(c => c.id === parseInt(id));
 
-// Helper versátil que busca por cualquier identificador (Slug o Abbr)
+// Helper versátil que busca por cualquier identificador (Slug, Abbr o ID numérico)
 export const getCourseByIdentifier = (id) => {
     if (!id) return null;
-    const normalized = id.toLowerCase();
+    const normalized = String(id).toLowerCase();
     return COURSES_DEFINITION.find(c => 
         c.abbr.toLowerCase() === normalized || 
-        c.slug.toLowerCase() === normalized
+        c.slug.toLowerCase() === normalized ||
+        String(c.id) === normalized
     );
 };
 

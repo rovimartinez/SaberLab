@@ -55,11 +55,13 @@ const Lesson = () => {
     const courseVisibility = lessonVisibility[courseData?.id] || {};
 
     // Identificador único de la lección para base de datos y búsqueda
-    const internalId = useMemo(() =>
-        lessonId && lessonId.includes('-')
-            ? lessonId
-            : `${courseCode}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`,
-        [courseCode, moduleId, lessonId]);
+    const internalId = useMemo(() => {
+        if (!lessonId) return '';
+        if (lessonId.includes('-')) return lessonId.toLowerCase();
+        const cleanMod = moduleId ? moduleId.toLowerCase() : 'm1';
+        const cleanLes = lessonId.toLowerCase().startsWith('l') ? lessonId.toLowerCase() : `l${lessonId.toLowerCase()}`;
+        return `${courseCode}-${cleanMod}-${cleanLes}`;
+    }, [courseCode, moduleId, lessonId]);
 
     const isLocked = profile?.role !== 'admin' && courseVisibility[internalId] === false;
 
