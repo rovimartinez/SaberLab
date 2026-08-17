@@ -28,6 +28,44 @@ const MyCourses = () => {
     const [error, setError] = useState(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [joinedCourseName, setJoinedCourseName] = useState('');
+    const [completedLessonsMap, setCompletedLessonsMap] = useState({});
+
+    // Cargar progreso de lecciones en tiempo real desde Cloudflare D1
+    React.useEffect(() => {
+        const loadLiveProgress = async () => {
+            if (!user?.id) return;
+            try {
+                const { data } = await api('/lesson-progress');
+                if (Array.isArray(data)) {
+                    const map = {};
+                    data.forEach(item => {
+                        if (item.status === 'completed' || item.progress === 100) {
+                            map[item.lesson_id] = true;
+                        }
+                    });
+                    setCompletedLessonsMap(map);
+                }
+            } catch (err) {
+                console.error('Error cargando progreso en MyCourses:', err);
+            }
+        };
+        loadLiveProgress();
+    }, [user?.id]);
+
+    const calculateCourseProgress = (course) => {
+        if (!course.modules || course.modules.length === 0) return course.progress || 0;
+        const allLessons = course.modules.flatMap(m => (m.lessons || []).map(l => {
+            const normalizedId = l.id.includes('-') ? l.id : `${course.abbr?.toLowerCase()}-${m.id}-${l.id}`;
+            return { rawId: l.id, normalizedId };
+        }));
+        const total = allLessons.length;
+        if (total === 0) return 0;
+        const completed = allLessons.filter(l => completedLessonsMap[l.normalizedId] || completedLessonsMap[l.rawId]).length;
+        if (completed > 0) {
+            return Math.min(100, Math.round((completed / total) * 100));
+        }
+        return course.progress || 0;
+    };
 
     const handleJoinCourse = async () => {
         if (!joinCode.trim()) return;
@@ -105,7 +143,7 @@ const MyCourses = () => {
                                         <span>{lessons} lecciones</span>
                                     </div>
                                     <div className="card-classic-progress" style={{ color: 'white', fontWeight: '800' }}>
-                                        {course.progress}% completado
+                                        {calculateCourseProgress(course)}% completado
                                     </div>
                                 </div>
                                 <div className="card-classic-bg-icon" style={{ opacity: 0.4, color: color }}>

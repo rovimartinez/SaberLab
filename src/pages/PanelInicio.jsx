@@ -66,9 +66,11 @@ const PanelInicio = () => {
 
     const lastCourse = enrolledCourses.length > 0 ? enrolledCourses[0] : null;
 
-    const totalProgress = enrolledCourses.length > 0
-        ? Math.round(enrolledCourses.reduce((acc, c) => acc + (c.progress || 0), 0) / enrolledCourses.length)
-        : 0;
+    const totalProgress = typeof userProgress?.overall_progress === 'number'
+        ? userProgress.overall_progress
+        : (enrolledCourses.length > 0
+            ? Math.round(enrolledCourses.reduce((acc, c) => acc + (c.progress || 0), 0) / enrolledCourses.length)
+            : 0);
 
     const lessonsCompleted = userProgress?.lessons_completed || 0;
     const streakDays = userProgress?.streak_days || 0;
