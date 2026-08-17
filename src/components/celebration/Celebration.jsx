@@ -15,6 +15,8 @@ import '../../styles/Celebration.css';
 export default function Celebration({
     show,
     onClose,
+    onNextLesson,
+    nextLessonTitle,
     title = '¡Lección Completada!',
     subtitle = '¡Excelente trabajo! Sigue así.',
 }) {
@@ -59,6 +61,14 @@ export default function Celebration({
         }, 300);
     };
 
+    const handleNext = () => {
+        setExiting(true);
+        setTimeout(() => {
+            setExiting(false);
+            onNextLesson?.();
+        }, 300);
+    };
+
     if (!show && !exiting) return null;
 
     return (
@@ -80,11 +90,26 @@ export default function Celebration({
                 <h2 className="celebration-title">{title}</h2>
                 <p className="celebration-subtitle">{subtitle}</p>
 
-                {/* Botón continuar */}
-                <button className="celebration-btn" onClick={handleClose}>
-                    Continuar
-                    <ArrowRight size={18} />
-                </button>
+                {/* Botones de acción */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', marginTop: '1.25rem' }}>
+                    {onNextLesson && (
+                        <button className="celebration-btn" onClick={handleNext} style={{ background: 'linear-gradient(135deg, #10b981, #059669)', width: '100%' }}>
+                            <span>Siguiente lección</span>
+                            <ArrowRight size={18} />
+                        </button>
+                    )}
+                    <button 
+                        className="celebration-btn" 
+                        onClick={handleClose} 
+                        style={{ 
+                            background: onNextLesson ? 'rgba(255,255,255,0.08)' : undefined, 
+                            border: onNextLesson ? '1px solid rgba(255,255,255,0.2)' : undefined,
+                            width: '100%' 
+                        }}
+                    >
+                        <span>Volver al curso</span>
+                    </button>
+                </div>
             </div>
         </div>
     );

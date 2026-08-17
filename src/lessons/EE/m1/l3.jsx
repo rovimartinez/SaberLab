@@ -219,8 +219,8 @@ const lessonDefinition = {
             concept: 'resistencia_serie',
             difficulty: 'easy',
             q: 'Tres resistencias de 20Ω, 30Ω y 50Ω se conectan en serie. La resistencia equivalente total es:',
-            options: ['100 Ω', '10 Ω', '33.3 Ω', '300 Ω'],
-            correct: 0
+            options: ['33.3 Ω', '100 Ω', '10 Ω', '300 Ω'],
+            correct: 1
         },
         {
             id: 'ee-1-3-q2',
@@ -229,12 +229,12 @@ const lessonDefinition = {
             difficulty: 'easy',
             q: 'En un circuito serie formado por una batería de 9V y tres bombillos:',
             options: [
-                'La corriente que pasa por cada bombillo es exactamente idéntica',
-                'Cada bombillo recibe una corriente diferente según su tamaño',
                 'El último bombillo de la serie recibe menos corriente',
+                'Cada bombillo recibe una corriente diferente según su tamaño',
+                'La corriente que pasa por cada bombillo es exactamente idéntica',
                 'La corriente depende del color del bombillo'
             ],
-            correct: 0
+            correct: 2
         },
         {
             id: 'ee-1-3-q3',
@@ -242,8 +242,8 @@ const lessonDefinition = {
             concept: 'caida_tension',
             difficulty: 'medium',
             q: 'Una fuente de 12V alimenta en serie una resistencia R1=4Ω y otra R2=8Ω (Req=12Ω). La caída de voltaje en R2 es:',
-            options: ['8 V', '4 V', '12 V', '6 V'],
-            correct: 0
+            options: ['4 V', '8 V', '12 V', '6 V'],
+            correct: 1
         },
         {
             id: 'ee-1-3-q4',
@@ -265,8 +265,8 @@ const lessonDefinition = {
             concept: 'divisor_voltaje',
             difficulty: 'hard',
             q: 'En un divisor de voltaje con VT = 20V, R1 = 3kΩ y R2 = 1kΩ (Req = 4kΩ), ¿cuál es el voltaje sobre R2?',
-            options: ['5 V', '15 V', '10 V', '20 V'],
-            correct: 0
+            options: ['15 V', '10 V', '20 V', '5 V'],
+            correct: 3
         },
         {
             id: 'ee-1-3-q6',
@@ -275,12 +275,12 @@ const lessonDefinition = {
             difficulty: 'medium',
             q: 'La Primera Ley de Kirchhoff (Ley de Corrientes en Nodos) se fundamenta en:',
             options: [
+                'El efecto Joule de disipación de calor',
                 'El principio de conservación de la carga eléctrica',
                 'El principio de inducción electromagnética de Faraday',
-                'El efecto Joule de disipación de calor',
                 'La teoría de la relatividad especial'
             ],
-            correct: 0
+            correct: 1
         },
         {
             id: 'ee-1-3-q7',
@@ -288,8 +288,8 @@ const lessonDefinition = {
             concept: 'fallas_serie',
             difficulty: 'hard',
             q: 'Si un resistor se quema y queda en circuito abierto dentro de una serie de 120V, ¿qué voltaje medirá un voltímetro conectado en sus extremos?',
-            options: ['120 V (la totalidad de la fuente)', '0 V', '60 V', 'Infinito Voltios'],
-            correct: 0
+            options: ['0 V', '60 V', '120 V (la totalidad de la fuente)', 'Infinito Voltios'],
+            correct: 2
         },
         {
             id: 'ee-1-3-q8',
@@ -298,15 +298,43 @@ const lessonDefinition = {
             difficulty: 'easy',
             q: '¿Por qué los interruptores y fusibles de protección se conectan siempre en serie con la carga?',
             options: [
-                'Porque al abrirse o fundirse interrumpen toda la corriente de la línea',
                 'Para aumentar la potencia total entregada por la fuente',
+                'Para reducir a la mitad el voltaje de la instalación',
                 'Para cambiar el circuito de corriente continua a alterna',
-                'Para reducir a la mitad el voltaje de la instalación'
+                'Porque al abrirse o fundirse interrumpen toda la corriente de la línea'
+            ],
+            correct: 3
+        },
+        {
+            id: 'ee-1-3-q9',
+            objective: 'Comprender aplicaciones prácticas de divisores de tensión',
+            concept: 'divisor_voltaje_aplicacion',
+            difficulty: 'medium',
+            q: 'Un potenciómetro utilizado para regular el volumen de un equipo de audio funciona como:',
+            options: [
+                'Un generador de corriente alterna',
+                'Un capacitor de almacenamiento rápido',
+                'Un divisor de voltaje con resistencia ajustable mediante una perilla',
+                'Un fusible de protección térmica'
+            ],
+            correct: 2
+        },
+        {
+            id: 'ee-1-3-q10',
+            objective: 'Analizar el efecto de un cortocircuito en serie',
+            concept: 'falla_cortocircuito',
+            difficulty: 'hard',
+            q: 'Si una de las tres resistencias en un circuito serie entra en cortocircuito (R = 0 Ω):',
+            options: [
+                'La corriente total aumenta y las demás resistencias reciben más voltaje',
+                'Todo el circuito se apaga inmediatamente',
+                'El voltaje de la batería se reduce a cero',
+                'La resistencia equivalente total se duplica'
             ],
             correct: 0
         }
     ],
-    quizConfig: { timePerQuestion: 45, requiredScorePercent: 75 }
+    quizConfig: { timePerQuestion: 20, requiredScorePercent: 80 }
 };
 
 export const lessonData = defineLesson({

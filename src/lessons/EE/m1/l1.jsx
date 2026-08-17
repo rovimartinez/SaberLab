@@ -673,7 +673,7 @@ const lessonDefinition = {
             correct: 0
         }
     ],
-    quizConfig: { timePerQuestion: 25, requiredScorePercent: 75 }
+    quizConfig: { timePerQuestion: 20, requiredScorePercent: 80 }
 };
 
 export const lessonData = defineLesson({

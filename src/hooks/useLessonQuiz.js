@@ -16,7 +16,7 @@ export const useLessonQuiz = ({
     moduleId,
     lessonId
 }) => {
-    const [timeLeft, setTimeLeft] = useState(quizConfig.timePerQuestion ?? 30);
+    const [timeLeft, setTimeLeft] = useState(quizConfig.timePerQuestion ?? 20);
     const [quizMode, setQuizMode] = useState('intro');
     const [currentQ, setCurrentQ] = useState(0);
     const [quizScore, setQuizScore] = useState(0);
@@ -31,8 +31,8 @@ export const useLessonQuiz = ({
     const quizPersistedRef = useRef(false);
     const handleQuizAnswerRef = useRef(() => { });
 
-    const quizTimeLimit = quizConfig.timePerQuestion ?? 30;
-    const requiredScorePercent = quizConfig.requiredScorePercent ?? 100;
+    const quizTimeLimit = quizConfig.timePerQuestion ?? 20;
+    const requiredScorePercent = quizConfig.requiredScorePercent ?? 80;
     const courseId = lessonKey?.split('-')?.[0] ?? null;
 
     const questionTimeSegments = useMemo(

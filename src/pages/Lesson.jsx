@@ -17,7 +17,7 @@ import { l1Missions } from '../lessons/RE/m1/l1.missions';
 import { l2Missions } from '../lessons/RE/m1/l2.missions';
 import { l3Missions } from '../lessons/RE/m1/l3.missions';
 import { l4Missions } from '../lessons/RE/m1/l4.missions';
-import { COURSES_DEFINITION, getCourseByIdentifier, getFullLessonPath, getLessonContent } from '../data/coursesData.jsx';
+import { COURSES_DEFINITION, getCourseByIdentifier, getFullLessonPath, getLessonContent, getNextLesson } from '../data/coursesData.jsx';
 import CourseSidebar from '../components/course/CourseSidebar';
 import LessonRenderer from '../components/lesson/LessonRenderer';
 import LessonLegacyBridge from '../components/lesson/legacy/LessonLegacyBridge';
@@ -122,6 +122,7 @@ const Lesson = () => {
     const courseInfo = (lessonPath && lessonPath.lesson) || { title: 'Leccion' };
     const resolvedMissions = lessonMissionsMap[internalId] || [];
     const lessonKey = internalId;
+    const nextLesson = useMemo(() => getNextLesson(internalId), [internalId]);
 
     const normalizedLesson = useMemo(() =>
         lesson
@@ -166,8 +167,14 @@ const Lesson = () => {
 
     const handleCelebrationClose = () => {
         setShowCelebration(false);
-        // Navegar de regreso al curso después de cerrar
         navigate(`/dashboard/my-courses/${courseId}`);
+    };
+
+    const handleNextLesson = () => {
+        setShowCelebration(false);
+        if (nextLesson) {
+            navigate(`/dashboard/my-courses/${nextLesson.courseSlug}/${nextLesson.moduleId}/${nextLesson.shortId}`);
+        }
     };
 
     useEffect(() => {
@@ -255,6 +262,8 @@ const Lesson = () => {
             <Celebration
                 show={showCelebration}
                 onClose={handleCelebrationClose}
+                onNextLesson={nextLesson ? handleNextLesson : null}
+                nextLessonTitle={nextLesson?.title}
                 title="¡Lección Completada!"
                 subtitle="Tu progreso fue guardado. ¡Sigue aprendiendo!"
             />
@@ -386,7 +395,7 @@ const Lesson = () => {
                             onClick={() => navigate(`/dashboard/my-courses/${courseId}`)}
                         >
                             <ArrowLeft size={20} />
-                            <span>Modulos del curso</span>
+                            <span>Módulos del curso</span>
                         </button>
                         <button
                             className="nav-btn nav-btn-complete"
@@ -402,6 +411,25 @@ const Lesson = () => {
                             <CheckCircle size={20} />
                             <span>{isSavingProgress ? 'Guardando en BD...' : isCompleted ? '¡Lección Completada! ✓' : 'Marcar como completada'}</span>
                         </button>
+                        {nextLesson && (
+                            <button
+                                className="nav-btn nav-btn-next"
+                                style={{
+                                    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                    color: 'white',
+                                    border: 'none',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}
+                                onClick={handleNextLesson}
+                            >
+                                <span>Siguiente lección</span>
+                                <ChevronRight size={20} />
+                            </button>
+                        )}
                     </div>
                 </article>
             </main>

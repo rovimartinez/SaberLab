@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Play, RotateCcw, CheckCircle2, AlertCircle, Sparkles, Zap, Award, ArrowRight, Activity, Gauge, Flame } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Play, RotateCcw, CheckCircle2, AlertCircle, Sparkles, Zap, Award, ArrowRight, Activity, Gauge, Flame, Lightbulb } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { api } from '../../../lib/api';
 import '../../../styles/ElectricitySimulators.css';
 
 // ── BANCO DE 10 EJERCICIOS GUIADOS DE CIRCUITOS EN SERIE Y LVK ──────────────
@@ -164,6 +165,7 @@ export default function PracticalLabL3() {
     const [currentInput, setCurrentInput] = useState('');
     const [feedback, setFeedback] = useState(null); // { isCorrect, message }
     const [completedSet, setCompletedSet] = useState(new Set());
+    const [challengeStats, setChallengeStats] = useState({}); // { [id]: { attempts, failures } }
 
     // Estado del Sandbox Interactivo Libre
     const [sandboxVoltage, setSandboxVoltage] = useState(12);
@@ -173,6 +175,39 @@ export default function PracticalLabL3() {
 
     const currentEx = SERIES_EXERCISES[currentExIndex];
 
+    // Cargar historial y estado guardado en D1
+    useEffect(() => {
+        const loadHistory = async () => {
+            try {
+                const { data } = await api('/practice?lesson_id=ee-m1-l3');
+                if (data?.challenges) {
+                    const done = new Set();
+                    const answers = {};
+                    const stats = {};
+                    data.challenges.forEach((ch) => {
+                        const exId = parseInt(ch.exercise_id, 10);
+                        if (ch.status === 'completed') {
+                            done.add(exId);
+                        }
+                        if (ch.user_last_input) {
+                            answers[exId] = ch.user_last_input;
+                        }
+                        stats[exId] = {
+                            attempts: ch.attempts_count || 1,
+                            failures: ch.failures_count || 0
+                        };
+                    });
+                    setCompletedSet(done);
+                    setUserAnswers(answers);
+                    setChallengeStats(stats);
+                }
+            } catch (err) {
+                console.error('Error cargando historial de retos:', err);
+            }
+        };
+        loadHistory();
+    }, []);
+
     // Cálculos del Sandbox
     const sandboxReq = sandboxR1 + sandboxR2 + sandboxR3;
     const sandboxCurrent = sandboxReq > 0 ? (sandboxVoltage / sandboxReq) : 0;
@@ -180,6 +215,25 @@ export default function PracticalLabL3() {
     const sandboxV2 = sandboxCurrent * sandboxR2;
     const sandboxV3 = sandboxCurrent * sandboxR3;
     const sandboxPTotal = sandboxVoltage * sandboxCurrent;
+
+    // Registrar interacción en el sandbox libre
+    const sandboxTrackTimeoutRef = useRef(null);
+    const trackSandboxInteraction = () => {
+        if (sandboxTrackTimeoutRef.current) clearTimeout(sandboxTrackTimeoutRef.current);
+        sandboxTrackTimeoutRef.current = setTimeout(() => {
+            try {
+                api('/practice', {
+                    method: 'POST',
+                    body: {
+                        type: 'simulator_interaction',
+                        simulator_id: 'practical_lab_l3_sandbox',
+                        lesson_id: 'ee-m1-l3',
+                        duration_seconds: 5
+                    }
+                });
+            } catch {}
+        }, 1500);
+    };
 
     const playSuccessSound = () => {
         try {
@@ -200,7 +254,7 @@ export default function PracticalLabL3() {
         }
     };
 
-    const handleValidate = (e) => {
+    const handleValidate = async (e) => {
         e?.preventDefault();
         const num = parseFloat(currentInput.replace(',', '.'));
         if (isNaN(num)) {
@@ -209,6 +263,33 @@ export default function PracticalLabL3() {
         }
 
         const isOk = Math.abs(num - currentEx.correct) < 0.05;
+
+        // Registrar intento en D1
+        try {
+            api('/practice', {
+                method: 'POST',
+                body: {
+                    type: 'challenge_attempt',
+                    lesson_id: 'ee-m1-l3',
+                    exercise_id: currentEx.id,
+                    exercise_title: currentEx.title,
+                    concept: currentEx.targetVar || 'serie',
+                    is_correct: isOk,
+                    user_input: num
+                }
+            });
+        } catch {}
+
+        setChallengeStats((prev) => {
+            const currentStat = prev[currentEx.id] || { attempts: 0, failures: 0 };
+            return {
+                ...prev,
+                [currentEx.id]: {
+                    attempts: currentStat.attempts + 1,
+                    failures: currentStat.failures + (isOk ? 0 : 1)
+                }
+            };
+        });
 
         if (isOk) {
             playSuccessSound();
@@ -382,21 +463,62 @@ export default function PracticalLabL3() {
                                         </text>
                                     </g>
 
-                                    {/* Resistencia 1 (Arriba a la izquierda, X=100) */}
-                                    <g transform="translate(85, 20)">
-                                        <rect x="0" y="0" width="40" height="20" rx="5" fill="url(#resBodyL3)" stroke="#78350f" strokeWidth="1.2" />
-                                        <text x="20" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V1' ? '#fbbf24' : '#c084fc'} fontSize="9" fontWeight="900">
-                                            R₁: {currentEx.R1}Ω
-                                        </text>
-                                    </g>
+                                    {/* Caso 1: Retos con 3 Resistencias (R3 > 0) */}
+                                    {currentEx.R3 > 0 ? (
+                                        <>
+                                            {/* Resistencia 1 */}
+                                            <g transform="translate(60, 20)">
+                                                <rect x="0" y="0" width="42" height="20" rx="4" fill="url(#resBodyL3)" stroke="#78350f" strokeWidth="1.2" />
+                                                <text x="21" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V1' ? '#fbbf24' : '#c084fc'} fontSize="8.5" fontWeight="900">
+                                                    R₁: {currentEx.R1}Ω
+                                                </text>
+                                                {currentEx.id === 6 && (
+                                                    <text x="21" y="-5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="800">V₁: 8V</text>
+                                                )}
+                                            </g>
 
-                                    {/* Resistencia 2 (Arriba a la derecha, X=195) */}
-                                    <g transform="translate(195, 20)">
-                                        <rect x="0" y="0" width="40" height="20" rx="5" fill="url(#resBodyL3)" stroke="#78350f" strokeWidth="1.2" />
-                                        <text x="20" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V2' ? '#fbbf24' : '#c084fc'} fontSize="9" fontWeight="900">
-                                            R₂: {currentEx.R2}Ω
-                                        </text>
-                                    </g>
+                                            {/* Resistencia 2 */}
+                                            <g transform="translate(138, 20)">
+                                                <rect x="0" y="0" width="42" height="20" rx="4" fill="url(#resBodyL3)" stroke="#78350f" strokeWidth="1.2" />
+                                                <text x="21" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V2' ? '#fbbf24' : '#c084fc'} fontSize="8.5" fontWeight="900">
+                                                    R₂: {currentEx.R2}Ω
+                                                </text>
+                                                {currentEx.id === 6 && (
+                                                    <text x="21" y="-5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="800">V₂: 14V</text>
+                                                )}
+                                            </g>
+
+                                            {/* Resistencia 3 */}
+                                            <g transform="translate(216, 20)">
+                                                <rect x="0" y="0" width="42" height="20" rx="4" fill="url(#resBodyL3)" stroke="#78350f" strokeWidth="1.2" />
+                                                <text x="21" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V3' ? '#fbbf24' : '#c084fc'} fontSize="8.5" fontWeight="900">
+                                                    R₃: {currentEx.R3}Ω
+                                                </text>
+                                                {currentEx.id === 6 && (
+                                                    <text x="21" y="-5" textAnchor="middle" fill="#38bdf8" fontSize="8" fontWeight="800">V₃: 18V</text>
+                                                )}
+                                            </g>
+                                        </>
+                                    ) : (
+                                        /* Caso 2: Retos con 2 Resistencias (R3 === 0) */
+                                        <>
+                                            {/* Resistencia 1 */}
+                                            <g transform="translate(85, 20)">
+                                                <rect x="0" y="0" width="45" height="20" rx="5" fill="url(#resBodyL3)" stroke="#78350f" strokeWidth="1.2" />
+                                                <text x="22" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V1' ? '#fbbf24' : '#c084fc'} fontSize="9" fontWeight="900">
+                                                    R₁: {currentEx.R1 === 999999 ? 'ABIERTO (∞)' : `${currentEx.R1}Ω`}
+                                                </text>
+                                            </g>
+
+                                            {/* Resistencia 2 */}
+                                            <g transform="translate(195, 20)">
+                                                <rect x="0" y="0" width="45" height="20" rx="5" fill="url(#resBodyL3)" stroke={currentEx.R2 === 999999 ? '#ef4444' : '#78350f'} strokeWidth={currentEx.R2 === 999999 ? 2 : 1.2} strokeDasharray={currentEx.R2 === 999999 ? '3 2' : 'none'} />
+                                                <text x="22" y="34" textAnchor="middle" fill={currentEx.targetVar === 'V2' ? '#fbbf24' : currentEx.R2 === 999999 ? '#ef4444' : '#c084fc'} fontSize="9" fontWeight="900">
+                                                    R₂: {currentEx.R2 === 999999 ? 'ABIERTO (∞)' : `${currentEx.R2}Ω`}
+                                                </text>
+                                            </g>
+                                        </>
+                                    )}
 
                                     {/* Indicador de Incógnita de Corriente (solo si el reto pregunta por I) */}
                                     {currentEx.targetVar === 'I' && (
@@ -463,6 +585,26 @@ export default function PracticalLabL3() {
                                     </div>
                                 )}
 
+                                {/* Sugerencia de refuerzo automático basada en historial */}
+                                {challengeStats[currentEx.id]?.failures >= 2 && !feedback?.isCorrect && (
+                                    <div style={{
+                                        background: 'rgba(234, 179, 8, 0.1)',
+                                        border: '1px solid rgba(234, 179, 8, 0.3)',
+                                        borderRadius: '10px',
+                                        padding: '8px 12px',
+                                        fontSize: '0.78rem',
+                                        color: '#fde047',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}>
+                                        <Lightbulb size={16} />
+                                        <span>
+                                            <strong>Sugerencia de refuerzo:</strong> Llevas {challengeStats[currentEx.id].failures} intentos en este reto. Te sugerimos revisar la fórmula: <em>{currentEx.formula}</em>.
+                                        </span>
+                                    </div>
+                                )}
+
                                 {/* Botón Siguiente Reto */}
                                 {feedback?.isCorrect && currentExIndex < SERIES_EXERCISES.length - 1 && (
                                     <button
@@ -524,10 +666,11 @@ export default function PracticalLabL3() {
                                     <text x="22" y="-5" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="800">V₃: {sandboxV3.toFixed(2)}V</text>
                                 </g>
 
-                                {/* Corriente común I */}
+                                {/* Corriente común I (Cápsula elegante sin solapamiento) */}
                                 <g transform="translate(170, 170)">
-                                    <polygon points="-8,4 0,0 -8,-4" fill="#34d399" />
-                                    <text x="20" y="4" textAnchor="middle" fill="#34d399" fontSize="11" fontWeight="900">
+                                    <rect x="-65" y="-12" width="130" height="24" rx="12" fill="#090e1a" stroke="#34d399" strokeWidth="1.5" />
+                                    <polygon points="-50,4 -42,0 -50,-4" fill="#34d399" />
+                                    <text x="-34" y="4" textAnchor="start" fill="#34d399" fontSize="10.5" fontWeight="900" fontFamily="monospace">
                                         I = {sandboxCurrent.toFixed(3)} A
                                     </text>
                                 </g>
@@ -547,7 +690,7 @@ export default function PracticalLabL3() {
                                     <span>Voltaje de Fuente (VT):</span>
                                     <span>{sandboxVoltage} V</span>
                                 </div>
-                                <input type="range" min="1" max="48" step="1" value={sandboxVoltage} onChange={e => setSandboxVoltage(+e.target.value)} style={{ width: '100%', accentColor: '#38bdf8' }} />
+                                <input type="range" min="1" max="48" step="1" value={sandboxVoltage} onChange={e => { setSandboxVoltage(+e.target.value); trackSandboxInteraction(); }} style={{ width: '100%', accentColor: '#38bdf8' }} />
                             </div>
 
                             {/* Slider R1 */}
@@ -556,7 +699,7 @@ export default function PracticalLabL3() {
                                     <span>Resistencia R₁:</span>
                                     <span>{sandboxR1} Ω</span>
                                 </div>
-                                <input type="range" min="5" max="100" step="5" value={sandboxR1} onChange={e => setSandboxR1(+e.target.value)} style={{ width: '100%', accentColor: '#c084fc' }} />
+                                <input type="range" min="5" max="100" step="5" value={sandboxR1} onChange={e => { setSandboxR1(+e.target.value); trackSandboxInteraction(); }} style={{ width: '100%', accentColor: '#c084fc' }} />
                             </div>
 
                             {/* Slider R2 */}
@@ -565,7 +708,7 @@ export default function PracticalLabL3() {
                                     <span>Resistencia R₂:</span>
                                     <span>{sandboxR2} Ω</span>
                                 </div>
-                                <input type="range" min="5" max="100" step="5" value={sandboxR2} onChange={e => setSandboxR2(+e.target.value)} style={{ width: '100%', accentColor: '#c084fc' }} />
+                                <input type="range" min="5" max="100" step="5" value={sandboxR2} onChange={e => { setSandboxR2(+e.target.value); trackSandboxInteraction(); }} style={{ width: '100%', accentColor: '#c084fc' }} />
                             </div>
 
                             {/* Slider R3 */}
@@ -574,7 +717,7 @@ export default function PracticalLabL3() {
                                     <span>Resistencia R₃:</span>
                                     <span>{sandboxR3} Ω</span>
                                 </div>
-                                <input type="range" min="5" max="100" step="5" value={sandboxR3} onChange={e => setSandboxR3(+e.target.value)} style={{ width: '100%', accentColor: '#c084fc' }} />
+                                <input type="range" min="5" max="100" step="5" value={sandboxR3} onChange={e => { setSandboxR3(+e.target.value); trackSandboxInteraction(); }} style={{ width: '100%', accentColor: '#c084fc' }} />
                             </div>
 
                             {/* Caja de Resultados Globales */}

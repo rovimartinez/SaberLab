@@ -52,15 +52,13 @@ const PanelProgreso = () => {
         };
     });
 
-    const weeklyActivity = [
-        { day: 'Lun', hours: 0, color: '#64748b' },
-        { day: 'Mar', hours: 0, color: '#64748b' },
-        { day: 'Mié', hours: 0, color: '#64748b' },
-        { day: 'Jue', hours: 0, color: '#64748b' },
-        { day: 'Vie', hours: 0, color: '#64748b' },
-        { day: 'Sáb', hours: 0, color: '#64748b' },
-        { day: 'Dom', hours: 0, color: '#64748b' }
-    ];
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const weeklyHoursArr = userProgress?.weekly_hours || [0, 0, 0, 0, 0, 0, 0];
+    const weeklyActivity = days.map((day, idx) => ({
+        day,
+        hours: weeklyHoursArr[idx] || 0,
+        color: (weeklyHoursArr[idx] || 0) > 0 ? '#60a5fa' : '#64748b'
+    }));
 
     const maxHours = Math.max(...weeklyActivity.map(d => d.hours), 1);
 

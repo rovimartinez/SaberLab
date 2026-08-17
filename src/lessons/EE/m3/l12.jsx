@@ -47,7 +47,7 @@ export const lessonData = defineLesson({
                         correct: 0
                     }
                 ],
-                quizConfig: { timePerQuestion: 45, requiredScorePercent: 70 }
+                quizConfig: { timePerQuestion: 20, requiredScorePercent: 80 }
             })
         ]
     }

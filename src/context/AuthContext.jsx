@@ -222,7 +222,24 @@ export const AuthProvider = ({ children }) => {
   const loadUserProgress = async (userId) => {
     try {
       const { data } = await api('/progress');
-      if (data) setUserProgress(data);
+      if (data) {
+        setUserProgress(data);
+        if (data.courses_progress) {
+          setEnrolledCourses(prevCourses => (prevCourses || []).map(course => {
+            const courseStat = data.courses_progress[course.id];
+            if (courseStat) {
+              return {
+                ...course,
+                progress: courseStat.progress,
+                completedLessons: courseStat.completed,
+                totalLessons: courseStat.total,
+                lessons: courseStat.total
+              };
+            }
+            return course;
+          }));
+        }
+      }
     } catch (err) {
       console.error('Error loading user progress:', err);
     }

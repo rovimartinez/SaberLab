@@ -68,11 +68,11 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
 
         try {
             setLoading(true);
-            const { data, error } = await api('/flashcards');
+            const { data, error } = await api('/flashcards?lesson_id=' + encodeURIComponent(lessonKey));
 
             if (error) throw error;
 
-            if (data) {
+            if (data && Array.isArray(data)) {
                 const progress = {};
                 data.forEach((item) => {
                     progress[item.card_id] = item.status;
