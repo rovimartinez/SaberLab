@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, FlaskConical, Box, Gift, ArrowRight, Trophy } from 'lucide-react';
 import { getCourseByIdentifier, getLessonInfo } from '../data/coursesData.jsx';
 import { gadgets } from '../data/gadgetsData';
 import { useAuth } from '../context/useAuth';
+import { api } from '../lib/api';
 import '../styles/SubjectDetail.css';
 
 const agendaItems = [
@@ -16,11 +17,35 @@ const agendaItems = [
 const SubjectDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { lessonVisibility } = useAuth();
+    const { user, lessonVisibility } = useAuth();
     const realCourse = getCourseByIdentifier(id) || getCourseByIdentifier('RE');
     const abbr = realCourse.abbr;
     const courseId = realCourse.id;
     const courseVisibility = lessonVisibility[courseId] || {};
+
+    const [completedLessons, setCompletedLessons] = useState({});
+
+    // Cargar progreso de lecciones desde Cloudflare D1
+    useEffect(() => {
+        const loadProgress = async () => {
+            if (!user?.id) return;
+            try {
+                const { data } = await api('/lesson-progress');
+                if (Array.isArray(data)) {
+                    const map = {};
+                    data.forEach(item => {
+                        if (item.status === 'completed' || item.progress === 100) {
+                            map[item.lesson_id] = true;
+                        }
+                    });
+                    setCompletedLessons(map);
+                }
+            } catch (err) {
+                console.error('Error cargando progreso de lecciones:', err);
+            }
+        };
+        loadProgress();
+    }, [user?.id, courseId]);
 
     // Filtrar recompensas que pertenecen a este curso
     const courseRewards = gadgets.filter(g => g.courseAbbr === abbr || (!g.courseAbbr && abbr === 'EE'));
@@ -37,14 +62,26 @@ const SubjectDetail = () => {
         teacher: 'Ronny Martinez'
     };
 
+    const courseModules = realCourse?.modules || [];
+
+    // Calcular progreso dinámico del curso
+    const { completedCount, totalLessonsCount, progressPercent } = useMemo(() => {
+        const all = courseModules.flatMap(m => (m.lessons || []).map(l => ({
+            ...l,
+            normalizedId: normalizeLessonId(l.id, m.id)
+        })));
+        const total = all.length;
+        const done = all.filter(l => completedLessons[l.normalizedId] || completedLessons[l.id]).length;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        return { completedCount: done, totalLessonsCount: total, progressPercent: pct };
+    }, [courseModules, completedLessons, abbr]);
+
     // Redirigir al slug descriptivo si se entra por la abreviatura
     useEffect(() => {
         if (id && realCourse && id !== realCourse.slug) {
             navigate(`/dashboard/my-courses/${realCourse.slug}`, { replace: true });
         }
     }, [id, realCourse, navigate]);
-
-    const courseModules = realCourse?.modules || [];
     
     const [expandedModules, setExpandedModules] = useState(() => {
         const initialState = { m1: true };
@@ -77,13 +114,13 @@ const SubjectDetail = () => {
                         <div className="header-stat-item">
                             <span className="stat-label">Docente: <b style={{ color: subject.color }}>{subject.teacher}</b></span>
                         </div>
-                        <div className="header-stat-item subject-progress-block" style={{ flex: 1, maxWidth: '200px' }}>
+                        <div className="header-stat-item subject-progress-block" style={{ flex: 1, maxWidth: '240px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.75rem' }}>
-                                <span className="stat-label">Progreso</span>
-                                <span className="stat-label">15%</span>
+                                <span className="stat-label">Progreso ({completedCount}/{totalLessonsCount})</span>
+                                <span className="stat-label" style={{ fontWeight: 800, color: subject.color }}>{progressPercent}%</span>
                             </div>
-                            <div className="mini-progress-track" style={{ width: '100%' }}>
-                                <div className="mini-progress-fill" style={{ width: '15%', background: subject.color }}></div>
+                            <div className="mini-progress-track" style={{ width: '100%', background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '4px', overflow: 'hidden' }}>
+                                <div className="mini-progress-fill" style={{ width: `${progressPercent}%`, background: progressPercent === 100 ? '#10b981' : subject.color, height: '100%', transition: 'width 0.4s ease' }}></div>
                             </div>
                         </div>
                     </div>
@@ -132,15 +169,25 @@ const SubjectDetail = () => {
                                             const normalizedId = normalizeLessonId(lesson.id, module.id);
                                             const visibility = courseVisibility[normalizedId];
                                             const isHidden = visibility === false;
+                                            const isCompleted = completedLessons[normalizedId] || completedLessons[lesson.id];
                                             const lessonInfo = getLessonInfo(lesson.id);
                                             return (
                                             <div key={lesson.id} className="lesson-item-improved">
-                                                <div className="lesson-indicator-line"></div>
-                                                <div className="lesson-icon-circle">
-                                                    {isHidden ? <Lock size={20} /> : <FileText size={20} />}
+                                                <div className="lesson-indicator-line" style={isCompleted ? { background: '#10b981' } : {}}></div>
+                                                <div className="lesson-icon-circle" style={isCompleted ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' } : {}}>
+                                                    {isHidden ? <Lock size={20} /> : isCompleted ? <CheckCircle size={20} color="#10b981" /> : <FileText size={20} />}
                                                 </div>
                                                 <div className="lesson-main-info">
-                                                    <h4 className="lesson-title-text" style={isHidden ? { opacity: 0.5 } : {}}>{lessonInfo.title || lesson.id}</h4>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <h4 className="lesson-title-text" style={isHidden ? { opacity: 0.5 } : {}}>
+                                                            {lessonInfo.title || lesson.id}
+                                                        </h4>
+                                                        {isCompleted && !isHidden && (
+                                                            <span style={{ fontSize: '0.68rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                                                                Completada ✓
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="lesson-action-area">
                                                     {isHidden ? (
@@ -148,10 +195,11 @@ const SubjectDetail = () => {
                                                     ) : (
                                                         <button 
                                                             className="lesson-btn start"
-                                                            style={{ background: subject.color, color: 'white', border: 'none' }}
+                                                            style={{ background: isCompleted ? '#10b981' : subject.color, color: 'white', border: 'none' }}
                                                             onClick={() => navigate(`/dashboard/my-courses/${subject.slug}/${module.id}/${lesson.id}`)}
+                                                            title={isCompleted ? 'Repasar Lección' : 'Comenzar Lección'}
                                                         >
-                                                            <PlayCircle size={14} />
+                                                            {isCompleted ? <CheckCircle size={14} /> : <PlayCircle size={14} />}
                                                         </button>
                                                     )}
                                                 </div>

@@ -1,4 +1,20 @@
+async function ensureAttemptsSchema(env) {
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS intentos_evaluacion (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      evaluation_key TEXT NOT NULL,
+      answers TEXT,
+      score INTEGER,
+      passed INTEGER,
+      completed_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `).run();
+}
+
 export async function onRequestGet({ request, env, data }) {
+  await ensureAttemptsSchema(env);
   const url = new URL(request.url);
   const evaluationKey = url.searchParams.get('evaluation_key');
 
@@ -16,6 +32,7 @@ export async function onRequestGet({ request, env, data }) {
 }
 
 export async function onRequestPost({ request, env, data }) {
+  await ensureAttemptsSchema(env);
   let body;
   try {
     body = await request.json();

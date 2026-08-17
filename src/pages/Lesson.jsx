@@ -8,7 +8,8 @@ import {
     CheckCircle,
     ChevronRight,
     ClipboardList,
-    Rocket
+    Rocket,
+    Lock
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import '../styles/Lesson.css';
@@ -24,7 +25,7 @@ import ArduinoPartsModal from '../components/lesson/modals/ArduinoPartsModal';
 import GuideModal from '../components/lesson/modals/GuideModal';
 import { saveContentEvent } from '../lib/learningAnalytics';
 import { normalizeLessonData } from '../lib/lessonSchema';
-import { upsertLessonProgress } from '../lib/studentProgress';
+import { fetchLessonProgress, upsertLessonProgress } from '../lib/studentProgress';
 import Celebration from '../components/celebration/Celebration';
 import RewardBanner from '../components/celebration/RewardBanner';
 import RewardDialog from '../components/celebration/RewardDialog';
@@ -45,7 +46,7 @@ const lessonMissionsMap = {
 };
 
 const Lesson = () => {
-    const { user, lessonVisibility } = useAuth();
+    const { user, profile, lessonVisibility } = useAuth();
     const { courseId, moduleId, lessonId } = useParams();
     const navigate = useNavigate();
 
@@ -60,6 +61,8 @@ const Lesson = () => {
             : `${courseCode}-${moduleId.toLowerCase()}-${lessonId.toLowerCase()}`,
         [courseCode, moduleId, lessonId]);
 
+    const isLocked = profile?.role !== 'admin' && courseVisibility[internalId] === false;
+
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('contenido');
@@ -72,7 +75,24 @@ const Lesson = () => {
     const [showCelebration, setShowCelebration] = useState(false);
     const [showBanner, setShowBanner] = useState(false);
     const [rewardGadget, setRewardGadget] = useState(null);
+    const [isCompleted, setIsCompleted] = useState(false);
+    const [isSavingProgress, setIsSavingProgress] = useState(false);
     const hasTrackedInitialTabRef = useRef(false);
+
+    useEffect(() => {
+        const checkProgress = async () => {
+            if (!user?.id || !internalId) return;
+            try {
+                const prog = await fetchLessonProgress(user.id, internalId);
+                if (prog && (prog.status === 'completed' || prog.progress === 100)) {
+                    setIsCompleted(true);
+                }
+            } catch (err) {
+                console.error('Error cargando progreso de lección:', err);
+            }
+        };
+        checkProgress();
+    }, [user?.id, internalId]);
 
     useEffect(() => {
         if (courseId && courseData && courseId !== courseData.slug) {
@@ -113,6 +133,7 @@ const Lesson = () => {
 
     const handleCompleteLesson = async () => {
         if (!user) return;
+        setIsSavingProgress(true);
         try {
             const saved = await upsertLessonProgress({
                 user_id: user.id,
@@ -123,6 +144,8 @@ const Lesson = () => {
             });
 
             if (!saved) throw new Error('No se pudo guardar el progreso');
+
+            setIsCompleted(true);
 
             // Verificar si esta lección desbloquea un gadget
             const unlockedGadget = getGadgetUnlockedByLesson(lessonKey);
@@ -136,6 +159,8 @@ const Lesson = () => {
             console.error('Error saving lesson progress:', error);
             // Banner de error sutil en vez de alert
             setShowBanner(true);
+        } finally {
+            setIsSavingProgress(false);
         }
     };
 
@@ -183,6 +208,30 @@ const Lesson = () => {
                 <div style={{ textAlign: 'center', color: '#94a3b8' }}>
                     <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>Cargando...</div>
                     <p>Cargando leccion...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (isLocked) {
+        return (
+            <div className="lesson-view-container animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh', padding: '2rem' }}>
+                <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '2.5rem 2rem', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', textAlign: 'center' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+                        <Lock size={32} />
+                    </div>
+                    <h2 style={{ color: 'white', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.75rem' }}>Lección Bloqueada</h2>
+                    <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+                        Esta lección aún no ha sido habilitada por el docente para este curso. Consulta con tu profesor o regresa al panel del curso.
+                    </p>
+                    <button
+                        className="btn btn-primary"
+                        style={{ padding: '0.75rem 1.5rem', margin: '0 auto', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                        onClick={() => navigate(`/dashboard/my-courses/${courseData?.slug || courseId}`)}
+                    >
+                        <ArrowLeft size={18} />
+                        <span>Volver al curso</span>
+                    </button>
                 </div>
             </div>
         );
@@ -341,11 +390,17 @@ const Lesson = () => {
                         </button>
                         <button
                             className="nav-btn nav-btn-complete"
-                            style={{ background: subject.color, border: 'none' }}
+                            style={{
+                                background: isCompleted ? '#10b981' : subject.color,
+                                border: 'none',
+                                opacity: isSavingProgress ? 0.7 : 1,
+                                cursor: isSavingProgress ? 'not-allowed' : 'pointer'
+                            }}
                             onClick={handleCompleteLesson}
+                            disabled={isSavingProgress}
                         >
                             <CheckCircle size={20} />
-                            <span>Marcar como completada</span>
+                            <span>{isSavingProgress ? 'Guardando en BD...' : isCompleted ? '¡Lección Completada! ✓' : 'Marcar como completada'}</span>
                         </button>
                     </div>
                 </article>

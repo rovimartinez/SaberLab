@@ -8,13 +8,24 @@ const QuestionPanel = ({
     onAnswer,
     showFeedback = false
 }) => {
-    const isAnswered = userAnswer !== undefined;
+    const isAnswered = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
     const getOptionValue = (option) => {
         if (option && typeof option === 'object') {
             return option.value ?? option.text ?? option.label ?? '';
         }
         return option;
     };
+
+    let rawOptions = [];
+    if (Array.isArray(question?.options)) {
+        rawOptions = question.options;
+    } else if (typeof question?.options === 'string') {
+        try {
+            rawOptions = JSON.parse(question.options);
+        } catch {
+            rawOptions = [];
+        }
+    }
     
     return (
         <div className="glass-panel" style={{ padding: '2rem' }}>
@@ -33,22 +44,19 @@ const QuestionPanel = ({
 
             <h2 style={{ 
                 color: '#f8fafc', 
-                fontSize: '1.4rem', 
-                lineHeight: '1.5',
+                fontSize: '1.35rem', 
+                lineHeight: '1.6', 
                 marginBottom: '2rem',
-                fontWeight: '500'
+                fontWeight: '600'
             }}>
-                {question?.q}
+                {question?.q || question?.question_text || question?.text || 'Pregunta sin enunciado'}
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                {question?.options.map((option, index) => {
+                {rawOptions.map((option, index) => {
                     const optionValue = getOptionValue(option);
                     const isSelected = String(userAnswer) === String(optionValue);
                     const isCorrect = String(question?.correct) === String(optionValue);
-                    
-                    let borderColor = 'rgba(255,255,255,0.1)';
-                    let bgColor = 'rgba(255,255,255,0.03)';
                     let textColor = '#cbd5e1';
                     
                     if (isSelected) {

@@ -69,10 +69,39 @@ const PanelExamenes = () => {
         return course?.modules || [];
     };
 
+    const resetEvaluationForm = () => {
+        setFormData({
+            course_id: '',
+            module_id: '',
+            evaluation_key: '',
+            title: '',
+            description: '',
+            type: 'quiz',
+            max_score: 100,
+            points: 100,
+            time_limit: 30,
+            passing_score: 70,
+            is_published: false,
+            instructions: ''
+        });
+        setEditingEval(null);
+    };
+
     const handleEdit = (evalItem) => {
         setEditingEval(evalItem);
         setFormData({
-            course_id: evalItem.course_id !== undefined && evalItem.course_id !== null ? String(evalItem.course_id) : '', module_id: evalItem.module_id, evaluation_key: evalItem.evaluation_key, title: evalItem.title, description: evalItem.description || '', type: evalItem.type || 'quiz', max_score: evalItem.max_score || 100, points: evalItem.points || 100, time_limit: evalItem.time_limit || 30, passing_score: evalItem.passing_score || 70, is_published: evalItem.is_published || false, instructions: evalItem.instructions || ''
+            course_id: evalItem.course_id !== undefined && evalItem.course_id !== null ? String(evalItem.course_id) : '',
+            module_id: evalItem.module_id || '',
+            evaluation_key: evalItem.evaluation_key || '',
+            title: evalItem.title || '',
+            description: evalItem.description || '',
+            type: evalItem.type || 'quiz',
+            max_score: evalItem.max_score || 100,
+            points: evalItem.points || 100,
+            time_limit: evalItem.time_limit || 30,
+            passing_score: evalItem.passing_score || 70,
+            is_published: evalItem.is_published || false,
+            instructions: evalItem.instructions || ''
         });
         setShowModal(true);
     };
@@ -80,8 +109,11 @@ const PanelExamenes = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const generatedKey = formData.evaluation_key || `eval-c${formData.course_id || 'gen'}-m${formData.module_id || '1'}-${Date.now().toString(36)}`;
+
         const payload = {
             ...formData,
+            evaluation_key: generatedKey,
             course_id: formData.course_id ? Number(formData.course_id) : null,
             max_score: formData.max_score ? Number(formData.max_score) : 100,
             points: formData.points ? Number(formData.points) : 100,
@@ -97,7 +129,7 @@ const PanelExamenes = () => {
 
         if (result.error) {
             console.error('Error guardando evaluación:', result.error);
-            alert(`No se pudo guardar la evaluación: ${result.error.message}`);
+            alert(`No se pudo guardar la evaluación: ${result.error.message || 'Error desconocido'}`);
             return;
         }
 
@@ -135,10 +167,6 @@ const PanelExamenes = () => {
         setLocalQuestions(updatedQuestions);
         await fetchData();
         return true;
-    };
-
-    const resetEvaluationForm = () => {
-        setFormData({ course_id: '', module_id: '', evaluation_key: '', title: '', description: '', type: 'quiz', max_score: 100, points: 100, time_limit: 30, passing_score: 70, is_published: false, instructions: '' });
     };
 
     const handleSelectType = (type) => {

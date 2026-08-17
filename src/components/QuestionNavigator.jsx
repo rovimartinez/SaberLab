@@ -9,18 +9,26 @@ const QuestionNavigator = ({
 }) => {
     const totalQuestions = questions.length;
 
-    const correctCount = questions.filter((q, idx) => 
-        answers[idx] !== undefined && String(answers[idx]) === String(q.correct)
-    ).length;
+    const answeredCount = Object.values(answers).filter(v => v !== undefined && v !== null && v !== '').length;
+
+    const correctCount = questions.filter((q, idx) => {
+        const userAns = answers[idx];
+        if (userAns === undefined || userAns === null || userAns === '') return false;
+        if (q?.correct === undefined || q?.correct === null || q?.correct === '') return false;
+        return String(userAns).trim().toLowerCase() === String(q.correct).trim().toLowerCase();
+    }).length;
     
-    const incorrectCount = questions.filter((q, idx) => 
-        answers[idx] !== undefined && String(answers[idx]) !== String(q.correct)
-    ).length;
+    const incorrectCount = questions.filter((q, idx) => {
+        const userAns = answers[idx];
+        if (userAns === undefined || userAns === null || userAns === '') return false;
+        if (q?.correct === undefined || q?.correct === null || q?.correct === '') return true;
+        return String(userAns).trim().toLowerCase() !== String(q.correct).trim().toLowerCase();
+    }).length;
 
     return (
         <div className="glass-panel" style={{ padding: '1.5rem', height: '100%', minHeight: '300px' }}>
             <h3 style={{ color: '#f8fafc', marginTop: 0, marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.1rem' }}>
-                Progreso ({Object.keys(answers).length}/{totalQuestions})
+                Progreso ({answeredCount}/{totalQuestions})
             </h3>
             
             <div style={{ 
@@ -32,8 +40,8 @@ const QuestionNavigator = ({
                 {questions.map((_, qIndex) => {
                     const userAnswer = answers[qIndex];
                     const correctAnswer = questions[qIndex]?.correct;
-                    const isAnswered = userAnswer !== undefined;
-                    const isCorrect = String(userAnswer) === String(correctAnswer);
+                    const isAnswered = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
+                    const isCorrect = isAnswered && correctAnswer !== undefined && correctAnswer !== null && String(userAnswer).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
                     const isCurrent = currentQuestion === qIndex;
                     
                     let borderColor = 'rgba(255,255,255,0.1)';

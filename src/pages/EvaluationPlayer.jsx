@@ -7,23 +7,30 @@ import QuestionNavigator from '../components/QuestionNavigator';
 import QuestionPanel from '../components/QuestionPanel';
 import '../styles/EvaluationInstruction.css';
 
-const getQuestionText = (question) => question.question_text || question.q || question.text || '';
+const getQuestionText = (question) => question?.question_text || question?.q || question?.text || '';
+
 const getOptionValue = (option) => {
     if (option && typeof option === 'object') {
         return option.value ?? option.text ?? option.label ?? '';
     }
     return option;
 };
+
 const normalizeCorrectAnswer = (question, options) => {
-    const rawCorrect = question.correct_answer !== undefined ? question.correct_answer : question.correct;
-    if (typeof rawCorrect === 'number') return getOptionValue(options[rawCorrect]);
+    const rawCorrect = question?.correct_answer !== undefined ? question.correct_answer : question?.correct;
+    if (typeof rawCorrect === 'number' && options[rawCorrect] !== undefined) {
+        return getOptionValue(options[rawCorrect]);
+    }
     const correctText = String(rawCorrect ?? '').trim();
     if (/^[A-F]$/i.test(correctText)) {
         const index = correctText.toUpperCase().charCodeAt(0) - 65;
-        return getOptionValue(options[index]) ?? correctText;
+        if (options[index] !== undefined) {
+            return getOptionValue(options[index]);
+        }
     }
     return rawCorrect;
 };
+
 const normalizeSavedAnswers = (savedAnswers, normalizedQuestions) => {
     const nextAnswers = {};
     Object.entries(savedAnswers || {}).forEach(([questionIndex, answer]) => {
@@ -46,7 +53,6 @@ const EvaluationPlayer = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     
-    // Inicialización inmediata para evitar pérdida de datos al montar el componente
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState(() => {
         try {
@@ -64,6 +70,8 @@ const EvaluationPlayer = () => {
     });
     const [finalizing, setFinalizing] = useState(false);
     const [syncStatus, setSyncStatus] = useState('saved'); // 'saving', 'saved', 'error'
+    const [showResults, setShowResults] = useState(false);
+    const [result, setResult] = useState(null);
 
     useEffect(() => {
         const fetchEvaluation = async () => {
@@ -76,14 +84,37 @@ const EvaluationPlayer = () => {
                 if (data) {
                     setEvaluation(data);
                     
-                    // Normalizar preguntas (manejar JSON guardado)
-                    const questionsData = (data.questions || []).map(q => {
-                        const options = Array.isArray(q.options) ? q.options.map(getOptionValue) : [];
+                    // Normalizar preguntas (manejar JSON guardado en D1)
+                    let rawQuestions = [];
+                    if (Array.isArray(data.questions)) {
+                        rawQuestions = data.questions;
+                    } else if (typeof data.questions === 'string') {
+                        try {
+                            let p = JSON.parse(data.questions);
+                            if (typeof p === 'string') p = JSON.parse(p);
+                            rawQuestions = Array.isArray(p) ? p : [];
+                        } catch {
+                            rawQuestions = [];
+                        }
+                    }
+
+                    const questionsData = rawQuestions.map(q => {
+                        let opts = [];
+                        if (Array.isArray(q.options)) {
+                            opts = q.options.map(getOptionValue);
+                        } else if (typeof q.options === 'string') {
+                            try {
+                                const parsedOpts = JSON.parse(q.options);
+                                opts = Array.isArray(parsedOpts) ? parsedOpts.map(getOptionValue) : [];
+                            } catch {
+                                opts = [];
+                            }
+                        }
                         return {
                             ...q,
                             q: getQuestionText(q),
-                            options,
-                            correct: normalizeCorrectAnswer(q, options)
+                            options: opts,
+                            correct: normalizeCorrectAnswer(q, opts)
                         };
                     });
 
@@ -94,7 +125,7 @@ const EvaluationPlayer = () => {
                         return normalizedAnswers;
                     });
 
-                    // --- RESTABLECER TIEMPO ORIGINAL ---
+                    // --- TIEMPO REAL PERSISTENTE ---
                     const savedEndTime = localStorage.getItem(`exam_end_time_${evaluationKey}`);
                     const now = Math.floor(Date.now() / 1000);
                     
@@ -135,22 +166,25 @@ const EvaluationPlayer = () => {
     };
 
     useEffect(() => {
-        // No iniciar si no ha empezado el examen o el tiempo se agotó
-        if (!examStarted || timeLeft <= 0) return;
+        if (!examStarted) return;
 
-        const timer = setTimeout(() => {
-            setTimeLeft(prev => {
-                const updated = prev - 1;
-                if (updated <= 0) {
-                    handleAutoFinish();
-                    return 0;
-                }
-                return updated;
-            });
-        }, 1000);
+        const timerInterval = setInterval(() => {
+            const savedEndTime = localStorage.getItem(`exam_end_time_${evaluationKey}`);
+            if (!savedEndTime) return;
+            const now = Math.floor(Date.now() / 1000);
+            const remaining = parseInt(savedEndTime, 10) - now;
+            
+            if (remaining <= 0) {
+                setTimeLeft(0);
+                clearInterval(timerInterval);
+                handleAutoFinish();
+            } else {
+                setTimeLeft(remaining);
+            }
+        }, 500);
 
-        return () => clearTimeout(timer);
-    }, [examStarted, timeLeft, evaluationKey]);
+        return () => clearInterval(timerInterval);
+    }, [examStarted, evaluationKey]);
 
     const handleAutoFinish = () => {
         if (!finalizing) {
@@ -166,16 +200,17 @@ const EvaluationPlayer = () => {
         setSyncStatus('saving');
         
         try {
-            // Calculamos puntaje parcial
             let correctCount = 0;
             questions.forEach((q, idx) => {
-                if (currentAnswers[idx] !== undefined && String(currentAnswers[idx]) === String(q.correct)) {
-                    correctCount++;
+                const userAns = currentAnswers[idx];
+                if (userAns !== undefined && userAns !== null && userAns !== '' && q.correct !== undefined && q.correct !== null) {
+                    if (String(userAns).trim().toLowerCase() === String(q.correct).trim().toLowerCase()) {
+                        correctCount++;
+                    }
                 }
             });
             const partialScore = Math.round((correctCount / (questions.length || 1)) * 100);
 
-            // El backend hace el "upsert" automático (busca intento incompleto o crea uno)
             await api('/attempts', {
                 method: 'POST',
                 body: {
@@ -216,27 +251,9 @@ const EvaluationPlayer = () => {
         }
     };
 
-    const [showResults, setShowResults] = useState(false);
-    const [result, setResult] = useState(null);
-
     const handleQuestionClick = (index) => {
         setCurrentQuestion(index);
     };
-
-    const currentQ = questions[currentQuestion];
-    const userAnswer = answers[currentQuestion];
-
-    if (loading) {
-        return <div className="notifications-page"><div className="page-header"><h1>Cargando...</h1></div></div>;
-    }
-
-    if (!evaluation) {
-        return <div className="notifications-page"><div className="page-header"><h1>Evaluación no encontrada</h1></div></div>;
-    }
-
-    if (questions.length === 0) {
-        return <div className="notifications-page"><div className="page-header"><h1>No hay preguntas cargadas en esta evaluación</h1></div></div>;
-    }
 
     const handleFinishExam = async (isAuto = false) => {
         if (!isAuto) {
@@ -246,13 +263,16 @@ const EvaluationPlayer = () => {
 
         let correctCount = 0;
         questions.forEach((q, idx) => {
-            if (answers[idx] !== undefined && String(answers[idx]) === String(q.correct)) {
-                correctCount++;
+            const userAns = answers[idx];
+            if (userAns !== undefined && userAns !== null && userAns !== '' && q.correct !== undefined && q.correct !== null) {
+                if (String(userAns).trim().toLowerCase() === String(q.correct).trim().toLowerCase()) {
+                    correctCount++;
+                }
             }
         });
 
-        const score = Math.round((correctCount / totalQuestions) * 100);
-        const passed = score >= (evaluation.passing_score || 70);
+        const score = Math.round((correctCount / (totalQuestions || 1)) * 100);
+        const passed = score >= (evaluation?.passing_score || 70);
 
         try {
             await api('/attempts', {
@@ -269,24 +289,56 @@ const EvaluationPlayer = () => {
             setResult({ score, correctCount, totalQuestions, passed });
             setShowResults(true);
             
-            // Limpieza TOTAL
+            // Limpieza TOTAL de claves de este examen
             localStorage.removeItem(`exam_end_time_${evaluationKey}`);
             localStorage.removeItem(`exam_answers_${evaluationKey}`);
             localStorage.removeItem(`exam_started_${evaluationKey}`);
             
         } catch (error) {
             console.error('Error guardando intento:', error);
-            setFinalizing(false); // Liberar el bloqueo si falla
+            setFinalizing(false);
             if (!isAuto) alert('Hubo un error al guardar tus resultados. Por favor, intenta de nuevo.');
         }
     };
+
+    if (loading) {
+        return <div className="notifications-page"><div className="page-header"><h1>Cargando...</h1></div></div>;
+    }
+
+    if (!evaluation) {
+        return <div className="notifications-page"><div className="page-header"><h1>Evaluación no encontrada</h1></div></div>;
+    }
+
+    if (questions.length === 0) {
+        return (
+            <div className="notifications-page">
+                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', maxWidth: '600px', margin: '2rem auto' }}>
+                    <h2 style={{ color: '#f8fafc', marginBottom: '1rem' }}>Sin Preguntas</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Esta evaluación aún no tiene preguntas publicadas por el docente.</p>
+                    <button
+                        onClick={() => navigate('/dashboard/evaluations')}
+                        style={{
+                            background: 'rgba(255,255,255,0.1)',
+                            color: 'white',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            padding: '0.75rem 1.5rem',
+                            borderRadius: '10px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Volver a evaluaciones
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (showResults) {
         return (
             <div className="notifications-page">
                 <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', maxWidth: '600px', margin: '2rem auto' }}>
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: result.passed ? '#10b981' : '#ef4444' }}>
-                        {result.passed ? '¡Felicidades!' : 'Sigue practicando'}
+                    <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', color: result?.passed ? '#10b981' : '#ef4444' }}>
+                        {result?.passed ? '¡Felicidades!' : 'Sigue practicando'}
                     </h1>
                     <div style={{ fontSize: '1.2rem', color: '#cbd5e1', marginBottom: '2rem' }}>
                         Has completado la evaluación con un puntaje de:
@@ -294,13 +346,13 @@ const EvaluationPlayer = () => {
                     <div style={{
                         fontSize: '4rem',
                         fontWeight: 'bold',
-                        color: result.passed ? '#10b981' : '#ef4444',
+                        color: result?.passed ? '#10b981' : '#ef4444',
                         marginBottom: '1rem'
                     }}>
-                        {result.score}%
+                        {result?.score}%
                     </div>
                     <div style={{ marginBottom: '2rem', color: '#94a3b8' }}>
-                        Acertaste {result.correctCount} de {result.totalQuestions} preguntas.
+                        Acertaste {result?.correctCount} de {result?.totalQuestions} preguntas.
                     </div>
                     <button
                         onClick={() => navigate('/dashboard/evaluations')}
@@ -320,6 +372,9 @@ const EvaluationPlayer = () => {
             </div>
         );
     }
+
+    const currentQ = questions[currentQuestion];
+    const userAnswer = answers[currentQuestion];
 
     return (
         <div className="notifications-page">

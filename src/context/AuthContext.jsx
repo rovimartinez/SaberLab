@@ -375,7 +375,8 @@ export const AuthProvider = ({ children }) => {
         initialDataLoaded,
         refreshEvaluations: () => loadEvaluations(user?.id, profile?.role),
         refreshNotifications: () => loadNotifications(user?.id),
-        refreshUserProgress: () => loadUserProgress(user?.id)
+        refreshUserProgress: () => loadUserProgress(user?.id),
+        refreshLessonVisibility: loadLessonVisibility
     }}>
       {children}
     </AuthContext.Provider>

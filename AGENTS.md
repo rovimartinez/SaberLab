@@ -4,38 +4,26 @@
 - Antes de buscar o modificar código, leer primero [REPO_MAP.md](REPO_MAP.md) para localizar la ruta relevante.
 - Si el cambio afecta el estado del proyecto, revisar también [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md) y [TAREAS.md](TAREAS.md).
 
-## ✅ ÚLTIMO: HOY (05-abr-2026)
-- Sistema de evaluaciones migrado a JSON en tabla `evaluaciones`
-- Nuevo Editor Visual para preguntas
-- Importación con validación y previsualización
-- Tabla `evaluacion_preguntas` eliminada (ya no se usa)
-- **CSS centralizado** - Todos los archivos movidos a `src/styles/`
-- **Nombres de componentes corregidos** - exports ahora coinciden con nombres de funciones
-- **Sidebar mostrando Display Name** - Usa `userMetadata.name` (nombre de Google)
-- **Corregido error "Cargando" al cambiar pestañas** - Error en BD: columna `first_name` no existía
-- Optimizado loading para no mostrar "Cargando" en cada cambio de pestaña
+## ✅ ÚLTIMO: HOY (17-ago-2026)
+- **Progreso de Lecciones en BD** - `Lesson.jsx` y `SubjectDetail.jsx` sincronizados con Cloudflare D1 en tiempo real.
+- **Control de Visibilidad Blindado** - Docente oculta lecciones y se sincroniza en D1 (`visibilidad_curso`), bloqueando en `SubjectDetail.jsx`, `CourseSidebar.jsx` y ruta protegida en `Lesson.jsx`.
+- **Evaluación y Examen Reparados Integralmente**:
+  - Preguntas renderizan limpiamente desde JSON de D1 (`safeParseQuestions`, normalización de opciones y enunciados).
+  - Contador de correctas e incorrectas corregido en `QuestionNavigator.jsx` y `EvaluationPlayer.jsx` (ya no marca máximo sin responder).
+  - Temporizador persistente real basado en reloj de pared (`Date.now()`) inmune a throttling en cambio de pestañas o minimizado.
+  - Edición completa de Nombre, Descripción, Instrucciones, Tiempo y Puntaje en `PanelExamenes.jsx`.
+  - Auto-generación de `evaluation_key` única para cada evaluación creada.
 
 ---
 
 ## 🔴 PENDIENTES (Prioridad)
 
-### Alta
-1. **Corregir Evaluación/Examen** (varios bugs):
-   - Las preguntas del examen no aparecen
-   - Contador de correctas está al máximo (sin hacer nada)
-   - El tiempo se reinicia al cambiar de pestaña (localStorage no funciona)
-   - Necesita buscar dónde editar nombre, descripción e instrucciones del examen
-
-2. **Completar lección** - Lesson.jsx solo hace console.log, necesita guardar en BD
-
-3. **Verificar que visibilidad funcione** - Test completo admin → estudiante
-
-### Media  
-4. Migrar cursos a BD cuando sean 100+
-5. Probar sistema de evaluaciones completo (estudiante presenta examen)
+### Media
+1. Migrar cursos a BD cuando sean 100+
+2. Probar sistema de evaluaciones completo en vivo (estudiante presentando examen con varios tipos de preguntas)
 
 ### Baja
-6. Tablas pendientes sin uso (student_lesson_progress, etc.)
+3. Tablas pendientes sin uso (student_lesson_progress, etc.)
 
 ---
 

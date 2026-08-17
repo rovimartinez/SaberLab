@@ -1,4 +1,4 @@
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet({ request, env, data }) {
   const url = new URL(request.url);
   const evaluationKey = url.searchParams.get('key');
   const id = url.searchParams.get('id');
@@ -20,7 +20,45 @@ export async function onRequestGet({ request, env }) {
   }
 
   const { results } = await env.DB.prepare('SELECT * FROM evaluaciones ORDER BY created_at DESC').all();
-  return Response.json(results.map(parseEvaluationRow));
+
+  // Si hay usuario logueado, consultar sus intentos para adjuntar status y grade
+  let attemptsMap = {};
+  if (data?.user?.id) {
+    try {
+      const { results: attempts } = await env.DB.prepare(
+        'SELECT evaluation_key, score, completed_at FROM intentos_evaluacion WHERE user_id = ? ORDER BY id DESC'
+      ).bind(data.user.id).all();
+      (attempts || []).forEach(att => {
+        if (!attemptsMap[att.evaluation_key]) {
+          attemptsMap[att.evaluation_key] = att;
+        }
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  const evaluationsWithStatus = (results || []).map(row => {
+    const parsed = parseEvaluationRow(row);
+    const attempt = attemptsMap[row.evaluation_key];
+    let status = 'pending';
+    let grade = null;
+    if (attempt) {
+      if (attempt.completed_at) {
+        status = 'completed';
+        grade = attempt.score;
+      } else {
+        status = 'in_progress';
+      }
+    }
+    return {
+      ...parsed,
+      status,
+      grade
+    };
+  });
+
+  return Response.json(evaluationsWithStatus);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -111,16 +149,20 @@ function parseEvaluationRow(row) {
   if (!row) return null;
   return {
     ...row,
-    questions: typeof row.questions === 'string' && row.questions ? safeParseJSON(row.questions) : row.questions,
+    questions: safeParseQuestions(row.questions),
     is_published: row.is_published === 1 || row.is_published === true,
   };
 }
 
-function safeParseJSON(value) {
+function safeParseQuestions(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
   try {
-    return JSON.parse(value);
+    let parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return value;
+    return [];
   }
 }
 

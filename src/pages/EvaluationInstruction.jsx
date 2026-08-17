@@ -73,7 +73,19 @@ const EvaluationInstruction = () => {
         );
     }
 
-    const questionsCount = evaluation.questions?.length || 0;
+    let questionsList = [];
+    if (Array.isArray(evaluation.questions)) {
+        questionsList = evaluation.questions;
+    } else if (typeof evaluation.questions === 'string') {
+        try {
+            let p = JSON.parse(evaluation.questions);
+            if (typeof p === 'string') p = JSON.parse(p);
+            questionsList = Array.isArray(p) ? p : [];
+        } catch {
+            questionsList = [];
+        }
+    }
+    const questionsCount = questionsList.length;
 
     return (
         <div className="notifications-page">
