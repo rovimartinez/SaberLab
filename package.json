@@ -4,16 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n web,functions -c blue,green \"npx vite\" \"npx wrangler pages dev dist --port 8788 --remote\"",
-    "dev:remote": "concurrently -k -n web,functions -c blue,green \"npx vite\" \"npx wrangler pages dev dist --port 8788 --remote\"",
-
+    "dev": "concurrently -k -n web,functions -c blue,green \"npx vite\" \"npx wrangler pages dev dist --port 8788\"",
     "dev:frontend": "npx vite",
-    "dev:functions": "npx wrangler pages dev dist --port 8788 --live-reload",
+    "dev:functions": "npx wrangler pages dev public --port 8788",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "pages": "npx wrangler pages dev dist --port 8788 --live-reload",
-    "pages:remote": "npx wrangler pages dev dist --port 8788 --remote"
+    "pages": "npx wrangler pages dev public --port 8788"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

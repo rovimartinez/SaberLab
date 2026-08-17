@@ -1,0 +1,281 @@
+/* ============================================================
+   Welcome Page — Onboarding de nuevo usuario
+   ============================================================ */
+
+.welcome-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    padding: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Fondo decorativo */
+.welcome-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(59, 130, 246, 0.10) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Card principal */
+.welcome-card {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    animation: welcome-card-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes welcome-card-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+:root[data-theme='light'] .welcome-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+/* Logo */
+.welcome-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.35);
+}
+
+/* Barra de pasos */
+.welcome-steps {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.welcome-step-dot {
+    width: 32px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.15);
+    transition: background 0.3s;
+}
+
+.welcome-step-dot.active {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+}
+
+:root[data-theme='light'] .welcome-step-dot {
+    background: rgba(0,0,0,0.1);
+}
+
+/* Paso */
+.welcome-step {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: welcome-step-in 0.35s ease forwards;
+}
+
+@keyframes welcome-step-in {
+    from { opacity: 0; transform: translateX(10px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.welcome-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-align: center;
+    margin: 0;
+}
+
+.welcome-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 0;
+}
+
+.welcome-question {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin: 0.5rem 0 0;
+}
+
+/* Opciones de selección */
+.welcome-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    width: 100%;
+}
+
+.welcome-option {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    position: relative;
+    width: 100%;
+}
+
+.welcome-option:hover {
+    border-color: rgba(168, 85, 247, 0.4);
+    background: rgba(168, 85, 247, 0.05);
+    transform: translateX(3px);
+}
+
+.welcome-option.selected {
+    border-color: rgba(168, 85, 247, 0.6);
+    background: rgba(168, 85, 247, 0.1);
+}
+
+:root[data-theme='light'] .welcome-option {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme='light'] .welcome-option.selected {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.5);
+}
+
+.welcome-option-emoji {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.welcome-option-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.welcome-option-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    position: absolute;
+    bottom: 0.5rem;
+    right: 2.5rem;
+}
+
+.welcome-check {
+    color: #a855f7;
+    flex-shrink: 0;
+}
+
+/* Select de país */
+.welcome-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-top: 0.5rem;
+}
+
+.welcome-select:focus {
+    border-color: rgba(168, 85, 247, 0.6);
+}
+
+:root[data-theme='light'] .welcome-select {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #1e293b;
+}
+
+/* Navegación */
+.welcome-nav {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.welcome-btn-next {
+    flex: 1;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.welcome-btn-next:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.welcome-btn-next:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.welcome-btn-back {
+    padding: 0.875rem 1.5rem;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.welcome-btn-back:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* Skip */
+.welcome-skip {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+}
+
+.welcome-skip:hover {
+    color: var(--text-secondary);
+}

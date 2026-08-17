@@ -27,13 +27,6 @@ export const LESSONS_MAP = {
         courseId: 1,
         modules: {}
     },
-    'FP': { // Fundamentos de Programación (Curso 2)
-        name: 'Fundamentos de Programación',
-        color: '#3b82f6',
-        icon: 'Code',
-        courseId: 2,
-        modules: {}
-    },
     'MQ': { // Mediaciones en Química (Curso 3)
         name: 'Mediaciones Tecnológicas en la Química',
         color: '#10b981',
@@ -46,13 +39,6 @@ export const LESSONS_MAP = {
         color: '#ec4899',
         icon: 'Box',
         courseId: 4,
-        modules: {}
-    },
-    'TD': { // Tendencias y Desarrollo (Curso 6)
-        name: 'Tendencias y Desarrollo en Tecnología',
-        color: '#f97316',
-        icon: 'Brain',
-        courseId: 6,
         modules: {}
     }
 };

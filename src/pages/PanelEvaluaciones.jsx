@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { supabase } from '../lib/supabase';
 import { getCourseById } from '../data/coursesData.jsx';
 import '../styles/PanelEvaluaciones.css';
 

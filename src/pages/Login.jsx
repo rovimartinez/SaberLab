@@ -42,7 +42,7 @@ const Login = () => {
             await signInWithGoogle();
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
-            window.alert(error?.message || 'No se pudo iniciar sesion con Google. Revisa la configuracion de Supabase Auth.');
+            window.alert(error?.message || 'No se pudo iniciar sesion con Google. Revisa la configuracion de Google OAuth y Cloudflare.');
             setIsLoading(false);
         }
     };
@@ -61,7 +61,7 @@ const Login = () => {
                 alert('Código inválido. Por favor, revisa e intenta de nuevo.');
             }
         } else {
-            alert(`Aún no has conectado el Auth de Email/Password a Supabase. \nUsa "Continuar con Google" para entrar al panel.`);
+            alert(`Aún no has conectado el inicio con Email/Password. \nUsa "Continuar con Google" para entrar al panel.`);
         }
     };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, User, Mail, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/useAuth';
 
 const AccessRequests = () => {
@@ -15,14 +15,10 @@ const AccessRequests = () => {
     const { refreshPendingAccessRequestsCount } = useAuth();
 
     const loadRequests = async () => {
-        const { data, error } = await supabase
-            .from('solicitudes_acceso')
-            .select('*')
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
+        const { data, error } = await api('/requests');
 
         if (!error && data) {
-            setRequests(data);
+            setRequests(data.filter(r => r.status === 'pending'));
         }
 
         await refreshPendingAccessRequestsCount();
@@ -34,21 +30,10 @@ const AccessRequests = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Polling en lugar de Realtime
     useEffect(() => {
-        const channel = supabase
-            .channel('admin-access-requests-list')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'access_requests' },
-                () => {
-                    loadRequests();
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        const interval = setInterval(loadRequests, 10000);
+        return () => clearInterval(interval);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -67,39 +52,18 @@ const AccessRequests = () => {
 
     const handleApprove = async (request) => {
         try {
-            const normalizedEmail = request.email.trim().toLowerCase();
+            const { error } = await api('/requests', {
+                method: 'PATCH',
+                body: { id: request.id, status: 'approved' }
+            });
 
-            const { data: existingProfile, error: existingProfileError } = await supabase
-                .from('perfiles')
-                .select('id')
-                .eq('email', normalizedEmail)
-                .maybeSingle();
+            if (error) throw new Error(error.message);
 
-            if (existingProfileError) throw existingProfileError;
-
-            const { error: approveError } = await supabase
-                .from('solicitudes_acceso')
-                .update({ 
-                    status: 'approved',
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', request.id);
-
-            if (approveError) throw approveError;
-
-            if (existingProfile) {
-                openFeedbackModal(
-                    'success',
-                    'Solicitud aprobada',
-                    'El estudiante ya tenía perfil, así que puede ingresar de inmediato.'
-                );
-            } else {
-                openFeedbackModal(
-                    'success',
-                    'Solicitud aprobada',
-                    'Cuando el estudiante vuelva a iniciar sesión, su perfil se creará automáticamente y podrá entrar.'
-                );
-            }
+            openFeedbackModal(
+                'success',
+                'Solicitud aprobada',
+                'El estudiante ya puede iniciar sesión y entrar a la plataforma.'
+            );
 
             loadRequests();
         } catch (err) {
@@ -110,12 +74,12 @@ const AccessRequests = () => {
 
     const handleReject = async (request) => {
         try {
-            const { error } = await supabase
-                .from('solicitudes_acceso')
-                .update({ status: 'rejected' })
-                .eq('id', request.id);
+            const { error } = await api('/requests', {
+                method: 'PATCH',
+                body: { id: request.id, status: 'rejected' }
+            });
 
-            if (error) throw error;
+            if (error) throw new Error(error.message);
 
             openFeedbackModal(
                 'success',

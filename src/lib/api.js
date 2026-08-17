@@ -30,10 +30,15 @@ export function getToken() {
   return getAccessToken();
 }
 
-export async function api(path, options = {}) {
+async function request(path, options = {}) {
   const token = getAccessToken();
+  const body = typeof options.body === 'object' && options.body !== null
+    ? JSON.stringify(options.body)
+    : options.body;
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
+    body,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -49,8 +54,18 @@ export async function api(path, options = {}) {
     } catch {
       /* respuesta no JSON */
     }
-    throw new Error(message);
+    return { data: null, error: { message } };
   }
 
-  return res.json();
+  return { data: await res.json(), error: null };
+}
+
+export function api(path, options = {}) {
+  return request(path, options);
+}
+
+export async function apiData(path, options = {}) {
+  const { data, error } = await request(path, options);
+  if (error) throw error;
+  return data;
 }

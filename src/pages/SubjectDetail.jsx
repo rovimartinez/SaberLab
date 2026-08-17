@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, Code, FlaskConical, Box, Brain } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, FlaskConical, Box, Gift, ArrowRight, Trophy } from 'lucide-react';
 import { getCourseByIdentifier, getLessonInfo } from '../data/coursesData.jsx';
+import { gadgets } from '../data/gadgetsData';
 import { useAuth } from '../context/useAuth';
 import '../styles/SubjectDetail.css';
-
-// eslint-disable-next-line no-unused-vars
-const subjectData = {
-    'EE': { name: 'Electricidad y Electrónica Básica', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', icon: <Zap size={32} />, teacher: 'Ronny Martinez', abbr: 'EE' },
-    'RE': { name: 'Robótica Educativa', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.1)', icon: <Bot size={32} />, teacher: 'Ronny Martinez', abbr: 'RE' },
-    'FP': { name: 'Fundamentos de Programación', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: <Code size={32} />, teacher: 'Ronny Martinez', abbr: 'FP' },
-    'MQ': { name: 'Mediaciones Tecnológicas en la Química', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: <FlaskConical size={32} />, teacher: 'Ronny Martinez', abbr: 'MQ' },
-    'MA': { name: 'Modelado y Animación 3D', color: '#ec4899', bg: 'rgba(236, 72, 153, 0.1)', icon: <Box size={32} />, teacher: 'Ronny Martinez', abbr: 'MA' },
-    'TD': { name: 'Tendencias y Desarrollo en Tecnología', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', icon: <Brain size={32} />, teacher: 'Ronny Martinez', abbr: 'TD' }
-};
 
 const agendaItems = [
     { date: 'Marzo 11, 2026', type: 'EVALUACIÓN', title: 'Módulo 1 - 1', points: 150 },
@@ -22,43 +13,37 @@ const agendaItems = [
     { date: 'Mayo 27, 2026', type: 'PROYECTO', title: 'Módulo 4 - FINAL', points: 100 }
 ];
 
-const getIcon = (type, status) => {
-    if (status === 'locked') return <Lock size={20} />;
-    if (type === 'content') return <FileText size={20} />;
-    if (type === 'video') return <PlayCircle size={20} />;
-    if (type === 'reading') return <FileText size={20} />;
-    return <CheckCircle size={20} />;
-};
-
 const SubjectDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { lessonVisibility, enrolledCourses } = useAuth();
+    const { lessonVisibility } = useAuth();
     const realCourse = getCourseByIdentifier(id) || getCourseByIdentifier('RE');
     const abbr = realCourse.abbr;
     const courseId = realCourse.id;
     const courseVisibility = lessonVisibility[courseId] || {};
-    
-    // Normalizar ID de lección: 'l1' -> 're-m1-l1'
+
+    // Filtrar recompensas que pertenecen a este curso
+    const courseRewards = gadgets.filter(g => g.courseAbbr === abbr || (!g.courseAbbr && abbr === 'EE'));
+
+    // Normalizar ID de lección
     const normalizeLessonId = (lessonId, moduleId) => {
-        if (lessonId.includes('-')) return lessonId; // Ya tiene formato completo
+        if (lessonId.includes('-')) return lessonId;
         return `${abbr.toLowerCase()}-${moduleId}-${lessonId}`;
     };
     
     const subject = {
         ...realCourse,
         bg: `${realCourse.color}15`,
-        teacher: 'Ronny Martinez' // TODO: Get from course info
+        teacher: 'Ronny Martinez'
     };
 
-    // Redirigir automáticamente al slug descriptivo si se entra por la abreviatura
+    // Redirigir al slug descriptivo si se entra por la abreviatura
     useEffect(() => {
         if (id && realCourse && id !== realCourse.slug) {
             navigate(`/dashboard/my-courses/${realCourse.slug}`, { replace: true });
         }
     }, [id, realCourse, navigate]);
 
-    // Usar módulos reales de coursesData en vez del array hardcodeado
     const courseModules = realCourse?.modules || [];
     
     const [expandedModules, setExpandedModules] = useState(() => {
@@ -73,6 +58,7 @@ const SubjectDetail = () => {
 
     return (
         <div className="subject-detail-container animate-fade-in" style={{ padding: '0 1rem' }}>
+            {/* ── Hero Banner del Curso ── */}
             <div className="detail-header-classic subject-hero" style={{ 
                 background: `linear-gradient(90deg, ${subject.color}50 0%, #161d2b 100%)`, 
                 border: `1px solid ${subject.color}40`,
@@ -94,25 +80,28 @@ const SubjectDetail = () => {
                         <div className="header-stat-item subject-progress-block" style={{ flex: 1, maxWidth: '200px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.75rem' }}>
                                 <span className="stat-label">Progreso</span>
-                                <span className="stat-label">5%</span>
+                                <span className="stat-label">15%</span>
                             </div>
                             <div className="mini-progress-track" style={{ width: '100%' }}>
-                                <div className="mini-progress-fill" style={{ width: '5%', background: subject.color }}></div>
+                                <div className="mini-progress-fill" style={{ width: '15%', background: subject.color }}></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Decorative Background Element */}
+                {/* Arte decorativo de fondo */}
                 <div className="subject-hero-art" style={{ color: subject.color }}>
                     {React.cloneElement(subject.icon, { size: 180 })}
                 </div>
             </div>
 
+            {/* ── Contenido Principal y Sidebar Derecha ── */}
             <div className="course-content">
+                
+                {/* ── Columna Izquierda: Plan de Estudios ── */}
                 <div className="syllabus-section">
                     <div className="syllabus-header-row" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0 0 1.25rem 0', height: '1.5rem' }}>
-                        <div className="syllabus-header-icon" style={{ background: `${subject.color}15`, color: subject.color, width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyCenter: 'center', justifyContent: 'center' }}>
+                        <div className="syllabus-header-icon" style={{ background: `${subject.color}15`, color: subject.color, width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <BookOpen size={20} />
                         </div>
                         <h2 className="section-title-premium">Plan de Estudios</h2>
@@ -138,7 +127,6 @@ const SubjectDetail = () => {
                                         {module.lessons.filter(lesson => {
                                             const normalizedId = normalizeLessonId(lesson.id, module.id);
                                             const visibility = courseVisibility[normalizedId];
-                                            // Mostrar todas las lecciones, pero marcar las ocultas
                                             return visibility === undefined || visibility === true || visibility === false;
                                         }).map((lesson) => {
                                             const normalizedId = normalizeLessonId(lesson.id, module.id);
@@ -176,7 +164,10 @@ const SubjectDetail = () => {
                     </div>
                 </div>
 
+                {/* ── Columna Derecha: Agenda + Tarjeta de Recompensas del Curso ── */}
                 <div className="course-sidebar-improved">
+                    
+                    {/* 1. Agenda y Evaluación */}
                     <div className="sidebar-card-premium agenda-container">
                         <div className="sidebar-header-row">
                             <div className="sidebar-header-icon" style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e' }}>
@@ -212,6 +203,87 @@ const SubjectDetail = () => {
                             })}
                         </div>
                     </div>
+
+                    {/* 2. Opción de Entrada a Recompensas del Curso (Debajo de Agenda y Evaluación) */}
+                    {courseRewards.length > 0 && (
+                        <div className="sidebar-card-premium" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+                            <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
+                                <div className="sidebar-header-icon" style={{ background: 'rgba(250, 204, 21, 0.15)', color: '#facc15' }}>
+                                    <Gift size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="section-title-premium" style={{ margin: 0 }}>Mis Recompensas</h2>
+                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                        Instrumentos y simuladores del curso
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Banner de Estado de Colección */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                                border: '1px solid rgba(250, 204, 21, 0.3)',
+                                borderRadius: '14px',
+                                padding: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: '1rem'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '50%',
+                                        background: 'rgba(250, 204, 21, 0.2)',
+                                        border: '1.5px solid #facc15',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#facc15'
+                                    }}>
+                                        <Trophy size={20} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#f8fafc' }}>
+                                            {courseRewards.length} Insignias Ganadas
+                                        </div>
+                                        <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>
+                                            ✓ Colección Completa
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Botón de Entrada a la Bóveda de Recompensas */}
+                            <button
+                                onClick={() => navigate(`/dashboard/my-courses/${subject.slug}/rewards`)}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    padding: '10px 14px',
+                                    background: 'linear-gradient(90deg, #facc15 0%, #eab308 100%)',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    color: '#0f172a',
+                                    fontWeight: 900,
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 14px rgba(234, 179, 8, 0.3)',
+                                    transition: 'all 0.18s ease'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                            >
+                                <span>Ver Mis Recompensas</span>
+                                <ArrowRight size={16} />
+                            </button>
+                        </div>
+                    )}
+
                 </div>
             </div>
         </div>
@@ -219,4 +291,3 @@ const SubjectDetail = () => {
 };
 
 export default SubjectDetail;
-

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Zap, Code, FlaskConical, Box, Bot, Brain, Play, BookOpen, Plus, Hash, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import '../styles/PanelMisCursos.css';
 
@@ -40,79 +40,17 @@ const MyCourses = () => {
         setError(null);
 
         try {
-            // Buscar el código en la tabla group_codes (solo el código, sin joins)
-            const { data: codeData, error: codeError } = await supabase
-                .from('codigos_grupo')
-                .select('*')
-                .eq('code', joinCode.trim().toUpperCase())
-                .single();
-
-            if (codeError || !codeData) {
-                throw new Error('Código inválido');
-            }
-
-            if (new Date(codeData.expires_at) < new Date()) {
-                throw new Error('El código ha expirado');
-            }
-
-            // Buscar el grupo
-            const { data: groupData, error: groupError } = await supabase
-                .from('grupos')
-                .select('*')
-                .eq('id', codeData.group_id)
-                .single();
-
-            if (groupError || !groupData) {
-                throw new Error('Grupo no encontrado');
-            }
-
-            // Buscar el curso usando el course_id del grupo
-            const { data: courseData, error: courseError } = await supabase
-                .from('cursos')
-                .select('*')
-                .eq('id', groupData.course_id)
-                .single();
-
-            if (courseError || !courseData) {
-                throw new Error('Curso no encontrado');
-            }
-
-            const group = groupData;
-            const course = courseData;
-
-            // Verificar si ya está inscrito
-            const { data: existingEnrollment } = await supabase
-                .from('inscripciones')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('course_id', course.id)
-                .single();
-
-            if (existingEnrollment) {
-                throw new Error('Ya estás inscrito en este curso');
-            }
-
-            // Inscribir al usuario en el curso
-            console.log('Insertando enrollment:', {
-                user_id: user.id,
-                course_id: course.id,
-                group_id: group.id
+            const { data, error } = await api('/enrollments/code', {
+                method: 'POST',
+                body: { code: joinCode.trim() }
             });
 
-            const { error: enrollmentError } = await supabase
-                .from('inscripciones')
-                .insert({
-                    user_id: user.id,
-                    course_id: course.id,
-                    group_id: group.id,
-                    progress: 0,
-                    status: 'active'
-                });
-
-            if (enrollmentError) {
-                console.error('Error enrollment:', enrollmentError);
-                throw enrollmentError;
+            if (error || !data?.curso) {
+                throw new Error(error?.message || 'Código inválido');
             }
+
+            const course = data.curso;
+            const group = data.grupo;
 
             setJoinedCourseName(course.name);
             setShowSuccessModal(true);

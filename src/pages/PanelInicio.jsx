@@ -1,8 +1,9 @@
 import React from 'react';
-import { Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, Zap, Bot, GraduationCap } from 'lucide-react';
+import { Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, Zap, Bot, GraduationCap, Gamepad2, Award, User, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
+import { getRankByLessons } from '../data/ranksData';
 import '../styles/PanelInicio.css';
 
 const getCourseIcon = (abbr) => {
@@ -18,18 +19,73 @@ const getCourseColor = (abbr) => {
     return def?.color || '#6366f1';
 };
 
+// Gráfica de barras de actividad semanal (CSS puro)
+function WeeklyActivityChart({ userProgress }) {
+    const today = new Date().getDay(); // 0=Dom, 1=Lun,...
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const activity = userProgress?.weekly_hours || [0, 0, 0, 0, 0, 0, 0];
+    const maxVal = Math.max(...activity, 1);
+
+    return (
+        <div className="activity-chart-card">
+            <div className="activity-chart-header">
+                <h3 className="activity-chart-title">
+                    <Activity size={18} color="#a855f7" />
+                    Actividad esta semana
+                </h3>
+            </div>
+            <div className="activity-chart-bars">
+                {days.map((day, i) => {
+                    const val = activity[i] || 0;
+                    const heightPct = `${Math.round((val / maxVal) * 100)}%`;
+                    const isToday = i === (today === 0 ? 6 : today - 1);
+                    return (
+                        <div key={day} className="activity-bar-col" style={{ animationDelay: `${i * 0.06}s` }}>
+                            <div className="activity-bar-wrapper">
+                                <div
+                                    className={`activity-bar ${val === 0 ? 'empty' : ''} ${isToday ? 'today' : ''}`}
+                                    style={{ height: val === 0 ? '6px' : heightPct, animationDelay: `${i * 0.08}s` }}
+                                />
+                            </div>
+                            <span className="activity-bar-day">{day}</span>
+                            {val > 0 && <span className="activity-bar-val">{val}h</span>}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
 const PanelInicio = () => {
-    const { user, enrolledCourses } = useAuth();
+    const { user, enrolledCourses, userProgress } = useAuth();
 
     const fullName = user?.user_metadata?.full_name?.split(' ')[0] || 'Estudiante';
 
-    const upcomingActivities = []; 
+    const upcomingActivities = [];
 
     const lastCourse = enrolledCourses.length > 0 ? enrolledCourses[0] : null;
-    
-    const totalProgress = enrolledCourses.length > 0 
+
+    const totalProgress = enrolledCourses.length > 0
         ? Math.round(enrolledCourses.reduce((acc, c) => acc + (c.progress || 0), 0) / enrolledCourses.length)
         : 0;
+
+    const lessonsCompleted = userProgress?.lessons_completed || 0;
+    const streakDays = userProgress?.streak_days || 0;
+    const rank = getRankByLessons(lessonsCompleted);
+
+    const achievements = [
+        { emoji: '📚', label: 'Lecciones',  value: lessonsCompleted,       color: '#a855f7', bg: 'rgba(168,85,247,0.12)' },
+        { emoji: '🔥', label: 'Racha',      value: `${streakDays}d`,       color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+        { emoji: '🎓', label: 'Cursos',     value: enrolledCourses.length, color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+        { emoji: rank.emoji, label: 'Rango', value: rank.name,             color: rank.color, bg: `${rank.color}18` },
+    ];
+
+    const quickActions = [
+        { label: 'Mi Perfil',    icon: <User size={14} />,     to: '/dashboard/profile' },
+        { label: 'Gadgets',      icon: <Gamepad2 size={14} />, to: '/dashboard/gadgets' },
+        { label: 'Certificados', icon: <Award size={14} />,    to: '/dashboard/certificate/re' },
+    ];
 
     return (
         <div className="dashboard-grid">
@@ -39,9 +95,18 @@ const PanelInicio = () => {
                     <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', marginTop: 0 }}>
                         ¡Hola, <span className="text-gradient" style={{ fontWeight: 800 }}>{fullName}</span>! 👋
                     </h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', margin: 0 }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', margin: '0 0 1rem' }}>
                         ¿Qué aprenderemos hoy?
                     </p>
+                    {/* Quick actions */}
+                    <div className="quick-actions">
+                        {quickActions.map(qa => (
+                            <Link key={qa.label} to={qa.to} className="quick-action-btn">
+                                {qa.icon}
+                                {qa.label}
+                            </Link>
+                        ))}
+                    </div>
                 </div>
                 <div className="banner-stats">
                     <div className="stat-item">
@@ -54,7 +119,7 @@ const PanelInicio = () => {
                     <div className="stat-item">
                         <Clock className="text-gradient" size={24} color="#a855f7" />
                         <div>
-                            <div className="stat-value">0</div>
+                            <div className="stat-value">{streakDays}</div>
                             <div className="stat-label">Días de Racha</div>
                         </div>
                     </div>
@@ -138,6 +203,30 @@ const PanelInicio = () => {
                 </div>
             </div>
 
+            {/* Gráfica de actividad semanal */}
+            <WeeklyActivityChart userProgress={userProgress} />
+
+            {/* Tarjetas de logros */}
+            <div>
+                <div className="section-header" style={{ marginBottom: '1rem' }}>
+                    <h2 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>Mis Logros</h2>
+                    <Link to="/dashboard/profile" style={{ color: 'var(--accent-blue)', fontSize: '0.85rem', textDecoration: 'none' }}>
+                        Ver perfil
+                    </Link>
+                </div>
+                <div className="achievements-section">
+                    {achievements.map(a => (
+                        <div key={a.label} className="achievement-card">
+                            <div className="achievement-icon" style={{ background: a.bg }}>
+                                {a.emoji}
+                            </div>
+                            <div className="achievement-value" style={{ color: a.color }}>{a.value}</div>
+                            <div className="achievement-label">{a.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* Fila: Próximas actividades + Cursos */}
             <div className="content-columns">
                 {/* Próximas actividades */}
@@ -153,7 +242,11 @@ const PanelInicio = () => {
                         </div>
 
                         <div>
-                            {upcomingActivities.map((activity) => (
+                            {upcomingActivities.length === 0 ? (
+                                <div style={{ color: 'var(--text-muted)', fontSize: '0.88rem', textAlign: 'center', padding: '1rem 0' }}>
+                                    Sin actividades próximas.<br />¡Sigue aprendiendo!
+                                </div>
+                            ) : upcomingActivities.map((activity) => (
                                 <div key={activity.id} className="activity-item">
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>

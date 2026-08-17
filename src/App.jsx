@@ -22,6 +22,11 @@ import AccessRequests from './pages/AccessRequests';
 import PanelGestion from './pages/PanelGestion';
 import Landing from './pages/Landing';
 import RequestAccess from './pages/RequestAccess';
+import Certificate from './pages/Certificate';
+import PanelGadgets from './pages/PanelGadgets';
+import PanelRecompensas from './pages/PanelRecompensas';
+import PanelPerfil from './pages/PanelPerfil';
+import Welcome from './pages/Welcome';
 import './index.css';
 import { useState } from 'react';
 import { COURSES_DEFINITION, getCourseByIdentifier } from './data/coursesData.jsx';
@@ -82,6 +87,7 @@ function AppRoutes() {
                 <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/request-access" element={<RequestAccess />} />
+                <Route path="/welcome" element={<Welcome />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                     <Route index element={<PanelInicio />} />
                     <Route path="my-courses" element={<MyCourses />} />
@@ -93,6 +99,7 @@ function AppRoutes() {
                     <Route path="learn/:id" element={<RedirectToMyCourses />} />
                     <Route path="learn/:courseId/:moduleId/:lessonId" element={<RedirectLessonToMyCourses />} />
                     <Route path="my-courses/:id" element={<SubjectDetail />} />
+                    <Route path="my-courses/:courseId/rewards" element={<PanelRecompensas />} />
                     <Route path="my-courses/:courseId/:moduleId/:lessonId" element={<Lesson />} />
                     <Route path="notifications" element={<PanelNotificaciones />} />
                     <Route path="evaluations" element={<PanelEvaluaciones />} />
@@ -102,6 +109,11 @@ function AppRoutes() {
                     <Route path="resources" element={<PanelRecursos />} />
                     <Route path="myapps" element={<PanelWidgets />} />
                     <Route path="settings" element={<SettingsPage />} />
+                    {/* 🎉 Nuevas rutas */}
+                    <Route path="certificate/:courseId" element={<Certificate />} />
+                    <Route path="rewards" element={<PanelRecompensas />} />
+                    <Route path="gadgets" element={<PanelRecompensas />} />
+                    <Route path="profile" element={<PanelPerfil />} />
                 </Route>
             </Routes>
         </Router>

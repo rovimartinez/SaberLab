@@ -17,13 +17,14 @@ export async function onRequestGet({ request, env, data }) {
   }
 
   if (courseId) {
+    const numId = parseInt(courseId, 10);
     const { results } = await env.DB.prepare(
       `SELECT g.id, g.course_id, g.name, g.teacher, COUNT(gu.user_id) AS studentCount
        FROM grupos g
        LEFT JOIN grupos_usuario gu ON gu.group_id = g.id
-       WHERE g.course_id = ?
+       WHERE g.course_id = ? OR g.course_id = ? OR CAST(g.course_id AS TEXT) = ?
        GROUP BY g.id` 
-    ).bind(courseId).all();
+    ).bind(isNaN(numId) ? courseId : numId, courseId, courseId).all();
 
     return Response.json(results);
   }
@@ -101,9 +102,10 @@ export async function onRequestPatch({ request, env, data }) {
     return Response.json({ error: 'Faltan group_id o user_id' }, { status: 400 });
   }
 
+  const numGroupId = parseInt(group_id, 10);
   await env.DB.prepare(
-    `DELETE FROM grupos_usuario WHERE group_id = ? AND user_id = ?`
-  ).bind(group_id, user_id).run();
+    `DELETE FROM grupos_usuario WHERE (group_id = ? OR group_id = ? OR CAST(group_id AS TEXT) = ?) AND user_id = ?`
+  ).bind(isNaN(numGroupId) ? group_id : numGroupId, group_id, group_id, user_id).run();
 
   return Response.json({ success: true });
 }
@@ -121,10 +123,16 @@ export async function onRequestDelete({ request, env, data }) {
     return Response.json({ error: 'Falta el id' }, { status: 400 });
   }
 
-  await env.DB.prepare('DELETE FROM grupos_usuario WHERE group_id = ?').bind(id).run();
-  await env.DB.prepare('DELETE FROM grupos WHERE id = ?').bind(id).run();
+  const numId = parseInt(id, 10);
+  await env.DB.prepare(
+    'DELETE FROM grupos_usuario WHERE group_id = ? OR group_id = ? OR CAST(group_id AS TEXT) = ?'
+  ).bind(isNaN(numId) ? id : numId, id, id).run();
 
-  return Response.json({ success: true });
+  await env.DB.prepare(
+    'DELETE FROM grupos WHERE id = ? OR id = ? OR CAST(id AS TEXT) = ?'
+  ).bind(isNaN(numId) ? id : numId, id, id).run();
+
+  return Response.json({ success: true, deleted_id: id });
 }
 
 async function ensureGroupsSchema(env) {

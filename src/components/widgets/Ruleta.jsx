@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Settings, X, History, Volume2, VolumeX } from 'lucide-react';
+import { Settings, X, History, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { api } from '../../lib/api';
 
 const PALETTE = ['#FF3D00','#FFD600','#00E676','#00B0FF','#651FFF','#F50057','#FF9100','#00E5FF'];
 
-const enrolledGroups = [
-  { id:'6a',  name:'Grado 6A - Robótica',    students:['Ana','Beto','Carla','David','Elena','Fernando','Gaby','Hugo'] },
-  { id:'7b',  name:'Grado 7B - Electrónica',  students:['Camilo','Daniela','Esteban','Fabiana','Gabriel','Héctor','Ivonne','Javier'] },
-  { id:'8c',  name:'Grado 8C - Programación', students:['Lucas','Marta','Néstor','Olivia','Paola','Quique','Rosa','Samuel'] },
-  { id:'prf', name:'Sala de Profesores',      students:['Prof. García','Prof. López','Prof. Martínez','Prof. Rodríguez'] },
-];
-
 export default function Ruleta() {
+  const [dbGroups, setDbGroups] = useState([]);
+  const [loadingDbGroups, setLoadingDbGroups] = useState(false);
   const [names,       setNames]       = useState(['Ana','Beto','Carla','David','Elena','Fernando','Gaby','Hugo']);
   const [namesText,   setNamesText]   = useState('Ana\nBeto\nCarla\nDavid\nElena\nFernando\nGaby\nHugo');
   const [isSpinning,  setIsSpinning]  = useState(false);
@@ -26,6 +22,39 @@ export default function Ruleta() {
   const [tab,         setTab]         = useState('groups');
   const [zoom,        setZoom]        = useState(1);
   const [spinTime,    setSpinTime]    = useState(7);
+
+  // Cargar grupos reales desde la base de datos
+  const loadDbGroups = async () => {
+    setLoadingDbGroups(true);
+    try {
+      const { data } = await api('/groups');
+      if (data && Array.isArray(data)) {
+        setDbGroups(data);
+      }
+    } catch (err) {
+      console.error('Error cargando grupos para la ruleta:', err);
+    } finally {
+      setLoadingDbGroups(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDbGroups();
+  }, []);
+
+  const handleSelectDbGroup = async (group) => {
+    try {
+      const { data: students } = await api(`/groups?group_id=${encodeURIComponent(group.id)}`);
+      if (students && students.length > 0) {
+        const studentNames = students.map(s => s.full_name || s.email?.split('@')[0] || 'Estudiante');
+        loadGroup(studentNames);
+      } else {
+        alert(`El grupo "${group.name}" no tiene estudiantes registrados aún.`);
+      }
+    } catch (err) {
+      console.error('Error cargando estudiantes del grupo:', err);
+    }
+  };
 
   const canvasRef = useRef(null);
   const audioRef  = useRef(null);
@@ -327,19 +356,46 @@ export default function Ruleta() {
 
         <div style={{flex:1,overflowY:'auto',padding:'18px 20px',display:'flex',flexDirection:'column',gap:10}}>
           {tab === 'groups' ? (
-            enrolledGroups.map(g => (
-              <button key={g.id} onClick={() => loadGroup(g.students)}
-                style={{width:'100%',padding:'16px 18px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:18,display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',color:'white',textAlign:'left',transition:'background .2s'}}
-                onMouseEnter={e=>e.currentTarget.style.background='rgba(99,102,241,0.45)'}
-                onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.05)'}
-              >
-                <div>
-                  <p style={{fontWeight:900,fontSize:13,textTransform:'uppercase',margin:'0 0 3px'}}>{g.name}</p>
-                  <p style={{fontSize:10,color:'#64748b',textTransform:'uppercase',margin:0}}>{g.students.length} estudiantes</p>
-                </div>
-                <span style={{fontSize:10,fontWeight:900,opacity:.35}}>CARGAR</span>
-              </button>
-            ))
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                  Grupos en Base de Datos ({dbGroups.length})
+                </span>
+                <button
+                  onClick={loadDbGroups}
+                  disabled={loadingDbGroups}
+                  style={{ background: 'transparent', border: 'none', color: '#818cf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}
+                  title="Recargar grupos desde la BD"
+                >
+                  <RefreshCw size={12} className={loadingDbGroups ? 'animate-spin' : ''} />
+                  Actualizar
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {dbGroups.map(g => (
+                  <button key={g.id} onClick={() => handleSelectDbGroup(g)}
+                    style={{width:'100%',padding:'14px 16px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:16,display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',color:'white',textAlign:'left',transition:'background .2s'}}
+                    onMouseEnter={e=>e.currentTarget.style.background='rgba(99,102,241,0.35)'}
+                    onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.05)'}
+                  >
+                    <div>
+                      <p style={{fontWeight:800,fontSize:13,textTransform:'uppercase',margin:'0 0 3px',color:'#f8fafc'}}>{g.name}</p>
+                      <p style={{fontSize:10,color:'#94a3b8',textTransform:'uppercase',margin:0}}>
+                        {g.studentCount || g.total || 0} estudiantes
+                      </p>
+                    </div>
+                    <span style={{fontSize:10,fontWeight:900,color:'#818cf8',background:'rgba(99,102,241,0.2)',padding:'4px 8px',borderRadius:6}}>CARGAR</span>
+                  </button>
+                ))}
+
+                {dbGroups.length === 0 && !loadingDbGroups && (
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#64748b', fontSize: 12 }}>
+                    No hay grupos creados en la base de datos.
+                  </div>
+                )}
+              </div>
+            </div>
           ) : (
              <div style={{display:'flex',flexDirection:'column',gap:10,flex:1}}>
               <p style={{fontSize:10,color:'#475569',textTransform:'uppercase',letterSpacing:'0.1em',margin:0}}>Un nombre por línea</p>

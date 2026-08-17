@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Trash2, Filter } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import AdminAccessRequestsBubble from '../components/layout/AdminAccessRequestsBubble';
 import '../styles/PanelNotificaciones.css';
 
@@ -27,7 +27,7 @@ const PanelNotificaciones = () => {
     });
 
     const markAsRead = async (id) => {
-        await supabase.from('notificaciones').update({ read: true }).eq('id', id);
+        await api('/notifications', { method: 'POST', body: { ids: [id] } });
         setNotifications(notifications.map(n => 
             n.id === id ? { ...n, read: true } : n
         ));
@@ -37,14 +37,14 @@ const PanelNotificaciones = () => {
     const markAllAsRead = async () => {
         const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
         if (unreadIds.length > 0) {
-            await supabase.from('notificaciones').update({ read: true }).in('id', unreadIds);
+            await api('/notifications', { method: 'POST', body: { all: true } });
             setNotifications(notifications.map(n => ({ ...n, read: true })));
             refreshNotifications();
         }
     };
 
     const deleteNotification = async (id) => {
-        await supabase.from('notificaciones').delete().eq('id', id);
+        await api('/notifications', { method: 'DELETE', body: { ids: [id] } });
         setNotifications(notifications.filter(n => n.id !== id));
         refreshNotifications();
     };
@@ -52,7 +52,7 @@ const PanelNotificaciones = () => {
     const clearAll = async () => {
         const allIds = notifications.map(n => n.id);
         if (allIds.length > 0) {
-            await supabase.from('notificaciones').delete().in('id', allIds);
+            await api('/notifications', { method: 'DELETE', body: { ids: allIds } });
             setNotifications([]);
             refreshNotifications();
         }

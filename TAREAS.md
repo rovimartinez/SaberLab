@@ -4,7 +4,7 @@
 
 - [ ] 1. Evaluación Módulo 1 RE - Hacer que funcione correctamente (mostrar, tomar, guardar)
 - [ ] 2. Verificar visibilidad admin → estudiante - Test completo del flujo
-- [ ] 3. Completar lección - Guardar progreso en BD cuando estudiante marca "Marcar como completada"
+- [x] 3. Completar lección - Guardar progreso en BD cuando estudiante marca "Marcar como completada"
 
 ---
 
@@ -20,7 +20,7 @@
 
 ## 🟢 BAJA (Mejora)
 
-- [ ] 9. Tablas sin uso - Limpiar o implementar: student_lesson_progress, student_quiz_attempts, student_mission_progress
+- [ ] 9. Tablas sin uso - Limpiar o implementar: student_quiz_attempts, student_mission_progress
 - [ ] 10. Tablas analíticas - student_learning_sessions, student_content_events (si se necesitan métricas)
 - [ ] 11. Perfiles de estudiante - Completar datos adicionales (escuela, grado, etc.)
 - [ ] 12. Logros/Achievements - Sistema de logros por completar módulos/cursos

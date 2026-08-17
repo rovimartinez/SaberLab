@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Layers, ArrowRight } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import CourseDetail from './CourseDetail';
 import '../styles/PanelMisCursos.css';
 
@@ -12,7 +12,7 @@ const PanelMisCursos = ({ courses, showHeader = true, embedded = false, onCourse
 
     useEffect(() => {
         const loadGroupCounts = async () => {
-            const { data } = await supabase.from('grupos').select('course_id');
+            const { data } = await api('/groups');
             if (data) {
                 const counts = {};
                 data.forEach(g => {

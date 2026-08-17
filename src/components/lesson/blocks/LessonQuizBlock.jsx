@@ -253,18 +253,78 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         </div>
                     )}
 
-                    <div style={{ position: 'relative', zIndex: 1, marginBottom: '1.5rem' }}>
+                    <div style={{ position: 'relative', zIndex: 1, marginBottom: '1rem' }}>
                         {resultPercent >= requiredScorePercent ? <Trophy size={60} color="#10b981" /> : <AlertCircle size={60} color="#ef4444" />}
                     </div>
 
                     <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem', position: 'relative', zIndex: 1 }}>
-                        {resultPercent >= requiredScorePercent ? 'Dominio alcanzado' : 'Sigue practicando'}
+                        {resultPercent >= requiredScorePercent ? '¡Dominio Alcanzado!' : 'Sigue Practicando'}
                     </h3>
 
-                    <p style={{ color: '#94a3b8', fontSize: '1rem', marginBottom: '2rem', maxWidth: '500px', position: 'relative', zIndex: 1 }}>
+                    {/* Tarjeta con métricas de evaluación: Correctas, Incorrectas y Porcentaje */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: '12px',
+                        width: '100%',
+                        maxWidth: '460px',
+                        margin: '1.25rem 0 1.5rem',
+                        position: 'relative',
+                        zIndex: 1
+                    }}>
+                        {/* 1. Correctas */}
+                        <div style={{
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            borderRadius: '16px',
+                            padding: '12px',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ color: '#10b981', fontSize: '1.5rem', fontWeight: 900 }}>
+                                {quizScore}
+                            </div>
+                            <div style={{ color: '#6ee7b7', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                                Correctas
+                            </div>
+                        </div>
+
+                        {/* 2. Incorrectas */}
+                        <div style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '16px',
+                            padding: '12px',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ color: '#ef4444', fontSize: '1.5rem', fontWeight: 900 }}>
+                                {quizQuestions.length - quizScore}
+                            </div>
+                            <div style={{ color: '#fca5a5', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                                Incorrectas
+                            </div>
+                        </div>
+
+                        {/* 3. Porcentaje */}
+                        <div style={{
+                            background: resultPercent >= requiredScorePercent ? 'rgba(56, 189, 248, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                            border: `1px solid ${resultPercent >= requiredScorePercent ? 'rgba(56, 189, 248, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                            borderRadius: '16px',
+                            padding: '12px',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ color: resultPercent >= requiredScorePercent ? '#38bdf8' : '#fbbf24', fontSize: '1.5rem', fontWeight: 900 }}>
+                                {Math.round(resultPercent)}%
+                            </div>
+                            <div style={{ color: resultPercent >= requiredScorePercent ? '#7dd3fc' : '#fde68a', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase' }}>
+                                Acierto
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '2rem', maxWidth: '520px', lineHeight: 1.6, position: 'relative', zIndex: 1 }}>
                         {resultPercent >= requiredScorePercent
-                            ? 'Has superado el reto con exito. La evaluacion ya dejo trazabilidad para el analisis del proceso.'
-                            : `Has acertado ${quizScore} de ${quizQuestions.length}. Para avanzar necesitas al menos ${requiredScorePercent}% de aciertos.`}
+                            ? `¡Excelente trabajo! Has superado el reto con ${quizScore} de ${quizQuestions.length} respuestas correctas (${Math.round(resultPercent)}%). El progreso ha sido guardado exitosamente.`
+                            : `Has acertado ${quizScore} de ${quizQuestions.length} (${Math.round(resultPercent)}%). Para avanzar necesitas al menos ${requiredScorePercent}% de aciertos. ¡Repasa el contenido e inténtalo de nuevo!`}
                     </p>
 
                     <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', position: 'relative', zIndex: 1 }}>

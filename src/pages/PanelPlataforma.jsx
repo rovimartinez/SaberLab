@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Shield, Settings, UserPlus, MoreVertical, Edit2, Trash2, Plus, X } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import '../styles/PanelPlataforma.css';
 
 const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
@@ -21,21 +21,15 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
         const fetchData = async () => {
             setLoading(true);
             
-            const [usersRes, coursesRes, groupsRes, ugRes] = await Promise.all([
-                supabase.from('perfiles').select('*').order('created_at', { ascending: false }),
-                supabase.from('cursos').select('*').order('name'),
-                supabase.from('grupos').select('*').order('name'),
-                supabase.from('grupos_usuario').select('*')
-            ]);
-            
-            if (usersRes.data) setUsers(usersRes.data);
-            if (coursesRes.data) setCourses(coursesRes.data);
-            if (groupsRes.data) setGroups(groupsRes.data);
-            
-            // Crear mapa de usuario -> grupos
-            if (ugRes.data) {
+            const { data } = await api('/admin/plataforma');
+
+            if (data) {
+                if (data.perfiles) setUsers(data.perfiles);
+                if (data.cursos) setCourses(data.cursos);
+                if (data.grupos) setGroups(data.grupos);
+
                 const ugMap = {};
-                ugRes.data.forEach(ug => {
+                (data.grupos_usuario || []).forEach(ug => {
                     if (!ugMap[ug.user_id]) ugMap[ug.user_id] = [];
                     ugMap[ug.user_id].push(ug.group_id);
                 });

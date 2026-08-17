@@ -9,6 +9,12 @@ const QuestionPanel = ({
     showFeedback = false
 }) => {
     const isAnswered = userAnswer !== undefined;
+    const getOptionValue = (option) => {
+        if (option && typeof option === 'object') {
+            return option.value ?? option.text ?? option.label ?? '';
+        }
+        return option;
+    };
     
     return (
         <div className="glass-panel" style={{ padding: '2rem' }}>
@@ -37,8 +43,9 @@ const QuestionPanel = ({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {question?.options.map((option, index) => {
-                    const isSelected = userAnswer === index;
-                    const isCorrect = String(question?.correct) === String(index);
+                    const optionValue = getOptionValue(option);
+                    const isSelected = String(userAnswer) === String(optionValue);
+                    const isCorrect = String(question?.correct) === String(optionValue);
                     
                     let borderColor = 'rgba(255,255,255,0.1)';
                     let bgColor = 'rgba(255,255,255,0.03)';
@@ -67,7 +74,7 @@ const QuestionPanel = ({
                     return (
                         <button
                             key={index}
-                            onClick={() => onAnswer(index)}
+                            onClick={() => onAnswer(optionValue)}
                             disabled={isAnswered && showFeedback}
                             style={{
                                 padding: '1.2rem',
@@ -84,7 +91,7 @@ const QuestionPanel = ({
                                 justifyContent: 'space-between',
                             }}
                         >
-                            <span>{option}</span>
+                            <span>{optionValue}</span>
                             {showFeedback && isSelected && (
                                 <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
                                     {isCorrect ? '✓' : '✗'}

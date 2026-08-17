@@ -282,7 +282,7 @@ const LessonContentBlock = ({
     showSimulator,
     setShowSimulator
 }) => {
-    const challenges = lesson?.challenges || [];
+    const challenges = block?.challenges || [];
     const sessionIdRef = useRef(null);
     const sessionStartedAtRef = useRef(null);
     const activeChallengeRef = useRef(activeChallenge);
@@ -435,9 +435,11 @@ const LessonContentBlock = ({
         });
     }, [activeChallenge, block?.id, challenges, lessonKey, showSimulator, user?.id]);
 
+    const htmlToRender = block?.content !== undefined ? block.content : (lesson?.content || '');
+
     return (
         <div className="lesson-content-container">
-            <div key={lesson.content} dangerouslySetInnerHTML={{ __html: lesson.content }} />
+            <div key={block?.id || 'content-block'} dangerouslySetInnerHTML={{ __html: htmlToRender }} />
 
             {challenges.length > 0 && (
                 <div className="challenges-tabs-section" style={{ marginTop: '3rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem' }}>

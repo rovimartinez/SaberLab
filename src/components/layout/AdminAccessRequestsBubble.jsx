@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Mail, Shield, User, UserPlus, X } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 import { useAuth } from '../../context/useAuth';
 
 const bubbleButtonStyle = {
@@ -79,18 +79,14 @@ const AdminAccessRequestsBubble = () => {
         if (!isAdmin) return undefined;
 
         const loadRequests = async () => {
-            const { data, error } = await supabase
-                .from('solicitudes_acceso')
-                .select('*')
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false });
+            const { data, error } = await api('/requests');
 
             if (error) {
                 console.error('Error cargando solicitudes pendientes:', error);
                 return;
             }
 
-            setRequests(data ?? []);
+            setRequests((data ?? []).filter(r => r.status === 'pending'));
             await refreshPendingAccessRequestsCount();
         };
 
@@ -99,19 +95,12 @@ const AdminAccessRequestsBubble = () => {
             void loadRequests().finally(() => setLoading(false));
         }
 
-        const channel = supabase
-            .channel('admin-access-requests-bubble')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'access_requests' },
-                () => {
-                    void loadRequests();
-                }
-            )
-            .subscribe();
+        const interval = setInterval(() => {
+            if (open) void loadRequests();
+        }, 10000);
 
         return () => {
-            supabase.removeChannel(channel);
+            clearInterval(interval);
         };
     }, [isAdmin, open, refreshPendingAccessRequestsCount]);
 
@@ -119,15 +108,12 @@ const AdminAccessRequestsBubble = () => {
         setBusyId(request.id);
 
         try {
-            const { error } = await supabase
-                .from('solicitudes_acceso')
-                .update({ 
-                    status,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', request.id);
+            const { error } = await api('/requests', {
+                method: 'PATCH',
+                body: { id: request.id, status }
+            });
 
-            if (error) throw error;
+            if (error) throw new Error(error.message);
 
             setRequests((current) => current.filter((item) => item.id !== request.id));
             await refreshPendingAccessRequestsCount();

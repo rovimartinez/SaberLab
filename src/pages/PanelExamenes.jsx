@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Edit2, Trash2, X, Check, Clock, Download, Upload, HelpCircle, ChevronRight, ClipboardList, FileText, UploadCloud, CheckCircle2, Layers, ListOrdered, Type } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
+import { useAuth } from '../context/useAuth';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 
+const createLocalQuestionId = () => Date.now().toString();
+
 const PanelExamenes = () => {
-    const { evaluations: cachedEvaluations, refreshEvaluations } = useAuth();
+    const { evaluations: cachedEvaluations } = useAuth();
     const [evaluations, setEvaluations] = useState(cachedEvaluations || []);
     const [loading, setLoading] = useState(!cachedEvaluations || cachedEvaluations.length === 0);
     const [showModal, setShowModal] = useState(false);
@@ -43,21 +46,18 @@ const PanelExamenes = () => {
         { id: 'escribir', label: 'Escribir', icon: <Type className="w-4 h-4" /> },
     ];
 
-    useEffect(() => { 
-        if (cachedEvaluations && cachedEvaluations.length > 0) {
-            setEvaluations(cachedEvaluations);
-            setLoading(false);
-        } else {
-            fetchData(); 
+    async function fetchData() {
+        setLoading(true);
+        const { data } = await api('/evaluations');
+        if (data) setEvaluations(data);
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        if (!cachedEvaluations || cachedEvaluations.length === 0) {
+            queueMicrotask(fetchData);
         }
     }, [cachedEvaluations]);
-
-    const fetchData = async () => {
-        setLoading(true);
-        const { data: evalsRes } = await supabase.from('evaluaciones').select('*').order('created_at', { ascending: false });
-        if (evalsRes) setEvaluations(evalsRes);
-        setLoading(false);
-    };
 
     const getCourseName = (courseId) => {
         const course = COURSES_DEFINITION.find(c => c.id === courseId);
@@ -90,12 +90,10 @@ const PanelExamenes = () => {
             is_published: Boolean(formData.is_published)
         };
 
-        let result;
-        if (editingEval) {
-            result = await supabase.from('evaluaciones').update(payload).eq('id', editingEval.id);
-        } else {
-            result = await supabase.from('evaluaciones').insert(payload);
-        }
+        let result = await api('/evaluations', {
+            method: 'POST',
+            body: { ...payload, id: editingEval?.id || null }
+        });
 
         if (result.error) {
             console.error('Error guardando evaluación:', result.error);
@@ -110,14 +108,33 @@ const PanelExamenes = () => {
 
     const handleDelete = async (id) => {
         if (confirm('¿Eliminar evaluación?')) {
-            await supabase.from('evaluaciones').delete().eq('id', id);
+            await api(`/evaluations?id=${id}`, { method: 'DELETE' });
             fetchData();
         }
     };
 
     const handlePublish = async (evalItem) => {
-        await supabase.from('evaluaciones').update({ is_published: !evalItem.is_published }).eq('id', evalItem.id);
+        await api('/evaluations', {
+            method: 'POST',
+            body: { id: evalItem.id, is_published: !evalItem.is_published }
+        });
         fetchData();
+    };
+
+    const persistQuestions = async (updatedQuestions) => {
+        const { error } = await api('/evaluations', {
+            method: 'POST',
+            body: { id: selectedEval.id, questions: updatedQuestions }
+        });
+        if (error) {
+            console.error('Error guardando cambios:', error);
+            alert(`Error guardando cambios: ${error.message}`);
+            return false;
+        }
+        setQuestions(updatedQuestions);
+        setLocalQuestions(updatedQuestions);
+        await fetchData();
+        return true;
     };
 
     const resetEvaluationForm = () => {
@@ -184,19 +201,12 @@ const PanelExamenes = () => {
                 updatedQuestions[idx] = { ...updatedQuestions[idx], question_text: newQuestionText, question_type: currentType.id, options: optionsToSave, correct_answer: correctAnswer, points: 10, difficulty: 'medium' };
             }
         } else {
-            const newQuestion = { id: Date.now().toString(), question_text: newQuestionText, question_type: currentType.id, options: optionsToSave, correct_answer: correctAnswer, points: 10, difficulty: 'medium', order_index: localQuestions.length + 1 };
+            const newQuestion = { id: createLocalQuestionId(), question_text: newQuestionText, question_type: currentType.id, options: optionsToSave, correct_answer: correctAnswer, points: 10, difficulty: 'medium', order_index: localQuestions.length + 1 };
             updatedQuestions.push(newQuestion);
         }
 
-        const { error } = await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
-        if (error) {
-            console.error('Error guardando pregunta:', error);
-            alert(`Error guardando pregunta: ${error.message}`);
-            return;
-        }
-        setLocalQuestions(updatedQuestions);
-        setQuestions(updatedQuestions);
-        await fetchData(); // Refrescar lista
+        const ok = await persistQuestions(updatedQuestions);
+        if (!ok) return;
         resetForm();
     };
 
@@ -299,32 +309,12 @@ const PanelExamenes = () => {
         setShowQuestionsModal(true);
     };
 
-    const updateQuestion = async (questionId, updates) => {
-        const updatedQuestions = localQuestions.map(q => q.id === questionId ? { ...q, ...updates } : q);
-        const { error } = await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
-        if (error) {
-            console.error('Error actualizando pregunta:', error);
-            alert(`Error actualizando pregunta: ${error.message}`);
-            return;
-        }
-        setLocalQuestions(updatedQuestions);
-        setQuestions(updatedQuestions);
-        await fetchData(); // Refrescar lista
-    };
-
     const deleteQuestion = async (questionId) => {
         if (showDeleteConfirm === questionId) {
             const updatedQuestions = localQuestions.filter(q => q.id !== questionId);
-            const { error } = await supabase.from('evaluaciones').update({ questions: updatedQuestions }).eq('id', selectedEval.id);
-            if (error) {
-                console.error('Error eliminando pregunta:', error);
-                alert(`Error eliminando pregunta: ${error.message}`);
-                return;
-            }
-            setLocalQuestions(updatedQuestions);
-            setQuestions(updatedQuestions);
+            const ok = await persistQuestions(updatedQuestions);
+            if (!ok) return;
             setShowDeleteConfirm(null);
-            await fetchData(); // Refrescar lista
         } else {
             setShowDeleteConfirm(questionId);
             setTimeout(() => setShowDeleteConfirm(null), 3000);
@@ -339,7 +329,7 @@ const PanelExamenes = () => {
         if (Array.isArray(question.options)) {
             parsedOptions = question.options;
         } else {
-            try { parsedOptions = JSON.parse(question.options); } catch (e) { parsedOptions = []; }
+            try { parsedOptions = JSON.parse(question.options); } catch { parsedOptions = []; }
         }
         if (question.question_type === 'verdadero_falso') {
             setOptions([{ text: 'Verdadero', isCorrect: question.correct_answer === 'Verdadero' }, { text: 'Falso', isCorrect: question.correct_answer === 'Falso' }]);
@@ -348,13 +338,13 @@ const PanelExamenes = () => {
             setOptions([]);
             setTextAnswer(question.correct_answer || '');
         } else if (question.question_type === 'emparejar') {
-            try { const pairs = JSON.parse(question.correct_answer); setPairOptions(pairs); } catch (e) { setPairOptions([{ left: '', right: '' }]); }
+            try { const pairs = JSON.parse(question.correct_answer); setPairOptions(pairs); } catch { setPairOptions([{ left: '', right: '' }]); }
             setOptions([]);
         } else if (question.question_type === 'ordenar') {
             const orderItems = question.correct_answer ? question.correct_answer.split('|') : [];
             setOptions(orderItems.map(text => ({ text, isCorrect: false })));
         } else {
-            setOptions(parsedOptions.map((opt, idx) => ({ text: opt, isCorrect: opt === question.correct_answer })));
+            setOptions(parsedOptions.map((opt) => ({ text: opt, isCorrect: opt === question.correct_answer })));
         }
         setIsAdding(true);
     };
@@ -471,7 +461,7 @@ const PanelExamenes = () => {
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <button onClick={async () => { 
-                                    const { data: evalData } = await supabase.from('evaluaciones').select('questions').eq('id', selectedEval.id).single();
+                                    const { data: evalData } = await api(`/evaluations?id=${selectedEval.id}`);
                                     setQuestions(evalData?.questions || []);
                                     setLocalQuestions(evalData?.questions || []);
                                     setShowQuestionsModal(false); 
@@ -497,7 +487,7 @@ const PanelExamenes = () => {
                                                     <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase' }}>{q.question_type}</span>
                                                     <button onClick={() => deleteQuestion(q.id)} style={{ marginLeft: 'auto', padding: '0.25rem', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
                                                 </div>
-                                                <input type="text" value={q.question_text} onChange={(e) => { const updated = [...localQuestions]; updated[idx].question_text = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { const { error } = await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(localQuestions); await fetchData(); } }} style={{ width: '100%', padding: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem', color: 'white', fontSize: '0.875rem', marginBottom: '0.75rem' }} />
+                                                <input type="text" value={q.question_text} onChange={(e) => { const updated = [...localQuestions]; updated[idx].question_text = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { await persistQuestions(localQuestions); }} style={{ width: '100%', padding: '0.75rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.5rem', color: 'white', fontSize: '0.875rem', marginBottom: '0.75rem' }} />
                                                 {q.question_type === 'opcion_multiple' && (
                                                     <div style={{ display: 'grid', gap: '0.5rem' }}>
                                                         {(Array.isArray(q.options) ? q.options : []).map((opt, optIdx) => {
@@ -507,21 +497,14 @@ const PanelExamenes = () => {
                                                                 <div key={optIdx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                                     <button 
                                                                         onClick={async () => { 
-                                                                            const updated = [...localQuestions]; 
-                                                                            updated[idx].correct_answer = letter; 
-                                                                            setLocalQuestions(updated); 
-                                                                            const { error } = await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id);
-                                                                            if (error) {
-                                                                                console.error('Error guardando cambios:', error);
-                                                                                alert(`Error guardando cambios: ${error.message}`);
-                                                                            } else {
-                                                                                setQuestions(updated);
-                                                                                await fetchData();
-                                                                            }
+                                                            const updated = [...localQuestions]; 
+                                                            updated[idx].correct_answer = letter; 
+                                                            setLocalQuestions(updated); 
+                                                            await persistQuestions(updated);
                                                                         }}
                                                                         style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.25rem', background: isCorrect ? 'rgba(34,197,94,0.2)' : '#0f172a', border: `1px solid ${isCorrect ? '#22c55e' : '#334155'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isCorrect ? '#4ade80' : '#64748b', fontSize: '0.75rem', cursor: 'pointer' }}
                                                                     >{letter}</button>
-                                                                    <input type="text" value={opt} onChange={(e) => { const updated = [...localQuestions]; updated[idx].options[optIdx] = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { const { error } = await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(localQuestions); await fetchData(); } }} style={{ flex: 1, padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
+                                                                    <input type="text" value={opt} onChange={(e) => { const updated = [...localQuestions]; updated[idx].options[optIdx] = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { await persistQuestions(localQuestions); }} style={{ flex: 1, padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
                                                                 </div>
                                                             );
                                                         })}
@@ -529,14 +512,14 @@ const PanelExamenes = () => {
                                                 )}
                                                 {q.question_type === 'verdadero_falso' && (
                                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Verdadero'; setLocalQuestions(updated); const { error } = await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(updated); await fetchData(); } }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Verdadero' ? 'rgba(34,197,94,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Verdadero' ? '#22c55e' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Verdadero' ? '#4ade80' : '#64748b', cursor: 'pointer' }}>✓ Verdadero</button>
-                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Falso'; setLocalQuestions(updated); const { error } = await supabase.from('evaluaciones').update({ questions: updated }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(updated); await fetchData(); } }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Falso' ? 'rgba(239,68,68,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Falso' ? '#ef4444' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Falso' ? '#f87171' : '#64748b', cursor: 'pointer' }}>✗ Falso</button>
+                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Verdadero'; setLocalQuestions(updated); await persistQuestions(updated); }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Verdadero' ? 'rgba(34,197,94,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Verdadero' ? '#22c55e' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Verdadero' ? '#4ade80' : '#64748b', cursor: 'pointer' }}>✓ Verdadero</button>
+                                                        <button onClick={async () => { const updated = [...localQuestions]; updated[idx].correct_answer = 'Falso'; setLocalQuestions(updated); await persistQuestions(updated); }} style={{ flex: 1, padding: '0.5rem', background: q.correct_answer === 'Falso' ? 'rgba(239,68,68,0.2)' : '#0f172a', border: `1px solid ${q.correct_answer === 'Falso' ? '#ef4444' : '#334155'}`, borderRadius: '0.25rem', color: q.correct_answer === 'Falso' ? '#f87171' : '#64748b', cursor: 'pointer' }}>✗ Falso</button>
                                                     </div>
                                                 )}
                                                 {q.question_type === 'escribir' && (
                                                     <div>
                                                         <label style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginBottom: '0.25rem' }}>Respuesta esperada:</label>
-                                                        <input type="text" value={q.correct_answer || ''} onChange={(e) => { const updated = [...localQuestions]; updated[idx].correct_answer = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { const { error } = await supabase.from('evaluaciones').update({ questions: localQuestions }).eq('id', selectedEval.id); if (error) { console.error('Error guardando cambios:', error); alert(`Error guardando cambios: ${error.message}`); } else { setQuestions(localQuestions); await fetchData(); } }} style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
+                                                        <input type="text" value={q.correct_answer || ''} onChange={(e) => { const updated = [...localQuestions]; updated[idx].correct_answer = e.target.value; setLocalQuestions(updated); }} onBlur={async () => { await persistQuestions(localQuestions); }} style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '0.25rem', color: 'white', fontSize: '0.8rem' }} />
                                                     </div>
                                                 )}
                                             </div>
@@ -699,17 +682,10 @@ const PanelExamenes = () => {
                                                 <button onClick={async () => { 
                                                     const currentQuestions = questions || [];
                                                     const newQuestions = [...currentQuestions, ...importPreview];
-                                                    const { error } = await supabase.from('evaluaciones').update({ questions: newQuestions }).eq('id', selectedEval.id);
-                                                    if (error) {
-                                                        console.error('Error importando preguntas:', error);
-                                                        alert(`Error importando preguntas: ${error.message}`);
-                                                        return;
-                                                    }
-                                                    setQuestions(newQuestions);
-                                                    setLocalQuestions(newQuestions);
+                                                    const ok = await persistQuestions(newQuestions);
+                                                    if (!ok) return;
                                                     setImportPreview(null);
                                                     setView('list');
-                                                    await fetchData(); // Refrescar lista
                                                 }} style={{ flex: 1, padding: '0.75rem', background: '#2563eb', border: 'none', borderRadius: '0.5rem', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Importar</button>
                                                 <button onClick={() => { setImportPreview(null); }} style={{ flex: 1, padding: '0.75rem', background: '#1e293b', border: '1px solid #334155', borderRadius: '0.5rem', color: '#94a3b8', cursor: 'pointer' }}>Cancelar</button>
                                             </div>

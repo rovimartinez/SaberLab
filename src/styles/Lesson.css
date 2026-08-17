@@ -226,9 +226,7 @@
 .theory-section-main {
     font-size: clamp(0.85rem, 1.5vw, 1rem) !important;
     line-height: 1.6;
-    max-width: 1100px;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    width: 100%;
 }
 
 .theory-section {

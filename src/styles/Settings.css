@@ -23,9 +23,17 @@
 
 .settings-tabs {
     display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
     overflow-x: auto;
+}
+
+.settings-tab-list {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .settings-tab {
@@ -52,6 +60,11 @@
 .settings-tab.active {
     background: rgba(139, 92, 246, 0.2);
     color: #a78bfa;
+}
+
+.settings-save-btn {
+    padding: 0.7rem 1rem;
+    white-space: nowrap;
 }
 
 .settings-content {

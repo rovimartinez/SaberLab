@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
-import { supabase } from '../../lib/supabase';
+import { api } from '../../lib/api';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
     const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses } = useAuth();
@@ -38,21 +38,9 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             }
 
             try {
-                let query = supabase
-                    .from('evaluaciones')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('is_published', true);
-
-                // Para estudiantes, solo contar evaluaciones de cursos inscritos
-                if (!isAdmin) {
-                    const courseIds = enrolledCourses.map(c => c.id);
-                    query = query.in('course_id', courseIds);
-                }
-
-                const { count, error } = await query;
-
-                if (error) throw error;
-                setPublishedEvaluationsCount(count || 0);
+                const { data } = await api('/evaluations');
+                const published = (data || []).filter(e => e.is_published === 1 || e.is_published === true);
+                setPublishedEvaluationsCount(published.length);
             } catch (error) {
                 console.error('Error fetching published evaluations count:', error);
             }
@@ -76,7 +64,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                { name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }
+                { name: 'Certificados', path: '/dashboard/certificate/re', icon: <Award size={18} /> }
             ]
         },
         ...(isAdmin ? [{
@@ -102,19 +90,11 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
 
             <nav className="sidebar-nav" style={{ overflowY: 'auto', paddingRight: '4px' }}>
                 {navCategories.map((category, catIndex) => (
-                    <div key={catIndex} style={{ marginBottom: '1.5rem' }}>
-                        <h3 style={{
-                            fontSize: '0.70rem',
-                            fontWeight: 700,
-                            color: 'rgba(255,255,255,0.4)',
-                            letterSpacing: '1px',
-                            marginBottom: '0.75rem',
-                            paddingLeft: '1rem',
-                            textTransform: 'uppercase'
-                        }}>
+                    <div key={catIndex} className="sidebar-section" style={{ marginBottom: '1.5rem' }}>
+                        <h3 className="sidebar-section-title">
                             {category.title}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        <div className="sidebar-section-list">
                             {category.items.map((item) => {
                                 const renderIcon = () => (
                                     <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', minWidth: '24px', justifyContent: 'center', position: 'relative' }}>
@@ -193,21 +173,11 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                 ))}
             </nav>
 
-            <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div className="sidebar-footer" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
                 <div className="sidebar-user-container" ref={menuRef} style={{ position: 'relative' }}>
                     <div
-                        className="user-profile"
+                        className={`user-profile sidebar-user-card ${isMenuOpen ? 'open' : ''}`}
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '0.5rem',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            background: isMenuOpen ? 'rgba(255,255,255,0.05)' : 'transparent'
-                        }}
                     >
                         {avatarUrl ? (
                             <div className="avatar" style={{ padding: 0, overflow: 'hidden', width: '36px', height: '36px', flexShrink: 0 }}>
@@ -269,7 +239,11 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, wordBreak: 'break-all' }}>{user?.email}</p>
                             </div>
                             <div className="dropdown-divider"></div>
-                            <Link to="/dashboard/settings" className="dropdown-item" onClick={() => setIsMenuOpen(false)}>
+                            <Link to="/dashboard/profile" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
+                                <User size={16} />
+                                Mi Perfil
+                            </Link>
+                            <Link to="/dashboard/settings" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
                                 <Settings size={16} />
                                 Configuracion
                             </Link>

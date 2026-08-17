@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Bell, Clock } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import '../styles/EvaluationInstruction.css';
 
 const EvaluationInstruction = () => {
@@ -30,11 +30,7 @@ const EvaluationInstruction = () => {
                 return;
             }
 
-            const { data, error } = await supabase
-                .from('evaluaciones')
-                .select('*')
-                .eq('evaluation_key', evaluationKey)
-                .single();
+            const { data, error } = await api(`/evaluations?key=${encodeURIComponent(evaluationKey)}`);
 
             if (data) {
                 setEvaluation(data);

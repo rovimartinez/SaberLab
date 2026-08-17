@@ -77,6 +77,9 @@ export async function onRequestGet({ request, env }) {
          VALUES (?, ?, ?, ?, ?, datetime('now'))`
       ).bind(userId, email, googleUser.name || null, googleUser.picture || null, role).run();
       profile = { id: userId, email, full_name: googleUser.name || null, avatar_url: googleUser.picture || null, role };
+    } else if (email === (env.ADMIN_EMAIL || '').toLowerCase() && profile.role !== 'admin') {
+      await env.DB.prepare("UPDATE perfiles SET role = 'admin' WHERE id = ?").bind(userId).run();
+      profile.role = 'admin';
     }
 
     // 4. Emitir nuestro token de sesión

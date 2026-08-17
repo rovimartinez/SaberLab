@@ -1,20 +1,50 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Settings, User, Bell, Shield, Palette, Moon, Sun, Globe, Smartphone, Mail, Lock, Save, Camera } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import '../styles/Settings.css';
 
+const initialNotifications = {
+    email: true,
+    push: true,
+    activities: true,
+    grades: true,
+    announcements: false
+};
+
+const getStoredTheme = () => {
+    if (typeof window === 'undefined') return 'dark';
+    const storedTheme = localStorage.getItem('saberlab-theme');
+    return storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system' ? storedTheme : 'dark';
+};
+
+const getResolvedTheme = (theme) => {
+    if (theme === 'system' && typeof window !== 'undefined' && window.matchMedia) {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return theme;
+};
+
 const SettingsPage = () => {
     const { user } = useAuth();
-    const fullName = user?.user_metadata?.full_name?.split(' ')[0] || 'Estudiante';
+    const initialProfileName = user?.user_metadata?.full_name || '';
+    const initialTheme = 'dark';
+    const initialLanguage = 'es';
+    const initialTimezone = 'america_mexico';
     const [activeTab, setActiveTab] = useState('profile');
-    const [theme, setTheme] = useState('dark');
-    const [notifications, setNotifications] = useState({
-        email: true,
-        push: true,
-        activities: true,
-        grades: true,
-        announcements: false
-    });
+    const [profileName, setProfileName] = useState(initialProfileName);
+    const [theme, setTheme] = useState(getStoredTheme);
+    const [language, setLanguage] = useState(initialLanguage);
+    const [timezone, setTimezone] = useState(initialTimezone);
+    const [notifications, setNotifications] = useState(initialNotifications);
+
+    useEffect(() => {
+        const resolvedTheme = getResolvedTheme(theme);
+        document.documentElement.setAttribute('data-theme', resolvedTheme);
+        localStorage.setItem('saberlab-theme', theme);
+    }, [theme]);
+
+    const fullName = profileName.split(' ')[0] || 'Estudiante';
+    const hasChanges = profileName !== initialProfileName || theme !== initialTheme || language !== initialLanguage || timezone !== initialTimezone || JSON.stringify(notifications) !== JSON.stringify(initialNotifications);
 
     const tabs = [
         { id: 'profile', name: 'Perfil', icon: <User size={18} /> },
@@ -42,16 +72,22 @@ const SettingsPage = () => {
             </div>
 
             <div className="settings-tabs glass-panel">
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {tab.icon}
-                        <span>{tab.name}</span>
-                    </button>
-                ))}
+                <div className="settings-tab-list">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
+                            onClick={() => setActiveTab(tab.id)}
+                        >
+                            {tab.icon}
+                            <span>{tab.name}</span>
+                        </button>
+                    ))}
+                </div>
+                <button type="button" className="btn btn-primary settings-save-btn" disabled={!hasChanges}>
+                    <Save size={18} />
+                    Guardar cambios
+                </button>
             </div>
 
             <div className="settings-content">
@@ -81,7 +117,8 @@ const SettingsPage = () => {
                                             <label>Nombre completo</label>
                                             <input
                                                 type="text"
-                                                defaultValue={user?.user_metadata?.full_name || ''}
+                                                value={profileName}
+                                                onChange={(e) => setProfileName(e.target.value)}
                                                 placeholder="Tu nombre"
                                             />
                                         </div>
@@ -115,12 +152,6 @@ const SettingsPage = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="profile-actions">
-                            <button type="button" className="btn btn-primary">
-                                <Save size={18} />
-                                Guardar cambios
-                            </button>
                         </div>
                     </>
                 )}
@@ -256,7 +287,7 @@ const SettingsPage = () => {
                             </div>
                             <div className="option-group">
                                 <label>Idioma</label>
-                                <select defaultValue="es">
+                                <select value={language} onChange={(e) => setLanguage(e.target.value)}>
                                     <option value="es">Español</option>
                                     <option value="en">English</option>
                                     <option value="pt">Português</option>
@@ -264,7 +295,7 @@ const SettingsPage = () => {
                             </div>
                             <div className="option-group">
                                 <label>Zona horaria</label>
-                                <select defaultValue="america_mexico">
+                                <select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
                                     <option value="america_mexico">Ciudad de México (GMT-6)</option>
                                     <option value="america_buenos_aires">Buenos Aires (GMT-3)</option>
                                     <option value="europe_madrid">Madrid (GMT+1)</option>

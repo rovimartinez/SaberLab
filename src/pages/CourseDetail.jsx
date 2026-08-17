@@ -175,9 +175,15 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         const confirmed = window.confirm('¿Estás seguro de eliminar este grupo? Se eliminarán todos los estudiantes asignados a este grupo.');
         if (!confirmed) return;
 
-        await api(`/groups?id=${group.id}`, { method: 'DELETE' });
+        const { error } = await api(`/groups?id=${group.id}`, { method: 'DELETE' });
+        if (error) {
+            console.error('Error al eliminar grupo:', error);
+            alert('Error al eliminar grupo: ' + (error.message || 'No autorizado'));
+            return;
+        }
 
         setDbGroups(prev => prev.filter(g => g.id !== group.id));
+        setGroupsReload(x => x + 1);
         if (editGroupModal.group?.id === group.id) {
             setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' });
         }

@@ -46,25 +46,23 @@ export const LESSONS_REGISTRY = {
     're-m4-l4': { id: 're-m4-l4', title: 'Proyecto Integrador Final', load: null },
     
     // --- ELECTRICIDAD (EE) ---
-    'ee-concepts': { id: 'ee-concepts', title: 'Conceptos básicos de electricidad', load: null },
-    'ee-voltage': { id: 'ee-voltage', title: 'Tensión, Corriente y Resistencia', load: null },
-    'ee-ohm': { id: 'ee-ohm', title: 'Ley de Ohm y Potencia', load: null },
-    'ee-resistors': { id: 'ee-resistors', title: 'Resistores y Código de Colores', load: null },
-    'ee-capacitors': { id: 'ee-capacitors', title: 'Capacitores y Almacenamiento', load: null },
-    'ee-diodes': { id: 'ee-diodes', title: 'Diodos y Rectificación', load: null },
-    'ee-series': { id: 'ee-series', title: 'Circuitos en Serie', load: null },
-    'ee-parallel': { id: 'ee-parallel', title: 'Circuitos en Paralelo', load: null },
-    'ee-breadboard': { id: 'ee-breadboard', title: 'Uso de la Protoboard', load: null },
+    'ee-m1-l1': { id: 'ee-m1-l1', title: 'Introducción a la Electricidad', load: () => import('../lessons/EE/m1/l1').then(m => m.lessonData) },
+    'ee-m1-l2': { id: 'ee-m1-l2', title: 'Ley de Ohm y Herramientas de Medición', load: () => import('../lessons/EE/m1/l2').then(m => m.lessonData) },
+    'ee-m1-l3': { id: 'ee-m1-l3', title: 'Análisis de Circuitos en Serie', load: () => import('../lessons/EE/m1/l3').then(m => m.lessonData) },
+    'ee-m1-l4': { id: 'ee-m1-l4', title: 'Análisis de Circuitos en Paralelo', load: () => import('../lessons/EE/m1/l4').then(m => m.lessonData) },
+    'ee-m1-l5': { id: 'ee-m1-l5', title: 'Análisis de Circuitos Mixtos', load: () => import('../lessons/EE/m1/l5').then(m => m.lessonData) },
+    'ee-m1-l6': { id: 'ee-m1-l6', title: 'Evaluación de Fundamentos', load: () => import('../lessons/EE/m1/l6').then(m => m.lessonData) },
+    'ee-m2-l7': { id: 'ee-m2-l7', title: 'Capacitores y Almacenamiento de Energía', load: () => import('../lessons/EE/m2/l7').then(m => m.lessonData) },
+    'ee-m2-l8': { id: 'ee-m2-l8', title: 'Bobinas y Motores DC', load: () => import('../lessons/EE/m2/l8').then(m => m.lessonData) },
+    'ee-m2-l9': { id: 'ee-m2-l9', title: 'Transistores y Control Electromecánico', load: () => import('../lessons/EE/m2/l9').then(m => m.lessonData) },
+    'ee-m2-l10': { id: 'ee-m2-l10', title: 'Evaluación de Componentes', load: () => import('../lessons/EE/m2/l10').then(m => m.lessonData) },
+    'ee-m3-l11': { id: 'ee-m3-l11', title: 'Circuitos Integrados - Temporización', load: () => import('../lessons/EE/m3/l11').then(m => m.lessonData) },
+    'ee-m3-l12': { id: 'ee-m3-l12', title: 'Circuitos Integrados - Contadores', load: () => import('../lessons/EE/m3/l12').then(m => m.lessonData) },
+    'ee-m3-l13': { id: 'ee-m3-l13', title: 'Visualización de Datos', load: () => import('../lessons/EE/m3/l13').then(m => m.lessonData) },
+    'ee-m3-l14': { id: 'ee-m3-l14', title: 'Evaluación de Aplicaciones Avanzadas', load: () => import('../lessons/EE/m3/l14').then(m => m.lessonData) },
+    'ee-m4-l15': { id: 'ee-m4-l15', title: 'Optimización de Prototipos', load: () => import('../lessons/EE/m4/l15').then(m => m.lessonData) },
+    'ee-m4-l16': { id: 'ee-m4-l16', title: 'Presentación de Proyecto Final', load: () => import('../lessons/EE/m4/l16').then(m => m.lessonData) },
 
-    // --- PROGRAMACIÓN (FP) ---
-    'fp-program': { id: 'fp-program', title: '¿Qué es la Programación?', load: null },
-    'fp-variables': { id: 'fp-variables', title: 'Variables y Tipos de Datos', load: null },
-    'fp-operators': { id: 'fp-operators', title: 'Operadores Matemáticos y Lógicos', load: null },
-    'fp-conditionals': { id: 'fp-conditionals', title: 'Condicionales (If-Else)', load: null },
-    'fp-loops-for': { id: 'fp-loops-for', title: 'Bucles y Ciclos (For)', load: null },
-    'fp-loops-while': { id: 'fp-loops-while', title: 'Ciclos Condicionales (While)', load: null },
-    'fp-functions': { id: 'fp-functions', title: 'Funciones y Modularidad', load: null },
-    'fp-arrays': { id: 'fp-arrays', title: 'Arreglos y Listas', load: null },
 
     // --- QUIMICA (MQ) ---
     'mq-atoms': { id: 'mq-atoms', title: 'Átomos, Protones y Neutrones', load: null },
@@ -82,13 +80,6 @@ export const LESSONS_REGISTRY = {
     'ma-animation': { id: 'ma-animation', title: 'Keyframes y Animación', load: null },
     'ma-rendering': { id: 'ma-rendering', title: 'Motores de Renderizado', load: null },
 
-    // --- TENDENCIAS (TD) ---
-    'td-ai': { id: 'td-ai', title: 'Inteligencia Artificial y Redes Neuronales', load: null },
-    'td-blockchain': { id: 'td-blockchain', title: 'Blockchain y Criptoactivos', load: null },
-    'td-iot': { id: 'td-iot', title: 'IoT: El Internet de las Cosas', load: null },
-    'td-cyber': { id: 'td-cyber', title: 'Ciberseguridad y Ética Digital', load: null },
-    'td-metaverse': { id: 'td-metaverse', title: 'Realidad Virtual y Metaverso', load: null },
-    'td-green': { id: 'td-green', title: 'Tecnologías Verdes y Sostenibles', load: null }
 };
 
 /**
@@ -103,73 +94,134 @@ export const COURSES_DEFINITION = [
         name: 'Electricidad y Electrónica Básica',
         icon: <Zap size={28} />,
         color: '#f59e0b',
+        duration: '17 semanas',
+        modality: 'Presencial',
+        description: 'Curso de fundamentos de electricidad y electrónica con enfoque STEAM, laboratorio práctico y proyecto final.',
         modules: [
             {
                 id: 'm1',
-                name: 'Módulo 1: Fundamentos Eléctricos',
+                name: 'Módulo 1: Fundamentos de Electricidad y Circuitos Básicos',
+                weeks: 'Semanas 1-6',
+                learningOutcome: 'Analizar circuitos eléctricos básicos (serie, paralelo y mixtos) mediante la Ley de Ohm y el uso del multímetro.',
+                topics: [
+                    'Introducción a la electricidad',
+                    'Ley de Ohm y uso del multímetro',
+                    'Circuitos en serie, paralelo y mixtos',
+                    'Potencia eléctrica y consumo'
+                ],
                 lessons: [
-                    { id: 'ee-concepts', visible: true },
-                    { id: 'ee-voltage', visible: true },
-                    { id: 'ee-ohm', visible: true }
-                ]
+                    { id: 'ee-m1-l1', visible: true },
+                    { id: 'ee-m1-l2', visible: true },
+                    { id: 'ee-m1-l3', visible: true },
+                    { id: 'ee-m1-l4', visible: true },
+                    { id: 'ee-m1-l5', visible: true },
+                    { id: 'ee-m1-l6', visible: true }
+                ],
+                evaluation: {
+                    title: 'Examen 1 - Circuitos básicos',
+                    date: '2 de septiembre de 2026',
+                    points: 150
+                }
             },
             {
                 id: 'm2',
-                name: 'Módulo 2: Componentes Pasivos',
+                name: 'Módulo 2: Componentes Electrónicos y Aplicaciones',
+                weeks: 'Semanas 7-11',
+                learningOutcome: 'Identificar y aplicar componentes electrónicos en circuitos funcionales.',
+                topics: [
+                    'Capacitores, relés, bobinas y motores DC',
+                    'Transistores y aplicaciones básicas',
+                    'Aplicaciones prácticas y control de circuitos'
+                ],
                 lessons: [
-                    { id: 'ee-resistors', visible: true },
-                    { id: 'ee-capacitors', visible: true },
-                    { id: 'ee-diodes', visible: true }
-                ]
+                    { id: 'ee-m2-l7', visible: true },
+                    { id: 'ee-m2-l8', visible: true },
+                    { id: 'ee-m2-l9', visible: true },
+                    { id: 'ee-m2-l10', visible: true }
+                ],
+                evaluation: {
+                    title: 'Examen 2 - Uso de componentes electrónicos',
+                    date: '28 de septiembre de 2026',
+                    points: 125
+                }
             },
             {
                 id: 'm3',
-                name: 'Módulo 3: Circuitos y Prototipado',
+                name: 'Módulo 3: Aplicaciones Avanzadas y Diseño de Circuitos',
+                weeks: 'Semanas 12-14',
+                learningOutcome: 'Implementar circuitos integrados en contextos prácticos.',
+                topics: [
+                    'Circuitos integrados',
+                    'Temporizador 555',
+                    'Contadores binarios y displays de 7 segmentos'
+                ],
                 lessons: [
-                    { id: 'ee-series', visible: true },
-                    { id: 'ee-parallel', visible: true },
-                    { id: 'ee-breadboard', visible: true }
-                ]
-            }
-        ],
-        groups: []
-    },
-    {
-        id: 2,
-        abbr: 'FP',
-        slug: 'fundamentos-de-programacion',
-        name: 'Fundamentos de Programación',
-        icon: <Code size={28} />,
-        color: '#3b82f6',
-        modules: [
-            {
-                id: 'm1',
-                name: 'Módulo 1: Lógica y Algoritmos',
-                lessons: [
-                    { id: 'fp-program', visible: true },
-                    { id: 'fp-variables', visible: true },
-                    { id: 'fp-operators', visible: true }
-                ]
+                    { id: 'ee-m3-l11', visible: true },
+                    { id: 'ee-m3-l12', visible: true },
+                    { id: 'ee-m3-l13', visible: true },
+                    { id: 'ee-m3-l14', visible: true }
+                ],
+                evaluation: {
+                    title: 'Examen 3 - Implementación de circuitos integrados',
+                    date: '21 de octubre de 2026',
+                    points: 125
+                }
             },
             {
-                id: 'm2',
-                name: 'Módulo 2: Estructuras de Control',
+                id: 'm4',
+                name: 'Módulo 4: Proyecto Final',
+                weeks: 'Semanas 15-16',
+                learningOutcome: 'Desarrollar, optimizar y presentar un prototipo funcional.',
+                topics: [
+                    'Diseño del prototipo',
+                    'Optimización y presentación del proyecto'
+                ],
                 lessons: [
-                    { id: 'fp-conditionals', visible: true },
-                    { id: 'fp-loops-for', visible: true },
-                    { id: 'fp-loops-while', visible: true }
-                ]
-            },
-            {
-                id: 'm3',
-                name: 'Módulo 3: Funciones y Datos',
-                lessons: [
-                    { id: 'fp-functions', visible: true },
-                    { id: 'fp-arrays', visible: true }
-                ]
+                    { id: 'ee-m4-l15', visible: true },
+                    { id: 'ee-m4-l16', visible: true }
+                ],
+                evaluation: {
+                    title: 'Proyecto Final',
+                    date: '11 de noviembre de 2026',
+                    points: 100
+                }
             }
         ],
-        groups: []
+        groups: [],
+        resources: {
+            required: [
+                'Protoboard 830',
+                'Jumpers macho-macho',
+                'Fuente 5 V o portapilas 4xAA',
+                'Multímetro digital',
+                'Resistencias ¼ W',
+                'LEDs 5 mm',
+                'Potenciómetro 10 kΩ (opcional)'
+            ],
+            module2: [
+                'Capacitores 100 nF, 10 µF, 100 µF',
+                'Transistor BJT NPN y PNP',
+                'Diodos 1N4007',
+                'Relé 5 V',
+                'Motor DC pequeño',
+                'Buzzer activo 5 V',
+                'Pulsadores / switch'
+            ],
+            module3: [
+                'CI 555',
+                'CI 74LS93',
+                'CI CD4511',
+                'Display de 7 segmentos',
+                'Resistencias de 220 Ω a 330 Ω',
+                'Pulsadores o DIP switch de 4 posiciones'
+            ],
+            software: [
+                'Software de simulación',
+                'Manuales técnicos',
+                'Guías de laboratorio',
+                'Videos tutoriales'
+            ]
+        }
     },
     {
         id: 3,
@@ -282,41 +334,6 @@ export const COURSES_DEFINITION = [
                     { id: 're-m4-l2', visible: true },
                     { id: 're-m4-l3', visible: true },
                     { id: 're-m4-l4', visible: true }
-                ]
-            }
-        ],
-        groups: []
-    },
-    {
-        id: 6,
-        abbr: 'TD',
-        slug: 'tendencias-tecnologicas',
-        name: 'Tendencias y Desarrollo en Tecnología',
-        icon: <Brain size={28} />,
-        color: '#f97316',
-        modules: [
-            {
-                id: 'm1',
-                name: 'Módulo 1: Inteligencia y Futuro',
-                lessons: [
-                    { id: 'td-ai', visible: true },
-                    { id: 'td-blockchain', visible: true }
-                ]
-            },
-            {
-                id: 'm2',
-                name: 'Módulo 2: Conectividad y Redes',
-                lessons: [
-                    { id: 'td-iot', visible: true },
-                    { id: 'td-cyber', visible: true }
-                ]
-            },
-            {
-                id: 'm3',
-                name: 'Módulo 3: Nuevos Mundos',
-                lessons: [
-                    { id: 'td-metaverse', visible: true },
-                    { id: 'td-green', visible: true }
                 ]
             }
         ],

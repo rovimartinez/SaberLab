@@ -1,0 +1,423 @@
+/* ============================================================
+   Certificate Page — Diploma descargable / imprimible
+   ============================================================ */
+
+.certificate-page {
+    min-height: 100vh;
+    background: #1e293b;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Barra de controles (oculta al imprimir) */
+.certificate-controls {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.certificate-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.certificate-back-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.certificate-download-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.certificate-download-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+/* ── El diploma ── */
+.certificate-wrapper {
+    width: 100%;
+    max-width: 900px;
+}
+
+.certificate-diploma {
+    width: 100%;
+    aspect-ratio: 11 / 8.5;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fondo decorativo de circuito */
+.certificate-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Patrón de puntos sutil */
+.certificate-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Marco decorativo interior */
+.certificate-frame {
+    position: absolute;
+    inset: 12px;
+    border: 2px solid rgba(168, 85, 247, 0.3);
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.certificate-frame::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(168, 85, 247, 0.12);
+    border-radius: 3px;
+}
+
+/* Contenido principal */
+.certificate-content {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 2.5rem 3rem 2rem;
+}
+
+/* Header con logo */
+.certificate-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.certificate-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
+}
+
+.certificate-org-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1e293b;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.certificate-org-subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0.1rem 0 0;
+}
+
+/* Divider decorativo */
+.certificate-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.75rem 0;
+}
+
+.certificate-divider::before,
+.certificate-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(168, 85, 247, 0.4), transparent);
+}
+
+.certificate-divider-diamond {
+    width: 6px;
+    height: 6px;
+    background: #a855f7;
+    transform: rotate(45deg);
+}
+
+/* Cuerpo principal */
+.certificate-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.certificate-presents {
+    font-size: 0.85rem;
+    color: #64748b;
+    letter-spacing: 0.05em;
+    margin: 0;
+}
+
+.certificate-certifies {
+    font-size: 0.85rem;
+    color: #64748b;
+    letter-spacing: 0.02em;
+    margin: 0.5rem 0 0;
+}
+
+.certificate-student-name {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1e293b;
+    font-family: Georgia, serif;
+    letter-spacing: 0.02em;
+    margin: 0.25rem 0;
+    line-height: 1.1;
+}
+
+.certificate-course-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0.5rem 0 0;
+}
+
+.certificate-course-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #a855f7;
+    margin: 0.25rem 0;
+}
+
+.certificate-course-hours {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+}
+
+/* Footer */
+.certificate-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.certificate-footer-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.certificate-signature-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.certificate-signature-line {
+    width: 120px;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.certificate-signature-role {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.certificate-date-label {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.certificate-date-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+/* QR y credencial */
+.certificate-qr-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.certificate-qr-box {
+    width: 64px;
+    height: 64px;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.certificate-qr-box canvas,
+.certificate-qr-box img {
+    width: 100%;
+    height: 100%;
+}
+
+.certificate-credential-id {
+    font-size: 0.65rem;
+    font-family: monospace;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+}
+
+/* Badges de nivel */
+.certificate-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.certificate-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.certificate-badge-level {
+    background: rgba(168, 85, 247, 0.1);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.certificate-badge-year {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Acciones post-diploma */
+.certificate-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.certificate-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.certificate-action-btn.primary {
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    color: white;
+}
+
+.certificate-action-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.certificate-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* Loading / not found */
+.certificate-loading,
+.certificate-not-found {
+    color: white;
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+/* ── Print styles ── */
+@media print {
+    .certificate-page {
+        background: white;
+        padding: 0;
+    }
+
+    .certificate-controls,
+    .certificate-actions {
+        display: none !important;
+    }
+
+    .certificate-wrapper {
+        max-width: 100%;
+    }
+
+    .certificate-diploma {
+        border-radius: 0;
+        box-shadow: none;
+        aspect-ratio: auto;
+        height: 100vh;
+    }
+
+    .certificate-content {
+        padding: 2cm 2.5cm 1.5cm;
+    }
+}

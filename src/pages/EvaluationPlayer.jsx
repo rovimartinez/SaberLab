@@ -1,11 +1,45 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Bell, Clock, AlertTriangle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/useAuth';
 import QuestionNavigator from '../components/QuestionNavigator';
 import QuestionPanel from '../components/QuestionPanel';
 import '../styles/EvaluationInstruction.css';
+
+const getQuestionText = (question) => question.question_text || question.q || question.text || '';
+const getOptionValue = (option) => {
+    if (option && typeof option === 'object') {
+        return option.value ?? option.text ?? option.label ?? '';
+    }
+    return option;
+};
+const normalizeCorrectAnswer = (question, options) => {
+    const rawCorrect = question.correct_answer !== undefined ? question.correct_answer : question.correct;
+    if (typeof rawCorrect === 'number') return getOptionValue(options[rawCorrect]);
+    const correctText = String(rawCorrect ?? '').trim();
+    if (/^[A-F]$/i.test(correctText)) {
+        const index = correctText.toUpperCase().charCodeAt(0) - 65;
+        return getOptionValue(options[index]) ?? correctText;
+    }
+    return rawCorrect;
+};
+const normalizeSavedAnswers = (savedAnswers, normalizedQuestions) => {
+    const nextAnswers = {};
+    Object.entries(savedAnswers || {}).forEach(([questionIndex, answer]) => {
+        const options = normalizedQuestions[Number(questionIndex)]?.options || [];
+        if (typeof answer === 'number') {
+            nextAnswers[questionIndex] = getOptionValue(options[answer]);
+            return;
+        }
+        if (/^\d+$/.test(String(answer)) && options[Number(answer)] !== undefined) {
+            nextAnswers[questionIndex] = getOptionValue(options[Number(answer)]);
+            return;
+        }
+        nextAnswers[questionIndex] = answer;
+    });
+    return nextAnswers;
+};
 
 const EvaluationPlayer = () => {
     const { evaluationKey } = useParams();
@@ -18,7 +52,7 @@ const EvaluationPlayer = () => {
         try {
             const saved = localStorage.getItem(`exam_answers_${evaluationKey}`);
             return saved ? JSON.parse(saved) : {};
-        } catch (e) { return {}; }
+        } catch { return {}; }
     });
     
     const [timeLeft, setTimeLeft] = useState(0);
@@ -30,33 +64,35 @@ const EvaluationPlayer = () => {
     });
     const [finalizing, setFinalizing] = useState(false);
     const [syncStatus, setSyncStatus] = useState('saved'); // 'saving', 'saved', 'error'
-    
-    const timerRef = useRef();
 
     useEffect(() => {
         const fetchEvaluation = async () => {
             if (!evaluationKey) return;
             
             try {
-                const { data, error } = await supabase
-                    .from('evaluaciones')
-                    .select('*')
-                    .eq('evaluation_key', evaluationKey)
-                    .single();
+                const { data, error } = await api(`/evaluations?key=${encodeURIComponent(evaluationKey)}`);
 
                 if (error) throw error;
                 if (data) {
                     setEvaluation(data);
                     
                     // Normalizar preguntas (manejar JSON guardado)
-                    const questionsData = (data.questions || []).map(q => ({
-                        ...q,
-                        q: q.question_text || q.q || '',
-                        options: q.options || [],
-                        correct: q.correct_answer !== undefined ? q.correct_answer : q.correct
-                    }));
+                    const questionsData = (data.questions || []).map(q => {
+                        const options = Array.isArray(q.options) ? q.options.map(getOptionValue) : [];
+                        return {
+                            ...q,
+                            q: getQuestionText(q),
+                            options,
+                            correct: normalizeCorrectAnswer(q, options)
+                        };
+                    });
 
                     setQuestions(questionsData);
+                    setAnswers(prevAnswers => {
+                        const normalizedAnswers = normalizeSavedAnswers(prevAnswers, questionsData);
+                        localStorage.setItem(`exam_answers_${evaluationKey}`, JSON.stringify(normalizedAnswers));
+                        return normalizedAnswers;
+                    });
 
                     // --- RESTABLECER TIEMPO ORIGINAL ---
                     const savedEndTime = localStorage.getItem(`exam_end_time_${evaluationKey}`);
@@ -139,36 +175,17 @@ const EvaluationPlayer = () => {
             });
             const partialScore = Math.round((correctCount / (questions.length || 1)) * 100);
 
-            // Manual "upsert" workaround to avoid UNIQUE constraint missing check
-            const { data: existing } = await supabase
-                .from('intentos_evaluacion')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('evaluation_key', evaluationKey)
-                .is('completed_at', null)
-                .maybeSingle();
-
-            if (existing) {
-                await supabase
-                    .from('intentos_evaluacion')
-                    .update({ 
-                        answers: currentAnswers, 
-                        score: partialScore,
-                        passed: partialScore >= (evaluation?.passing_score || 70) 
-                    })
-                    .eq('id', existing.id);
-            } else {
-                await supabase
-                    .from('intentos_evaluacion')
-                    .insert({
-                        user_id: user.id,
-                        evaluation_key: evaluationKey,
-                        answers: currentAnswers,
-                        score: partialScore,
-                        passed: partialScore >= (evaluation?.passing_score || 70),
-                        completed_at: null
-                    });
-            }
+            // El backend hace el "upsert" automático (busca intento incompleto o crea uno)
+            await api('/attempts', {
+                method: 'POST',
+                body: {
+                    evaluation_key: evaluationKey,
+                    answers: currentAnswers,
+                    score: partialScore,
+                    passed: partialScore >= (evaluation?.passing_score || 70),
+                    completed_at: null
+                }
+            });
 
             setSyncStatus('saved');
         } catch (err) {
@@ -177,8 +194,8 @@ const EvaluationPlayer = () => {
         }
     };
 
-    const handleAnswer = (optionIndex) => {
-        const newAnswers = { ...answers, [currentQuestion]: optionIndex };
+    const handleAnswer = (answerValue) => {
+        const newAnswers = { ...answers, [currentQuestion]: answerValue };
         setAnswers(newAnswers);
         setExamStarted(true);
         localStorage.setItem(`exam_answers_${evaluationKey}`, JSON.stringify(newAnswers));
@@ -238,33 +255,16 @@ const EvaluationPlayer = () => {
         const passed = score >= (evaluation.passing_score || 70);
 
         try {
-            // Manual Check-and-Update (Upsert)
-            const { data: existing } = await supabase
-                .from('intentos_evaluacion')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('evaluation_key', evaluationKey)
-                .maybeSingle();
-
-            const payload = {
-                user_id: user?.id,
-                evaluation_key: evaluationKey,
-                answers: answers,
-                score: score,
-                passed: passed,
-                completed_at: new Date().toISOString()
-            };
-
-            if (existing) {
-                await supabase
-                    .from('intentos_evaluacion')
-                    .update(payload)
-                    .eq('id', existing.id);
-            } else {
-                await supabase
-                    .from('intentos_evaluacion')
-                    .insert(payload);
-            }
+            await api('/attempts', {
+                method: 'POST',
+                body: {
+                    evaluation_key: evaluationKey,
+                    answers: answers,
+                    score: score,
+                    passed: passed,
+                    completed_at: new Date().toISOString()
+                }
+            });
 
             setResult({ score, correctCount, totalQuestions, passed });
             setShowResults(true);
@@ -406,7 +406,7 @@ const EvaluationPlayer = () => {
                     currentQuestion={currentQuestion}
                     answers={answers}
                     onQuestionClick={handleQuestionClick}
-                    showFeedback={true}
+                    showFeedback={false}
                 />
 
                 <div style={{ width: '100%' }}>
@@ -416,7 +416,7 @@ const EvaluationPlayer = () => {
                         question={currentQ}
                         userAnswer={userAnswer}
                         onAnswer={handleAnswer}
-                        showFeedback={true}
+                        showFeedback={false}
                     />
 
                     <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>

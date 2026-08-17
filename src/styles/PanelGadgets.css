@@ -1,0 +1,219 @@
+/* ============================================================
+   PanelGadgets — Gadgets Digitales bloqueables
+   ============================================================ */
+
+.gadgets-page {
+    padding: 0.25rem;
+}
+
+.gadgets-header-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.gadgets-header-card h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+}
+
+.gadgets-header-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ── Grupo por curso ── */
+.gadgets-course-group {
+    margin-bottom: 2.5rem;
+}
+
+.gadgets-course-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+/* ── Grid de insignias ── */
+.gadgets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── Cada gadget ── */
+.gadget-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+}
+
+.gadget-item.locked {
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Círculo de insignia */
+.gadget-badge {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    background: var(--glass-bg);
+    border: 2px solid var(--glass-border);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.gadget-item:not(.locked) .gadget-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.gadget-badge.unlocked {
+    border-color: var(--gadget-color, #a855f7);
+    box-shadow: 0 0 0 0 var(--gadget-color, #a855f7);
+    animation: gadget-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes gadget-glow-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(168, 85, 247, 0.1); }
+    50%       { box-shadow: 0 0 20px rgba(168, 85, 247, 0.25); }
+}
+
+.gadget-badge.locked {
+    filter: grayscale(1);
+    opacity: 0.45;
+}
+
+/* Overlay de lock */
+.gadget-lock-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.7);
+}
+
+/* Nombre del gadget */
+.gadget-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    max-width: 110px;
+}
+
+.gadget-item:not(.locked) .gadget-name {
+    color: var(--text-primary);
+}
+
+/* Tooltip de lock */
+.gadget-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.78rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    max-width: 200px;
+    white-space: normal;
+    text-align: center;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    line-height: 1.4;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.gadget-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(15, 23, 42, 0.95);
+}
+
+.gadget-item:hover .gadget-tooltip {
+    opacity: 1;
+}
+
+/* Conteo total */
+.gadgets-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.gadgets-stat {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.gadgets-stat-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+/* Estado vacío */
+.gadgets-empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+/* Light mode */
+:root[data-theme='light'] .gadget-badge {
+    background: rgba(255,255,255,0.8);
+}
+
+:root[data-theme='light'] .gadget-tooltip {
+    background: white;
+    border-color: rgba(0,0,0,0.1);
+    color: #1e293b;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+:root[data-theme='light'] .gadget-tooltip::after {
+    border-top-color: white;
+}

@@ -1,0 +1,13 @@
+/* Placeholder for global design system styles.
+   Este archivo se importa desde src/main.jsx.
+   Agrega aquí variables CSS, resets o reglas globales compartidas.
+*/
+:root {
+  --color-primary: #f59e0b;
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+}
+
+html {
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,674 @@
+/* ============================================================
+   Electricity Simulators — Shared Styles
+   ============================================================ */
+
+/* ── Quitar flechitas arriba/abajo en inputs numéricos ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+/* ── Wrapper general de simulador ── */
+.sim-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.sim-card-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.sim-card-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.2rem;
+}
+
+.sim-card-header p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.sim-card-body {
+    padding: 1.25rem;
+}
+
+/* ── Grid 2 columnas (visualización + controles) ── */
+.sim-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 640px) {
+    .sim-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Panel de visualización SVG ── */
+.sim-visual {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+:root[data-theme='light'] .sim-visual {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Controles ── */
+.sim-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.sim-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sim-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sim-label-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.sim-label-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Slider custom */
+.sim-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--glass-border);
+    outline: none;
+    cursor: pointer;
+}
+
+.sim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-purple);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(168, 85, 247, 0.5);
+    transition: transform 0.15s;
+}
+
+.sim-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* ── Gauge de corriente ── */
+.sim-gauge {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.sim-gauge-bar-bg {
+    height: 28px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    padding: 3px;
+}
+
+.sim-gauge-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent-purple);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+    min-width: 0;
+}
+
+.sim-gauge-bar-fill.danger {
+    background: #ef4444;
+    animation: gauge-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes gauge-pulse {
+    from { opacity: 0.7; }
+    to   { opacity: 1; }
+}
+
+/* ── Short circuit overlay ── */
+.sim-short-circuit-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(239, 68, 68, 0.8);
+    backdrop-filter: blur(2px);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    gap: 0.5rem;
+    animation: short-circuit-pulse 0.6s ease-in-out infinite alternate;
+    z-index: 10;
+}
+
+@keyframes short-circuit-pulse {
+    from { opacity: 0.85; }
+    to   { opacity: 1; }
+}
+
+.sim-short-circuit-icon {
+    font-size: 2.5rem;
+}
+
+.sim-short-circuit-title {
+    font-size: 1.2rem;
+    letter-spacing: 0.05em;
+}
+
+.sim-short-circuit-sub {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* ── Exercise Mode ── */
+.sim-exercise-card {
+    background: rgba(168, 85, 247, 0.05);
+    border: 1px dashed rgba(168, 85, 247, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.sim-data-boxes {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.sim-data-box {
+    flex: 1;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.sim-data-box.unknown {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.2);
+}
+
+.sim-data-box-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.sim-data-box-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.sim-data-box.unknown .sim-data-box-value {
+    color: var(--accent-purple);
+}
+
+.sim-data-box-unit {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: 2px;
+}
+
+.sim-exercise-actions {
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+}
+
+/* ── Buttons ── */
+.sim-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+.sim-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.sim-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.sim-btn-primary {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+    color: white;
+}
+
+.sim-btn-secondary {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+}
+
+/* ── Resistor Calculator ── */
+.resistor-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    position: relative;
+}
+
+.resistor-body {
+    width: 180px;
+    height: 36px;
+    border-radius: 6px;
+    background: #d4b483;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+.resistor-lead {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 3px;
+    width: 30px;
+    background: #a0a0a0;
+}
+
+.resistor-lead.left { left: -30px; }
+.resistor-lead.right { right: -30px; }
+
+.resistor-band {
+    width: 14px;
+    height: 100%;
+    border-radius: 2px;
+}
+
+.resistor-value-display {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+    font-variant-numeric: tabular-nums;
+}
+
+.resistor-tolerance {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.color-select-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.color-select-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.color-select-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.color-select {
+    flex: 1;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+}
+
+/* ── Circuit Simulator ── */
+.circuit-sim-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.circuit-sim-tab {
+    padding: 0.4rem 0.875rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.circuit-sim-tab.active {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.5);
+    color: var(--accent-purple);
+}
+
+.circuit-resistors {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+}
+
+.circuit-resistor-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.circuit-resistor-input {
+    flex: 1;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.circuit-resistor-input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+}
+
+.circuit-add-btn, .circuit-remove-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: opacity 0.15s;
+}
+
+.circuit-add-btn {
+    background: rgba(168, 85, 247, 0.2);
+    color: var(--accent-purple);
+}
+
+.circuit-remove-btn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.circuit-add-btn:hover { opacity: 0.8; }
+.circuit-remove-btn:hover { opacity: 0.8; }
+.circuit-add-btn:disabled, .circuit-remove-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Resultados */
+.circuit-results {
+    background: rgba(168, 85, 247, 0.05);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    text-align: center;
+}
+
+.circuit-result-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.circuit-result-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.circuit-result-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--accent-purple);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Conductor Animation ── */
+.conductor-svg-wrapper {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    padding: 0.75rem;
+    overflow: hidden;
+}
+
+:root[data-theme='light'] .conductor-svg-wrapper {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.conductor-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.875rem;
+    margin-top: 0.875rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.conductor-toggle {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: var(--glass-border);
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+}
+
+.conductor-toggle.on {
+    background: var(--accent-purple);
+}
+
+.conductor-toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.3s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.conductor-toggle.on .conductor-toggle-thumb {
+    transform: translateX(20px);
+}
+
+/* ── Multimeter ── */
+.multimeter-container {
+    position: relative;
+    display: inline-block;
+}
+
+.multimeter-img {
+    width: 100%;
+    max-width: 260px;
+    border-radius: 8px;
+}
+
+.multimeter-hotspot {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(168, 85, 247, 0.25);
+    border: 2px solid rgba(168, 85, 247, 0.8);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transition: background 0.2s, transform 0.2s;
+    animation: hotspot-ping 2s ease-in-out infinite;
+}
+
+.multimeter-hotspot:hover {
+    background: rgba(168, 85, 247, 0.5);
+    transform: scale(1.15);
+}
+
+@keyframes hotspot-ping {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); }
+    50%       { box-shadow: 0 0 0 6px rgba(168, 85, 247, 0); }
+}
+
+.multimeter-info-panel {
+    background: var(--glass-bg);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 0.75rem;
+    animation: panel-fade-in 0.2s ease;
+}
+
+@keyframes panel-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.multimeter-info-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+    margin: 0 0 0.25rem;
+}
+
+.multimeter-info-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Tabs de modo selector ── */
+.sim-mode-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+}
+
+.sim-mode-tab {
+    padding: 0.3rem 0.625rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.sim-mode-tab.active {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.5);
+    color: var(--accent-purple);
+}
+
+/* Seven Segment Display */
+.seven-seg-display {
+    background: #0d1117;
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    font-family: 'Courier New', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #10b981;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    min-width: 140px;
+    text-align: right;
+}

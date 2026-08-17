@@ -1,0 +1,256 @@
+/* ============================================================
+   PanelPerfil — Perfil del estudiante con IdCard 3D
+   ============================================================ */
+
+.perfil-page {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .perfil-page {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Columna izquierda: IdCard + acciones ── */
+.perfil-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.perfil-card-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.perfil-card-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* ── Rango actual ── */
+.perfil-rank-section {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+}
+
+.perfil-rank-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.perfil-rank-emoji {
+    font-size: 2rem;
+}
+
+.perfil-rank-name {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.perfil-rank-desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.perfil-rank-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.perfil-rank-bar-bg {
+    height: 8px;
+    background: var(--glass-border);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.perfil-rank-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Columna derecha: Estadísticas + Avatar selector ── */
+.perfil-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ── Stats grid ── */
+.perfil-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .perfil-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.perfil-stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 0.2s;
+}
+
+.perfil-stat-card:hover {
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.perfil-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.perfil-stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.perfil-stat-label {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+
+/* ── Todos los rangos ── */
+.perfil-ranks-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+}
+
+.perfil-ranks-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 1rem;
+}
+
+.perfil-ranks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.perfil-rank-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: background 0.2s;
+}
+
+.perfil-rank-item.current {
+    background: rgba(168, 85, 247, 0.08);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.perfil-rank-item.achieved {
+    opacity: 0.7;
+}
+
+.perfil-rank-item.locked {
+    opacity: 0.35;
+    filter: grayscale(0.6);
+}
+
+.perfil-rank-item-emoji {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.perfil-rank-item-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.perfil-rank-item-req {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.perfil-rank-item-badge {
+    margin-left: auto;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.perfil-rank-item-badge.current {
+    background: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
+}
+
+.perfil-rank-item-badge.achieved {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.perfil-rank-item-badge.locked {
+    background: rgba(100, 116, 139, 0.2);
+    color: #64748b;
+}
+
+/* Scrollbar oculto */
+.perfil-ranks-list::-webkit-scrollbar { display: none; }
+
+/* Light mode */
+:root[data-theme='light'] .perfil-stat-card,
+:root[data-theme='light'] .perfil-card-section,
+:root[data-theme='light'] .perfil-rank-section,
+:root[data-theme='light'] .perfil-ranks-card {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(148, 163, 184, 0.2);
+}

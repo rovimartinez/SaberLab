@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Shield, CheckCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { useAuth } from '../context/useAuth';
 import '../styles/Login.css';
 
@@ -23,29 +23,19 @@ const RequestAccess = () => {
 
             const normalizedEmail = user?.email?.trim().toLowerCase();
 
-            const query = supabase
-                .from('perfiles')
-                .select('id, email, role')
-                .limit(1);
-
             let data = null;
             let error = null;
 
             if (user?.id) {
-                const response = await query.eq('id', user.id).maybeSingle();
-                data = response.data;
-                error = response.error;
+                const { data: responseData, error: responseError } = await api('/profile');
+                data = responseData;
+                error = responseError;
             }
 
             if (!data && normalizedEmail) {
-                const response = await supabase
-                    .from('perfiles')
-                    .select('id, email, role')
-                    .eq('email', normalizedEmail)
-                    .limit(1)
-                    .maybeSingle();
-                data = response.data;
-                error = error || response.error;
+                const { data: responseData, error: responseError } = await api('/profile');
+                data = responseData;
+                error = error || responseError;
             }
 
             if (error) {
@@ -98,13 +88,7 @@ const RequestAccess = () => {
         try {
             const normalizedEmail = userData.email.trim().toLowerCase();
 
-            const { data: existingRequest, error: requestLookupError } = await supabase
-                .from('solicitudes_acceso')
-                .select('id, status')
-                .eq('email', normalizedEmail)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const { data: existingRequest, error: requestLookupError } = await api('/requests?email=' + encodeURIComponent(normalizedEmail));
 
             if (requestLookupError) throw requestLookupError;
 
@@ -121,24 +105,17 @@ const RequestAccess = () => {
             }
 
             if (existingRequest?.id) {
-                const { error: updateError } = await supabase
-                    .from('solicitudes_acceso')
-                    .update({
-                        name: userData.name,
-                        email: normalizedEmail,
-                        status: 'pending'
-                    })
-                    .eq('id', existingRequest.id);
+                const { error: updateError } = await api('/requests', {
+                    method: 'PATCH',
+                    body: { id: existingRequest.id, name: userData.name, email: normalizedEmail, status: 'pending' }
+                });
 
                 if (updateError) throw updateError;
             } else {
-                const { error: insertError } = await supabase
-                    .from('solicitudes_acceso')
-                    .insert({
-                        name: userData.name,
-                        email: normalizedEmail,
-                        status: 'pending'
-                    });
+                const { error: insertError } = await api('/requests', {
+                    method: 'POST',
+                    body: { name: userData.name, email: normalizedEmail, status: 'pending' }
+                });
 
                 if (insertError) throw insertError;
             }

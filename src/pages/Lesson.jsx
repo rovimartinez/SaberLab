@@ -24,6 +24,11 @@ import ArduinoPartsModal from '../components/lesson/modals/ArduinoPartsModal';
 import GuideModal from '../components/lesson/modals/GuideModal';
 import { saveContentEvent } from '../lib/learningAnalytics';
 import { normalizeLessonData } from '../lib/lessonSchema';
+import { upsertLessonProgress } from '../lib/studentProgress';
+import Celebration from '../components/celebration/Celebration';
+import RewardBanner from '../components/celebration/RewardBanner';
+import RewardDialog from '../components/celebration/RewardDialog';
+import { getGadgetUnlockedByLesson } from '../data/gadgetsData';
 
 const tabs = [
     { id: 'contenido', label: 'Contenido', icon: <BookOpen size={18} /> },
@@ -64,6 +69,9 @@ const Lesson = () => {
     const [activeChallenge, setActiveChallenge] = useState(0);
     const [showSimulator, setShowSimulator] = useState(false);
     const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+    const [showCelebration, setShowCelebration] = useState(false);
+    const [showBanner, setShowBanner] = useState(false);
+    const [rewardGadget, setRewardGadget] = useState(null);
     const hasTrackedInitialTabRef = useRef(false);
 
     useEffect(() => {
@@ -106,25 +114,35 @@ const Lesson = () => {
     const handleCompleteLesson = async () => {
         if (!user) return;
         try {
-            const { error } = await supabase
-                .from('progreso_usuario')
-                .upsert({
-                    user_id: user.id,
-                    course_id: courseData?.id,
-                    lesson_id: lessonKey,
-                    progress: 100,
-                    completed: true,
-                    updated_at: new Date().toISOString()
-                }, { 
-                    onConflict: 'user_id, lesson_id' 
-                });
+            const saved = await upsertLessonProgress({
+                user_id: user.id,
+                lesson_id: lessonKey,
+                status: 'completed',
+                progress: 100,
+                completed_at: new Date().toISOString()
+            });
 
-            if (error) throw error;
-            alert('¡Lección completada con éxito!');
+            if (!saved) throw new Error('No se pudo guardar el progreso');
+
+            // Verificar si esta lección desbloquea un gadget
+            const unlockedGadget = getGadgetUnlockedByLesson(lessonKey);
+            if (unlockedGadget) {
+                setRewardGadget(unlockedGadget);
+            }
+
+            // 🎉 Mostrar celebración con confeti
+            setShowCelebration(true);
         } catch (error) {
             console.error('Error saving lesson progress:', error);
-            alert('Error al guardar el progreso');
+            // Banner de error sutil en vez de alert
+            setShowBanner(true);
         }
+    };
+
+    const handleCelebrationClose = () => {
+        setShowCelebration(false);
+        // Navegar de regreso al curso después de cerrar
+        navigate(`/dashboard/my-courses/${courseId}`);
     };
 
     useEffect(() => {
@@ -184,6 +202,28 @@ const Lesson = () => {
 
     return (
         <div className="lesson-view-container animate-fade-in">
+            {/* 🎉 Celebración al completar lección */}
+            <Celebration
+                show={showCelebration}
+                onClose={handleCelebrationClose}
+                title="¡Lección Completada!"
+                subtitle="Tu progreso fue guardado. ¡Sigue aprendiendo!"
+            />
+
+            {/* Reward Dialog al desbloquear gadget */}
+            <RewardDialog
+                isOpen={!!rewardGadget && !showCelebration}
+                onClose={() => setRewardGadget(null)}
+                gadget={rewardGadget}
+            />
+
+            {/* Banner de error sutil */}
+            <RewardBanner
+                show={showBanner}
+                message="Error al guardar"
+                desc="No se pudo guardar el progreso. Inténtalo de nuevo."
+            />
+
             <LessonLegacyBridge
                 hasSimulator={lesson?.hasSimulator}
                 onShowGuide={() => setShowGuide(true)}

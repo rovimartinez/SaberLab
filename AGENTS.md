@@ -1,5 +1,9 @@
 # SaberLab - Estado del Proyecto
 
+## 🔎 Reglas de trabajo
+- Antes de buscar o modificar código, leer primero [REPO_MAP.md](REPO_MAP.md) para localizar la ruta relevante.
+- Si el cambio afecta el estado del proyecto, revisar también [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md) y [TAREAS.md](TAREAS.md).
+
 ## ✅ ÚLTIMO: HOY (05-abr-2026)
 - Sistema de evaluaciones migrado a JSON en tabla `evaluaciones`
 - Nuevo Editor Visual para preguntas

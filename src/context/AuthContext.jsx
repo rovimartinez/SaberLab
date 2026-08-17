@@ -1,5 +1,4 @@
 import { createContext, useEffect, useState, useRef } from 'react';
-import { supabase } from '../lib/supabase';
 import { api, setToken, clearToken } from '../lib/api';
 
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
@@ -106,7 +105,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const { profile: p, courses } = await api('/profile');
+      const { data, error } = await api('/profile');
+      if (error) throw error;
+
+      const courses = data?.courses || [];
 
       if (courses && courses.length > 0) {
         const courseIds = courses.map((course) => course.id);
@@ -145,27 +147,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loadNotificationsCount = async (userId) => {
-    try {
-      const { count } = await supabase
-        .from('notificaciones')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('read', false);
-      
-      setUnreadNotificationsCount(count || 0);
-    } catch (err) {
-      console.error('Error loading notifications count:', err);
-    }
-  };
-
   const loadNotifications = async (userId) => {
     try {
-        const { data } = await supabase
-            .from('notificaciones')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
+        const { data } = await api('/notifications');
 
         if (data) {
             setNotifications(data);
@@ -173,6 +157,15 @@ export const AuthProvider = ({ children }) => {
         }
     } catch (err) {
         console.error('Error loading notifications:', err);
+    }
+  };
+
+  const loadNotificationsCount = async (userId) => {
+    try {
+      const { data } = await api('/notifications');
+      setUnreadNotificationsCount((data || []).filter(n => !n.read).length);
+    } catch (err) {
+      console.error('Error loading notifications count:', err);
     }
   };
 
@@ -184,12 +177,12 @@ export const AuthProvider = ({ children }) => {
 
   const loadLessonVisibility = async () => {
     try {
-      const { visibility } = await api('/visibility');
-      if (visibility && Object.keys(visibility).length > 0) {
-        setLessonVisibility(visibility);
-      }
+      const { data } = await api('/visibility');
+      const visibility = data && typeof data === 'object' ? data : {};
+      setLessonVisibility(visibility);
     } catch (err) {
       console.error('Error cargando visibilidad de lecciones:', err);
+      setLessonVisibility({});
     }
   };
 
@@ -200,13 +193,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const loadPendingAccessRequestsCount = async () => {
-    const { count, error } = await supabase
-      .from('solicitudes_acceso')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-
-    if (!error) {
-      setPendingAccessRequestsCount(count || 0);
+    try {
+      const { data } = await api('/requests');
+      setPendingAccessRequestsCount((data || []).filter(r => r.status === 'pending').length);
+    } catch (err) {
+      console.error('Error loading pending access requests count:', err);
     }
   };
 
@@ -221,28 +212,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadEvaluations = async (userId, role) => {
     try {
-      let query = supabase
-        .from('evaluaciones')
-        .select('*')
-        .order('due_date', { ascending: true });
-
-      if (role !== 'admin') {
-        const { data: enrollments } = await supabase
-          .from('inscripciones')
-          .select('course_id')
-          .eq('user_id', userId);
-        
-        if (enrollments && enrollments.length > 0) {
-          query = query.in('course_id', enrollments.map(e => e.course_id));
-        } else {
-          setEvaluations([]);
-          return;
-        }
-      } else {
-        query = query.eq('is_published', true);
-      }
-
-      const { data } = await query;
+      const { data } = await api('/evaluations');
       if (data) setEvaluations(data);
     } catch (err) {
       console.error('Error loading evaluations:', err);
@@ -251,12 +221,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadUserProgress = async (userId) => {
     try {
-      const { data } = await supabase
-        .from('progreso_usuario')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
+      const { data } = await api('/progress');
       if (data) setUserProgress(data);
     } catch (err) {
       console.error('Error loading user progress:', err);
@@ -268,62 +233,13 @@ export const AuthProvider = ({ children }) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    const { data, error } = await supabase
-      .from('solicitudes_acceso')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error consultando solicitud de acceso:', error);
+    try {
+      const { data } = await api(`/requests?email=${encodeURIComponent(normalizedEmail)}`);
+      return data || null;
+    } catch (err) {
+      console.error('Error consultando solicitud de acceso:', err);
       return null;
     }
-
-    return data;
-  };
-
-  const getProfileForUser = async (loggedInUser) => {
-    if (!loggedInUser?.id) return null;
-
-    const normalizedEmail = loggedInUser.email?.trim().toLowerCase();
-
-    const { data: profileById, error: profileByIdError } = await supabase
-      .from('perfiles')
-      .select('id, email, full_name, role')
-      .eq('id', loggedInUser.id)
-      .maybeSingle();
-
-    if (profileByIdError) {
-      console.error('Error consultando perfil por id:', profileByIdError);
-    }
-
-    if (profileById) {
-      return profileById;
-    }
-
-    if (!normalizedEmail) {
-      return null;
-    }
-
-    const { data: profileByEmail, error: profileByEmailError } = await supabase
-      .from('perfiles')
-      .select('id, email, full_name, role')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-
-    if (profileByEmailError) {
-      console.error('Error consultando perfil por email:', profileByEmailError);
-      return null;
-    }
-
-    if (profileByEmail?.id && profileByEmail.id !== loggedInUser.id) {
-      // Perfil encontrado pero con ID diferente - se usará el de auth
-      return profileByEmail;
-    }
-
-    return profileByEmail ?? null;
   };
 
   const validateSession = async (token) => {
@@ -337,7 +253,10 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const { profile: p } = await api('/auth/me');
+      const { data, error } = await api('/auth/me');
+      if (error) throw error;
+
+      const p = data?.profile;
       if (!p) {
         setUser(null);
         setProfile(null);
@@ -377,12 +296,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initSession = async () => {
-      // Si venimos de Google OAuth, el token llega en el hash: #/auth?token=...
+      // Si venimos de Google OAuth, el token llega en el hash.
       const rawHash = window.location.hash;
       let token = localStorage.getItem('saberlab-token');
 
       if (rawHash.includes('token=')) {
-        const params = new URLSearchParams(rawHash.slice(rawHash.indexOf('?') + 1));
+        const hashParams = rawHash.includes('?')
+          ? rawHash.slice(rawHash.indexOf('?') + 1)
+          : rawHash.replace(/^#\/?/, '');
+        const params = new URLSearchParams(hashParams);
         token = params.get('token');
         if (token) {
           setToken(token);

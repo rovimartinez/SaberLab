@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Target, Award, Calendar, BookOpen, Clock, ChevronRight, Flame, Activity, Zap, Bot, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import '../styles/PanelProgreso.css';
 
@@ -22,12 +22,8 @@ const PanelProgreso = () => {
                 setUserProgress(cachedProgress);
             }
 
-            // Los logros si se cargan localmente por ahora
-            const { data: achievementsData } = await supabase
-                .from('logros')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('unlocked_at', { ascending: false });
+            // Los logros se cargan del backend
+            const { data: achievementsData } = await api('/achievements');
 
             if (achievementsData) {
                 setAchievements(achievementsData);
