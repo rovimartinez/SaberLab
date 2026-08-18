@@ -63,6 +63,14 @@ const PanelCalificaciones = () => {
             const percentage = isSubmitted ? Math.round((pointsObtained / maxPoints) * 100) : 0;
             const passed = isSubmitted ? (percentage >= 60) : null;
 
+            let antiCheat = null;
+            if (attempt?.answers) {
+                try {
+                    const parsed = typeof attempt.answers === 'string' ? JSON.parse(attempt.answers) : attempt.answers;
+                    antiCheat = parsed?.anti_cheat || null;
+                } catch {}
+            }
+
             return {
                 id: evalKey,
                 title: evalData.title,
@@ -73,6 +81,7 @@ const PanelCalificaciones = () => {
                 percentage,
                 isSubmitted,
                 passed,
+                antiCheat,
                 submittedAt: attempt?.completed_at || attempt?.timestamp
             };
         });
@@ -246,26 +255,48 @@ const PanelCalificaciones = () => {
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                                             {ev.isSubmitted ? (
-                                                <span style={{
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    gap: '6px',
-                                                    minWidth: '115px',
-                                                    height: '36px',
-                                                    boxSizing: 'border-box',
-                                                    padding: '0 0.85rem',
-                                                    borderRadius: '9px',
-                                                    background: 'rgba(16, 185, 129, 0.15)',
-                                                    color: '#10b981',
-                                                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                                                    fontSize: '0.82rem',
-                                                    fontWeight: 800,
-                                                    whiteSpace: 'nowrap'
-                                                }}>
-                                                    <CheckCircle2 size={15} />
-                                                    Realizado
-                                                </span>
+                                                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                                                    <span style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        minWidth: '115px',
+                                                        height: '32px',
+                                                        boxSizing: 'border-box',
+                                                        padding: '0 0.85rem',
+                                                        borderRadius: '9px',
+                                                        background: 'rgba(16, 185, 129, 0.15)',
+                                                        color: '#10b981',
+                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                        fontSize: '0.82rem',
+                                                        fontWeight: 800,
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        <CheckCircle2 size={15} />
+                                                        Realizado
+                                                    </span>
+                                                    {ev.antiCheat?.strikes > 0 ? (
+                                                        <span style={{
+                                                            fontSize: '0.66rem',
+                                                            fontWeight: 800,
+                                                            color: ev.antiCheat.strikes >= 3 ? '#ef4444' : '#f59e0b',
+                                                            whiteSpace: 'nowrap'
+                                                        }}>
+                                                            {ev.antiCheat.strikes >= 3 ? '⚠️ Infracción (3/3)' : `⚠️ ${ev.antiCheat.strikes} Advertencia(s)`}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{
+                                                            fontSize: '0.66rem',
+                                                            fontWeight: 700,
+                                                            color: '#10b981',
+                                                            opacity: 0.8,
+                                                            whiteSpace: 'nowrap'
+                                                        }}>
+                                                            ✓ 100% Íntegro
+                                                        </span>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <span style={{
                                                     display: 'inline-flex',

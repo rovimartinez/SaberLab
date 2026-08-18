@@ -1,0 +1,288 @@
+/* ============================================================
+   SaberLab Sentinel — Sistema Antitrampa y Supervisión Activa
+   ============================================================ */
+
+/* ── 1. Pantalla de Consentimiento de Seguridad (Pre-Flight Gate) ── */
+.security-gate-wrapper {
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 2.5rem 2rem;
+    background: #0f172a;
+    background-image: radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.15) 0%, transparent 70%);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.1);
+    color: #f8fafc;
+    text-align: center;
+}
+
+.security-gate-icon-halo {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
+    background: rgba(2, 132, 199, 0.15);
+    border: 1.5px solid #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+}
+
+.security-gate-title {
+    font-size: 1.85rem;
+    font-weight: 900;
+    margin: 0 0 0.5rem;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+.security-gate-subtitle {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin: 0 0 1.75rem;
+    line-height: 1.5;
+}
+
+.security-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 640px) {
+    .security-rules-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.security-rule-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+}
+
+.rule-icon {
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.rule-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0 0 0.2rem;
+}
+
+.rule-desc {
+    font-size: 0.76rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.35;
+}
+
+.security-start-btn {
+    width: 100%;
+    max-width: 480px;
+    padding: 1.1rem 2rem;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border: 1px solid #38bdf8;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 6px 25px rgba(2, 132, 199, 0.45);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    transition: all 0.2s ease;
+}
+
+.security-start-btn:hover {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    box-shadow: 0 8px 32px rgba(14, 165, 233, 0.6);
+    transform: translateY(-2px);
+}
+
+/* ── 2. Badge HUD de Supervisión en el Header del Examen ── */
+.anticheat-hud-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.35rem 0.85rem;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: #10b981;
+    letter-spacing: 0.5px;
+}
+
+.anticheat-hud-badge.warning {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+}
+
+.anticheat-hud-badge.danger {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+}
+
+.hud-pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+    animation: anticheatPulse 1.5s infinite;
+}
+
+@keyframes anticheatPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ── 3. Modal de Infracción / Advertencia (Strike Overlay) ── */
+.strike-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 8, 18, 0.96);
+    backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    padding: 1.5rem;
+    animation: strikeFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes strikeFadeIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.strike-modal-card {
+    max-width: 580px;
+    width: 100%;
+    background: #0f172a;
+    border: 2px solid #ef4444;
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 0 80px rgba(239, 68, 68, 0.4), 0 25px 60px rgba(0, 0, 0, 0.9);
+    position: relative;
+    overflow: hidden;
+}
+
+.strike-modal-card.warning-level {
+    border-color: #f59e0b;
+    box-shadow: 0 0 80px rgba(245, 158, 11, 0.35), 0 25px 60px rgba(0, 0, 0, 0.9);
+}
+
+.strike-icon-wrapper {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    border: 2px solid #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+}
+
+.strike-modal-card.warning-level .strike-icon-wrapper {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+}
+
+.strike-pills-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+}
+
+.strike-pip {
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    font-family: monospace;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.strike-pip.active {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+}
+
+.strike-pip.active-warn {
+    background: #f59e0b;
+    color: #ffffff;
+    border-color: #f59e0b;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.strike-title {
+    font-size: 1.65rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 0.5rem;
+}
+
+.strike-reason-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    font-size: 0.88rem;
+    color: #fca5a5;
+    margin: 1rem 0 1.5rem;
+    line-height: 1.4;
+}
+
+.strike-modal-card.warning-level .strike-reason-box {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fde68a;
+}
+
+.strike-resume-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: white;
+    border: 1px solid #38bdf8;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(2, 132, 199, 0.4);
+    transition: all 0.2s ease;
+}
+
+.strike-resume-btn:hover {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    transform: translateY(-1px);
+}

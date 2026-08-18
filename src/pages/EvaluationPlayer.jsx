@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Bell, Clock, AlertTriangle, ShieldCheck, Activity, Layers, CheckCircle2, Award } from 'lucide-react';
+import { Bell, Clock, AlertTriangle, ShieldCheck, Activity, Layers, CheckCircle2, Award, ShieldAlert, EyeOff, Maximize, Lock, AlertOctagon, Sparkles } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/useAuth';
 import { getLessonInfo, LESSONS_REGISTRY } from '../data/coursesData.jsx';
@@ -8,6 +8,26 @@ import PracticalLabL6, { calculatePracticalScore } from '../components/simulator
 import QuestionNavigator from '../components/QuestionNavigator';
 import QuestionPanel from '../components/QuestionPanel';
 import '../styles/EvaluationInstruction.css';
+import '../styles/AntiCheatOverlay.css';
+
+// Generador de audio de advertencia sintético (Web Audio API)
+const playWarningBeep = (isFatal = false) => {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = isFatal ? 'sawtooth' : 'sine';
+        osc.frequency.setValueAtTime(isFatal ? 300 : 580, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + (isFatal ? 0.7 : 0.35));
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + (isFatal ? 0.7 : 0.35));
+    } catch {
+        // Bloqueo de audio previo a interacción
+    }
+};
 
 const getQuestionText = (question) => question?.question || question?.question_text || question?.q || question?.text || '';
 
@@ -75,6 +95,29 @@ const EvaluationPlayer = () => {
     });
     const [showTimeWarningModal, setShowTimeWarningModal] = useState(false);
     const [hasShown3MinWarning, setHasShown3MinWarning] = useState(false);
+
+    // ── ESTADOS DEL SISTEMA ANTITRAMPA SENTINEL ──
+    const [strikes, setStrikes] = useState(() => {
+        try {
+            const saved = localStorage.getItem(`exam_strikes_${evaluationKey}`);
+            return saved ? parseInt(saved, 10) : 0;
+        } catch { return 0; }
+    });
+    const [tabSwitches, setTabSwitches] = useState(() => {
+        try {
+            const saved = localStorage.getItem(`exam_tab_switches_${evaluationKey}`);
+            return saved ? parseInt(saved, 10) : 0;
+        } catch { return 0; }
+    });
+    const [fullscreenExits, setFullscreenExits] = useState(() => {
+        try {
+            const saved = localStorage.getItem(`exam_fs_exits_${evaluationKey}`);
+            return saved ? parseInt(saved, 10) : 0;
+        } catch { return 0; }
+    });
+    const [showStrikeModal, setShowStrikeModal] = useState(false);
+    const [strikeModalData, setStrikeModalData] = useState({ number: 1, reason: '' });
+    const lastInfractionTimeRef = useRef(0);
 
     // Guardar posición de navegación en tiempo real
     useEffect(() => {
@@ -234,10 +277,7 @@ const EvaluationPlayer = () => {
                     } else {
                         const limitSeconds = (evalObj.time_limit || 60) * 60;
                         setTimeLeft(limitSeconds);
-                        const endTime = now + limitSeconds;
-                        localStorage.setItem(`exam_end_time_${evaluationKey}`, endTime.toString());
-                        localStorage.setItem(`exam_started_${evaluationKey}`, 'true');
-                        setExamStarted(true);
+                        setExamStarted(false);
                     }
 
                     // --- RECUPERAR INTENTO DESDE D1 O LOCALSTORAGE ---
@@ -329,6 +369,133 @@ const EvaluationPlayer = () => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // ── 1. REGISTRAR INFRACCIÓN ANTITRAMPA ──
+    const recordInfraction = (reason) => {
+        if (!examStarted || showResults || reviewMode || finalizing) return;
+        
+        // Debounce de 1.5s para evitar eventos dobles
+        const now = Date.now();
+        if (now - lastInfractionTimeRef.current < 1500) return;
+        lastInfractionTimeRef.current = now;
+
+        const nextStrikes = strikes + 1;
+        setStrikes(nextStrikes);
+        localStorage.setItem(`exam_strikes_${evaluationKey}`, nextStrikes.toString());
+
+        if (reason.toLowerCase().includes('pestaña') || reason.toLowerCase().includes('ventana') || reason.toLowerCase().includes('aplicación')) {
+            const nextTabs = tabSwitches + 1;
+            setTabSwitches(nextTabs);
+            localStorage.setItem(`exam_tab_switches_${evaluationKey}`, nextTabs.toString());
+        } else if (reason.toLowerCase().includes('pantalla')) {
+            const nextFs = fullscreenExits + 1;
+            setFullscreenExits(nextFs);
+            localStorage.setItem(`exam_fs_exits_${evaluationKey}`, nextFs.toString());
+        }
+
+        playWarningBeep(nextStrikes >= 3);
+        setStrikeModalData({ number: nextStrikes, reason });
+        setShowStrikeModal(true);
+
+        if (nextStrikes >= 3) {
+            // Strike 3: Bloqueo total y auto-finalización por infracción
+            setTimeout(() => {
+                handleFinishExam(true, 'infraction');
+            }, 2200);
+        }
+    };
+
+    // ── 2. LISTENERS DE SEGURIDAD EN VIVO ──
+    useEffect(() => {
+        if (!examStarted || showResults || reviewMode || finalizing) return;
+
+        // Detector de cambio de pestaña o minimizado
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                recordInfraction('Has cambiado de pestaña o minimizado el examen.');
+            }
+        };
+
+        // Detector de pérdida de foco (otra aplicación)
+        const handleWindowBlur = () => {
+            if (!document.hidden) {
+                recordInfraction('Has cambiado a otra ventana o aplicación externa.');
+            }
+        };
+
+        // Detector de salida de pantalla completa
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement && !showStrikeModal) {
+                recordInfraction('Has salido del modo Pantalla Completa obligatorio.');
+            }
+        };
+
+        // Bloqueo de portapapeles
+        const handleClipboard = (e) => {
+            e.preventDefault();
+        };
+
+        // Bloqueo de menú contextual
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+        };
+
+        // Bloqueo de atajos clave (DevTools, Source, Print, Copy)
+        const handleKeyDown = (e) => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key))) {
+                e.preventDefault();
+                recordInfraction('Intento de inspección / herramientas de desarrollador.');
+                return;
+            }
+            if (e.ctrlKey && ['u', 'U', 'p', 'P', 's', 'S'].includes(e.key)) {
+                e.preventDefault();
+                return;
+            }
+            if (e.ctrlKey && ['c', 'C', 'v', 'V', 'x', 'X'].includes(e.key)) {
+                e.preventDefault();
+                return;
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleWindowBlur);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('copy', handleClipboard);
+        document.addEventListener('cut', handleClipboard);
+        document.addEventListener('paste', handleClipboard);
+        document.addEventListener('contextmenu', handleContextMenu);
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('blur', handleWindowBlur);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('copy', handleClipboard);
+            document.removeEventListener('cut', handleClipboard);
+            document.removeEventListener('paste', handleClipboard);
+            document.removeEventListener('contextmenu', handleContextMenu);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [examStarted, showResults, reviewMode, finalizing, strikes, tabSwitches, fullscreenExits, showStrikeModal]);
+
+    // ── 3. INICIO CON SEGURIDAD Y PANTALLA COMPLETA ──
+    const startExamWithSecurity = async () => {
+        try {
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+            }
+        } catch (e) {
+            console.warn('Fullscreen request:', e);
+        }
+
+        const limitSeconds = (evaluation?.time_limit || 60) * 60;
+        const now = Math.floor(Date.now() / 1000);
+        const endTime = now + limitSeconds;
+        setTimeLeft(limitSeconds);
+        localStorage.setItem(`exam_end_time_${evaluationKey}`, endTime.toString());
+        localStorage.setItem(`exam_started_${evaluationKey}`, 'true');
+        setExamStarted(true);
+    };
+
     useEffect(() => {
         if (!examStarted || showResults || reviewMode) return;
 
@@ -402,7 +569,13 @@ const EvaluationPlayer = () => {
                     evaluation_key: evaluationKey,
                     answers: {
                         theory: currentTheoryAnswers,
-                        practical: practicalAnswers
+                        practical: practicalAnswers,
+                        anti_cheat: {
+                            strikes: strikes,
+                            tab_switches: tabSwitches,
+                            fullscreen_exits: fullscreenExits,
+                            status: strikes >= 3 ? 'infraction' : strikes > 0 ? 'warning' : 'clean'
+                        }
                     },
                     score: scorePct,
                     points_obtained: totalPts,
@@ -452,10 +625,14 @@ const EvaluationPlayer = () => {
         setCurrentQuestion(index);
     };
 
-    const handleFinishExam = async (isAuto = false) => {
+    const handleFinishExam = async (isAuto = false, infractionType = null) => {
         if (!isAuto) {
             const confirmed = window.confirm('¿Deseas finalizar el examen oficial? Se consolidarán tus puntajes de Teoría y Práctica.');
             if (!confirmed) return;
+        }
+
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
         }
 
         let correctCount = 0;
@@ -493,6 +670,7 @@ const EvaluationPlayer = () => {
         const totalPts = isExamenL6 ? (theoryPts + currentPracticalScore) : theoryPts;
         const scorePct = Math.round((totalPts / maxExamPts) * 100);
         const passed = scorePct >= (evaluation?.passing_score || 70);
+        const integrityStatus = infractionType === 'infraction' || strikes >= 3 ? 'infraction' : strikes > 0 ? 'warning' : 'clean';
 
         try {
             await api('/attempts', {
@@ -501,7 +679,13 @@ const EvaluationPlayer = () => {
                     evaluation_key: evaluationKey,
                     answers: {
                         theory: answers,
-                        practical: practicalAnswers
+                        practical: practicalAnswers,
+                        anti_cheat: {
+                            strikes: strikes,
+                            tab_switches: tabSwitches,
+                            fullscreen_exits: fullscreenExits,
+                            status: integrityStatus
+                        }
                     },
                     score: scorePct,
                     points_obtained: totalPts,
@@ -520,7 +704,8 @@ const EvaluationPlayer = () => {
                 practicalScore: currentPracticalScore, 
                 correctCount, 
                 totalQuestions, 
-                passed 
+                passed,
+                integrityStatus
             });
             setShowResults(true);
             setFinalizing(false);
@@ -531,6 +716,7 @@ const EvaluationPlayer = () => {
                 points_obtained: totalPts,
                 max_points: maxExamPts,
                 passed: passed,
+                integrityStatus: integrityStatus,
                 completed_at: new Date().toISOString()
             };
             localStorage.setItem(`exam_completed_${normKey}`, JSON.stringify(completionRecord));
@@ -543,7 +729,6 @@ const EvaluationPlayer = () => {
             localStorage.removeItem(`exam_shuffled_questions_${evaluationKey}`);
             localStorage.removeItem(`exam_current_q_${evaluationKey}`);
             localStorage.removeItem(`exam_active_phase_${evaluationKey}`);
-            // Preservamos exam_answers y practical_answers para permitir la auditoría en modo de revisión
             
         } catch (error) {
             console.error('Error guardando intento:', error);
@@ -581,6 +766,82 @@ const EvaluationPlayer = () => {
                     >
                         Volver a evaluaciones
                     </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!examStarted && !reviewMode && !showResults) {
+        return (
+            <div className="notifications-page">
+                <div className="security-gate-wrapper">
+                    <div className="security-gate-icon-halo">
+                        <ShieldAlert size={42} color="#38bdf8" />
+                    </div>
+
+                    <h1 className="security-gate-title">Protocolo de Seguridad y Antitrampa</h1>
+                    <p className="security-gate-subtitle">
+                        Estás a punto de iniciar la prueba oficial <strong>{evaluation.title}</strong>. Para garantizar la validez académica y la integridad de tu certificación, el sistema activará la supervisión en tiempo real.
+                    </p>
+
+                    <div className="security-rules-grid">
+                        <div className="security-rule-card">
+                            <span className="rule-icon">🖥️</span>
+                            <div>
+                                <h4 className="rule-title">Pantalla Completa Obligatoria</h4>
+                                <p className="rule-desc">La prueba debe realizarse en pantalla completa continua. Salir registrará una infracción.</p>
+                            </div>
+                        </div>
+
+                        <div className="security-rule-card">
+                            <span className="rule-icon">👁️</span>
+                            <div>
+                                <h4 className="rule-title">Detección de Pestañas y Apps</h4>
+                                <p className="rule-desc">Cambiar de pestaña, minimizar el navegador o abrir otra app sumará un strike de advertencia.</p>
+                            </div>
+                        </div>
+
+                        <div className="security-rule-card">
+                            <span className="rule-icon">🔒</span>
+                            <div>
+                                <h4 className="rule-title">Bloqueo de Portapapeles</h4>
+                                <p className="rule-desc">Copiar, pegar, clic derecho e inspección de código están completamente inhabilitados.</p>
+                            </div>
+                        </div>
+
+                        <div className="security-rule-card">
+                            <span className="rule-icon">⚠️</span>
+                            <div>
+                                <h4 className="rule-title">Límite de 3 Strikes</h4>
+                                <p className="rule-desc">Al acumular 3 infracciones, el examen se bloqueará y auto-enviará inmediatamente al docente.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                            className="security-start-btn"
+                            onClick={startExamWithSecurity}
+                        >
+                            <Maximize size={20} />
+                            <span>Aceptar Protocolo e Iniciar Examen en Pantalla Completa</span>
+                        </button>
+                        <button
+                            onClick={() => navigate('/dashboard/evaluations')}
+                            style={{
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                color: '#cbd5e1',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                padding: '1rem 1.75rem',
+                                borderRadius: '14px',
+                                cursor: 'pointer',
+                                fontWeight: 700,
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Cancelar y Volver
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -650,6 +911,20 @@ const EvaluationPlayer = () => {
                             }}>
                                 {result?.totalPts ?? result?.score} <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>/ {result?.maxExamPts || 100} pts</span>
                             </div>
+                            
+                            {/* Insignia de Integridad */}
+                            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
+                                <div className={`anticheat-hud-badge ${result?.integrityStatus === 'infraction' || strikes >= 3 ? 'danger' : result?.integrityStatus === 'warning' || strikes > 0 ? 'warning' : ''}`}>
+                                    <ShieldCheck size={14} />
+                                    <span>
+                                        {result?.integrityStatus === 'infraction' || strikes >= 3 
+                                            ? 'AUDITORÍA: FINALIZADO CON INFRACCIONES' 
+                                            : result?.integrityStatus === 'warning' || strikes > 0 
+                                                ? `AUDITORÍA: COMPLETADO CON ${strikes} ADVERTENCIA(S)` 
+                                                : 'AUDITORÍA: 100% ÍNTEGRO (SIN INCIDENCIAS)'}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -712,6 +987,59 @@ const EvaluationPlayer = () => {
 
     return (
         <div className="notifications-page" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            
+            {/* Modal de Strike Antitrampa en Pantalla Completa */}
+            {showStrikeModal && (
+                <div className="strike-modal-overlay">
+                    <div className={`strike-modal-card ${strikeModalData.number < 3 ? 'warning-level' : ''}`}>
+                        <div className="strike-icon-wrapper">
+                            {strikeModalData.number >= 3 ? <AlertOctagon size={38} color="#ef4444" /> : <ShieldAlert size={38} color="#f59e0b" />}
+                        </div>
+
+                        <div className="strike-pills-row">
+                            <span className={`strike-pip ${strikeModalData.number >= 1 ? (strikeModalData.number >= 3 ? 'active' : 'active-warn') : ''}`}>STRIKE 1</span>
+                            <span className={`strike-pip ${strikeModalData.number >= 2 ? (strikeModalData.number >= 3 ? 'active' : 'active-warn') : ''}`}>STRIKE 2</span>
+                            <span className={`strike-pip ${strikeModalData.number >= 3 ? 'active' : ''}`}>STRIKE 3 (BLOQUEO)</span>
+                        </div>
+
+                        <h2 className="strike-title">
+                            {strikeModalData.number >= 3 ? '⛔ EXAMEN BLOQUEADO' : `⚠️ ADVERTENCIA ${strikeModalData.number}/3`}
+                        </h2>
+
+                        <p style={{ color: '#cbd5e1', fontSize: '0.95rem', margin: '0 0 0.5rem' }}>
+                            {strikeModalData.number >= 3 
+                                ? 'Has acumulado 3 infracciones de seguridad. Tu examen ha sido finalizado automáticamente.'
+                                : 'Se ha detectado una salida del entorno de evaluación seguro.'}
+                        </p>
+
+                        <div className="strike-reason-box">
+                            <strong>Motivo:</strong> {strikeModalData.reason}
+                        </div>
+
+                        {strikeModalData.number < 3 ? (
+                            <button
+                                className="strike-resume-btn"
+                                onClick={async () => {
+                                    setShowStrikeModal(false);
+                                    try {
+                                        if (!document.fullscreenElement) {
+                                            await document.documentElement.requestFullscreen();
+                                        }
+                                    } catch {}
+                                }}
+                            >
+                                <Maximize size={18} />
+                                <span>Reanudar Examen en Pantalla Completa</span>
+                            </button>
+                        ) : (
+                            <p style={{ color: '#ef4444', fontWeight: 800, fontSize: '0.9rem' }}>
+                                Consolidando y enviando resultados con reporte de auditoría...
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {finalizing && (
                 <div style={{
                     position: 'fixed',
@@ -747,9 +1075,18 @@ const EvaluationPlayer = () => {
                     padding: '0.75rem 1.5rem', 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: '1.5rem',
+                    gap: '1.25rem',
                     borderRadius: '12px'
                 }}>
+                    {/* Badge de Supervisión Antitrampa */}
+                    <div className={`anticheat-hud-badge ${strikes >= 2 ? 'danger' : strikes > 0 ? 'warning' : ''}`}>
+                        <div className="hud-pulse-dot"></div>
+                        <ShieldAlert size={14} />
+                        <span>SUPERVISIÓN: {strikes}/3 STRIKES</span>
+                    </div>
+
+                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
+
                     <div style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
