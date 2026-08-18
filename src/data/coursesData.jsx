@@ -94,20 +94,33 @@ export const COURSES_DEFINITION = [
         name: 'Electricidad y Electrónica Básica',
         icon: <Zap size={28} />,
         color: '#f59e0b',
-        duration: '17 semanas',
+        duration: '17 semanas (3 de agosto – 27 de noviembre de 2026)',
+        period: '2026-2',
+        credits: 4,
         modality: 'Presencial',
-        description: 'Curso de fundamentos de electricidad y electrónica con enfoque STEAM, laboratorio práctico y proyecto final.',
+        teacher: 'Ronny Martinez Reyes',
+        institution: 'CampusVirtual UNIMAG',
+        schedule: [
+            { day: 'Lunes', time: '4:00 PM – 6:00 PM', location: 'EIE-Electricidad y Magnetismo' },
+            { day: 'Miércoles', time: '6:00 PM – 8:00 PM', location: 'Sierra Nevada Sur Salón 201' }
+        ],
+        complementaryDates: [
+            { event: 'Nivelación', date: '18 de noviembre de 2026' },
+            { event: 'Reclamaciones de notas', date: '23 de noviembre de 2026' },
+            { event: 'Publicación de notas finales', date: '25 de noviembre de 2026' }
+        ],
+        description: 'Curso de fundamentos de electricidad y electrónica con enfoque STEAM y metodología ABP (Aprendizaje Basado en Proyectos), laboratorios prácticos y proyecto final.',
         modules: [
             {
                 id: 'm1',
                 name: 'Módulo 1: Fundamentos de Electricidad y Circuitos Básicos',
-                weeks: 'Semanas 1-6',
-                learningOutcome: 'Analizar circuitos eléctricos básicos (serie, paralelo y mixtos) mediante la Ley de Ohm y el uso del multímetro.',
+                weeks: 'Semanas 1 a 6',
+                learningOutcome: 'RA1: Analizar circuitos eléctricos básicos (serie, paralelo y mixtos) mediante la aplicación de principios fundamentales como la Ley de Ohm y el uso del multímetro.',
                 topics: [
-                    'Introducción a la electricidad',
-                    'Ley de Ohm y uso del multímetro',
-                    'Circuitos en serie, paralelo y mixtos',
-                    'Potencia eléctrica y consumo'
+                    'Introducción a la electricidad y estructura atómica',
+                    'Ley de Ohm, Ley de Watt y uso del multímetro digital',
+                    'Circuitos en serie, en paralelo y mixtos serie-paralelo',
+                    'Diagnóstico de fallas (cortocircuito y circuito abierto)'
                 ],
                 lessons: [
                     { id: 'ee-m1-l1', visible: true },
@@ -118,7 +131,7 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m1-l6', visible: true }
                 ],
                 evaluation: {
-                    title: 'Examen 1 - Circuitos básicos',
+                    title: 'Examen 1 - Circuitos Básicos',
                     date: '2 de septiembre de 2026',
                     points: 150
                 }
@@ -126,12 +139,13 @@ export const COURSES_DEFINITION = [
             {
                 id: 'm2',
                 name: 'Módulo 2: Componentes Electrónicos y Aplicaciones',
-                weeks: 'Semanas 7-11',
-                learningOutcome: 'Identificar y aplicar componentes electrónicos en circuitos funcionales.',
+                weeks: 'Semanas 7 a 11',
+                learningOutcome: 'RA2: Identificar y aplicar los principales componentes electrónicos en circuitos funcionales, comprendiendo su comportamiento y aplicaciones.',
                 topics: [
-                    'Capacitores, relés, bobinas y motores DC',
-                    'Transistores y aplicaciones básicas',
-                    'Aplicaciones prácticas y control de circuitos'
+                    'Capacitores, relés de 5V, bobinas y motores DC',
+                    'Transistores BJT NPN (2N2222/BC547) y PNP (BC557)',
+                    'Diodos rectificadores 1N4007 y buzzer activo 5V',
+                    'Aplicaciones prácticas y control electromecánico'
                 ],
                 lessons: [
                     { id: 'ee-m2-l7', visible: true },
@@ -140,7 +154,7 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m2-l10', visible: true }
                 ],
                 evaluation: {
-                    title: 'Examen 2 - Uso de componentes electrónicos',
+                    title: 'Examen 2 - Uso de Componentes Electrónicos',
                     date: '28 de septiembre de 2026',
                     points: 125
                 }
@@ -148,12 +162,12 @@ export const COURSES_DEFINITION = [
             {
                 id: 'm3',
                 name: 'Módulo 3: Aplicaciones Avanzadas y Diseño de Circuitos',
-                weeks: 'Semanas 12-14',
-                learningOutcome: 'Implementar circuitos integrados en contextos prácticos.',
+                weeks: 'Semanas 12 a 14',
+                learningOutcome: 'RA3: Implementar circuitos integrados en contextos prácticos.',
                 topics: [
-                    'Circuitos integrados',
-                    'Temporizador 555',
-                    'Contadores binarios y displays de 7 segmentos'
+                    'Temporizador CI NE555 en configuración astable',
+                    'Contador binario de 4 bits CI 74LS93',
+                    'Decodificador BCD a 7 segmentos CI CD4511 y Display Cátodo Común'
                 ],
                 lessons: [
                     { id: 'ee-m3-l11', visible: true },
@@ -162,7 +176,7 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m3-l14', visible: true }
                 ],
                 evaluation: {
-                    title: 'Examen 3 - Implementación de circuitos integrados',
+                    title: 'Examen 3 - Implementación de Circuitos Integrados',
                     date: '21 de octubre de 2026',
                     points: 125
                 }
@@ -170,18 +184,18 @@ export const COURSES_DEFINITION = [
             {
                 id: 'm4',
                 name: 'Módulo 4: Proyecto Final',
-                weeks: 'Semanas 15-16',
-                learningOutcome: 'Desarrollar, optimizar y presentar un prototipo funcional.',
+                weeks: 'Semanas 15 a 16',
+                learningOutcome: 'Desarrollo, optimización y presentación de prototipo funcional con justificación técnica.',
                 topics: [
-                    'Diseño del prototipo',
-                    'Optimización y presentación del proyecto'
+                    'Diseño y ensamblaje del prototipo funcional',
+                    'Optimización, documentación técnica y sustentación'
                 ],
                 lessons: [
                     { id: 'ee-m4-l15', visible: true },
                     { id: 'ee-m4-l16', visible: true }
                 ],
                 evaluation: {
-                    title: 'Proyecto Final',
+                    title: 'Presentación del Proyecto Final',
                     date: '11 de noviembre de 2026',
                     points: 100
                 }
@@ -189,37 +203,56 @@ export const COURSES_DEFINITION = [
         ],
         groups: [],
         resources: {
-            required: [
-                'Protoboard 830',
-                'Jumpers macho-macho',
-                'Fuente 5 V o portapilas 4xAA',
-                'Multímetro digital',
-                'Resistencias ¼ W',
-                'LEDs 5 mm',
-                'Potenciómetro 10 kΩ (opcional)'
-            ],
-            module2: [
-                'Capacitores 100 nF, 10 µF, 100 µF',
-                'Transistor BJT NPN y PNP',
-                'Diodos 1N4007',
-                'Relé 5 V',
-                'Motor DC pequeño',
-                'Buzzer activo 5 V',
-                'Pulsadores / switch'
-            ],
-            module3: [
-                'CI 555',
-                'CI 74LS93',
-                'CI CD4511',
-                'Display de 7 segmentos',
-                'Resistencias de 220 Ω a 330 Ω',
-                'Pulsadores o DIP switch de 4 posiciones'
-            ],
+            module1: {
+                adquirir: [
+                    'Protoboard 830 puntos',
+                    'Jumpers macho-macho',
+                    'Fuente 5 V (USB) o portapilas 4×AA (≤9 V)',
+                    'Multímetro digital con puntas de prueba',
+                    'Resistencias ¼ W (220 Ω, 330 Ω, 1 kΩ, 2.2 kΩ, 4.7 kΩ, 10 kΩ)',
+                    'LEDs 5 mm (rojo y verde)',
+                    'Potenciómetro 10 kΩ (opcional)'
+                ]
+            },
+            module2: {
+                reutilizar: [
+                    'Protoboard 830, Jumpers, Fuente 5V / portapilas, Multímetro digital, Resistencias ¼ W y LEDs 5 mm'
+                ],
+                adquirir: [
+                    'Capacitores electrolíticos (100 nF, 10 µF, 100 µF)',
+                    'Transistores BJT NPN (2N2222 o BC547) y PNP (BC557) — 2–3 de c/u',
+                    'Diodos rectificadores 1N4007',
+                    'Relé 5 V',
+                    'Motor DC pequeño + rueda o hélice',
+                    'Buzzer activo 5 V',
+                    'Pulsadores / switch'
+                ]
+            },
+            module3: {
+                reutilizar: [
+                    'Protoboard 830, Jumpers, Fuente 5V, Multímetro, Resistencias (220Ω, 330Ω, 1kΩ, 10kΩ), LEDs, Pulsadores y Condensador 10 µF'
+                ],
+                adquirir: [
+                    '1× CI NE555 (Temporizador astable) + 1× R 6.8 kΩ + 1× Potenciómetro 100 kΩ',
+                    '1× CI 74LS93 (Contador binario de 4 bits)',
+                    '1× CI CD4511 (Decodificador BCD a 7 segmentos)',
+                    '1× Display de 7 segmentos cátodo común',
+                    '7× Resistencias de 220 Ω a 330 Ω (¼ W)',
+                    '4× Pulsadores o 1 DIP switch de 4 posiciones'
+                ]
+            },
+            module4: {
+                reutilizar: [
+                    'Protoboard, jumpers, fuente, multímetro, componentes de M2 y CIs de M3'
+                ],
+                adquirir: [
+                    'Materiales extra según el proyecto autorizado por el docente'
+                ]
+            },
             software: [
-                'Software de simulación',
-                'Manuales técnicos',
-                'Guías de laboratorio',
-                'Videos tutoriales'
+                'Software de simulación SaberLab',
+                'Manuales técnicos y guías de laboratorio',
+                'Videos tutoriales y materiales multimedia complementarios'
             ]
         }
     },

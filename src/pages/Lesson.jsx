@@ -97,10 +97,15 @@ const Lesson = () => {
     }, [user?.id, internalId]);
 
     useEffect(() => {
+        if (internalId && (internalId === 'ee-m1-l6' || internalId.endsWith('-l6') || internalId.endsWith('-l10') || internalId.endsWith('-l14') || internalId.endsWith('-l16'))) {
+            navigate(`/dashboard/evaluations/${internalId}`, { replace: true });
+            return;
+        }
+
         if (courseId && courseData && courseId !== courseData.slug) {
             navigate(`/dashboard/my-courses/${courseData.slug}/${moduleId}/${lessonId}`, { replace: true });
         }
-    }, [courseData, courseId, lessonId, moduleId, navigate]);
+    }, [courseData, courseId, internalId, lessonId, moduleId, navigate]);
 
     useEffect(() => {
         const loadLesson = async () => {

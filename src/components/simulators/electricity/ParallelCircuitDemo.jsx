@@ -30,31 +30,14 @@ export default function ParallelCircuitDemo() {
 
     return (
         <div className="sim-card" style={{ maxWidth: '820px', margin: '0 auto' }}>
-            <div className="sim-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <div>
-                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#f59e0b' }}>
-                        <Split size={20} color="#f59e0b" />
-                        <span>Simulación Interactiva: Ramas Independientes y Flujo de Electrones</span>
-                    </h4>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
-                        La base de cada foco está montada directamente sobre el cable conductor. Si quemas el Foco 2, su filamento se rompe y cesa su flujo, pero las demás ramas siguen encendidas.
-                    </p>
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                        className="sim-btn sim-btn-secondary"
-                        onClick={() => {
-                            setIsSwitchClosed(true);
-                            setIsBulb2Burned(false);
-                            setNumBranches(3);
-                        }}
-                        style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                        <RotateCcw size={13} />
-                        <span>Restablecer</span>
-                    </button>
-                </div>
+            <div className="sim-card-header">
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#f59e0b' }}>
+                    <Split size={20} color="#f59e0b" />
+                    <span>Simulación Interactiva: Ramas Independientes y Flujo de Electrones</span>
+                </h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+                    La base de cada foco está montada directamente sobre el cable conductor. Si quemas el Foco 2, su filamento se rompe y cesa su flujo, pero las demás ramas siguen encendidas.
+                </p>
             </div>
 
             <div className="sim-card-body" style={{ padding: '1.25rem' }}>
@@ -193,8 +176,8 @@ export default function ParallelCircuitDemo() {
 
                         {/* ══════════════ RAMA 1: FOCO 1 (Base en el cable, foco de costado) ══════════════ */}
                         <g transform="translate(180, 35)">
-                            {/* Etiqueta superior desplazada a la derecha sobre el foco */}
-                            <text x="28" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 1</text>
+                            {/* Etiqueta superior a la derecha del cable (no lo cruza) */}
+                            <text x="14" y="16" textAnchor="start" fill="#fbbf24" fontSize="9" fontWeight="900">Foco 1</text>
 
                             {/* Cable superior entrando a la base */}
                             <line x1="0" y1="0" x2="0" y2="66" stroke={isBranch1Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
@@ -240,9 +223,9 @@ export default function ParallelCircuitDemo() {
                             onClick={() => setIsBulb2Burned(!isBulb2Burned)}
                             style={{ cursor: 'pointer' }}
                         >
-                            {/* Etiqueta superior desplazada a la derecha sobre el foco */}
-                            <text x="28" y="16" textAnchor="middle" fill={isBulb2Burned ? '#ef4444' : '#fbbf24'} fontSize="9.5" fontWeight="900">
-                                {isBulb2Burned ? 'Foco 2 (QUEMADO)' : 'Foco 2'}
+                            {/* Etiqueta superior a la derecha del cable (no lo cruza) */}
+                            <text x="14" y="16" textAnchor="start" fill={isBulb2Burned ? '#f87171' : '#fbbf24'} fontSize="9" fontWeight="900">
+                                {isBulb2Burned ? 'Foco 2 (Quemado)' : 'Foco 2'}
                             </text>
 
                             {/* Cable superior entrando a la base */}
@@ -300,7 +283,7 @@ export default function ParallelCircuitDemo() {
                         {/* ══════════════ RAMA 3: FOCO 3 (OPCIONAL) ══════════════ */}
                         {numBranches === 3 && (
                             <g transform="translate(460, 35)">
-                                <text x="28" y="16" textAnchor="middle" fill="#fbbf24" fontSize="9.5" fontWeight="900">Foco 3</text>
+                                <text x="14" y="16" textAnchor="start" fill="#fbbf24" fontSize="9" fontWeight="900">Foco 3</text>
 
                                 <line x1="0" y1="0" x2="0" y2="66" stroke={isBranch3Active ? '#38bdf8' : '#334155'} strokeWidth="2.5" />
 
@@ -335,15 +318,15 @@ export default function ParallelCircuitDemo() {
 
                         {/* ══════════════ MEDIDOR DE CORRIENTE TOTAL IT ══════════════ */}
                         <g transform="translate(100, 195)">
-                            <rect x="-42" y="-13" width="84" height="26" rx="13" fill="#090e1a" stroke="#34d399" strokeWidth="1.5" />
-                            <polygon points="-28,4 -20,0 -28,-4" fill="#34d399" />
-                            <text x="-12" y="4" textAnchor="start" fill="#34d399" fontSize="10" fontWeight="900" fontFamily="monospace">
+                            <rect x="-52" y="-13" width="104" height="26" rx="13" fill="#090e1a" stroke="#34d399" strokeWidth="1.5" />
+                            <polygon points="-38,4 -30,0 -38,-4" fill="#34d399" />
+                            <text x="-22" y="4" textAnchor="start" fill="#34d399" fontSize="9.5" fontWeight="900" fontFamily="monospace">
                                 IT = {totalCurrent.toFixed(1)} A
                             </text>
                         </g>
 
-                        {/* ══════════════ FLUJO DE ELECTRONES ANIMADOS POR CADA RAMA ══════════════ */}
-                        {/* Electrones Rama 1 */}
+                        {/* ══════════════ FLUJO DE ELECTRONES ANIMADOS POR CADA RAMA (PASAN EXACTAMENTE POR EL FILAMENTO) ══════════════ */}
+                        {/* Electrones Rama 1: Entran al casquillo (180,101), van por el poste superior (204,112), pasan por el filamento (211,117), regresan por el poste inferior (204,122) y salen del casquillo (180,133) */}
                         {isBranch1Active && b1Offsets.map((offset, i) => (
                             <g key={`b1-${i}`} filter="url(#electronGlowPar)">
                                 <circle r="4" fill="#38bdf8" stroke="#ffffff" strokeWidth="1">
@@ -351,7 +334,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 180 35 L 180 80 L 180 112 L 180 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 180 35 L 180 101 L 204 112 L 211 117 L 204 122 L 180 133 L 180 195 L 40 195 L 40 35 Z"
                                     />
                                 </circle>
                                 <text textAnchor="middle" fill="#0f172a" fontSize="6.5" fontWeight="900" dy="2.5">
@@ -359,14 +342,14 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 180 35 L 180 80 L 180 112 L 180 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 180 35 L 180 101 L 204 112 L 211 117 L 204 122 L 180 133 L 180 195 L 40 195 L 40 35 Z"
                                     />
                                     −
                                 </text>
                             </g>
                         ))}
 
-                        {/* Electrones Rama 2 (Se detienen si Foco 2 está quemado o interruptor abierto) */}
+                        {/* Electrones Rama 2: Pasan exactamente por el filamento de Foco 2 (se detienen al quemarse) */}
                         {isBranch2Active && b2Offsets.map((offset, i) => (
                             <g key={`b2-${i}`} filter="url(#electronGlowPar)">
                                 <circle r="4" fill="#38bdf8" stroke="#ffffff" strokeWidth="1">
@@ -374,7 +357,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.1}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 320 35 L 320 80 L 320 112 L 320 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 320 35 L 320 101 L 344 112 L 351 117 L 344 122 L 320 133 L 320 195 L 40 195 L 40 35 Z"
                                     />
                                 </circle>
                                 <text textAnchor="middle" fill="#0f172a" fontSize="6.5" fontWeight="900" dy="2.5">
@@ -382,14 +365,14 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.1}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 320 35 L 320 80 L 320 112 L 320 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 320 35 L 320 101 L 344 112 L 351 117 L 344 122 L 320 133 L 320 195 L 40 195 L 40 35 Z"
                                     />
                                     −
                                 </text>
                             </g>
                         ))}
 
-                        {/* Electrones Rama 3 */}
+                        {/* Electrones Rama 3: Pasan exactamente por el filamento de Foco 3 */}
                         {isBranch3Active && b3Offsets.map((offset, i) => (
                             <g key={`b3-${i}`} filter="url(#electronGlowPar)">
                                 <circle r="4" fill="#38bdf8" stroke="#ffffff" strokeWidth="1">
@@ -397,7 +380,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.2}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 460 35 L 460 80 L 460 112 L 460 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 460 35 L 460 101 L 484 112 L 491 117 L 484 122 L 460 133 L 460 195 L 40 195 L 40 35 Z"
                                     />
                                 </circle>
                                 <text textAnchor="middle" fill="#0f172a" fontSize="6.5" fontWeight="900" dy="2.5">
@@ -405,7 +388,7 @@ export default function ParallelCircuitDemo() {
                                         dur={`${electronDuration * 1.2}s`}
                                         repeatCount="indefinite"
                                         begin={`${-offset}s`}
-                                        path="M 40 35 L 460 35 L 460 80 L 460 112 L 460 195 L 40 195 L 40 35 Z"
+                                        path="M 40 35 L 460 35 L 460 101 L 484 112 L 491 117 L 484 122 L 460 133 L 460 195 L 40 195 L 40 35 Z"
                                     />
                                     −
                                 </text>

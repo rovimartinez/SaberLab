@@ -336,18 +336,20 @@
 
 .agenda-card-classic {
     background: rgba(255, 255, 255, 0.03);
-    height: 54px;
-    padding: 0 1.25rem;
+    min-height: 52px;
+    height: auto;
+    padding: 0.65rem 1rem;
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.2s ease;
     display: flex;
-    align-items: center; /* Important for alignment */
+    align-items: center;
 }
 
 .agenda-card-classic:hover {
     background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateY(-1px);
 }
 
 .agenda-top-bar {

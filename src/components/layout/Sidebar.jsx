@@ -55,16 +55,16 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             items: [
                 { name: 'Inicio', path: '/dashboard', icon: <Home size={18} /> },
                 { name: 'Mis Cursos', path: '/dashboard/my-courses', icon: <Layers size={18} /> },
-                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: pendingAccessRequestsCount },
+                { name: 'Calificaciones', path: '/dashboard/grades', icon: <Award size={18} /> },
                 { name: 'Evaluaciones', path: '/dashboard/evaluations', icon: <Target size={18} /> },
-                { name: 'Progreso', path: '/dashboard/progress', icon: <BarChart2 size={18} /> }
+                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: pendingAccessRequestsCount }
             ]
         },
         {
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                { name: 'Certificados', path: '/dashboard/certificate/re', icon: <Award size={18} /> }
+                { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
             ]
         },
         ...(isAdmin ? [{

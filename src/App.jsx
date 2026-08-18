@@ -14,6 +14,7 @@ import PanelNotificaciones from './pages/PanelNotificaciones';
 import PanelEvaluaciones from './pages/PanelEvaluaciones';
 import EvaluationInstruction from './pages/EvaluationInstruction';
 import EvaluationPlayer from './pages/EvaluationPlayer';
+import PanelCalificaciones from './pages/PanelCalificaciones';
 import PanelProgreso from './pages/PanelProgreso';
 import PanelRecursos from './pages/PanelRecursos';
 import PanelWidgets from './pages/PanelWidgets';
@@ -105,7 +106,8 @@ function AppRoutes() {
                     <Route path="evaluations" element={<PanelEvaluaciones />} />
                     <Route path="evaluations/:evaluationKey" element={<EvaluationInstruction />} />
                     <Route path="evaluations/:evaluationKey/play" element={<EvaluationPlayer />} />
-                    <Route path="progress" element={<PanelProgreso />} />
+                    <Route path="grades" element={<PanelCalificaciones />} />
+                    <Route path="progress" element={<Navigate to="/dashboard" replace />} />
                     <Route path="resources" element={<PanelRecursos />} />
                     <Route path="myapps" element={<PanelWidgets />} />
                     <Route path="settings" element={<SettingsPage />} />

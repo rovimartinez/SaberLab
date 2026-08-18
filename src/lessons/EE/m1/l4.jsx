@@ -77,18 +77,26 @@ const lessonDefinition = {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
                 <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
                     <strong style="color: #38bdf8; display: block; margin-bottom: 0.5rem;">1. Caso Rápido: Dos Resistores</strong>
-                    <div style="font-family: monospace; font-size: 1.15rem; color: #f8fafc; font-weight: 800; margin-bottom: 0.5rem; text-align: center;">
-                        R<sub>eq</sub> = (R<sub>1</sub> × R<sub>2</sub>) / (R<sub>1</sub> + R<sub>2</sub>)
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-family: monospace; font-size: 1.15rem; color: #f8fafc; font-weight: 800; margin: 0.75rem 0;">
+                        <span>R<sub>eq</sub> =</span>
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; text-align: center;">
+                            <span style="border-bottom: 2px solid #38bdf8; padding: 0 6px 2px; color: #38bdf8;">R<sub>1</sub> × R<sub>2</sub></span>
+                            <span style="padding: 2px 6px 0; color: #f8fafc;">R<sub>1</sub> + R<sub>2</sub></span>
+                        </div>
                     </div>
-                    <span style="color: #94a3b8; font-size: 0.78rem;"><em>"Producto dividido entre la suma"</em>. Útil y muy rápido para calcular dos ramas.</span>
+                    <span style="color: #94a3b8; font-size: 0.78rem; display: block; text-align: center;"><em>"Producto dividido entre la suma"</em>. Útil y muy rápido para calcular dos ramas.</span>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
                     <strong style="color: #34d399; display: block; margin-bottom: 0.5rem;">2. Caso Especial: 'N' Resistores Iguales</strong>
-                    <div style="font-family: monospace; font-size: 1.15rem; color: #f8fafc; font-weight: 800; margin-bottom: 0.5rem; text-align: center;">
-                        R<sub>eq</sub> = R / N
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-family: monospace; font-size: 1.15rem; color: #f8fafc; font-weight: 800; margin: 0.75rem 0;">
+                        <span>R<sub>eq</sub> =</span>
+                        <div style="display: inline-flex; flex-direction: column; align-items: center; text-align: center;">
+                            <span style="border-bottom: 2px solid #34d399; padding: 0 8px 2px; color: #34d399;">R</span>
+                            <span style="padding: 2px 8px 0; color: #f8fafc;">N</span>
+                        </div>
                     </div>
-                    <span style="color: #94a3b8; font-size: 0.78rem;">Ejemplo: 3 resistencias de 60 Ω en paralelo tienen R<sub>eq</sub> = 60 / 3 = 20 Ω.</span>
+                    <span style="color: #94a3b8; font-size: 0.78rem; display: block; text-align: center;">Ejemplo: 3 resistencias de 60 Ω en paralelo tienen R<sub>eq</sub> = 60 / 3 = 20 Ω.</span>
                 </div>
             </div>
         </div>
@@ -123,8 +131,14 @@ const lessonDefinition = {
             Cuando una corriente total entra a un nodo con varias ramas en paralelo, <strong>se divide de forma inversamente proporcional a la resistencia de cada rama</strong>:
         </p>
         <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 18px; padding: 1.5rem; margin-bottom: 2rem;">
-            <div style="font-size: 1.3rem; font-weight: 900; color: #38bdf8; font-family: monospace; text-align: center; margin-bottom: 0.5rem;">
-                I<sub>1</sub> = I<sub>total</sub> × [ R<sub>2</sub> / (R<sub>1</sub> + R<sub>2</sub>) ]
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.35rem; font-weight: 900; color: #38bdf8; font-family: monospace; text-align: center; margin: 0.5rem 0 0.75rem;">
+                <span>I<sub>1</sub> = I<sub>total</sub> ×</span>
+                <div style="display: inline-flex; align-items: center; font-size: 1.8rem; color: #94a3b8; font-weight: 300; line-height: 1;">[</div>
+                <div style="display: inline-flex; flex-direction: column; align-items: center; text-align: center; margin: 0 4px;">
+                    <span style="border-bottom: 2px solid #38bdf8; padding: 0 8px 3px; color: #38bdf8; font-size: 1.25rem;">R<sub>2</sub></span>
+                    <span style="padding: 3px 8px 0; color: #f8fafc; font-size: 1.25rem;">R<sub>1</sub> + R<sub>2</sub></span>
+                </div>
+                <div style="display: inline-flex; align-items: center; font-size: 1.8rem; color: #94a3b8; font-weight: 300; line-height: 1;">]</div>
             </div>
             <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.6; margin: 0; text-align: center;">
                 💡 <em>¡Ojo con el numerador!:</em> Para hallar la corriente por la rama 1 (I<sub>1</sub>), colocas en el numerador la resistencia de la <strong>otra rama (R<sub>2</sub>)</strong>. Por tanto, la rama con menor resistencia siempre atrae la mayor porción de corriente.

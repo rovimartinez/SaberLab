@@ -1,305 +1,542 @@
 /* ============================================================
-   Certificate Page — Diploma descargable / imprimible
+   SaberLab Clean Sci-Fi Certificate — Credencial Futurista Clara
    ============================================================ */
 
-.certificate-page {
+.certificate-page-light-tech {
     min-height: 100vh;
-    background: #1e293b;
-    padding: 2rem 1rem;
+    background: #0f172a;
+    background-image: 
+        radial-gradient(circle at 50% 10%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(2, 132, 199, 0.1) 0%, transparent 50%),
+        linear-gradient(180deg, #0f172a 0%, #0b0f19 100%);
+    padding: 2rem 1.5rem 4rem;
     display: flex;
     flex-direction: column;
     align-items: center;
+    color: #f8fafc;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Barra de controles (oculta al imprimir) */
-.certificate-controls {
+/* ── 1. Controles Superiores Simétricos ── */
+.light-controls-bar {
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     gap: 1rem;
-    flex-wrap: wrap;
 }
 
-.certificate-back-btn {
+.controls-col-left {
+    flex: 1;
     display: flex;
+    justify-content: flex-start;
+}
+
+.controls-col-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.controls-col-right {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.light-btn-secondary {
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    padding: 0.55rem 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 }
 
-.certificate-back-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-}
-
-.certificate-download-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
-}
-
-.certificate-download-btn:hover {
-    background: #2563eb;
+.light-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border-color: #38bdf8;
     transform: translateY(-1px);
 }
 
-/* ── El diploma ── */
-.certificate-wrapper {
-    width: 100%;
-    max-width: 900px;
+.light-switch-group {
+    display: flex;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
 }
 
-.certificate-diploma {
+.light-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.light-pill.active {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
+}
+
+.light-btn-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.light-btn-share:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.light-btn-print {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border: 1px solid #38bdf8;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4);
+    transition: all 0.2s ease;
+}
+
+.light-btn-print:hover {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    box-shadow: 0 6px 22px rgba(14, 165, 233, 0.5);
+    transform: translateY(-1px);
+}
+
+/* ── 2. Lienzo del Diploma Futurista Claro (Clean High-Tech White) ── */
+.light-cert-wrapper {
     width: 100%;
-    aspect-ratio: 11 / 8.5;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    max-width: 1000px;
+    display: flex;
+    justify-content: center;
+}
+
+.light-cert-diploma {
+    width: 100%;
+    aspect-ratio: 1.414 / 1;
+    min-height: 640px;
+    background: #ffffff;
+    background-image: 
+        radial-gradient(circle at 50% 20%, rgba(2, 132, 199, 0.05) 0%, transparent 60%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #0284c7;
+    border-radius: 14px;
+    box-shadow: 
+        0 25px 70px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(2, 132, 199, 0.2);
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding: 2.2rem 3.2rem 2rem;
+    box-sizing: border-box;
+    color: #0f172a;
 }
 
-/* Fondo decorativo de circuito */
-.certificate-bg {
+/* Micro-Grid de Ingeniería Claro */
+.light-grid-overlay {
     position: absolute;
     inset: 0;
-    background-image:
-        radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
-    pointer-events: none;
-}
-
-/* Patrón de puntos sutil */
-.certificate-bg::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
-    background-size: 20px 20px;
-}
-
-/* Marco decorativo interior */
-.certificate-frame {
-    position: absolute;
-    inset: 12px;
-    border: 2px solid rgba(168, 85, 247, 0.3);
-    border-radius: 6px;
+    background-image: 
+        linear-gradient(rgba(2, 132, 199, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(2, 132, 199, 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
     pointer-events: none;
     z-index: 1;
 }
 
-.certificate-frame::before {
-    content: '';
+/* Circuit Traces Vectoriales */
+.light-circuit-svg {
     position: absolute;
-    inset: 4px;
-    border: 1px solid rgba(168, 85, 247, 0.12);
-    border-radius: 3px;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
 }
 
-/* Contenido principal */
-.certificate-content {
-    position: relative;
-    z-index: 2;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 2.5rem 3rem 2rem;
+/* Esquinas HUD Claras */
+.hud-corner-light {
+    position: absolute;
+    z-index: 3;
+    pointer-events: none;
 }
 
-/* Header con logo */
-.certificate-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 1.5rem;
+.corner-bracket-light {
+    width: 28px;
+    height: 28px;
+    border: 2px solid #0284c7;
 }
 
-.certificate-logo {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #a855f7, #3b82f6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.3);
-}
+.hud-light-tl { top: 12px; left: 12px; }
+.hud-light-tl .corner-bracket-light { border-right: none; border-bottom: none; }
 
-.certificate-org-name {
-    font-size: 1.4rem;
+.hud-light-tr { top: 12px; right: 12px; text-align: right; }
+.hud-light-tr .corner-bracket-light { border-left: none; border-bottom: none; margin-left: auto; }
+
+.hud-light-bl { bottom: 12px; left: 12px; }
+.hud-light-bl .corner-bracket-light { border-right: none; border-top: none; }
+
+.hud-light-br { bottom: 12px; right: 12px; text-align: right; }
+.hud-light-br .corner-bracket-light { border-left: none; border-top: none; margin-left: auto; }
+
+.hud-telemetry-light {
+    display: block;
+    font-family: monospace;
+    font-size: 0.58rem;
     font-weight: 800;
-    color: #1e293b;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    margin: 0;
+    color: #0284c7;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
 }
 
-.certificate-org-subtitle {
-    font-size: 0.75rem;
-    color: #64748b;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin: 0.1rem 0 0;
-}
-
-/* Divider decorativo */
-.certificate-divider {
+/* ── 3. Contenido Central ── */
+.light-cert-content {
+    position: relative;
+    z-index: 4;
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 0.75rem 0;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    text-align: center;
 }
 
-.certificate-divider::before,
-.certificate-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(to right, transparent, rgba(168, 85, 247, 0.4), transparent);
-}
-
-.certificate-divider-diamond {
-    width: 6px;
-    height: 6px;
-    background: #a855f7;
-    transform: rotate(45deg);
-}
-
-/* Cuerpo principal */
-.certificate-body {
-    flex: 1;
+/* Header */
+.light-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     text-align: center;
-    gap: 0.5rem;
 }
 
-.certificate-presents {
-    font-size: 0.85rem;
-    color: #64748b;
-    letter-spacing: 0.05em;
+.light-logo-halo {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(2, 132, 199, 0.08);
+    border: 1.5px solid #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.18);
+    margin-bottom: 0.4rem;
+}
+
+.light-logo-img {
+    height: 32px;
+    width: auto;
+    object-fit: contain;
+}
+
+.light-org-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    color: #0f172a;
     margin: 0;
-}
-
-.certificate-certifies {
-    font-size: 0.85rem;
-    color: #64748b;
-    letter-spacing: 0.02em;
-    margin: 0.5rem 0 0;
-}
-
-.certificate-student-name {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #1e293b;
-    font-family: Georgia, serif;
-    letter-spacing: 0.02em;
-    margin: 0.25rem 0;
     line-height: 1.1;
+    text-align: center;
 }
 
-.certificate-course-label {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin: 0.5rem 0 0;
+.light-org-sub {
+    font-family: monospace;
+    font-size: 0.62rem;
+    color: #0284c7;
+    letter-spacing: 0.12em;
+    margin: 0.15rem 0 0;
+    font-weight: 800;
+    text-align: center;
 }
 
-.certificate-course-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #a855f7;
-    margin: 0.25rem 0;
+.light-hud-badge-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 680px;
+    gap: 0.75rem;
+    margin: 0.35rem 0 0;
 }
 
-.certificate-course-hours {
-    font-size: 0.8rem;
-    color: #94a3b8;
+.hud-line-light {
+    flex: 1;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, #0284c7, transparent);
+}
+
+.hud-badge-pill-light {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.25rem 0.9rem;
+    background: rgba(2, 132, 199, 0.08);
+    border: 1px solid #0284c7;
+    border-radius: 99px;
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: 900;
+    color: #0369a1;
+    letter-spacing: 0.08em;
+}
+
+/* Cuerpo */
+.light-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0.3rem 0;
+}
+
+.light-proclamation {
+    font-size: 0.78rem;
+    color: #475569;
     margin: 0;
+    letter-spacing: 0.01em;
 }
 
-/* Footer */
-.certificate-footer {
+.light-student-name {
+    margin: 0.3rem 0;
+}
+
+.student-light-glow {
+    font-size: 2.25rem;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 2.5px solid #0284c7;
+    padding-bottom: 0.2rem;
+    display: inline-block;
+    min-width: 320px;
+}
+
+.light-statement {
+    font-size: 0.76rem;
+    color: #475569;
+    margin: 0.25rem 0 0.45rem;
+}
+
+/* Placa Holográfica Clara del Curso */
+.light-course-card {
+    width: 100%;
+    max-width: 680px;
+    background: #f0f9ff;
+    border: 1.5px solid #0284c7;
+    border-radius: 12px;
+    padding: 0.6rem 1.5rem;
+    box-shadow: 
+        0 4px 16px rgba(2, 132, 199, 0.08),
+        inset 0 0 12px rgba(2, 132, 199, 0.04);
+    margin-bottom: 0.35rem;
+}
+
+.course-card-top-tag-light {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: monospace;
+    font-size: 0.64rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.tag-code-light {
+    color: #0369a1;
+    background: rgba(2, 132, 199, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.tag-hours-light {
+    color: #0369a1;
+    background: rgba(2, 132, 199, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.light-course-title {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #0369a1;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.light-course-skills {
+    font-size: 0.72rem;
+    color: #475569;
+    margin: 0.25rem 0 0;
+    font-family: monospace;
+    letter-spacing: 0.02em;
+    font-weight: 600;
+}
+
+.light-quote {
+    font-size: 0.72rem;
+    font-style: italic;
+    color: #64748b;
+    margin: 0.15rem auto 0.4rem;
+    max-width: 640px;
+}
+
+/* Specs Badges */
+.light-meta-specs {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-top: 0.2rem;
+}
+
+.spec-badge-light {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: monospace;
+    font-size: 0.68rem;
+    background: #f8fafc;
+    border: 1px solid rgba(2, 132, 199, 0.25);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+}
+
+.spec-label-light {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.spec-val-light {
+    color: #0284c7;
+    font-weight: 900;
+}
+
+/* ── 4. Footer Holográfico Claro (Sin Colisiones) ── */
+.light-footer {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    margin-top: 0.4rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(2, 132, 199, 0.2);
+    width: 100%;
+    gap: 0.75rem;
 }
 
-.certificate-footer-col {
+.light-sig-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
+    width: 175px;
+    flex-shrink: 0;
 }
 
-.certificate-signature-name {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #1e293b;
+.light-sig-draw {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.certificate-signature-line {
-    width: 120px;
-    height: 1px;
-    background: rgba(0, 0, 0, 0.2);
+.light-sig-line {
+    width: 100%;
+    height: 1.5px;
+    background: #0284c7;
+    margin: 0.2rem 0;
 }
 
-.certificate-signature-role {
-    font-size: 0.75rem;
-    color: #64748b;
+.light-signer-name {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
 }
 
-.certificate-date-label {
-    font-size: 0.75rem;
-    color: #64748b;
-}
-
-.certificate-date-value {
-    font-size: 0.85rem;
+.light-signer-role {
+    font-size: 0.64rem;
+    color: #475569;
+    white-space: nowrap;
     font-weight: 600;
-    color: #1e293b;
 }
 
-/* QR y credencial */
-.certificate-qr-col {
+.light-sig-hash {
+    font-family: monospace;
+    font-size: 0.56rem;
+    color: #0284c7;
+    font-weight: 700;
+    margin-top: 1px;
+}
+
+/* Reactor Arc Central Claro */
+.light-reactor-seal {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
+    justify-content: center;
+    filter: drop-shadow(0 4px 12px rgba(2, 132, 199, 0.3));
+    transition: transform 0.3s ease;
+    margin-bottom: 2px;
+    flex-shrink: 0;
 }
 
-.certificate-qr-box {
-    width: 64px;
-    height: 64px;
-    background: white;
-    border: 1px solid rgba(0,0,0,0.1);
+.light-reactor-seal:hover {
+    transform: scale(1.08) rotate(5deg);
+}
+
+/* Panel QR HUD Claro */
+.light-qr-panel {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #f0f9ff;
+    border: 1px solid #0284c7;
+    padding: 0.35rem 0.65rem;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.certificate-qr-box-light-tech {
+    width: 58px;
+    height: 58px;
+    background: #ffffff;
+    border: 1px solid #0284c7;
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -307,117 +544,107 @@
     overflow: hidden;
 }
 
-.certificate-qr-box canvas,
-.certificate-qr-box img {
+.certificate-qr-box-light-tech img {
     width: 100%;
     height: 100%;
 }
 
-.certificate-credential-id {
-    font-size: 0.65rem;
+.light-qr-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.qr-badge-status-light {
     font-family: monospace;
-    color: #94a3b8;
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: #10b981;
     letter-spacing: 0.05em;
 }
 
-/* Badges de nivel */
-.certificate-badges {
+.qr-cred-code-light {
+    font-family: monospace;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #0369a1;
+}
+
+.qr-date-light {
+    font-size: 0.64rem;
+    color: #64748b;
+}
+
+/* ── 5. Banner de Telemetría Inferior ── */
+.light-security-footer {
     display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.certificate-badge {
-    padding: 0.2rem 0.6rem;
-    border-radius: 99px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-}
-
-.certificate-badge-level {
-    background: rgba(168, 85, 247, 0.1);
-    color: #a855f7;
-    border: 1px solid rgba(168, 85, 247, 0.3);
-}
-
-.certificate-badge-year {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-/* Acciones post-diploma */
-.certificate-actions {
-    margin-top: 1.5rem;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.certificate-action-btn {
-    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    border: none;
-    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+    max-width: 1000px;
+    margin-top: 1.25rem;
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
 }
 
-.certificate-action-btn.primary {
-    background: linear-gradient(135deg, #a855f7, #3b82f6);
-    color: white;
+.hash-tag-light {
+    color: #38bdf8;
+    font-weight: 800;
+    letter-spacing: 0.5px;
 }
 
-.certificate-action-btn.secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.certificate-action-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-}
-
-/* Loading / not found */
-.certificate-loading,
-.certificate-not-found {
-    color: white;
-    text-align: center;
-    padding: 4rem 2rem;
-}
-
-/* ── Print styles ── */
+/* ── 6. Reglas de Impresión / Exportación PDF (A4 Apaisado) ── */
 @media print {
-    .certificate-page {
-        background: white;
-        padding: 0;
+    @page {
+        size: landscape A4;
+        margin: 0;
     }
 
-    .certificate-controls,
-    .certificate-actions {
+    body, html {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .certificate-page-light-tech {
+        background: #ffffff !important;
+        padding: 0 !important;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .light-controls-bar,
+    .light-security-footer,
+    .sidebar,
+    nav {
         display: none !important;
     }
 
-    .certificate-wrapper {
-        max-width: 100%;
+    .light-cert-wrapper {
+        max-width: 100% !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    .certificate-diploma {
-        border-radius: 0;
-        box-shadow: none;
-        aspect-ratio: auto;
-        height: 100vh;
-    }
-
-    .certificate-content {
-        padding: 2cm 2.5cm 1.5cm;
+    .light-cert-diploma {
+        width: 100vw !important;
+        height: 100vh !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 2cm 2.5cm 1.5cm !important;
+        box-sizing: border-box !important;
     }
 }

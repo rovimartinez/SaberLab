@@ -18,10 +18,14 @@ import PracticalLabL1 from '../../simulators/electricity/PracticalLabL1';
 import PracticalLabL2 from '../../simulators/electricity/PracticalLabL2';
 import PracticalLabL3 from '../../simulators/electricity/PracticalLabL3';
 import PracticalLabL4 from '../../simulators/electricity/PracticalLabL4';
+import PracticalLabL5 from '../../simulators/electricity/PracticalLabL5';
+import PracticalLabL6 from '../../simulators/electricity/PracticalLabL6';
 import SeriesCircuitDemo from '../../simulators/electricity/SeriesCircuitDemo';
 import SeriesCalculationVisualizer from '../../simulators/electricity/SeriesCalculationVisualizer';
 import ParallelCircuitDemo from '../../simulators/electricity/ParallelCircuitDemo';
 import ParallelCalculationVisualizer from '../../simulators/electricity/ParallelCalculationVisualizer';
+import MixedCircuitDemo from '../../simulators/electricity/MixedCircuitDemo';
+import MixedCalculationVisualizer from '../../simulators/electricity/MixedCalculationVisualizer';
 import HorsepowerSimulator from '../../simulators/electricity/HorsepowerSimulator';
 
 const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) => {
@@ -166,6 +170,34 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
                 'parallel-calculation-visualizer-container',
                 <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                     <ParallelCalculationVisualizer />
+                </div>
+            );
+
+            mountInto(
+                'practical-lab-l5-container',
+                <div style={{ width: '100%' }}>
+                    <PracticalLabL5 />
+                </div>
+            );
+
+            mountInto(
+                'practical-lab-l6-container',
+                <div style={{ width: '100%' }}>
+                    <PracticalLabL6 />
+                </div>
+            );
+
+            mountInto(
+                'mixed-circuit-demo-container',
+                <div style={{ width: '100%', maxWidth: '860px', margin: '0 auto' }}>
+                    <MixedCircuitDemo />
+                </div>
+            );
+
+            mountInto(
+                'mixed-calculation-visualizer-container',
+                <div style={{ width: '100%', maxWidth: '860px', margin: '0 auto' }}>
+                    <MixedCalculationVisualizer />
                 </div>
             );
 

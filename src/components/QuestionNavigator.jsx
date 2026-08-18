@@ -44,31 +44,42 @@ const QuestionNavigator = ({
                     const isCorrect = isAnswered && correctAnswer !== undefined && correctAnswer !== null && String(userAnswer).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
                     const isCurrent = currentQuestion === qIndex;
                     
-                    let borderColor = 'rgba(255,255,255,0.1)';
-                    let bgColor = 'rgba(255,255,255,0.05)';
-                    let textColor = '#94a3b8';
+                    let border = '1px solid rgba(255, 255, 255, 0.1)';
+                    let background = '#1e293b';
+                    let color = '#94a3b8';
+                    let boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
+                    let transform = 'scale(1)';
+                    let fontWeight = '700';
+                    let outline = 'none';
                     
-                    if (isCurrent) {
-                        borderColor = '#3b82f6';
-                        bgColor = 'rgba(59, 130, 246, 0.2)';
-                        textColor = '#fff';
-                    } else if (isAnswered) {
-                        if (showFeedback) {
-                            if (isCorrect) {
-                                borderColor = '#10b981';
-                                bgColor = 'rgba(16, 185, 129, 0.2)';
-                                textColor = '#10b981';
-                            } else {
-                                borderColor = '#ef4444';
-                                bgColor = 'rgba(239, 68, 68, 0.2)';
-                                textColor = '#ef4444';
-                            }
+                    if (showFeedback) {
+                        if (isCorrect) {
+                            border = 'none';
+                            background = '#10b981';
+                            color = '#ffffff';
+                            boxShadow = isCurrent ? '0 0 0 3px #38bdf8, 0 4px 14px rgba(16, 185, 129, 0.6)' : '0 2px 8px rgba(16, 185, 129, 0.35)';
                         } else {
-                            // Style for answered but no feedback yet
-                            borderColor = '#facc15';
-                            bgColor = 'rgba(250, 204, 21, 0.1)';
-                            textColor = '#facc15';
+                            border = 'none';
+                            background = '#ef4444';
+                            color = '#ffffff';
+                            boxShadow = isCurrent ? '0 0 0 3px #38bdf8, 0 4px 14px rgba(239, 68, 68, 0.6)' : '0 2px 8px rgba(239, 68, 68, 0.35)';
                         }
+                        if (isCurrent) {
+                            transform = 'scale(1.1)';
+                            fontWeight = '900';
+                        }
+                    } else if (isCurrent) {
+                        border = 'none';
+                        background = 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)';
+                        color = '#0f172a';
+                        boxShadow = '0 4px 14px rgba(56, 189, 248, 0.5)';
+                        transform = 'scale(1.08)';
+                        fontWeight = '900';
+                    } else if (isAnswered) {
+                        border = 'none';
+                        background = '#2563eb';
+                        color = '#ffffff';
+                        boxShadow = '0 2px 8px rgba(37, 99, 235, 0.4)';
                     }
                     
                     return (
@@ -76,16 +87,18 @@ const QuestionNavigator = ({
                             key={qIndex}
                             onClick={() => onQuestionClick(qIndex)}
                             style={{
-                                width: '40px',
-                                height: '40px',
-                                border: `2px solid ${borderColor}`,
-                                borderRadius: '8px',
-                                background: bgColor,
-                                color: textColor,
+                                width: '42px',
+                                height: '42px',
+                                border,
+                                borderRadius: '10px',
+                                background,
+                                color,
                                 cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                fontWeight: '600',
-                                transition: 'all 0.2s ease',
+                                fontSize: '0.9rem',
+                                fontWeight,
+                                boxShadow,
+                                transform,
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
@@ -95,6 +108,45 @@ const QuestionNavigator = ({
                         </button>
                     );
                 })}
+            </div>
+
+            {/* Leyenda de colores */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+                marginTop: '1.5rem',
+                fontSize: '0.8rem',
+                color: '#94a3b8'
+            }}>
+                {showFeedback ? (
+                    <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#10b981', display: 'inline-block' }} />
+                            <span style={{ color: '#10b981', fontWeight: 700 }}>Correcta ({correctCount})</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#ef4444', display: 'inline-block' }} />
+                            <span style={{ color: '#ef4444', fontWeight: 700 }}>Incorrecta ({incorrectCount})</span>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#38bdf8', display: 'inline-block' }} />
+                            <span style={{ color: '#38bdf8', fontWeight: 700 }}>Actual</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }} />
+                            <span>Respondida</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.2)', display: 'inline-block' }} />
+                            <span>Pendiente</span>
+                        </div>
+                    </>
+                )}
             </div>
 
             {showFeedback && (

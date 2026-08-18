@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import { api } from '../lib/api';
 import { getCourseById } from '../data/coursesData.jsx';
 import '../styles/PanelEvaluaciones.css';
 
 const PanelEvaluaciones = () => {
     const { user, enrolledCourses, profile, evaluations, refreshEvaluations } = useAuth();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(!evaluations || evaluations.length === 0);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+    const [userAttempts, setUserAttempts] = useState({});
 
     const isAdmin = profile?.role === 'admin';
 
@@ -20,20 +22,138 @@ const PanelEvaluaciones = () => {
                 return;
             }
 
-            // Si no hay evaluaciones, intentar cargar
-            if (evaluations.length === 0) {
+            try {
+                const { data: attempts } = await api('/attempts');
+                if (Array.isArray(attempts)) {
+                    const map = {};
+                    attempts.forEach(att => {
+                        const k = (att.evaluation_key || '').toLowerCase();
+                        if (!map[k]) {
+                            map[k] = att;
+                        }
+                        if (!map[att.evaluation_key]) {
+                            map[att.evaluation_key] = att;
+                        }
+                    });
+                    setUserAttempts(map);
+                }
+            } catch (err) {
+                console.error('Error cargando intentos:', err);
+            }
+
+            if (!evaluations || evaluations.length === 0) {
                 await refreshEvaluations();
             }
             setLoading(false);
         };
 
         checkData();
-    }, [user, evaluations.length, refreshEvaluations]);
+    }, [user, evaluations?.length, refreshEvaluations]);
 
-    const processedEvaluations = evaluations.map(evalItem => ({
-        ...evalItem,
-        course: evalItem.course || getCourseById(evalItem.course_id)
-    }));
+    const defaultOfficialEvaluations = [
+        {
+            id: 'ee-m1-l6',
+            evaluation_key: 'ee-m1-l6',
+            course_id: 1,
+            title: 'Examen 1 - Fundamentos de Electricidad y Circuitos Básicos',
+            description: 'Evaluación Integral del Módulo 1 (Teoría: 60 pts + Práctica: 90 pts = 150 pts)',
+            type: 'Examen',
+            points: 150,
+            time_limit: 60,
+            passing_score: 70,
+            due_date: '2026-09-02',
+            date: '2 de septiembre de 2026',
+            status: 'pending',
+            grade: null
+        },
+        {
+            id: 'ee-m2-l10',
+            evaluation_key: 'ee-m2-l10',
+            course_id: 1,
+            title: 'Examen 2 - Uso de Componentes Electrónicos',
+            description: 'Capacitores, transistores BJT, relés 5V y motores DC (125 pts)',
+            type: 'Examen',
+            points: 125,
+            time_limit: 60,
+            passing_score: 70,
+            due_date: '2026-09-28',
+            date: '28 de septiembre de 2026',
+            status: 'pending',
+            grade: null
+        },
+        {
+            id: 'ee-m3-l14',
+            evaluation_key: 'ee-m3-l14',
+            course_id: 1,
+            title: 'Examen 3 - Implementación de Circuitos Integrados',
+            description: 'Temporizador NE555, contador binario 74LS93 y display 7 segmentos (125 pts)',
+            type: 'Examen',
+            points: 125,
+            time_limit: 60,
+            passing_score: 70,
+            due_date: '2026-10-21',
+            date: '21 de octubre de 2026',
+            status: 'pending',
+            grade: null
+        },
+        {
+            id: 'ee-m4-l16',
+            evaluation_key: 'ee-m4-l16',
+            course_id: 1,
+            title: 'Presentación del Proyecto Final',
+            description: 'Sustentación de prototipo funcional STEAM / ABP (100 pts)',
+            type: 'Proyecto',
+            points: 100,
+            time_limit: 90,
+            passing_score: 70,
+            due_date: '2026-11-11',
+            date: '11 de noviembre de 2026',
+            status: 'pending',
+            grade: null
+        }
+    ];
+
+    const baseEvaluations = (evaluations && evaluations.length > 0) ? evaluations : defaultOfficialEvaluations;
+
+    const processedEvaluations = baseEvaluations.map(evalItem => {
+        const k = (evalItem.evaluation_key || evalItem.id || '').toLowerCase();
+        
+        let localCompleted = null;
+        try {
+            const saved = localStorage.getItem(`exam_completed_${k}`) || 
+                          (evalItem.evaluation_key ? localStorage.getItem(`exam_completed_${evalItem.evaluation_key}`) : null) ||
+                          (evalItem.id ? localStorage.getItem(`exam_completed_${evalItem.id}`) : null);
+            if (saved) localCompleted = JSON.parse(saved);
+        } catch {}
+
+        const attempt = userAttempts[k] || 
+                        (evalItem.evaluation_key ? userAttempts[evalItem.evaluation_key] : null) || 
+                        (evalItem.id ? userAttempts[evalItem.id] : null) || 
+                        localCompleted;
+        
+        let status = 'pending';
+        let grade = null;
+        let pointsObtained = null;
+
+        if (attempt) {
+            if (attempt.completed_at) {
+                status = 'completed';
+                grade = attempt.score ?? Math.round(((attempt.points_obtained || 0) / (evalItem.points || 150)) * 100);
+                pointsObtained = attempt.points_obtained ?? Math.round(((attempt.score || 0) / 100) * (evalItem.points || 150));
+            } else {
+                status = 'in_progress';
+            }
+        }
+
+        return {
+            ...evalItem,
+            status,
+            grade,
+            points_obtained: pointsObtained,
+            type: evalItem.type || 'Examen',
+            course: evalItem.course || getCourseById(evalItem.course_id)
+        };
+    });
 
     const filteredEvaluations = processedEvaluations.filter(e => {
         if (filter === 'all') return true;
@@ -41,16 +161,16 @@ const PanelEvaluaciones = () => {
     });
 
     const stats = {
-        total: evaluations.length,
-        completed: evaluations.filter(e => e.status === 'completed').length,
-        pending: evaluations.filter(e => e.status === 'pending').length,
-        inProgress: evaluations.filter(e => e.status === 'in_progress').length,
-        averageGrade: evaluations.filter(e => e.grade !== null).length > 0 
+        total: processedEvaluations.length,
+        completed: processedEvaluations.filter(e => e.status === 'completed').length,
+        pending: processedEvaluations.filter(e => e.status === 'pending').length,
+        inProgress: processedEvaluations.filter(e => e.status === 'in_progress').length,
+        averageGrade: processedEvaluations.filter(e => e.grade !== null).length > 0 
             ? Math.round(
-                evaluations
+                processedEvaluations
                     .filter(e => e.grade !== null)
                     .reduce((sum, e) => sum + e.grade, 0) / 
-                evaluations.filter(e => e.grade !== null).length
+                processedEvaluations.filter(e => e.grade !== null).length
             )
             : 0
     };
@@ -66,7 +186,9 @@ const PanelEvaluaciones = () => {
 
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
+        if (typeof dateStr === 'string' && dateStr.includes(' de ')) return dateStr;
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
         return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
@@ -81,7 +203,7 @@ const PanelEvaluaciones = () => {
 
             {loading ? (
                 <div className="empty-state glass-panel"><p>Cargando...</p></div>
-            ) : evaluations.length === 0 ? (
+            ) : processedEvaluations.length === 0 ? (
                 <div className="empty-state glass-panel">
                     <FileText size={48} color="#64748b" />
                     <h3>No hay evaluaciones</h3>
@@ -126,33 +248,6 @@ const PanelEvaluaciones = () => {
                         <span className="stat-label">Promedio</span>
                     </div>
                 </div>
-            </div>
-
-            <div className="filter-tabs glass-panel">
-                <button 
-                    className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
-                    onClick={() => setFilter('all')}
-                >
-                    Todas ({stats.total})
-                </button>
-                <button 
-                    className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
-                    onClick={() => setFilter('pending')}
-                >
-                    Pendientes ({stats.pending})
-                </button>
-                <button 
-                    className={`filter-tab ${filter === 'in_progress' ? 'active' : ''}`}
-                    onClick={() => setFilter('in_progress')}
-                >
-                    En Progreso ({stats.inProgress})
-                </button>
-                <button 
-                    className={`filter-tab ${filter === 'completed' ? 'active' : ''}`}
-                    onClick={() => setFilter('completed')}
-                >
-                    Completadas ({stats.completed})
-                </button>
             </div>
 
             <div className="evaluations-list">

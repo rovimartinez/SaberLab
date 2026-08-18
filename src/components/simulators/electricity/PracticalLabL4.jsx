@@ -424,11 +424,11 @@ export default function PracticalLabL4() {
                                         </linearGradient>
                                     </defs>
 
-                                    {/* Rieles Horizontales Principales */}
-                                    <line x1="40" y1="30" x2={currentEx.R3 > 0 ? "270" : "210"} y2="30" stroke="#475569" strokeWidth="2.5" />
-                                    <line x1="40" y1="170" x2={currentEx.R3 > 0 ? "270" : "210"} y2="170" stroke="#475569" strokeWidth="2.5" />
+                                    {/* Rieles Horizontales Principales (Terminan exactamente en la última rama activa) */}
+                                    <line x1="40" y1="30" x2={currentEx.R3 > 0 ? "280" : "220"} y2="30" stroke="#475569" strokeWidth="2.5" />
+                                    <line x1="40" y1="170" x2={currentEx.R3 > 0 ? "280" : "220"} y2="170" stroke="#475569" strokeWidth="2.5" />
 
-                                    {/* Batería a la izquierda */}
+                                    {/* Batería a la izquierda (x = 40) */}
                                     <g transform="translate(25, 75)">
                                         <line x1="15" y1="-45" x2="15" y2="0" stroke="#475569" strokeWidth="2.5" />
                                         <line x1="15" y1="50" x2="15" y2="95" stroke="#475569" strokeWidth="2.5" />
@@ -441,8 +441,8 @@ export default function PracticalLabL4() {
                                         </text>
                                     </g>
 
-                                    {/* Rama 1: Resistor R1 */}
-                                    <g transform="translate(110, 30)">
+                                    {/* Rama 1: Resistor R1 (x = 120 con 3 ramas, x = 130 con 2 ramas) */}
+                                    <g transform={`translate(${currentEx.R3 > 0 ? 120 : 130}, 30)`}>
                                         <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="2" />
                                         <rect x="-10" y="50" width="20" height="40" rx="4" fill="url(#resBodyL4)" stroke="#78350f" strokeWidth="1.2" />
                                         <line x1="0" y1="90" x2="0" y2="140" stroke="#475569" strokeWidth="2" />
@@ -456,8 +456,8 @@ export default function PracticalLabL4() {
                                         ) : null}
                                     </g>
 
-                                    {/* Rama 2: Resistor R2 */}
-                                    <g transform="translate(200, 30)">
+                                    {/* Rama 2: Resistor R2 (x = 200 con 3 ramas [delta=80], x = 220 con 2 ramas [delta=90]) */}
+                                    <g transform={`translate(${currentEx.R3 > 0 ? 200 : 220}, 30)`}>
                                         <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="2" />
                                         <rect x="-10" y="50" width="20" height="40" rx="4" fill="url(#resBodyL4)" stroke={currentEx.R2 === 999999 ? '#ef4444' : '#78350f'} strokeWidth={currentEx.R2 === 999999 ? 2 : 1.2} strokeDasharray={currentEx.R2 === 999999 ? '3 2' : 'none'} />
                                         <line x1="0" y1="90" x2="0" y2="140" stroke="#475569" strokeWidth="2" />
@@ -466,9 +466,9 @@ export default function PracticalLabL4() {
                                         </text>
                                     </g>
 
-                                    {/* Rama 3: Resistor R3 (solo si R3 > 0) */}
+                                    {/* Rama 3: Resistor R3 (x = 280 [delta=80]) */}
                                     {currentEx.R3 > 0 && (
-                                        <g transform="translate(270, 30)">
+                                        <g transform="translate(280, 30)">
                                             <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="2" />
                                             <rect x="-10" y="50" width="20" height="40" rx="4" fill="url(#resBodyL4)" stroke="#78350f" strokeWidth="1.2" />
                                             <line x1="0" y1="90" x2="0" y2="140" stroke="#475569" strokeWidth="2" />
@@ -483,7 +483,7 @@ export default function PracticalLabL4() {
 
                                     {/* Indicador de Corriente Total IT */}
                                     {currentEx.targetVar === 'IT' && (
-                                        <g transform="translate(75, 30)">
+                                        <g transform={`translate(${currentEx.R3 > 0 ? 80 : 85}, 30)`}>
                                             <rect x="-24" y="-10" width="48" height="20" rx="5" fill="#0f172a" stroke="#fbbf24" strokeWidth="1.5" />
                                             <text x="0" y="4" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="900">
                                                 IT = ? A
@@ -598,11 +598,11 @@ export default function PracticalLabL4() {
                             textAlign: 'center'
                         }}>
                             <svg viewBox="0 0 340 210" width="100%" height="220" xmlns="http://www.w3.org/2000/svg">
-                                {/* Rieles Superior e Inferior */}
-                                <line x1="40" y1="30" x2="300" y2="30" stroke="#475569" strokeWidth="2.5" />
-                                <line x1="40" y1="175" x2="300" y2="175" stroke="#475569" strokeWidth="2.5" />
+                                {/* Rieles Superior e Inferior (Terminan exactamente a ras en R3 x = 280) */}
+                                <line x1="40" y1="30" x2="280" y2="30" stroke="#475569" strokeWidth="2.5" />
+                                <line x1="40" y1="175" x2="280" y2="175" stroke="#475569" strokeWidth="2.5" />
 
-                                {/* Fuente VT a la izquierda */}
+                                {/* Fuente VT a la izquierda (x = 40) */}
                                 <g transform="translate(25, 75)">
                                     <line x1="15" y1="-45" x2="15" y2="0" stroke="#475569" strokeWidth="2.5" />
                                     <line x1="15" y1="50" x2="15" y2="100" stroke="#475569" strokeWidth="2.5" />
@@ -612,7 +612,7 @@ export default function PracticalLabL4() {
                                     <text x="-14" y="28" textAnchor="middle" fill="#38bdf8" fontSize="11" fontWeight="900">{sandboxVoltage}V</text>
                                 </g>
 
-                                {/* Rama 1: Resistor R1 */}
+                                {/* Rama 1: Resistor R1 (x = 120 [delta = 80px]) */}
                                 <g transform="translate(120, 30)">
                                     <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="2" />
                                     <rect x="-10" y="50" width="20" height="45" rx="4" fill="#d4a373" stroke="#78350f" strokeWidth="1.2" />
@@ -621,8 +621,8 @@ export default function PracticalLabL4() {
                                     <text x="16" y="85" fill="#38bdf8" fontSize="8" fontWeight="800">I₁: {sandboxI1.toFixed(2)}A</text>
                                 </g>
 
-                                {/* Rama 2: Resistor R2 */}
-                                <g transform="translate(205, 30)">
+                                {/* Rama 2: Resistor R2 (x = 200 [delta = 80px]) */}
+                                <g transform="translate(200, 30)">
                                     <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="2" />
                                     <rect x="-10" y="50" width="20" height="45" rx="4" fill="#d4a373" stroke="#78350f" strokeWidth="1.2" />
                                     <line x1="0" y1="95" x2="0" y2="145" stroke="#475569" strokeWidth="2" />
@@ -630,8 +630,8 @@ export default function PracticalLabL4() {
                                     <text x="16" y="85" fill="#38bdf8" fontSize="8" fontWeight="800">I₂: {sandboxI2.toFixed(2)}A</text>
                                 </g>
 
-                                {/* Rama 3: Resistor R3 */}
-                                <g transform="translate(290, 30)">
+                                {/* Rama 3: Resistor R3 (x = 280 [delta = 80px]) */}
+                                <g transform="translate(280, 30)">
                                     <line x1="0" y1="0" x2="0" y2="50" stroke="#475569" strokeWidth="2" />
                                     <rect x="-10" y="50" width="20" height="45" rx="4" fill="#d4a373" stroke="#78350f" strokeWidth="1.2" />
                                     <line x1="0" y1="95" x2="0" y2="145" stroke="#475569" strokeWidth="2" />
@@ -639,12 +639,11 @@ export default function PracticalLabL4() {
                                     <text x="16" y="85" fill="#38bdf8" fontSize="8" fontWeight="800">I₃: {sandboxI3.toFixed(2)}A</text>
                                 </g>
 
-                                {/* Corriente total IT en riel superior */}
-                                <g transform="translate(75, 30)">
-                                    <rect x="-35" y="-12" width="70" height="24" rx="12" fill="#090e1a" stroke="#34d399" strokeWidth="1.5" />
-                                    <polygon points="-22,4 -14,0 -22,-4" fill="#34d399" />
-                                    <text x="-8" y="4" textAnchor="start" fill="#34d399" fontSize="9.5" fontWeight="900" fontFamily="monospace">
-                                        IT = {sandboxITotal.toFixed(2)}A
+                                {/* Corriente total IT en riel superior (Centrada sin flecha) */}
+                                <g transform="translate(80, 30)">
+                                    <rect x="-37" y="-12" width="74" height="24" rx="12" fill="#090e1a" stroke="#34d399" strokeWidth="1.5" />
+                                    <text x="0" y="4" textAnchor="middle" fill="#34d399" fontSize="9.5" fontWeight="900" fontFamily="monospace">
+                                        IT = {sandboxITotal.toFixed(2)} A
                                     </text>
                                 </g>
                             </svg>
