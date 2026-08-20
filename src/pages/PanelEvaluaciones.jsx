@@ -113,9 +113,29 @@ const PanelEvaluaciones = () => {
         }
     ];
 
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
+
+    // Mapear cursos en los que el estudiante está realmente inscrito
+    const enrolledCourseIds = (enrolledCourses || []).map(c => Number(c.id || c.course_id)).filter(Boolean);
+    const enrolledCourseAbbrs = (enrolledCourses || []).map(c => (c.abbr || '').toLowerCase()).filter(Boolean);
+    const enrolledCourseSlugs = (enrolledCourses || []).map(c => (c.slug || '').toLowerCase()).filter(Boolean);
+
     const baseEvaluations = (evaluations && evaluations.length > 0) ? evaluations : defaultOfficialEvaluations;
 
-    const processedEvaluations = baseEvaluations.map(evalItem => {
+    // Si es estudiante, filtrar estrictamente solo las evaluaciones de sus cursos inscritos
+    const relevantEvaluations = isStaff
+        ? baseEvaluations
+        : baseEvaluations.filter(evalItem => {
+            const courseId = Number(evalItem.course_id);
+            const evalKey = (evalItem.evaluation_key || evalItem.id || '').toLowerCase();
+            const prefix = evalKey.split('-')[0]; // 'ee', 're', etc.
+
+            return enrolledCourseIds.includes(courseId) ||
+                   enrolledCourseAbbrs.includes(prefix) ||
+                   enrolledCourseSlugs.some(slug => slug.startsWith(prefix));
+        });
+
+    const processedEvaluations = relevantEvaluations.map(evalItem => {
         const k = (evalItem.evaluation_key || evalItem.id || '').toLowerCase();
         
         let localCompleted = null;

@@ -76,33 +76,43 @@ const AdminAccessRequestsBubble = () => {
     }, [isStaff, open]);
 
     useEffect(() => {
-        if (!isStaff) return undefined;
+        if (!isStaff || !open) return undefined;
 
-        const loadRequests = async () => {
-            const { data, error } = await api('/requests');
+        let cancelled = false;
 
-            if (error) {
-                console.error('Error cargando solicitudes pendientes:', error);
-                return;
+        const loadRequests = async (isInitial = false) => {
+            if (isInitial) setLoading(true);
+            try {
+                const { data, error } = await api('/requests');
+
+                if (error) {
+                    console.error('Error cargando solicitudes pendientes:', error);
+                    return;
+                }
+
+                if (!cancelled) {
+                    setRequests((data ?? []).filter(r => r.status === 'pending'));
+                }
+            } catch (err) {
+                console.error('Error in bubble loadRequests:', err);
+            } finally {
+                if (!cancelled && isInitial) {
+                    setLoading(false);
+                }
             }
-
-            setRequests((data ?? []).filter(r => r.status === 'pending'));
-            await refreshPendingAccessRequestsCount();
         };
 
-        if (open) {
-            setLoading(true);
-            void loadRequests().finally(() => setLoading(false));
-        }
+        loadRequests(requests.length === 0);
 
         const interval = setInterval(() => {
-            if (open) void loadRequests();
-        }, 10000);
+            loadRequests(false);
+        }, 8000);
 
         return () => {
+            cancelled = true;
             clearInterval(interval);
         };
-    }, [isStaff, open, refreshPendingAccessRequestsCount]);
+    }, [isStaff, open]);
 
     const handleDecision = async (request, status) => {
         setBusyId(request.id);

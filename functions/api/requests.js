@@ -88,25 +88,5 @@ export async function onRequestPatch({ request, env, data }) {
      WHERE id = ?`
   ).bind(name || null, normalizedEmail || null, status || null, id).run();
 
-  // Si se aprueba la solicitud, asegurar inscripción en los cursos disponibles
-  if (status === 'approved') {
-    try {
-      const targetEmail = normalizedEmail || row.email.toLowerCase();
-      const userProfile = await env.DB.prepare('SELECT id FROM perfiles WHERE lower(email) = ?').bind(targetEmail).first();
-      if (userProfile?.id) {
-        const { results: courses } = await env.DB.prepare('SELECT id FROM cursos').all();
-        if (courses && courses.length > 0) {
-          for (const c of courses) {
-            await env.DB.prepare(
-              'INSERT OR IGNORE INTO inscripciones (user_id, course_id) VALUES (?, ?)'
-            ).bind(userProfile.id, c.id).run();
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error auto-enrolling on approval:', e);
-    }
-  }
-
   return Response.json({ success: true });
 }

@@ -118,7 +118,7 @@ const PanelInicio = () => {
     const courseIcon = mainCourseDef?.icon || <Zap size={22} />;
     const courseModules = mainCourseDef?.modules || [];
     const allCourseLessons = courseModules.flatMap(m => (m.lessons || []).map(l => ({ ...l, moduleId: m.id, moduleName: m.name })));
-    const totalLessons = allCourseLessons.length || 16;
+    const totalLessons = hasEnrolledCourses ? (allCourseLessons.length || 16) : 0;
 
     const completedLessonsCount = allCourseLessons.filter(l => 
         completedLessonsMap[l.id] || 
@@ -150,19 +150,32 @@ const PanelInicio = () => {
         ? `/dashboard/evaluations/${nextLessonTarget.id}`
         : `/dashboard/my-courses/${mainCourseDef.slug || 'electricidad-y-electronica'}/${nextLessonTarget?.moduleId || 'm1'}/${nextLessonTarget?.id || 'ee-m1-l1'}`;
 
-    // Actividad semanal
+    // Actividad semanal real (0h para nuevos estudiantes)
     const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     const todayIndex = new Date().getDay(); // 0=Dom, 1=Lun
-    const weeklyHoursArr = userProgress?.weekly_hours || [2, 0, 0, 0, 0, 0, 0];
+    const weeklyHoursArr = userProgress?.weekly_hours || [0, 0, 0, 0, 0, 0, 0];
     const weeklyActivity = days.map((day, idx) => ({
         day,
         hours: weeklyHoursArr[idx] || 0,
         isToday: idx === (todayIndex === 0 ? 6 : todayIndex - 1)
     }));
     const maxHours = Math.max(...weeklyActivity.map(d => d.hours), 1);
-    const totalWeeklyHours = weeklyActivity.reduce((acc, d) => acc + d.hours, 0) || 2;
+    const totalWeeklyHours = weeklyActivity.reduce((acc, d) => acc + d.hours, 0);
     const weeklyGoalHours = 5;
     const weeklyGoalPercent = Math.min(100, Math.round((totalWeeklyHours / weeklyGoalHours) * 100));
+
+    // Telemetría práctica vs teoría real
+    const practiceMins = userProgress?.practice_minutes || (lessonsCompleted * 20) || 0;
+    const theoryMins = userProgress?.theory_minutes || (lessonsCompleted * 10) || 0;
+    const totalMins = practiceMins + theoryMins;
+    const practicePercent = totalMins > 0 ? Math.round((practiceMins / totalMins) * 100) : 0;
+    const theoryPercent = totalMins > 0 ? (100 - practicePercent) : 0;
+
+    const formatMins = (mins) => {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return `${h}h ${m < 10 ? '0' : ''}${m}m`;
+    };
 
     // Próximas actividades dinámicas
     const upcomingActivities = [];
@@ -192,9 +205,11 @@ const PanelInicio = () => {
         }
     });
 
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
+
     const quickActions = [
         { label: 'Mi Perfil', icon: <User size={14} />, to: '/dashboard/profile' },
-        { label: 'Widgets', icon: <Wrench size={14} />, onClick: openLauncher },
+        ...(isStaff ? [{ label: 'Widgets', icon: <Wrench size={14} />, onClick: openLauncher }] : []),
         { label: 'Recompensas', icon: <Gift size={14} />, to: '/dashboard/gadgets' },
         { label: 'Calificaciones', icon: <Award size={14} />, to: '/dashboard/grades' },
     ];
@@ -242,7 +257,9 @@ const PanelInicio = () => {
                     <div className="hero-kpi-card">
                         <BookOpen size={24} color="#38bdf8" />
                         <div>
-                            <div className="kpi-value" style={{ color: '#bae6fd' }}>{lessonsCompleted} / {totalLessons}</div>
+                            <div className="kpi-value" style={{ color: '#bae6fd' }}>
+                                {hasEnrolledCourses ? `${lessonsCompleted} / ${totalLessons}` : '0 / 0'}
+                            </div>
                             <div className="kpi-label">Lecciones Listas</div>
                         </div>
                     </div>
@@ -404,14 +421,18 @@ const PanelInicio = () => {
                         <div className="telemetry-box">
                             <span className="telemetry-icon">🧪</span>
                             <div>
-                                <div className="telemetry-num" style={{ color: '#38bdf8' }}>2h 15m (68%)</div>
+                                <div className="telemetry-num" style={{ color: '#38bdf8' }}>
+                                    {formatMins(practiceMins)} ({practicePercent}%)
+                                </div>
                                 <div className="telemetry-label">Laboratorios y Simulador</div>
                             </div>
                         </div>
                         <div className="telemetry-box">
                             <span className="telemetry-icon">📖</span>
                             <div>
-                                <div className="telemetry-num" style={{ color: '#a855f7' }}>1h 05m (32%)</div>
+                                <div className="telemetry-num" style={{ color: '#a855f7' }}>
+                                    {formatMins(theoryMins)} ({theoryPercent}%)
+                                </div>
                                 <div className="telemetry-label">Teoría y Retos Prácticos</div>
                             </div>
                         </div>
@@ -431,49 +452,56 @@ const PanelInicio = () => {
                     </div>
 
                     <div className="agenda-items-container">
-                        {upcomingActivities.slice(0, 3).map((act) => (
-                            <div 
-                                key={act.id} 
-                                className="agenda-item-row"
-                                style={act.isDone ? { borderColor: 'rgba(16, 185, 129, 0.25)', background: 'rgba(16, 185, 129, 0.04)' } : {}}
-                            >
-                                <div className="agenda-item-left">
-                                    <div className="agenda-badge-row">
-                                        {act.isDone ? (
-                                            <span className="badge-pill done">✓ Rendido</span>
-                                        ) : (
-                                            <span className="badge-pill upcoming">📅 {act.type}</span>
-                                        )}
-                                        <span className="badge-date">{act.date}</span>
-                                    </div>
-                                    <div className="agenda-item-title">{act.title}</div>
-                                </div>
-
-                                <div className="agenda-item-right">
-                                    <div className={`score-badge ${act.isDone ? 'done' : ''}`}>
-                                        <span className="score-num">{act.isDone ? act.pointsEarned : act.points}</span>
-                                        <span className="score-txt">pts</span>
-                                    </div>
-                                    {act.isDone ? (
-                                        <Link 
-                                            to={`/dashboard/evaluations/${act.evalKey}/play?review=true`} 
-                                            className="action-btn-mini review"
-                                            title="Ver Revisión del Examen"
-                                        >
-                                            <Eye size={13} />
-                                        </Link>
-                                    ) : (
-                                        <Link 
-                                            to={`/dashboard/evaluations/${act.evalKey}`} 
-                                            className="action-btn-mini present"
-                                            title="Presentar Examen"
-                                        >
-                                            <Play size={13} fill="currentColor" />
-                                        </Link>
-                                    )}
-                                </div>
+                        {upcomingActivities.length === 0 ? (
+                            <div style={{ padding: '1.8rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem' }}>
+                                <Clock size={28} color="#64748b" style={{ margin: '0 auto 0.5rem', display: 'block' }} />
+                                No tienes actividades oficiales programadas.
                             </div>
-                        ))}
+                        ) : (
+                            upcomingActivities.slice(0, 3).map((act) => (
+                                <div 
+                                    key={act.id} 
+                                    className="agenda-item-row"
+                                    style={act.isDone ? { borderColor: 'rgba(16, 185, 129, 0.25)', background: 'rgba(16, 185, 129, 0.04)' } : {}}
+                                >
+                                    <div className="agenda-item-left">
+                                        <div className="agenda-badge-row">
+                                            {act.isDone ? (
+                                                <span className="badge-pill done">✓ Rendido</span>
+                                            ) : (
+                                                <span className="badge-pill upcoming">📅 {act.type}</span>
+                                            )}
+                                            <span className="badge-date">{act.date}</span>
+                                        </div>
+                                        <div className="agenda-item-title">{act.title}</div>
+                                    </div>
+
+                                    <div className="agenda-item-right">
+                                        <div className={`score-badge ${act.isDone ? 'done' : ''}`}>
+                                            <span className="score-num">{act.isDone ? act.pointsEarned : act.points}</span>
+                                            <span className="score-txt">pts</span>
+                                        </div>
+                                        {act.isDone ? (
+                                            <Link 
+                                                to={`/dashboard/evaluations/${act.evalKey}/play?review=true`} 
+                                                className="action-btn-mini review"
+                                                title="Ver Revisión del Examen"
+                                            >
+                                                <Eye size={13} />
+                                            </Link>
+                                        ) : (
+                                            <Link 
+                                                to={`/dashboard/evaluations/${act.evalKey}`} 
+                                                className="action-btn-mini present"
+                                                title="Presentar Examen"
+                                            >
+                                                <Play size={13} fill="currentColor" />
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 

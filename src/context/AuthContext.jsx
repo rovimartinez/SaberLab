@@ -39,6 +39,16 @@ export const AuthProvider = ({ children }) => {
     profileRef.current = profile;
   }, [user, profile]);
 
+  // Recargar cursos y visibilidad cuando cambia el modo de vista (admin <-> estudiante)
+  useEffect(() => {
+    if (user && profile) {
+      const realRole = profile?.real_role || profile?.role;
+      const isStaffUser = ['admin', 'teacher', 'docente', 'profesor'].includes(realRole);
+      const effectiveRole = (isStaffUser && viewMode === 'student') ? 'student' : realRole;
+      loadEnrolledCourses(user.id, effectiveRole);
+    }
+  }, [viewMode, user?.id]);
+
   const clearPendingAccessData = () => {
     localStorage.removeItem('pending_email');
     localStorage.removeItem('pending_name');
@@ -215,14 +225,15 @@ export const AuthProvider = ({ children }) => {
   const loadPendingAccessRequestsCount = async () => {
     try {
       const { data } = await api('/requests');
-      setPendingAccessRequestsCount((data || []).filter(r => r.status === 'pending').length);
+      const count = (data || []).filter(r => r.status === 'pending').length;
+      setPendingAccessRequestsCount(prev => prev === count ? prev : count);
     } catch (err) {
       console.error('Error loading pending access requests count:', err);
     }
   };
 
   const refreshPendingAccessRequestsCount = async () => {
-    if (profile?.role === 'admin') {
+    if (profile?.role === 'admin' || profile?.real_role === 'admin') {
       await loadPendingAccessRequestsCount();
       return;
     }
