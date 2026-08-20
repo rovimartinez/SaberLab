@@ -175,31 +175,56 @@ const MyCourses = () => {
 
             {/* Join with Code Modal */}
             {showJoinModal && (
-                <div className="code-modal-overlay" onClick={() => setShowJoinModal(false)}>
-                    <div className="code-modal glass-panel" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <span className="modal-label">Unirse a un curso</span>
-                            <h2 className="modal-course-name">Ingresa el código</h2>
+                <div className="join-modal-overlay" onClick={() => setShowJoinModal(false)}>
+                    <div className="join-modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                            <span className="modal-label" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '0.25rem' }}>
+                                Unirse a un curso
+                            </span>
+                            <h2 className="modal-course-name" style={{ color: 'white', fontSize: '1.4rem', margin: 0, fontWeight: 800 }}>
+                                Ingresa el código
+                            </h2>
                         </div>
 
-                        <div className="form-group">
+                        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
                             <input
                                 type="text"
                                 placeholder="Código del curso"
                                 value={joinCode}
                                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                                 autoFocus
-                                style={{ textTransform: 'uppercase', letterSpacing: '4px', fontSize: '1.2rem', textAlign: 'center' }}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.85rem 1rem',
+                                    borderRadius: '12px',
+                                    background: 'rgba(15, 23, 42, 0.8)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    color: 'white',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '4px',
+                                    fontSize: '1.2rem',
+                                    textAlign: 'center',
+                                    outline: 'none'
+                                }}
                             />
                         </div>
 
-                        {error && <p style={{ color: '#f43f5e', textAlign: 'center', marginBottom: '1rem' }}>{error}</p>}
+                        {error && <p style={{ color: '#f43f5e', textAlign: 'center', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</p>}
 
-                        <div className="modal-actions">
-                            <button className="btn btn-primary" onClick={handleJoinCourse} disabled={loading || !joinCode.trim()}>
+                        <div className="modal-actions" style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleJoinCourse} 
+                                disabled={loading || !joinCode.trim()}
+                                style={{ flex: 1, justifyContent: 'center' }}
+                            >
                                 {loading ? 'Uniéndose...' : 'Unirse'}
                             </button>
-                            <button className="btn btn-secondary" onClick={() => setShowJoinModal(false)}>
+                            <button 
+                                className="btn btn-secondary" 
+                                onClick={() => setShowJoinModal(false)}
+                                style={{ flex: 1, justifyContent: 'center' }}
+                            >
                                 Cancelar
                             </button>
                         </div>
@@ -209,17 +234,21 @@ const MyCourses = () => {
 
             {/* Success Modal */}
             {showSuccessModal && (
-                <div className="code-modal-overlay" onClick={() => setShowSuccessModal(false)}>
-                    <div className="code-modal glass-panel" onClick={e => e.stopPropagation()} style={{ textAlign: 'center', padding: '2rem' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-                        <h2 style={{ color: '#10b981', marginBottom: '0.5rem' }}>¡Te has unido!</h2>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                            Ahora eres parte de <strong>{joinedCourseName}</strong>
+                <div className="join-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+                    <div className="join-modal-content" onClick={e => e.stopPropagation()} style={{ textAlign: 'center', padding: '2.5rem 2rem' }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🎉</div>
+                        <h2 style={{ color: '#10b981', marginBottom: '0.5rem', fontSize: '1.6rem', fontWeight: 800 }}>¡Te has unido!</h2>
+                        <p style={{ color: '#cbd5e1', marginBottom: '1.75rem', fontSize: '0.95rem' }}>
+                            Ahora eres parte de <strong style={{ color: '#38bdf8' }}>{joinedCourseName}</strong>
                         </p>
-                        <button className="btn btn-primary" onClick={() => {
-                            setShowSuccessModal(false);
-                            navigate('/dashboard/my-courses');
-                        }}>
+                        <button 
+                            className="btn btn-primary" 
+                            style={{ width: '100%', justifyContent: 'center', padding: '0.75rem' }}
+                            onClick={async () => {
+                                setShowSuccessModal(false);
+                                await refreshEnrolledCourses();
+                            }}
+                        >
                             Ver mis Cursos
                         </button>
                     </div>

@@ -64,6 +64,17 @@ export async function onRequestPost({ request, env, data }) {
     )
   `).run();
 
+  // Poblar cursos base si no existen
+  await env.DB.prepare(`
+    INSERT OR IGNORE INTO cursos (id, name, abbr, slug) VALUES
+    (1, 'Electricidad y Electrónica Básica', 'EE', 'electricidad-y-electronica'),
+    (2, 'Fundamentos de Programación', 'FP', 'programacion'),
+    (3, 'Mediaciones Tecnológicas en la Química', 'MQ', 'quimica-tecnologica'),
+    (4, 'Modelado y Animación 3D', 'MA', 'modelado-y-animacion-3d'),
+    (5, 'Robótica Educativa', 'RE', 'robotica-educativa'),
+    (6, 'Tendencias y Desarrollo en Tecnología', 'TD', 'tendencias-desarrollo')
+  `).run();
+
   // 1. Buscar código en codigos_grupo
   const codeRow = await env.DB.prepare(
     'SELECT * FROM codigos_grupo WHERE UPPER(code) = ?'
@@ -94,11 +105,17 @@ export async function onRequestPost({ request, env, data }) {
   let course = null;
   if (group.course_id) {
     course = await env.DB.prepare(
-      'SELECT id, name, abbr, slug FROM cursos WHERE id = ? OR abbr = ? OR slug = ?'
-    ).bind(group.course_id, group.course_id, group.course_id).first();
+      'SELECT id, name, abbr, slug FROM cursos WHERE id = ? OR abbr = ? OR slug = ? OR CAST(id AS TEXT) = CAST(? AS TEXT)'
+    ).bind(group.course_id, group.course_id, group.course_id, group.course_id).first();
   }
 
-  const courseId = course?.id || group.course_id || 1;
+  const courseId = course?.id || (typeof group.course_id === 'number' ? group.course_id : 1);
+  const resolvedCourse = course || {
+    id: courseId,
+    name: group.name || 'Electricidad y Electrónica Básica',
+    abbr: 'EE',
+    slug: 'electricidad-y-electronica'
+  };
 
   // 4. Inscribir usuario en el grupo
   await env.DB.prepare(
@@ -110,18 +127,9 @@ export async function onRequestPost({ request, env, data }) {
     'INSERT OR REPLACE INTO inscripciones (user_id, course_id, group_id) VALUES (?, ?, ?)'
   ).bind(userId, courseId, group.id).run();
 
-  if (!course) {
-    course = {
-      id: courseId,
-      name: group.name || 'Curso Asignado',
-      abbr: 'EE',
-      slug: 'electricidad-y-electronica'
-    };
-  }
-
   return Response.json({
     success: true,
-    curso: course,
+    curso: resolvedCourse,
     grupo: group
   });
 }

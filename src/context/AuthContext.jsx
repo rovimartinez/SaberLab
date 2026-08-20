@@ -143,15 +143,23 @@ export const AuthProvider = ({ children }) => {
       if (courses && courses.length > 0) {
         const courseIds = courses.map((course) => course.id);
 
-        const coursesWithProgress = courseIds.map((courseId) => {
-          const courseDef = COURSES_DEFINITION.find((course) => course.id === courseId);
+        const coursesWithProgress = courses.map((userCourse) => {
+          const courseDef = COURSES_DEFINITION.find((c) => 
+            c.id === userCourse.id || 
+            c.id === Number(userCourse.id) ||
+            (c.abbr && userCourse.abbr && c.abbr.toUpperCase() === userCourse.abbr.toUpperCase()) ||
+            (c.slug && userCourse.slug && c.slug.toLowerCase() === userCourse.slug.toLowerCase()) ||
+            (c.name && userCourse.name && c.name.toLowerCase() === userCourse.name.toLowerCase())
+          );
+
           if (!courseDef) {
             return {
-              id: courseId,
-              name: 'Curso Desconocido',
-              abbr: '??',
-              slug: 'unknown',
-              progress: 0
+              id: userCourse.id,
+              name: userCourse.name || 'Curso Asignado',
+              abbr: userCourse.abbr || 'EE',
+              slug: userCourse.slug || 'electricidad-y-electronica',
+              progress: 0,
+              lastLesson: 'Sin iniciar'
             };
           }
 
@@ -173,7 +181,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Error cargando cursos:', err);
-      return;
+      return [];
     }
   };
 
