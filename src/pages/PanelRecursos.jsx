@@ -1,690 +1,282 @@
 import React, { useState, useMemo } from 'react';
 import { 
-    FolderOpen, FileText, Video, Download, Search, Filter, ExternalLink, 
-    Book, Link as LinkIcon, Zap, Bot, Code, FlaskConical, Box, Brain, 
-    CheckCircle2, AlertCircle, Layers, Sparkles, Check
+    FolderOpen, FileText, Video, ExternalLink, Play, 
+    Book, Link as LinkIcon, Zap, Bot, Search, 
+    Layers, Sparkles, X, Globe, Cpu, Wrench, CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import '../styles/PanelRecursos.css';
 
-// ── BANCO DE CONTENIDOS TÉCNICOS REALES PARA DESCARGA DIRECTA ──────────
-const RESOURCE_CONTENTS = {
-    'ee-1': {
-        filename: 'Manual_Tecnico_Ley_de_Ohm_y_Kirchhoff_SaberLab.md',
-        type: 'text/markdown;charset=utf-8;',
-        content: `# SABERLAB - MANUAL TÉCNICO DE FUNDAMENTOS ELÉCTRICOS
-Curso: Electricidad y Electrónica Básica (EE)
-Módulo 1: Fundamentos y Leyes de Circuitos
-
----
-
-## 1. LEY DE OHM
-Establece la relación matemática fundamental entre Tensión (V), Corriente (I) y Resistencia (R):
-
-- **Voltaje (V):** V = I · R      [Voltios (V)]
-- **Corriente (I):** I = V / R    [Amperios (A)]
-- **Resistencia (R):** R = V / I  [Ohmios (Ω)]
-
----
-
-## 2. LEYES DE KIRCHHOFF
-
-### 2.1 Ley de Corrientes de Kirchhoff (LCK - Regla de Nodos)
-La suma algebraica de las corrientes que entran a cualquier nodo es igual a la suma de las corrientes que salen:
-> Σ I_entrantes = Σ I_salientes  =>  I_total = I1 + I2 + ... + In
-
-### 2.2 Ley de Voltajes de Kirchhoff (LVK - Regla de Mallas)
-La suma de las elevaciones de potencial es igual a la suma de las caídas de potencial en un lazo cerrado:
-> Σ V_fuentes = Σ V_caídas  =>  V_total = V_R1 + V_R2 + ... + V_Rn
-
----
-
-## 3. REDUCCIÓN DE TOPOLOGÍAS DE CIRCUITOS
-
-### 3.1 Circuito Serie
-- R_total = R1 + R2 + R3 + ... + Rn
-- La corriente I_T es la misma a través de todos los componentes.
-- Divisor de Voltaje: V_Rx = V_total · (Rx / R_total)
-
-### 3.2 Circuito Paralelo
-- 1 / R_total = 1/R1 + 1/R2 + ... + 1/Rn
-- Para 2 resistores: R_eq = (R1 · R2) / (R1 + R2)
-- El voltaje V_T es idéntico en todas las ramas en paralelo.
-- Divisor de Corriente (2 ramas): I_R1 = I_total · [R2 / (R1 + R2)]
-
-### 3.3 Circuito Mixto (Serie - Paralelo)
-1. Identificar bloques internos en paralelo y reducirlos a resistencias equivalentes (Rp).
-2. Sumar en serie los bloques reducidos con las resistencias de la rama principal.
-3. Calcular I_T = V_T / R_eq y desglosar tensiones y corrientes de regreso hacia cada rama.
-
----
-© SaberLab Education Platform. Material educativo de libre distribución para fines académicos.
-`
-    },
-    'ee-2': {
-        filename: 'Tabla_Codigo_Colores_Resistencias_SaberLab.txt',
-        type: 'text/plain;charset=utf-8;',
-        content: `================================================================================
-           SABERLAB - TABLA OFICIAL DE CÓDIGO DE COLORES PARA RESISTORES
-================================================================================
-
-[ BANDA 1 / 2 ]     [ BANDA 3: MULTIPLICADOR ]     [ BANDA 4: TOLERANCIA ]
---------------------------------------------------------------------------------
-Negro    = 0        x 10^0  (1 Ω)                  -
-Marrón   = 1        x 10^1  (10 Ω)                 ± 1%    (F)
-Rojo     = 2        x 10^2  (100 Ω)                ± 2%    (G)
-Naranja  = 3        x 10^3  (1,000 Ω / 1 kΩ)       -
-Amarillo = 4        x 10^4  (10,000 Ω / 10 kΩ)     -
-Verde    = 5        x 10^5  (100,000 Ω / 100 kΩ)   ± 0.5%  (D)
-Azul     = 6        x 10^6  (1,000,000 Ω / 1 MΩ)   ± 0.25% (C)
-Violeta  = 7        x 10^7  (10 MΩ)                ± 0.1%  (B)
-Gris     = 8        x 10^8  (100 MΩ)               ± 0.05% (A)
-Blanco   = 9        x 10^9  (1 GΩ)                 -
-Dorado   = -        x 0.1                          ± 5%    (J)
-Plateado = -        x 0.01                         ± 10%   (K)
---------------------------------------------------------------------------------
-
-CÓMO LEER UNA RESISTENCIA DE 4 BANDAS:
-1. Banda 1 (Dígito 1)
-2. Banda 2 (Dígito 2)
-3. Banda 3 (Multiplicador de 10)
-4. Banda 4 (Margen de Tolerancia)
-
-EJEMPLOS PRÁCTICOS:
-- Marrón (1) - Negro (0) - Rojo (x100) - Dorado (±5%)
-  => 10 x 100 = 1,000 Ω = 1 kΩ (±5%)
-
-- Amarillo (4) - Violeta (7) - Naranja (x1k) - Dorado (±5%)
-  => 47 x 1,000 = 47,000 Ω = 47 kΩ (±5%)
-
-- Rojo (2) - Rojo (2) - Marrón (x10) - Dorado (±5%)
-  => 22 x 10 = 220 Ω (±5%)
-
-================================================================================
-`
-    },
-    'ee-3': {
-        filename: 'Datasheets_Semiconductores_Basicos_SaberLab.md',
-        type: 'text/markdown;charset=utf-8;',
-        content: `# SABERLAB - HOJAS TÉCNICAS DE DATOS (DATASHEETS)
-Curso: Electricidad y Electrónica Básica (EE)
-
----
-
-## 1. Diodo Rectificador 1N4007
-- **Tipo:** Diodo de silicio de propósito general
-- **Tensión Inversa de Pico Máxima (VRRM):** 1000 V
-- **Corriente Directa Continua (IF):** 1.0 A
-- **Caída de Tensión Directa (VF típica):** 0.7 V a 1.0 A
-- **Encapsulado:** DO-41
-- **Identificación:** La franja plateada/gris indica el CÁTODO (-).
-
----
-
-## 2. Transistor NPN 2N2222A (TO-92)
-- **Tipo:** Transistor BJT NPN de conmutación rápida y amplificación
-- **Tensión Colector-Emisor (VCEO máx):** 40 V
-- **Corriente Continua de Colector (IC máx):** 800 mA
-- **Ganancia de Corriente DC (hFE / beta):** 100 - 300 (a IC = 150 mA)
-- **Voltaje Saturación VCE(sat):** ~0.3 V
-- **Pinout (Vista frontal, cara plana de izq. a der.):**
-  1. Emisor (E) | 2. Base (B) | 3. Colector (C)
-
----
-
-## 3. Transistor NPN BC547 & PNP BC557 (TO-92)
-- **BC547 (NPN):** VCEO = 45V, IC = 100mA, hFE = 110-800.
-- **BC557 (PNP):** VCEO = -45V, IC = -100mA (Conduce con voltaje negativo en base).
-- **Pinout (Vista frontal):** 1. Colector | 2. Base | 3. Emisor
-
----
-
-## 4. Circuito Integrado Temporizador NE555
-- **Tensión de Alimentación (VCC):** 4.5 V a 15 V
-- **Corriente de Salida Máxima (Sink/Source):** 200 mA
-- **Configuraciones:** Monoestable (un pulso) y Astable (oscilador continuo).
-- **Pinout DIP-8:**
-  - Pin 1: GND
-  - Pin 2: TRIGGER (Disparo < 1/3 Vcc)
-  - Pin 3: OUTPUT (Salida)
-  - Pin 4: RESET (Activo en bajo)
-  - Pin 5: CONTROL VOLTAGE
-  - Pin 6: THRESHOLD (Umbral > 2/3 Vcc)
-  - Pin 7: DISCHARGE (Descarga del capacitor)
-  - Pin 8: VCC (+)
-
----
-`
-    },
-    'ee-4': {
-        filename: 'Guia_Montaje_Protoboard_y_Multimetro_SaberLab.md',
-        type: 'text/markdown;charset=utf-8;',
-        content: `# SABERLAB - GUÍA DE MONTAJE EN PROTOBOARD Y MULTÍMETRO
-Curso: Electricidad y Electrónica Básica (EE)
-
----
-
-## 1. ESTRUCTURA DE LA PROTOBOARD (TABLA DE PRUEBAS)
-- **Rieles Laterales de Alimentación (+ / -):** Conectados verticalmente a lo largo de toda la fila.
-- **Pistas Centrales de Componentes (a-b-c-d-e y f-g-h-i-j):** Conectadas horizontalmente en grupos de 5 orificios.
-- **Canal Central Separador:** Diseñado para insertar Circuitos Integrados (DIP) aislando los pines de cada lado.
-
----
-
-## 2. MEDIDAS CORRECTAS CON MULTÍMETRO DIGITAL (DMM)
-
-### 2.1 Medición de Tensión / Voltaje (V)
-- Conectar la sonda NEGRA en COM y la ROJA en V/Ω.
-- Seleccionar escala DCV (⎓).
-- **CONEXIÓN EN PARALELO:** Colocar las puntas en los dos extremos del componente sin desconectar el circuito.
-
-### 2.2 Medición de Corriente / Intensidad (I)
-- Conectar sonda NEGRA en COM y ROJA en mA o 10A según la magnitud esperada.
-- **CONEXIÓN EN SERIE (ABRIR EL CIRCUITO):** Se debe abrir un cable y hacer que los electrones atraviesen el multímetro.
-
-### 2.3 Medición de Resistencia (Ω) y Continuidad
-- **IMPORTANTE:** El circuito debe estar **TOTALMENTE APAGADO Y DESCONECTADO DE LA FUENTE**.
-- Para continuidad (pitido), probar diodos o cables para verificar que no haya rupturas.
-
----
-`
-    },
-    'ee-6': {
-        filename: 'Formulario_Ley_de_Watt_Potencia_SaberLab.md',
-        type: 'text/markdown;charset=utf-8;',
-        content: `# SABERLAB - FORMULARIO DE LEY DE WATT Y ENERGÍA
-Curso: Electricidad y Electrónica Básica (EE)
-
----
-
-## 1. LEY DE WATT (POTENCIA ELÉCTRICA)
-La potencia (P) mide la rapidez con la que se consume o transforma energía eléctrica en calor, luz o movimiento:
-
-- **P = V · I**        [Vatios / Watts (W)]
-- **P = I² · R**       [Especial para disipación térmica en resistores]
-- **P = V² / R**       [Potencia calculada conociendo la caída de tensión]
-
----
-
-## 2. UNIDADES Y CONVERSIONES
-- 1 Milivatio (mW) = 0.001 W = 10^-3 W
-- 1 Vatio (W) = 1 Joule / segundo (J/s) = 1 Voltio · 1 Amperio
-- 1 Kilovatio (kW) = 1,000 W
-
----
-
-## 3. SELECCIÓN DE POTENCIA EN RESISTORES
-Los resistores comerciales se clasifican por su capacidad de disipación:
-- 1/8 W (0.125 W)
-- 1/4 W (0.250 W) -> Uso estándar en protoboard
-- 1/2 W (0.500 W)
-- 1 W, 2 W, 5 W (Resistencias de potencia cerámica)
-
-> **Regla de Ingeniería:** Seleccionar un resistor con al menos el doble (2x) de la potencia calculada para evitar sobrecalentamiento.
----
-`
-    },
-    're-1': {
-        filename: 'Pinout_Arduino_Uno_R3_SaberLab.md',
-        type: 'text/markdown;charset=utf-8;',
-        content: `# SABERLAB - PINOUT Y ARQUITECTURA ARDUINO UNO R3
-Curso: Robótica Educativa (RE)
-
----
-
-## 1. ESPECIFICACIONES TÉCNICAS (ATmega328P)
-- **Voltaje de Operación:** 5 V
-- **Voltaje de Entrada Recomendado (Vin / Jack):** 7 V a 12 V
-- **Pines Digitales I/O:** 14 (Pines 0 al 13)
-- **Pines con Modulación por Ancho de Pulso (PWM ~):** 6 (Pines 3, 5, 6, 9, 10, 11)
-- **Pines de Entrada Analógica (ADC):** 6 (A0 al A5) - Resolución de 10 bits (0 a 1023)
-- **Corriente Máxima por Pin I/O:** 20 mA (40 mA absoluto)
-- **Memoria Flash:** 32 KB (0.5 KB usados por el Bootloader)
-- **SRAM:** 2 KB | **EEPROM:** 1 KB
-- **Frecuencia de Reloj:** 16 MHz
-
----
-
-## 2. ASIGNACIÓN ESPECIAL DE PINES
-- **Serial UART:** Pin 0 (RX) y Pin 1 (TX)
-- **Interrupciones Externas:** Pin 2 (INT0) y Pin 3 (INT1)
-- **Bus I2C:** A4 (SDA - Datos) y A5 (SCL - Reloj)
-- **Bus SPI:** Pin 10 (SS), Pin 11 (MOSI), Pin 12 (MISO), Pin 13 (SCK)
-- **LED Integrado:** Pin 13 (LED_BUILTIN)
-
----
-`
-    },
-    're-2': {
-        filename: 'Manual_Programacion_Arduino_Cpp_SaberLab.ino',
-        type: 'text/plain;charset=utf-8;',
-        content: `/*
- * ==============================================================================
- * SABERLAB - PLANTILLA Y GUÍA MAESTRA DE PROGRAMACIÓN C++ PARA ARDUINO
- * Curso: Robótica Educativa (RE)
- * ==============================================================================
- */
-
-// 1. DEFINICIÓN DE PINES Y CONSTANTES
-const int PIN_LED = 13;
-const int PIN_BOTON = 2;
-const int PIN_POTENCIOMETRO = A0;
-
-// 2. VARIABLES GLOBALES DE ESTADO Y TIEMPO (NO BLOQUEANTE)
-unsigned long tiempoAnterior = 0;
-const long intervaloLED = 500; // Milisegundos para parpadeo
-int estadoLED = LOW;
-
-void setup() {
-  // Configuración de velocidad del monitor serie
-  Serial.begin(9600);
-  
-  // Configuración de modos de pin
-  pinMode(PIN_LED, OUTPUT);
-  pinMode(PIN_BOTON, INPUT_PULLUP); // Resistencia pull-up interna activada
-  
-  Serial.println(F("--- Sistema SaberLab Arduino Inicializado con Exito ---"));
-}
-
-void loop() {
-  // LECTURA DE SENSORES
-  int valorPot = analogRead(PIN_POTENCIOMETRO); // 0 a 1023
-  int lecturaBoton = digitalRead(PIN_BOTON);    // LOW al presionar (Pull-Up)
-  
-  // CONVERSIÓN A VOLTAJE
-  float voltaje = (valorPot * 5.0) / 1023.0;
-  
-  // TEMPORIZADOR NO BLOQUEANTE CON millis() (Reemplazo profesional de delay)
-  unsigned long tiempoActual = millis();
-  if (tiempoActual - tiempoAnterior >= intervaloLED) {
-    tiempoAnterior = tiempoActual;
-    
-    estadoLED = (estadoLED == LOW) ? HIGH : LOW;
-    digitalWrite(PIN_LED, estadoLED);
-    
-    // Telemetría en Monitor Serie
-    Serial.print(F("Potenciometro: "));
-    Serial.print(valorPot);
-    Serial.print(F(" | Voltaje: "));
-    Serial.print(voltaje, 2);
-    Serial.print(F("V | Boton: "));
-    Serial.println(lecturaBoton == LOW ? F("PRESIONADO") : F("LIBRE"));
-  }
-}
-`
-    },
-    're-3': {
-        filename: 'Guia_Conexion_Driver_L298N_Servomotores_SaberLab.ino',
-        type: 'text/plain;charset=utf-8;',
-        content: `/*
- * ==============================================================================
- * SABERLAB - CONTROL DE MOTORES DC CON PUENTE H L298N Y SERVOMOTOR SG90
- * Curso: Robótica Educativa (RE)
- * ==============================================================================
- */
-
-#include <Servo.h>
-
-// PINES CONTROL L298N (MOTOR IZQUIERDO Y DERECHO)
-const int ENA = 5;  // PWM Velocidad Motor A
-const int IN1 = 6;  // Dirección Motor A
-const int IN2 = 7;
-const int IN3 = 8;  // Dirección Motor B
-const int IN4 = 9;
-const int ENB = 10; // PWM Velocidad Motor B
-
-Servo servoradar;
-const int PIN_SERVO = 11;
-
-void setup() {
-  pinMode(ENA, OUTPUT);
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-  pinMode(ENB, OUTPUT);
-  
-  servoradar.attach(PIN_SERVO);
-  servoradar.write(90); // Centrar servo
-}
-
-void moverAdelante(int velocidad) {
-  analogWrite(ENA, velocidad);
-  analogWrite(ENB, velocidad);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-}
-
-void detener() {
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, LOW);
-  analogWrite(ENA, 0);
-  analogWrite(ENB, 0);
-}
-
-void loop() {
-  moverAdelante(200); // Rango 0 a 255
-  delay(2000);
-  detener();
-  delay(1000);
-}
-`
-    },
-    're-4': {
-        filename: 'Guia_Librerias_Arduino_Esenciales_SaberLab.md',
-        type: 'text/markdown;charset=utf-8;',
-        content: `# SABERLAB - GUÍA DE LIBRERÍAS ARDUINO ESENCIALES
-Curso: Robótica Educativa (RE)
-
----
-
-## 1. LiquidCrystal_I2C (Pantallas LCD 16x2 / 20x4 con solo 2 cables)
-- **Conexiones:** VCC -> 5V, GND -> GND, SDA -> Pin A4, SCL -> Pin A5
-- **Código Inicial:**
-\`\`\`cpp
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-
-LiquidCrystal_I2C lcd(0x27, 16, 2); // Dirección I2C común: 0x27 o 0x3F
-
-void setup() {
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("SaberLab Robot");
-}
-\`\`\`
-
----
-
-## 2. Servo.h (Control preciso de servomotores)
-- **Frecuencia:** Genera pulsos PWM de 50 Hz (1ms a 2ms de ancho de pulso).
-- **Código:**
-\`\`\`cpp
-#include <Servo.h>
-Servo miServo;
-
-void setup() {
-  miServo.attach(9); // Conectar pin de control al Pin 9
-  miServo.write(0);  // 0 a 180 grados
-}
-\`\`\`
-
----
-`
-    },
-    're-6': {
-        filename: 'Robot_Seguidor_de_Linea_SaberLab.ino',
-        type: 'text/plain;charset=utf-8;',
-        content: `/*
- * ==============================================================================
- * SABERLAB - CÓDIGO ROBOT SEGUIDOR DE LÍNEA DE 2 SENSORES ÓPTICOS TCRT5000
- * Curso: Robótica Educativa (RE) - Proyecto Módulo 4
- * ==============================================================================
- */
-
-const int SENSOR_IZQ = A1;
-const int SENSOR_DER = A2;
-
-const int IN1 = 6;
-const int IN2 = 7;
-const int IN3 = 8;
-const int IN4 = 9;
-const int ENA = 5;
-const int ENB = 10;
-
-const int VELOCIDAD_BASE = 180;
-const int UMBRAL_NEGRO = 600; // Valor ADC para línea negra
-
-void setup() {
-  pinMode(SENSOR_IZQ, INPUT);
-  pinMode(SENSOR_DER, INPUT);
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT);
-}
-
-void loop() {
-  int valorIzq = analogRead(SENSOR_IZQ);
-  int valorDer = analogRead(SENSOR_DER);
-  
-  bool izqNegro = (valorIzq > UMBRAL_NEGRO);
-  bool derNegro = (valorDer > UMBRAL_NEGRO);
-  
-  if (izqNegro && derNegro) {
-    // Ambos en línea -> Avanzar recto
-    avanzar(VELOCIDAD_BASE, VELOCIDAD_BASE);
-  } else if (izqNegro && !derNegro) {
-    // Se desvía a la derecha -> Corregir a la izquierda
-    girarIzquierda(VELOCIDAD_BASE);
-  } else if (!izqNegro && derNegro) {
-    // Se desvía a la izquierda -> Corregir a la derecha
-    girarDerecha(VELOCIDAD_BASE);
-  } else {
-    // Ninguno en línea -> Mantener avance cauteloso
-    avanzar(120, 120);
-  }
-}
-
-void avanzar(int velA, int velB) {
-  analogWrite(ENA, velA);
-  analogWrite(ENB, velB);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-}
-
-void girarIzquierda(int vel) {
-  analogWrite(ENA, 50);
-  analogWrite(ENB, vel);
-  digitalWrite(IN1, LOW);
-  digitalWrite(IN2, HIGH);
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-}
-
-void girarDerecha(int vel) {
-  analogWrite(ENA, vel);
-  analogWrite(ENB, 50);
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
-}
-`
-    }
-};
-
-// ── BANCO DE RECURSOS OFICIALES ───────────────────────────────────────
-const OFFICIAL_RESOURCES = [
-    // ── ELECTRICIDAD Y ELECTRÓNICA BÁSICA (EE) ──
+// ── BANCO DE RECURSOS EXTERNOS OFICIALES, CANALES Y FUENTES CONFIABLES ──
+const OFFICIAL_EXTERNAL_RESOURCES = [
+    // ════════════════════════════════════════════════════════════════════
+    // ⚡ ELECTRICIDAD Y ELECTRÓNICA BÁSICA (EE)
+    // ════════════════════════════════════════════════════════════════════
     {
-        id: 'ee-1',
+        id: 'ee-vid-1',
         courseId: 1,
         courseAbbr: 'EE',
         courseName: 'Electricidad y Electrónica Básica',
         courseColor: '#f59e0b',
-        title: 'Manual Técnico de Ley de Ohm y Leyes de Kirchhoff',
-        description: 'Guía práctica con demostraciones de reducción de circuitos serie, paralelo y mixto, cálculo de caídas de tensión y divisor de voltaje.',
-        category: 'guides',
-        type: 'PDF',
-        size: '2.8 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['Ley de Ohm', 'Kirchhoff', 'Circuitos Mixtos']
+        title: 'Ley de Ohm y Conceptos Fundamentales de Circuitos',
+        source: 'Khan Academy en Español',
+        sourceType: 'YouTube',
+        description: 'Explicación conceptual y matemática de la relación entre Voltaje (V), Corriente (I) y Resistencia (R) con demostraciones visuales y ejercicios.',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=m7hyE1Tq-o8',
+        videoId: 'm7hyE1Tq-o8',
+        tags: ['Ley de Ohm', 'Khan Academy', 'Voltaje', 'Corriente']
     },
     {
-        id: 'ee-2',
+        id: 'ee-vid-2',
         courseId: 1,
         courseAbbr: 'EE',
         courseName: 'Electricidad y Electrónica Básica',
         courseColor: '#f59e0b',
-        title: 'Tabla Oficial de Código de Colores para Resistores',
-        description: 'Carta gráfica de referencia rápida para resistencias de 4 y 5 bandas, valores comerciales de la serie E12 y multiplicadores.',
-        category: 'documents',
-        type: 'PDF',
-        size: '1.2 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['Resistencias', 'Código de Colores', 'Tolerancias']
+        title: 'Leyes de Kirchhoff: Método de Mallas y Nodos',
+        source: 'JulioProfe Oficial',
+        sourceType: 'YouTube',
+        description: 'Resolución paso a paso de circuitos eléctricos complejos aplicando la Ley de Corrientes de Kirchhoff (LCK) y Ley de Voltajes de Kirchhoff (LVK).',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=0k0w6l7oYmE',
+        videoId: '0k0w6l7oYmE',
+        tags: ['Kirchhoff', 'Mallas', 'Nodos', 'JulioProfe']
     },
     {
-        id: 'ee-3',
+        id: 'ee-vid-3',
         courseId: 1,
         courseAbbr: 'EE',
         courseName: 'Electricidad y Electrónica Básica',
         courseColor: '#f59e0b',
-        title: 'Pack de Datasheets: Semiconductores Clave',
-        description: 'Hojas técnicas de especificaciones: Diodo 1N4007, Transistores NPN 2N2222 / BC547, PNP BC557 y Temporizador NE555.',
-        category: 'documents',
-        type: 'ZIP',
-        size: '4.5 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['1N4007', '2N2222', 'BC547', 'NE555']
+        title: 'Laboratorio de Multímetro: Medición de Voltaje, Corriente y Resistencia',
+        source: 'El Profe García',
+        sourceType: 'YouTube',
+        description: 'Guía práctica para medir voltaje DC en paralelo, corriente en serie sin fundir el fusible, y pruebas de continuidad y resistencia.',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=R9Z8X7e9r4w',
+        videoId: 'R9Z8X7e9r4w',
+        tags: ['Multímetro', 'Protoboard', 'El Profe García', 'Mediciones']
     },
     {
-        id: 'ee-4',
+        id: 'ee-sim-1',
         courseId: 1,
         courseAbbr: 'EE',
         courseName: 'Electricidad y Electrónica Básica',
         courseColor: '#f59e0b',
-        title: 'Guía de Montaje en Protoboard y Uso del Multímetro Digital',
-        description: 'Manual de buenas prácticas para medición de voltaje DC, corriente en serie sin fundir fusible y pruebas de continuidad.',
-        category: 'guides',
-        type: 'PDF',
-        size: '3.1 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['Protoboard', 'Multímetro', 'Seguridad Eléctrica']
+        title: 'PhET: Kit de Construcción de Circuitos DC',
+        source: 'Universidad de Colorado Boulder',
+        sourceType: 'Simulador PhET',
+        description: 'Laboratorio virtual interactivo de física para armar circuitos serie, paralelo y mixtos con baterías, bombillas, interruptores y voltímetros en tiempo real.',
+        category: 'simulators',
+        type: 'Simulador',
+        url: 'https://phet.colorado.edu/es/simulations/circuit-construction-kit-dc',
+        tags: ['PhET Colorado', 'Simulación DC', 'Interactivo']
     },
     {
-        id: 'ee-5',
+        id: 'ee-sim-2',
         courseId: 1,
         courseAbbr: 'EE',
         courseName: 'Electricidad y Electrónica Básica',
         courseColor: '#f59e0b',
-        title: 'Simulador Falstad & Tinkercad Circuits',
-        description: 'Acceso a simuladores interactivos de circuitos electrónicos en tiempo real con animación de corrientes y osciloscopio virtual.',
-        category: 'links',
-        type: 'Enlace',
-        link: 'https://www.falstad.com/circuit/',
-        date: 'En vivo',
-        tags: ['Simulación', 'Falstad', 'Tinkercad']
+        title: 'Falstad Circuit Simulator Online',
+        source: 'Paul Falstad Simulator',
+        sourceType: 'Simulador Web',
+        description: 'Potente simulador electrónico en tiempo real con animación de corrientes eléctricas, osciloscopio virtual y cientos de esquemas electrónicos.',
+        category: 'simulators',
+        type: 'Simulador',
+        url: 'https://www.falstad.com/circuit/',
+        tags: ['Falstad', 'Osciloscopio', 'Electrónica Analógica']
     },
     {
-        id: 'ee-6',
+        id: 'ee-sim-3',
         courseId: 1,
         courseAbbr: 'EE',
         courseName: 'Electricidad y Electrónica Básica',
         courseColor: '#f59e0b',
-        title: 'Formulario de Ley de Watt y Potencia Disipada',
-        description: 'Resumen gráfico de fórmulas para cálculo de potencia (P = V·I, P = I²·R, P = V²/R) y dimensionamiento de disipadores térmicos.',
-        category: 'documents',
-        type: 'PDF',
-        size: '1.4 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['Ley de Watt', 'Potencia', 'Disipación']
+        title: 'Autodesk Tinkercad Circuits',
+        source: 'Autodesk',
+        sourceType: 'Plataforma 3D',
+        description: 'Simulador de protoboards 3D interactivo con componentes electrónicos reales, multímetros digitales, fuentes de alimentación y osciloscopios.',
+        category: 'simulators',
+        type: 'Simulador',
+        url: 'https://www.tinkercad.com/circuits',
+        tags: ['Tinkercad', 'Autodesk', 'Protoboard 3D']
+    },
+    {
+        id: 'ee-tool-1',
+        courseId: 1,
+        courseAbbr: 'EE',
+        courseName: 'Electricidad y Electrónica Básica',
+        courseColor: '#f59e0b',
+        title: 'Calculadora Oficial de Código de Colores de Resistencias',
+        source: 'Digi-Key Electronics',
+        sourceType: 'Calculadora Técnica',
+        description: 'Herramienta interactiva de Digi-Key para decodificar resistencias de 4, 5 y 6 bandas con valores comerciales de tolerancia y multiplicadores.',
+        category: 'tools',
+        type: 'Calculadora',
+        url: 'https://www.digikey.com/es/resources/conversion-calculators/conversion-calculator-resistor-color-code',
+        tags: ['Digi-Key', 'Código de Colores', 'Calculadora']
+    },
+    {
+        id: 'ee-doc-1',
+        courseId: 1,
+        courseAbbr: 'EE',
+        courseName: 'Electricidad y Electrónica Básica',
+        courseColor: '#f59e0b',
+        title: 'Libro Abierto de Circuitos de Corriente Continua (DC)',
+        source: 'All About Circuits',
+        sourceType: 'Documentación Oficial',
+        description: 'Tratado completo de teoría eléctrica: Teoremas de Thevenin y Norton, divisor de tensión, divisor de corriente y análisis de potencia.',
+        category: 'docs',
+        type: 'Documentación',
+        url: 'https://www.allaboutcircuits.com/textbook/direct-current/',
+        tags: ['All About Circuits', 'Teoría DC', 'Thevenin']
+    },
+    {
+        id: 'ee-doc-2',
+        courseId: 1,
+        courseAbbr: 'EE',
+        courseName: 'Electricidad y Electrónica Básica',
+        courseColor: '#f59e0b',
+        title: 'Base de Datos Oficial de Datasheets de Semiconductores',
+        source: 'ALLDATASHEET',
+        sourceType: 'Hojas Técnicas',
+        description: 'Búsqueda y descarga directa de hojas de datos oficiales de fabricantes para diodos 1N4007, transistores 2N2222, BC547, BC557 y CI 555.',
+        category: 'docs',
+        type: 'Datasheet',
+        url: 'https://www.alldatasheet.com/',
+        tags: ['Datasheets', '1N4007', '2N2222', 'NE555']
     },
 
-    // ── ROBÓTICA EDUCATIVA (RE) ──
+    // ════════════════════════════════════════════════════════════════════
+    // 🤖 ROBÓTICA EDUCATIVA (RE)
+    // ════════════════════════════════════════════════════════════════════
     {
-        id: 're-1',
+        id: 're-vid-1',
         courseId: 3,
         courseAbbr: 'RE',
         courseName: 'Robótica Educativa',
         courseColor: '#a855f7',
-        title: 'Diagrama de Pinout y Arquitectura Arduino Uno R3',
-        description: 'Mapa de alta resolución con pines digitales, analógicos (ADC), salidas PWM (~), pines de alimentación e interfaces UART/I2C/SPI.',
-        category: 'documents',
-        type: 'PDF',
-        size: '2.4 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['Arduino Uno', 'Pinout', 'Microcontrolador']
+        title: 'Curso de Arduino Desde Cero: Primeros Pasos',
+        source: 'El Profe García',
+        sourceType: 'YouTube',
+        description: 'Introducción completa a la placa Arduino Uno R3: instalación del IDE, estructura básica de código setup(), loop() y control de pines digitales.',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=nL34zDTPkcs',
+        videoId: 'nL34zDTPkcs',
+        tags: ['Arduino', 'El Profe García', 'C++', 'Primeros Pasos']
     },
     {
-        id: 're-2',
+        id: 're-vid-2',
         courseId: 3,
         courseAbbr: 'RE',
         courseName: 'Robótica Educativa',
         courseColor: '#a855f7',
-        title: 'Manual de Programación en C++ para Microcontroladores',
-        description: 'Estructura esencial de sketch: setup(), loop(), pinMode(), digitalWrite(), analogRead() y control temporal no bloqueante con millis().',
-        category: 'guides',
-        type: 'PDF',
-        size: '3.6 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['C++', 'Arduino IDE', 'Variables', 'Funciones']
+        title: 'Control de Motores DC con Driver Puente H L298N',
+        source: 'Bitwise Ar',
+        sourceType: 'YouTube',
+        description: 'Esquemas de conexión de potencia, control de velocidad por modulación de ancho de pulso (PWM) y cambio de sentido de giro con Arduino.',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=F_4HkL5r5L8',
+        videoId: 'F_4HkL5r5L8',
+        tags: ['L298N', 'Motores DC', 'PWM', 'Bitwise Ar']
     },
     {
-        id: 're-3',
+        id: 're-vid-3',
         courseId: 3,
         courseAbbr: 'RE',
         courseName: 'Robótica Educativa',
         courseColor: '#a855f7',
-        title: 'Guía de Conexión de Driver L298N y Servomotores SG90',
-        description: 'Esquemas de potencia y aislamiento para control de sentido de giro con puente H L298N y posicionamiento angular con servomotores.',
-        category: 'guides',
-        type: 'PDF',
-        size: '3.0 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['L298N', 'Servomotor SG90', 'Puente H', 'PWM']
+        title: 'Sensor Ultrasónico HC-SR04: Medición de Distancia',
+        source: 'El Profe García',
+        sourceType: 'YouTube',
+        description: 'Funcionamiento de las señales Trigger y Echo, cálculo de tiempo de vuelo de la onda acústica y conversión matemática a centímetros.',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=PGXgL0I47C8',
+        videoId: 'PGXgL0I47C8',
+        tags: ['HC-SR04', 'Ultrasonido', 'Sensores', 'Distancia']
     },
     {
-        id: 're-4',
+        id: 're-vid-4',
         courseId: 3,
         courseAbbr: 'RE',
         courseName: 'Robótica Educativa',
         courseColor: '#a855f7',
-        title: 'Pack de Librerías Arduino Esenciales',
-        description: 'Colección de librerías verificadas para Display LCD I2C (LiquidCrystal_I2C), Servos (Servo.h) y sensor ultrasónico HC-SR04.',
-        category: 'documents',
-        type: 'ZIP',
-        size: '5.2 MB',
-        date: 'Agosto 2026',
-        link: null,
-        tags: ['Librerías', 'LCD I2C', 'HC-SR04', 'Servo']
-    },
-    {
-        id: 're-5',
-        courseId: 3,
-        courseAbbr: 'RE',
-        courseName: 'Robótica Educativa',
-        courseColor: '#a855f7',
-        title: 'Simulador Wokwi Online para Arduino',
-        description: 'Entorno de simulación online de código C++ y componentes Arduino con lógica de sensores, pulsadores y LEDs en tiempo real.',
-        category: 'links',
-        type: 'Enlace',
-        link: 'https://wokwi.com',
-        date: 'En vivo',
-        tags: ['Wokwi', 'Simulador Arduino', 'Online']
-    },
-    {
-        id: 're-6',
-        courseId: 3,
-        courseAbbr: 'RE',
-        courseName: 'Robótica Educativa',
-        courseColor: '#a855f7',
-        title: 'Esquema y Código Base del Robot Seguidor de Línea',
-        description: 'Guía paso a paso para armado del chasis 2WD, calibración de sensores ópticos infrarrojos TCRT5000 y algoritmo de seguimiento.',
-        category: 'guides',
-        type: 'PDF',
-        size: '4.1 MB',
-        date: 'Agosto 2026',
-        link: null,
+        title: 'Construcción de Robot Seguidor de Línea 2WD',
+        source: 'MakerZone',
+        sourceType: 'YouTube',
+        description: 'Guía de armado de chasis móvil de 2 ruedas motrices, conexión de sensores infrarrojos TCRT5000 y algoritmo de seguimiento en pista.',
+        category: 'videos',
+        type: 'YouTube',
+        url: 'https://www.youtube.com/watch?v=yY4gS9Yt6q0',
+        videoId: 'yY4gS9Yt6q0',
         tags: ['Seguidor de Línea', 'TCRT5000', 'Robótica Móvil']
+    },
+    {
+        id: 're-sim-1',
+        courseId: 3,
+        courseAbbr: 'RE',
+        courseName: 'Robótica Educativa',
+        courseColor: '#a855f7',
+        title: 'Wokwi: Simulador Online de Arduino y ESP32',
+        source: 'Wokwi Cloud Simulator',
+        sourceType: 'Simulador Web',
+        description: 'Simulador online de microcontroladores Arduino Uno, Mega y ESP32 con soporte para código C++, pantallas LCD I2C, pulsadores, servos y sensores.',
+        category: 'simulators',
+        type: 'Simulador',
+        url: 'https://wokwi.com/',
+        tags: ['Wokwi', 'Simulador Arduino', 'C++', 'Nube']
+    },
+    {
+        id: 're-doc-1',
+        courseId: 3,
+        courseAbbr: 'RE',
+        courseName: 'Robótica Educativa',
+        courseColor: '#a855f7',
+        title: 'Referencia Oficial del Lenguaje de Programación Arduino',
+        source: 'Arduino Official Docs (arduino.cc)',
+        sourceType: 'Documentación Oficial',
+        description: 'Documentación técnica oficial de funciones (pinMode, digitalWrite, analogRead, millis), estructuras de control y tipos de variables en C++.',
+        category: 'docs',
+        type: 'Documentación',
+        url: 'https://www.arduino.cc/reference/en/',
+        tags: ['Arduino Docs', 'Referencia C++', 'Funciones']
+    },
+    {
+        id: 're-doc-2',
+        courseId: 3,
+        courseAbbr: 'RE',
+        courseName: 'Robótica Educativa',
+        courseColor: '#a855f7',
+        title: 'Pinout y Especificaciones Oficiales de Arduino Uno R3',
+        source: 'Arduino Hardware Reference',
+        sourceType: 'Documentación Oficial',
+        description: 'Guía oficial de hardware con esquemático del microcontrolador ATmega328P, consumo eléctrico, pines de alimentación e interfaces I2C/SPI.',
+        category: 'docs',
+        type: 'Documentación',
+        url: 'https://docs.arduino.cc/hardware/uno-rev3/',
+        tags: ['Hardware', 'Pinout', 'ATmega328P']
+    },
+    {
+        id: 're-doc-3',
+        courseId: 3,
+        courseAbbr: 'RE',
+        courseName: 'Robótica Educativa',
+        courseColor: '#a855f7',
+        title: 'Repositorio Oficial de Librerías Arduino',
+        source: 'Arduino Library Hub',
+        sourceType: 'Librerías',
+        description: 'Buscador y catálogo oficial de librerías verificadas para pantallas LCD I2C (LiquidCrystal), servomotores (Servo.h) y sensores.',
+        category: 'docs',
+        type: 'Librerías',
+        url: 'https://www.arduino.cc/reference/en/libraries/',
+        tags: ['Librerías', 'Servo.h', 'LiquidCrystal']
     }
 ];
 
@@ -693,7 +285,7 @@ const PanelRecursos = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedCourseFilter, setSelectedCourseFilter] = useState('all');
-    const [downloadedId, setDownloadedId] = useState(null);
+    const [activeVideoModal, setActiveVideoModal] = useState(null);
 
     const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
 
@@ -702,15 +294,15 @@ const PanelRecursos = () => {
         return (enrolledCourses || []).map(c => (c.abbr || '').toUpperCase());
     }, [enrolledCourses]);
 
-    // Filtrar banco de recursos según los cursos permitidos para el usuario
+    // Filtrar recursos según cursos permitidos para el usuario
     const userAllowedResources = useMemo(() => {
         if (isStaff) {
-            return OFFICIAL_RESOURCES;
+            return OFFICIAL_EXTERNAL_RESOURCES;
         }
-        return OFFICIAL_RESOURCES.filter(r => enrolledAbbrs.includes(r.courseAbbr));
+        return OFFICIAL_EXTERNAL_RESOURCES.filter(r => enrolledAbbrs.includes(r.courseAbbr));
     }, [isStaff, enrolledAbbrs]);
 
-    // Opciones de filtro por curso disponibles para este usuario
+    // Opciones de filtro por curso
     const availableCourseFilters = useMemo(() => {
         const list = [{ id: 'all', label: 'Todos los Cursos', icon: <Layers size={15} /> }];
         
@@ -728,16 +320,18 @@ const PanelRecursos = () => {
     }, [isStaff, enrolledAbbrs]);
 
     const categories = [
-        { id: 'all', name: 'Todos', icon: <FolderOpen size={18} /> },
-        { id: 'guides', name: 'Guías Técnicas', icon: <Book size={18} /> },
-        { id: 'documents', name: 'Datasheets y Tablas', icon: <FileText size={18} /> },
-        { id: 'links', name: 'Simuladores y Enlaces', icon: <LinkIcon size={18} /> }
+        { id: 'all', name: 'Todos los Recursos', icon: <FolderOpen size={18} /> },
+        { id: 'videos', name: 'Videos y Clases (YouTube)', icon: <Video size={18} /> },
+        { id: 'simulators', name: 'Simuladores Interactivos', icon: <Globe size={18} /> },
+        { id: 'docs', name: 'Documentación y Datasheets', icon: <FileText size={18} /> },
+        { id: 'tools', name: 'Calculadoras y Herramientas', icon: <Wrench size={18} /> }
     ];
 
     const filteredResources = useMemo(() => {
         return userAllowedResources.filter(resource => {
             const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                resource.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (resource.tags && resource.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase())));
             
             const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory;
@@ -747,48 +341,22 @@ const PanelRecursos = () => {
         });
     }, [userAllowedResources, searchTerm, selectedCategory, selectedCourseFilter]);
 
-    const getTypeBadgeStyle = (type, color) => {
+    const getTypeBadgeStyle = (type) => {
         switch (type) {
-            case 'PDF': return { bg: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' };
-            case 'ZIP': return { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' };
-            case 'Enlace': return { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399' };
-            default: return { bg: `${color}20`, color: color };
+            case 'YouTube': return { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: 'rgba(239, 68, 68, 0.3)' };
+            case 'Simulador': return { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: 'rgba(16, 185, 129, 0.3)' };
+            case 'Documentación': return { bg: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.3)' };
+            case 'Datasheet': return { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: 'rgba(168, 85, 247, 0.3)' };
+            case 'Calculadora': return { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)' };
+            default: return { bg: 'rgba(255, 255, 255, 0.1)', color: '#ffffff', border: 'rgba(255, 255, 255, 0.2)' };
         }
     };
 
-    // ── DESCARGA REAL DE ARCHIVO EN EL NAVEGADOR ──────────────────────
-    const handleDownloadOrOpen = (resource) => {
-        if (resource.link) {
-            window.open(resource.link, '_blank', 'noopener,noreferrer');
-            return;
-        }
-
-        const resData = RESOURCE_CONTENTS[resource.id];
-        if (resData) {
-            const blob = new Blob([resData.content], { type: resData.type });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = resData.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            setDownloadedId(resource.id);
-            setTimeout(() => setDownloadedId(null), 3000);
-        } else {
-            // Fallback para recursos sin contenido binario directo
-            const fallbackText = `# ${resource.title}\nCurso: ${resource.courseName}\n\n${resource.description}\n\nSaberLab Education Platform`;
-            const blob = new Blob([fallbackText], { type: 'text/markdown;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${resource.title.replace(/[^a-zA-Z0-9]/g, '_')}.md`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+    const handleOpenResource = (resource) => {
+        if (resource.category === 'videos' && resource.videoId) {
+            setActiveVideoModal(resource);
+        } else if (resource.url) {
+            window.open(resource.url, '_blank', 'noopener,noreferrer');
         }
     };
 
@@ -796,11 +364,11 @@ const PanelRecursos = () => {
         <div className="resources-page">
             <div className="page-header" style={{ marginBottom: '0.5rem' }}>
                 <div className="header-title">
-                    <FolderOpen size={28} color="#38bdf8" />
+                    <Globe size={28} color="#38bdf8" />
                     <div>
-                        <h1 style={{ margin: 0 }}>Centro de Recursos Oficiales</h1>
+                        <h1 style={{ margin: 0 }}>Centro de Recursos y Fuentes Oficiales</h1>
                         <p style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
-                            Guías de laboratorio, hojas técnicas de datos (datasheets), esquemas y herramientas de simulación.
+                            Canales educativos verificados (YouTube), simuladores online, documentación oficial de fabricantes y calculadoras técnicas.
                         </p>
                     </div>
                 </div>
@@ -840,7 +408,7 @@ const PanelRecursos = () => {
                     <Search size={20} className="search-icon" />
                     <input
                         type="text"
-                        placeholder="Buscar por título, componente o palabra clave (ej. Kirchhoff, L298N, 2N2222, Wokwi)..."
+                        placeholder="Buscar por tema, canal o herramienta (ej. Khan Academy, PhET, Arduino, L298N, Falstad)..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -878,7 +446,7 @@ const PanelRecursos = () => {
                             <Layers size={48} color="#64748b" />
                             <h3>No tienes cursos con recursos activos</h3>
                             <p style={{ maxWidth: '420px', margin: '0.5rem auto 0', lineHeight: 1.5 }}>
-                                Únete a un curso como <strong>Electricidad y Electrónica Básica</strong> o <strong>Robótica Educativa</strong> para acceder a sus manuales y herramientas técnicas.
+                                Únete a un curso como <strong>Electricidad y Electrónica Básica</strong> o <strong>Robótica Educativa</strong> para acceder a los videos y recursos oficiales.
                             </p>
                         </div>
                     ) : filteredResources.length === 0 ? (
@@ -890,17 +458,21 @@ const PanelRecursos = () => {
                     ) : (
                         <div className="resources-grid">
                             {filteredResources.map(resource => {
-                                const badgeStyle = getTypeBadgeStyle(resource.type, resource.courseColor);
-                                const isDownloaded = downloadedId === resource.id;
+                                const badgeStyle = getTypeBadgeStyle(resource.type);
+                                const isVideo = resource.category === 'videos';
 
                                 return (
-                                    <div key={resource.id} className="resource-card glass-panel">
+                                    <div key={resource.id} className="resource-card glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
                                         <div className="resource-header">
                                             <div 
                                                 className="resource-type-badge"
-                                                style={{ backgroundColor: badgeStyle.bg, color: badgeStyle.color }}
+                                                style={{ 
+                                                    backgroundColor: badgeStyle.bg, 
+                                                    color: badgeStyle.color,
+                                                    border: `1px solid ${badgeStyle.border}`
+                                                }}
                                             >
-                                                {resource.type === 'Enlace' ? <ExternalLink size={14} /> : resource.type === 'ZIP' ? <FolderOpen size={14} /> : <FileText size={14} />}
+                                                {isVideo ? <Video size={14} /> : <ExternalLink size={14} />}
                                                 <span>{resource.type}</span>
                                             </div>
                                             <span 
@@ -918,7 +490,17 @@ const PanelRecursos = () => {
                                             </span>
                                         </div>
 
-                                        <h3 className="resource-title">{resource.title}</h3>
+                                        <h3 className="resource-title" style={{ fontSize: '1.05rem', lineHeight: 1.4 }}>
+                                            {resource.title}
+                                        </h3>
+
+                                        {/* Fuente y Autor */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                                            <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600, background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                {resource.source}
+                                            </span>
+                                        </div>
+
                                         <p className="resource-description">{resource.description}</p>
 
                                         {resource.tags && resource.tags.length > 0 && (
@@ -940,28 +522,51 @@ const PanelRecursos = () => {
                                             </div>
                                         )}
 
-                                        <div className="resource-footer">
-                                            <div className="resource-meta">
-                                                {resource.size && <span>{resource.size}</span>}
-                                                <span>{resource.date}</span>
-                                            </div>
-                                            <div className="resource-actions">
-                                                {resource.type === 'Enlace' ? (
+                                        <div className="resource-footer" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                {resource.sourceType}
+                                            </span>
+                                            <div className="resource-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+                                                {isVideo ? (
                                                     <button 
-                                                        onClick={() => handleDownloadOrOpen(resource)}
-                                                        className="action-btn external" 
-                                                        title="Abrir Simulador / Enlace"
+                                                        onClick={() => handleOpenResource(resource)}
+                                                        className="action-btn"
+                                                        style={{ 
+                                                            display: 'flex', 
+                                                            alignItems: 'center', 
+                                                            gap: '0.4rem', 
+                                                            padding: '0.4rem 0.85rem', 
+                                                            width: 'auto',
+                                                            borderRadius: '8px',
+                                                            background: 'rgba(239, 68, 68, 0.15)', 
+                                                            color: '#f87171',
+                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                            fontWeight: 600,
+                                                            fontSize: '0.85rem'
+                                                        }}
+                                                        title="Reproducir Video"
                                                     >
-                                                        <ExternalLink size={16} />
+                                                        <Play size={14} fill="#f87171" />
+                                                        <span>Ver Video</span>
                                                     </button>
                                                 ) : (
                                                     <button 
-                                                        onClick={() => handleDownloadOrOpen(resource)}
-                                                        className="action-btn download" 
-                                                        title="Descargar Archivo Real"
-                                                        style={isDownloaded ? { background: 'rgba(16, 185, 129, 0.25)', color: '#34d399' } : {}}
+                                                        onClick={() => handleOpenResource(resource)}
+                                                        className="action-btn external" 
+                                                        style={{ 
+                                                            display: 'flex', 
+                                                            alignItems: 'center', 
+                                                            gap: '0.4rem', 
+                                                            padding: '0.4rem 0.85rem', 
+                                                            width: 'auto',
+                                                            borderRadius: '8px',
+                                                            fontWeight: 600,
+                                                            fontSize: '0.85rem'
+                                                        }}
+                                                        title="Abrir enlace oficial"
                                                     >
-                                                        {isDownloaded ? <Check size={16} /> : <Download size={16} />}
+                                                        <ExternalLink size={14} />
+                                                        <span>Abrir</span>
                                                     </button>
                                                 )}
                                             </div>
@@ -973,6 +578,63 @@ const PanelRecursos = () => {
                     )}
                 </div>
             </div>
+
+            {/* MODAL DE REPRODUCTOR DE VIDEO YOUTUBE */}
+            {activeVideoModal && (
+                <div 
+                    className="join-modal-overlay" 
+                    onClick={() => setActiveVideoModal(null)}
+                    style={{ zIndex: 100000 }}
+                >
+                    <div 
+                        className="join-modal-content" 
+                        onClick={e => e.stopPropagation()}
+                        style={{ maxWidth: '780px', width: '92%', padding: '1.5rem' }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <div>
+                                <h3 style={{ margin: 0, color: 'white', fontSize: '1.2rem', fontWeight: 800 }}>
+                                    {activeVideoModal.title}
+                                </h3>
+                                <p style={{ margin: '0.2rem 0 0', color: '#38bdf8', fontSize: '0.85rem', fontWeight: 600 }}>
+                                    Canal: {activeVideoModal.source}
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => setActiveVideoModal(null)}
+                                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                            >
+                                <X size={22} />
+                            </button>
+                        </div>
+
+                        {/* Contenedor Iframe YouTube Responsivo */}
+                        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <iframe 
+                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                                src={`https://www.youtube-nocookie.com/embed/${activeVideoModal.videoId}?autoplay=1`}
+                                title={activeVideoModal.title}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem', flex: 1, paddingRight: '1rem' }}>
+                                {activeVideoModal.description}
+                            </p>
+                            <button
+                                onClick={() => window.open(activeVideoModal.url, '_blank', 'noopener,noreferrer')}
+                                className="btn btn-primary"
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', padding: '0.5rem 1rem', whiteSpace: 'nowrap' }}
+                            >
+                                <ExternalLink size={14} />
+                                <span>Abrir en YouTube</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
