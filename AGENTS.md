@@ -47,6 +47,7 @@
   - **Telemetría en Vivo:** Medición continua de $R_{eq}$, $I_T$, $P_T$, caídas de tensión y corrientes de rama.
 
 ### 3. Plataforma, Base de Datos y Exámenes
+- **Candado de Autorización Previa:** Conexión estricta de `solicitudes_acceso` en D1. Todo usuario que inicie con Google queda en estado `pending` y es redirigido a `/request-access` hasta que el administrador lo apruebe en `/dashboard/requests`. Al aprobarse, se auto-inscribe en los cursos y se le concede acceso inmediato con sincronización en tiempo real.
 - **Persistencia en Cloudflare D1:** Progreso de lecciones y retos prácticos sincronizados en tiempo real mediante API (`/api/practice`).
 - **Control de Visibilidad Docente:** `visibilidad_curso` sincronizado en D1, bloqueando acceso en menú, sidebar y rutas protegidas.
 - **Sistema de Evaluaciones y Exámenes:** Persistencia real del temporizador mediante `Date.now()`, generador de `evaluation_key` única y renderizado limpio desde JSON.

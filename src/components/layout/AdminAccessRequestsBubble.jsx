@@ -55,7 +55,7 @@ const AdminAccessRequestsBubble = () => {
     const [busyId, setBusyId] = useState(null);
     const containerRef = useRef(null);
 
-    const isAdmin = profile?.role === 'admin';
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
 
     const title = useMemo(() => {
         if (pendingAccessRequestsCount === 1) return '1 solicitud pendiente';
@@ -63,7 +63,7 @@ const AdminAccessRequestsBubble = () => {
     }, [pendingAccessRequestsCount]);
 
     useEffect(() => {
-        if (!open || !isAdmin) return undefined;
+        if (!open || !isStaff) return undefined;
 
         const handleClickOutside = (event) => {
             if (containerRef.current && !containerRef.current.contains(event.target)) {
@@ -73,10 +73,10 @@ const AdminAccessRequestsBubble = () => {
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isAdmin, open]);
+    }, [isStaff, open]);
 
     useEffect(() => {
-        if (!isAdmin) return undefined;
+        if (!isStaff) return undefined;
 
         const loadRequests = async () => {
             const { data, error } = await api('/requests');
@@ -102,7 +102,7 @@ const AdminAccessRequestsBubble = () => {
         return () => {
             clearInterval(interval);
         };
-    }, [isAdmin, open, refreshPendingAccessRequestsCount]);
+    }, [isStaff, open, refreshPendingAccessRequestsCount]);
 
     const handleDecision = async (request, status) => {
         setBusyId(request.id);
@@ -125,7 +125,7 @@ const AdminAccessRequestsBubble = () => {
         }
     };
 
-    if (!isAdmin) return null;
+    if (!isStaff) return null;
 
     return (
         <div ref={containerRef}>

@@ -98,7 +98,7 @@ export async function onRequestGet({ request, env }) {
       return Response.redirect(`${appUrl}/login?error=no_email`, 302);
     }
 
-    // 3. Asegurar que la tabla de perfiles existe en D1
+    // 3. Asegurar que las tablas de perfiles y solicitudes_acceso existen en D1
     await env.DB.prepare(`
       CREATE TABLE IF NOT EXISTS perfiles (
         id TEXT PRIMARY KEY,
@@ -110,29 +110,59 @@ export async function onRequestGet({ request, env }) {
       )
     `).run();
 
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS solicitudes_acceso (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        name TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+
     // 4. Buscar o crear el usuario en D1
     const userId = googleUser.id || email;
+    const isAdmin = email === (env.ADMIN_EMAIL || '').toLowerCase();
     let profile = await env.DB.prepare(
       'SELECT id, email, full_name, avatar_url, role FROM perfiles WHERE id = ?'
     ).bind(userId).first();
 
     if (!profile) {
-      const role = email === (env.ADMIN_EMAIL || '').toLowerCase() ? 'admin' : 'student';
+      const role = isAdmin ? 'admin' : 'student';
       await env.DB.prepare(
         `INSERT INTO perfiles (id, email, full_name, avatar_url, role, created_at)
          VALUES (?, ?, ?, ?, ?, datetime('now'))`
       ).bind(userId, email, googleUser.name || null, googleUser.picture || null, role).run();
       profile = { id: userId, email, full_name: googleUser.name || null, avatar_url: googleUser.picture || null, role };
-    } else if (email === (env.ADMIN_EMAIL || '').toLowerCase() && profile.role !== 'admin') {
+    } else if (isAdmin && profile.role !== 'admin') {
       await env.DB.prepare("UPDATE perfiles SET role = 'admin' WHERE id = ?").bind(userId).run();
       profile.role = 'admin';
     }
 
-    // 5. Emitir nuestro token de sesión JWT
+    // 5. Gestionar solicitud de acceso para no administradores
+    let isApproved = isAdmin || profile.role === 'admin';
+    if (!isApproved) {
+      const existingReq = await env.DB.prepare(
+        'SELECT id, status FROM solicitudes_acceso WHERE lower(email) = ? ORDER BY created_at DESC LIMIT 1'
+      ).bind(email).first();
+
+      if (!existingReq) {
+        await env.DB.prepare(
+          `INSERT INTO solicitudes_acceso (email, name, status, created_at)
+           VALUES (?, ?, 'pending', datetime('now'))`
+        ).bind(email, googleUser.name || null).run();
+        isApproved = false;
+      } else {
+        isApproved = existingReq.status === 'approved';
+      }
+    }
+
+    // 6. Emitir nuestro token de sesión JWT
     const token = await createSessionToken(profile, env);
 
-    // 6. Redirigir al panel con el token en el hash
-    return Response.redirect(`${appUrl}/dashboard#token=${encodeURIComponent(token)}`, 302);
+    // 7. Redirigir al panel o a solicitud de acceso según el estado
+    const destination = isApproved ? '/dashboard' : '/request-access';
+    return Response.redirect(`${appUrl}${destination}#token=${encodeURIComponent(token)}`, 302);
   } catch (err) {
     return new Response(`Auth callback error: ${err.message || err}`, { status: 500 });
   }

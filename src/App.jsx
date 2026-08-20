@@ -44,13 +44,19 @@ const ProtectedRoute = ({ children }) => {
         return <Navigate to="/request-access" replace />;
     }
 
+    const isApproved = profile.role === 'admin' || profile.access_status === 'approved';
+    if (!isApproved) {
+        return <Navigate to="/request-access" replace />;
+    }
+
     return children;
 };
 
 const AdminRoute = ({ children }) => {
     const { profile, loading } = useAuth();
     if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>Cargando...</div>;
-    return profile?.role === 'admin' ? children : <Navigate to="/dashboard" replace />;
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
+    return isStaff ? children : <Navigate to="/dashboard" replace />;
 };
 
 const PublicRoute = ({ children }) => {
@@ -58,11 +64,12 @@ const PublicRoute = ({ children }) => {
 
     if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>Cargando...</div>;
 
-    if (user && !profile) {
-        return <Navigate to="/request-access" replace />;
+    if (user) {
+        const isApproved = profile?.role === 'admin' || profile?.access_status === 'approved';
+        return isApproved ? <Navigate to="/dashboard" replace /> : <Navigate to="/request-access" replace />;
     }
 
-    return user ? <Navigate to="/dashboard" replace /> : children;
+    return children;
 };
 
 const RedirectToMyCourses = () => {

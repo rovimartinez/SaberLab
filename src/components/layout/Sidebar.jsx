@@ -1,18 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 import { api } from '../../lib/api';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses } = useAuth();
+    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses, isStaffUser, isImpersonating, toggleViewMode, viewMode } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [publishedEvaluationsCount, setPublishedEvaluationsCount] = useState(0);
     const menuRef = useRef(null);
 
-    const isAdmin = profile?.role === 'admin';
+    const isStaff = isStaffUser && !isImpersonating;
+    const isAdmin = profile?.role === 'admin' && !isImpersonating;
     const userMetadata = user?.user_metadata || {};
     const avatarUrl = profile?.avatar_url || userMetadata.avatar_url;
     const googleName = userMetadata.name || userMetadata.full_name || '';
@@ -32,7 +33,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
 
     useEffect(() => {
         const fetchPublishedEvaluationsCount = async () => {
-            if (!isAdmin && (!user || enrolledCourses.length === 0)) {
+            if (!isStaff && (!user || enrolledCourses.length === 0)) {
                 setPublishedEvaluationsCount(0);
                 return;
             }
@@ -47,7 +48,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         };
 
         fetchPublishedEvaluationsCount();
-    }, [isAdmin, user, enrolledCourses]);
+    }, [isStaff, user, enrolledCourses]);
 
     const navCategories = [
         {
@@ -64,11 +65,12 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
+                { name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> },
                 { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
             ]
         },
-        ...(isAdmin ? [{
-            title: 'ADMIN',
+        ...(isStaff ? [{
+            title: isAdmin ? 'ADMIN' : 'DOCENTE',
             items: [
                 { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> },
             ]
@@ -203,13 +205,31 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                 borderRadius: '20px',
                                 display: 'inline-block',
                                 marginTop: '2px',
-                                background: profile?.role === 'admin' ? 'rgba(168,85,247,0.2)' : profile?.role === 'teacher' ? 'rgba(59,130,246,0.2)' : 'rgba(148,163,184,0.15)',
-                                color: profile?.role === 'admin' ? '#c084fc' : profile?.role === 'teacher' ? '#60a5fa' : '#94a3b8',
-                                border: `1px solid ${profile?.role === 'admin' ? 'rgba(168,85,247,0.4)' : profile?.role === 'teacher' ? 'rgba(59,130,246,0.4)' : 'rgba(148,163,184,0.2)'}`,
+                                background: isImpersonating 
+                                    ? 'rgba(245, 158, 11, 0.2)'
+                                    : profile?.role === 'admin' 
+                                    ? 'rgba(168,85,247,0.2)' 
+                                    : profile?.role === 'teacher' 
+                                    ? 'rgba(59,130,246,0.2)' 
+                                    : 'rgba(148,163,184,0.15)',
+                                color: isImpersonating 
+                                    ? '#fbbf24' 
+                                    : profile?.role === 'admin' 
+                                    ? '#c084fc' 
+                                    : profile?.role === 'teacher' 
+                                    ? '#60a5fa' 
+                                    : '#94a3b8',
+                                border: `1px solid ${isImpersonating 
+                                    ? 'rgba(245, 158, 11, 0.5)' 
+                                    : profile?.role === 'admin' 
+                                    ? 'rgba(168,85,247,0.4)' 
+                                    : profile?.role === 'teacher' 
+                                    ? 'rgba(59,130,246,0.4)' 
+                                    : 'rgba(148,163,184,0.2)'}`,
                                 textTransform: 'capitalize',
                                 letterSpacing: '0.5px'
                             }}>
-                                {profile?.role || 'Estudiante'}
+                                {isImpersonating ? 'Vista Estudiante 👁️' : profile?.role || 'Estudiante'}
                             </span>
                         </div>
                         <ChevronDown size={16} style={{ color: 'var(--text-secondary)', flexShrink: 0, transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s ease' }} />
@@ -239,6 +259,35 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, wordBreak: 'break-all' }}>{user?.email}</p>
                             </div>
                             <div className="dropdown-divider"></div>
+                            {isStaffUser && (
+                                <>
+                                    <button 
+                                        className="dropdown-item" 
+                                        onClick={() => { toggleViewMode(); setIsMenuOpen(false); }}
+                                        style={{ 
+                                            color: isImpersonating ? '#c084fc' : '#38bdf8', 
+                                            width: '100%',
+                                            background: isImpersonating ? 'rgba(168,85,247,0.1)' : 'rgba(56,189,248,0.1)',
+                                            borderRadius: '8px',
+                                            marginBottom: '4px',
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        {isImpersonating ? (
+                                            <>
+                                                <Shield size={16} color="#c084fc" />
+                                                <span>Volver a Modo Admin</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Eye size={16} color="#38bdf8" />
+                                                <span>Ver como Estudiante</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <div className="dropdown-divider"></div>
+                                </>
+                            )}
                             <Link to="/dashboard/profile" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
                                 <User size={16} />
                                 Mi Perfil

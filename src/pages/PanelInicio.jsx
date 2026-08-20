@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
     Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, 
     Zap, Bot, GraduationCap, Gamepad2, Award, User, Activity, TrendingUp, 
-    Flame, CheckCircle2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, CheckCircle, X, Lock, Gift
+    Flame, CheckCircle2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, CheckCircle, X, Lock, Gift, Wrench, Hash
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import { useApps } from '../context/useApps';
 import { api } from '../lib/api';
 import { COURSES_DEFINITION, getLessonInfo } from '../data/coursesData.jsx';
 import { ranks, getRankByLessons, getNextRank, getRankProgress } from '../data/ranksData';
@@ -26,6 +27,7 @@ const getCourseColor = (abbr) => {
 
 const PanelInicio = () => {
     const { user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress } = useAuth();
+    const { openLauncher } = useApps();
     const navigate = useNavigate();
     
     const [userProgress, setUserProgress] = useState(cachedProgress);
@@ -107,8 +109,9 @@ const PanelInicio = () => {
     const rankProgress = getRankProgress(lessonsCompleted);
 
     // Mapeo del curso activo
-    const mainCourseDef = enrolledCourses.length > 0
-        ? (COURSES_DEFINITION.find(d => d.id === enrolledCourses[0].id || d.abbr === enrolledCourses[0].abbr || d.id === enrolledCourses[0].slug) || enrolledCourses[0])
+    const hasEnrolledCourses = (enrolledCourses && enrolledCourses.length > 0) || profile?.role === 'admin';
+    const mainCourseDef = hasEnrolledCourses
+        ? (COURSES_DEFINITION.find(d => d.id === enrolledCourses[0]?.id || d.abbr === enrolledCourses[0]?.abbr || d.id === enrolledCourses[0]?.slug) || enrolledCourses[0] || COURSES_DEFINITION[0])
         : COURSES_DEFINITION[0];
 
     const courseColor = mainCourseDef?.color || '#38bdf8';
@@ -191,6 +194,7 @@ const PanelInicio = () => {
 
     const quickActions = [
         { label: 'Mi Perfil', icon: <User size={14} />, to: '/dashboard/profile' },
+        { label: 'Widgets', icon: <Wrench size={14} />, onClick: openLauncher },
         { label: 'Recompensas', icon: <Gift size={14} />, to: '/dashboard/gadgets' },
         { label: 'Calificaciones', icon: <Award size={14} />, to: '/dashboard/grades' },
     ];
@@ -209,10 +213,17 @@ const PanelInicio = () => {
                     </p>
                     <div className="hero-quick-actions">
                         {quickActions.map(qa => (
-                            <Link key={qa.label} to={qa.to} className="hero-action-pill">
-                                {qa.icon}
-                                <span>{qa.label}</span>
-                            </Link>
+                            qa.to ? (
+                                <Link key={qa.label} to={qa.to} className="hero-action-pill">
+                                    {qa.icon}
+                                    <span>{qa.label}</span>
+                                </Link>
+                            ) : (
+                                <button key={qa.label} type="button" onClick={qa.onClick} className="hero-action-pill" style={{ cursor: 'pointer' }}>
+                                    {qa.icon}
+                                    <span>{qa.label}</span>
+                                </button>
+                            )
                         ))}
                     </div>
                 </div>
@@ -241,43 +252,73 @@ const PanelInicio = () => {
             {/* ── 2. FILA 1: ACCIÓN PRINCIPAL (IZQ) vs NIVEL STEAM (DER) [100% SIMÉTRICA] ── */}
             <div className="symmetric-grid-row">
                 
-                {/* IZQUIERDA: Lanzador del Curso Activo */}
-                <div className="glass-panel symmetric-card course-launcher-card" style={{ '--accent-color': courseColor }}>
-                    <div className="card-top-bar">
-                        <div className="card-title-group">
-                            <div className="course-icon-badge" style={{ background: `${courseColor}20`, color: courseColor }}>
-                                {courseIcon}
+                {/* IZQUIERDA: Lanzador del Curso Activo o Estado Sin Cursos */}
+                {hasEnrolledCourses ? (
+                    <div className="glass-panel symmetric-card course-launcher-card" style={{ '--accent-color': courseColor }}>
+                        <div className="card-top-bar">
+                            <div className="card-title-group">
+                                <div className="course-icon-badge" style={{ background: `${courseColor}20`, color: courseColor }}>
+                                    {courseIcon}
+                                </div>
+                                <div>
+                                    <span className="course-tag-badge" style={{ background: `${courseColor}20`, color: courseColor }}>
+                                        {mainCourseDef.abbr || 'CURSO ACTIVO'}
+                                    </span>
+                                    <h2 className="card-main-title">{mainCourseDef.name}</h2>
+                                </div>
                             </div>
-                            <div>
-                                <span className="course-tag-badge" style={{ background: `${courseColor}20`, color: courseColor }}>
-                                    {mainCourseDef.abbr || 'CURSO ACTIVO'}
+                        </div>
+
+                        <div className="next-mission-box">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                                <span style={{ fontSize: '0.86rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Sparkles size={15} color={courseColor} />
+                                    {courseProgressPercent === 0 ? 'Primer reto:' : 'Siguiente reto:'} <strong style={{ color: courseColor }}>{nextLessonTarget?.title}</strong>
                                 </span>
-                                <h2 className="card-main-title">{mainCourseDef.name}</h2>
+                                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 800 }}>
+                                    {courseProgressPercent}%
+                                </span>
+                            </div>
+                            <div className="progress-bar-bg" style={{ height: '7px' }}>
+                                <div className="progress-bar-fill" style={{ width: `${courseProgressPercent}%`, background: courseColor }} />
                             </div>
                         </div>
-                    </div>
 
-                    <div className="next-mission-box">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                            <span style={{ fontSize: '0.86rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Sparkles size={15} color={courseColor} />
-                                Siguiente reto: <strong style={{ color: courseColor }}>{nextLessonTarget?.title}</strong>
-                            </span>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 800 }}>
-                                {courseProgressPercent}%
-                            </span>
-                        </div>
-                        <div className="progress-bar-bg" style={{ height: '7px' }}>
-                            <div className="progress-bar-fill" style={{ width: `${courseProgressPercent}%`, background: courseColor }} />
-                        </div>
+                        <Link to={nextLessonLink} className="btn-launch-primary" style={{ background: courseColor }}>
+                            <Play size={16} fill="#0f172a" />
+                            <span>{courseProgressPercent === 0 ? 'Comenzar Primera Lección' : 'Continuar Lección'}</span>
+                            <ArrowRight size={16} />
+                        </Link>
                     </div>
+                ) : (
+                    <div className="glass-panel symmetric-card course-launcher-card" style={{ '--accent-color': '#38bdf8' }}>
+                        <div className="card-top-bar">
+                            <div className="card-title-group">
+                                <div className="course-icon-badge" style={{ background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}>
+                                    <GraduationCap size={24} />
+                                </div>
+                                <div>
+                                    <span className="course-tag-badge" style={{ background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}>
+                                        CURSOS
+                                    </span>
+                                    <h2 className="card-main-title">Aún no tienes cursos inscritos</h2>
+                                </div>
+                            </div>
+                        </div>
 
-                    <Link to={nextLessonLink} className="btn-launch-primary" style={{ background: courseColor }}>
-                        <Play size={16} fill="#0f172a" />
-                        <span>Continuar Lección</span>
-                        <ArrowRight size={16} />
-                    </Link>
-                </div>
+                        <div className="next-mission-box">
+                            <p style={{ margin: 0, fontSize: '0.88rem', color: '#94a3b8', lineHeight: '1.5' }}>
+                                Tu docente te asignará a tu clase o puedes unirte con tu código en la sección de Mis Cursos.
+                            </p>
+                        </div>
+
+                        <Link to="/dashboard/my-courses" className="btn-launch-primary" style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' }}>
+                            <Hash size={16} />
+                            <span>Ir a Mis Cursos / Unirse con Código</span>
+                            <ArrowRight size={16} />
+                        </Link>
+                    </div>
+                )}
 
                 {/* DERECHA: Nivel STEAM y Progresión de Rango (Abre Ventanita) */}
                 <div className="glass-panel symmetric-card rank-card">

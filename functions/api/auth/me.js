@@ -9,5 +9,15 @@ export async function onRequestGet({ env, data }) {
     return Response.json({ error: 'Perfil no encontrado' }, { status: 404 });
   }
 
-  return Response.json({ profile });
+  const isAdmin = profile.role === 'admin' || (env.ADMIN_EMAIL && profile.email?.toLowerCase() === env.ADMIN_EMAIL.toLowerCase());
+  let access_status = 'approved';
+
+  if (!isAdmin) {
+    const req = await env.DB.prepare(
+      'SELECT status FROM solicitudes_acceso WHERE lower(email) = ? ORDER BY created_at DESC LIMIT 1'
+    ).bind(profile.email.toLowerCase()).first();
+    access_status = req?.status || 'pending';
+  }
+
+  return Response.json({ profile: { ...profile, access_status } });
 }

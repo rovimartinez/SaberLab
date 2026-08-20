@@ -8,6 +8,7 @@ export const AuthContext = createContext({});
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [viewMode, setViewModeState] = useState(() => localStorage.getItem('saberlab_view_mode') || 'admin');
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [lessonVisibility, setLessonVisibility] = useState({});
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
@@ -18,6 +19,15 @@ export const AuthProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [userProgress, setUserProgress] = useState(null);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
+  const setViewMode = (mode) => {
+    setViewModeState(mode);
+    localStorage.setItem('saberlab_view_mode', mode);
+  };
+
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'student' ? 'admin' : 'student');
+  };
 
   // Refs for stable identity in effects
   const userRef = useRef(user);
@@ -62,9 +72,19 @@ export const AuthProvider = ({ children }) => {
     if (!loggedInUser || !resolvedProfile) return;
 
     try {
-        setSessionRejected(false);
+        const isApproved = resolvedProfile.role === 'admin' || resolvedProfile.access_status === 'approved';
+        setSessionRejected(resolvedProfile.access_status === 'rejected');
+        setProfile({
+          ...resolvedProfile,
+          real_role: resolvedProfile.role
+        });
+
+        if (!isApproved) {
+          setInitialDataLoaded(true);
+          return;
+        }
+
         clearPendingAccessData();
-        setProfile(resolvedProfile);
 
         // Prioridad 1: Cursos (esencial para el resto y para obtener los IDs correctos)
         const courses = await loadEnrolledCourses(loggedInUser.id, resolvedProfile.role);
@@ -370,10 +390,28 @@ export const AuthProvider = ({ children }) => {
     resetAccessState();
   };
 
+  const realRole = profile?.real_role || profile?.role || 'student';
+  const isStaffUser = ['admin', 'teacher', 'docente', 'profesor'].includes(realRole);
+  const isImpersonating = isStaffUser && viewMode === 'student';
+  const effectiveRole = isImpersonating ? 'student' : realRole;
+
+  const effectiveProfile = profile ? {
+    ...profile,
+    role: effectiveRole,
+    real_role: realRole,
+    isImpersonating
+  } : null;
+
   return (
     <AuthContext.Provider value={{ 
         user, 
-        profile, 
+        profile: effectiveProfile, 
+        realRole,
+        viewMode,
+        isStaffUser,
+        isImpersonating,
+        setViewMode,
+        toggleViewMode,
         loading, 
         sessionRejected, 
         setSessionRejected, 
@@ -390,7 +428,8 @@ export const AuthProvider = ({ children }) => {
         notifications,
         userProgress,
         initialDataLoaded,
-        refreshEvaluations: () => loadEvaluations(user?.id, profile?.role),
+        refreshSession: () => validateSession(localStorage.getItem('saberlab-token')),
+        refreshEvaluations: () => loadEvaluations(user?.id, effectiveRole),
         refreshNotifications: () => loadNotifications(user?.id),
         refreshUserProgress: () => loadUserProgress(user?.id),
         refreshLessonVisibility: loadLessonVisibility
