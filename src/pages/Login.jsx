@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Mail, ChevronLeft } from 'lucide-react';
+import { Mail, ChevronLeft, ShieldAlert } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
 import '../styles/Login.css';
 
@@ -139,6 +139,25 @@ const Login = () => {
             {!sessionRejected && (
             <>
             <div className="auth-card">
+                {new URLSearchParams(window.location.search).get('reason') === 'inactivity' && (
+                    <div style={{
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        border: '1px solid rgba(245, 158, 11, 0.4)',
+                        borderRadius: '12px',
+                        padding: '0.85rem 1rem',
+                        marginBottom: '1.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.65rem',
+                        color: '#fbbf24',
+                        fontSize: '0.85rem',
+                        lineHeight: 1.4,
+                        textAlign: 'left'
+                    }}>
+                        <ShieldAlert size={20} style={{ flexShrink: 0 }} />
+                        <span>Tu sesión se cerró automáticamente por inactividad (10 minutos) para proteger tu cuenta y tus notas.</span>
+                    </div>
+                )}
                 {renderHeader()}
 
                 {mode === 'register' ? (

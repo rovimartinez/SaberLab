@@ -93,12 +93,28 @@ export async function onRequestPost({ request, env, data }) {
   }
 
   // 2. Buscar el grupo correspondiente
-  const group = await env.DB.prepare(
-    'SELECT * FROM grupos WHERE id = ?'
-  ).bind(codeRow.group_id).first();
+  let group = null;
+  if (codeRow.group_id) {
+    group = await env.DB.prepare(
+      'SELECT * FROM grupos WHERE id = ?'
+    ).bind(codeRow.group_id).first();
+  }
+
+  if (!group && codeRow.course_id) {
+    group = await env.DB.prepare(
+      'SELECT * FROM grupos WHERE course_id = ? LIMIT 1'
+    ).bind(codeRow.course_id).first();
+
+    if (!group) {
+      const { meta } = await env.DB.prepare(
+        'INSERT INTO grupos (name, course_id) VALUES (?, ?)'
+      ).bind('Grupo General', codeRow.course_id).run();
+      group = { id: meta.last_row_id, name: 'Grupo General', course_id: codeRow.course_id };
+    }
+  }
 
   if (!group) {
-    return Response.json({ error: 'Grupo no encontrado para este código' }, { status: 404 });
+    return Response.json({ error: 'Grupo o curso no encontrado para este código' }, { status: 404 });
   }
 
   // 3. Buscar el curso asociado

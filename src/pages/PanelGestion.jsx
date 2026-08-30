@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Shield, ClipboardList, Users, Settings, Database } from 'lucide-react';
+import { BookOpen, Shield, ClipboardList, Users, Settings, Database, Radio, Link2 } from 'lucide-react';
 import PanelMisCursos from './PanelMisCursos';
 import PanelPlataforma from './PanelPlataforma';
 import PanelExamenes from './PanelExamenes';
+import OnlineStudentsMonitor from '../components/admin/OnlineStudentsMonitor';
+import CourseInviteManager from '../components/admin/CourseInviteManager';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import '../styles/PanelPlataforma.css';
 
 const PanelGestion = () => {
     const navigate = useNavigate();
-    const [activeCard, setActiveCard] = useState('cursos');
+    const [activeCard, setActiveCard] = useState('en_linea');
     const [activeSubPanel, setActiveSubPanel] = useState('usuarios');
     const [courses, setCourses] = useState(COURSES_DEFINITION);
 
@@ -18,86 +20,144 @@ const PanelGestion = () => {
             <div className="page-header">
                 <div className="header-title">
                     <Shield size={28} color="#60a5fa" />
-                    <h1>Gestión</h1>
+                    <h1>Gestión y Monitoreo</h1>
                 </div>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
                 <button
-                    onClick={() => setActiveCard('cursos')}
+                    onClick={() => setActiveCard('en_linea')}
                     style={{
-                        flex: '1 1 250px',
+                        flex: '1 1 200px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '1rem',
-                        padding: '1.5rem',
+                        padding: '1.25rem',
+                        background: activeCard === 'en_linea' ? 'rgba(16, 185, 129, 0.15)' : 'var(--glass-bg)',
+                        border: `1px solid ${activeCard === 'en_linea' ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
+                        borderRadius: '16px',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        minHeight: '90px'
+                    }}
+                >
+                    <Radio size={28} style={{ color: '#10b981' }} className={activeCard === 'en_linea' ? 'animate-pulse' : ''} />
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>En Vivo & Mensajes</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Alumnos en línea y alertas a pantalla</div>
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => setActiveCard('invitaciones')}
+                    style={{
+                        flex: '1 1 200px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '1rem',
+                        padding: '1.25rem',
+                        background: activeCard === 'invitaciones' ? 'rgba(56, 189, 248, 0.15)' : 'var(--glass-bg)',
+                        border: `1px solid ${activeCard === 'invitaciones' ? '#38bdf8' : 'rgba(255,255,255,0.1)'}`,
+                        borderRadius: '16px',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        minHeight: '90px'
+                    }}
+                >
+                    <Link2 size={28} style={{ color: '#38bdf8' }} />
+                    <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Enlaces con Tiempo</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Auto-unión y extensión de vigencia</div>
+                    </div>
+                </button>
+
+                <button
+                    onClick={() => setActiveCard('cursos')}
+                    style={{
+                        flex: '1 1 200px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '1rem',
+                        padding: '1.25rem',
                         background: activeCard === 'cursos' ? 'rgba(96, 165, 250, 0.15)' : 'var(--glass-bg)',
                         border: `1px solid ${activeCard === 'cursos' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.1)'}`,
                         borderRadius: '16px',
                         color: '#fff',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        minHeight: '100px'
+                        minHeight: '90px'
                     }}
                 >
-                    <BookOpen size={32} style={{ color: '#4ade80' }} />
+                    <BookOpen size={28} style={{ color: '#4ade80' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.25rem' }}>Gestión de Cursos</div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Administrar cursos, módulos y lecciones</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Gestión de Cursos</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Módulos, lecciones y visibilidad</div>
                     </div>
                 </button>
 
                 <button
                     onClick={() => setActiveCard('plataforma')}
                     style={{
-                        flex: '1 1 250px',
+                        flex: '1 1 200px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '1rem',
-                        padding: '1.5rem',
+                        padding: '1.25rem',
                         background: activeCard === 'plataforma' ? 'rgba(96, 165, 250, 0.15)' : 'var(--glass-bg)',
                         border: `1px solid ${activeCard === 'plataforma' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.1)'}`,
                         borderRadius: '16px',
                         color: '#fff',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        minHeight: '100px'
+                        minHeight: '90px'
                     }}
                 >
-                    <Shield size={32} style={{ color: '#a855f7' }} />
+                    <Shield size={28} style={{ color: '#a855f7' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.25rem' }}>Plataforma</div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Configuración general del sistema</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Plataforma</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Usuarios y configuración</div>
                     </div>
                 </button>
 
                 <button
                     onClick={() => setActiveCard('examenes')}
                     style={{
-                        flex: '1 1 250px',
+                        flex: '1 1 200px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '1rem',
-                        padding: '1.5rem',
+                        padding: '1.25rem',
                         background: activeCard === 'examenes' ? 'rgba(96, 165, 250, 0.15)' : 'var(--glass-bg)',
                         border: `1px solid ${activeCard === 'examenes' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.1)'}`,
                         borderRadius: '16px',
                         color: '#fff',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        minHeight: '100px'
+                        minHeight: '90px'
                     }}
                 >
-                    <ClipboardList size={32} style={{ color: '#f43f5e' }} />
+                    <ClipboardList size={28} style={{ color: '#f43f5e' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.25rem' }}>Exámenes</div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Gestionar evaluaciones y resultados</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Exámenes</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Evaluaciones y resultados</div>
                     </div>
                 </button>
             </div>
+
+            {activeCard === 'en_linea' && (
+                <OnlineStudentsMonitor />
+            )}
+
+            {activeCard === 'invitaciones' && (
+                <CourseInviteManager />
+            )}
 
             {activeCard === 'cursos' && (
                 <PanelMisCursos courses={courses} showHeader={false} embedded={true} />

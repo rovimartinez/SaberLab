@@ -6,6 +6,10 @@ import Topbar from './Topbar';
 import { useAuth } from '../../context/useAuth';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
 import { AppsProvider } from '../../context/AppsContext';
+import { useInactivityLogout } from '../../hooks/useInactivityLogout';
+import { useStudentPresence } from '../../hooks/useStudentPresence';
+import InactivityWarningModal from '../modals/InactivityWarningModal';
+import DirectMessagePopup from '../modals/DirectMessagePopup';
 import '../../styles/Layout.css';
 
 const LayoutContent = () => {
@@ -14,6 +18,10 @@ const LayoutContent = () => {
     const location = useLocation();
     const isEvaluationRoute = /^\/dashboard\/evaluations\/[^/]+$/.test(location.pathname);
     const isPracticeEvaluation = location.pathname.includes('re-m1-e2');
+    
+    // Hooks de seguridad por inactividad y presencia en vivo
+    const { showWarning, secondsRemaining, extendSession, handleLogout } = useInactivityLogout();
+    const { pendingMessage, clearPendingMessage } = useStudentPresence();
     
     const [isEvaluationMode, setIsEvaluationMode] = useState(() => {
         return localStorage.getItem('evaluationStarted') === 'true';
@@ -94,6 +102,23 @@ const LayoutContent = () => {
                     <Outlet />
                 </main>
             </div>
+
+            {/* Modal preventivo de inactividad (10 minutos) */}
+            {showWarning && (
+                <InactivityWarningModal 
+                    secondsRemaining={secondsRemaining} 
+                    onExtend={extendSession} 
+                    onLogout={handleLogout} 
+                />
+            )}
+
+            {/* Alerta emergente en pantalla de mensaje del docente */}
+            {pendingMessage && (
+                <DirectMessagePopup 
+                    message={pendingMessage} 
+                    onConfirm={clearPendingMessage} 
+                />
+            )}
         </div>
     );
 };

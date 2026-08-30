@@ -28,6 +28,7 @@ import PanelGadgets from './pages/PanelGadgets';
 import PanelRecompensas from './pages/PanelRecompensas';
 import PanelPerfil from './pages/PanelPerfil';
 import Welcome from './pages/Welcome';
+import JoinCourse from './pages/JoinCourse';
 import './index.css';
 import { useState } from 'react';
 import { COURSES_DEFINITION, getCourseByIdentifier } from './data/coursesData.jsx';
@@ -96,6 +97,7 @@ function AppRoutes() {
                 <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                 <Route path="/request-access" element={<RequestAccess />} />
                 <Route path="/welcome" element={<Welcome />} />
+                <Route path="/join" element={<JoinCourse />} />
                 <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                     <Route index element={<PanelInicio />} />
                     <Route path="my-courses" element={<MyCourses />} />
@@ -124,6 +126,7 @@ function AppRoutes() {
                     <Route path="gadgets" element={<PanelRecompensas />} />
                     <Route path="profile" element={<PanelPerfil />} />
                 </Route>
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
     );
