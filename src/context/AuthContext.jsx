@@ -18,6 +18,21 @@ export const AuthProvider = ({ children }) => {
   const [evaluations, setEvaluations] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [userProgress, setUserProgress] = useState(null);
+  const [totalPoints, setTotalPoints] = useState(() => {
+    const localKeys = ['ee-m1-l6', 'ee-m2-l10', 'ee-m3-l14', 'ee-m4-l16'];
+    let localSum = 0;
+    localKeys.forEach(key => {
+      try {
+        const item = localStorage.getItem(`exam_completed_${key}`);
+        if (item) {
+          const parsed = JSON.parse(item);
+          const pts = parsed.points_obtained ?? parsed.totalPts ?? parsed.score ?? 0;
+          localSum += Number(pts) || 0;
+        }
+      } catch {}
+    });
+    return localSum;
+  });
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   const setViewMode = (mode) => {
@@ -75,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     setEvaluations([]);
     setNotifications([]);
     setUserProgress(null);
+    setTotalPoints(0);
     setInitialDataLoaded(false);
   };
 
@@ -258,11 +274,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const calculateTotalPoints = (progressData) => {
+    let d1Pts = Number(progressData?.total_points) || 0;
+    const localKeys = ['ee-m1-l6', 'ee-m2-l10', 'ee-m3-l14', 'ee-m4-l16'];
+    let localSum = 0;
+    localKeys.forEach(key => {
+      try {
+        const item = localStorage.getItem(`exam_completed_${key}`);
+        if (item) {
+          const parsed = JSON.parse(item);
+          const pts = parsed.points_obtained ?? parsed.totalPts ?? parsed.score ?? 0;
+          localSum += Number(pts) || 0;
+        }
+      } catch {}
+    });
+    return Math.max(d1Pts, localSum);
+  };
+
   const loadUserProgress = async (userId) => {
     try {
       const { data } = await api('/progress');
       if (data) {
         setUserProgress(data);
+        setTotalPoints(calculateTotalPoints(data));
         if (data.courses_progress) {
           setEnrolledCourses(prevCourses => (prevCourses || []).map(course => {
             const courseStat = data.courses_progress[course.id];
@@ -421,6 +455,9 @@ export const AuthProvider = ({ children }) => {
     isImpersonating
   } : null;
 
+  const isStaff = isStaffUser && !isImpersonating;
+  const canAccessCertificate = isStaff || totalPoints >= 450;
+
   return (
     <AuthContext.Provider value={{ 
         user, 
@@ -429,6 +466,9 @@ export const AuthProvider = ({ children }) => {
         viewMode,
         isStaffUser,
         isImpersonating,
+        isStaff,
+        totalPoints,
+        canAccessCertificate,
         setViewMode,
         toggleViewMode,
         loading, 

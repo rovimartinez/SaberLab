@@ -156,6 +156,48 @@ const PanelCalificaciones = () => {
                         <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10b981' }}>{overallGPA}</div>
                         <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>Nota Equivalente (0-5.0)</div>
                     </div>
+                    {totalEarnedAll >= 450 ? (
+                        <div 
+                            onClick={() => navigate('/dashboard/certificate/ee')}
+                            style={{
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                border: '1px solid rgba(16, 185, 129, 0.4)',
+                                borderRadius: '16px',
+                                padding: '0.9rem 1.4rem',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
+                            title="Haz clic para ver y descargar tu Certificado Oficial"
+                        >
+                            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Award size={20} /> Desbloqueado
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6ee7b7', fontWeight: 600 }}>Certificado Oficial (450+ pts) ↗</div>
+                        </div>
+                    ) : (
+                        <div style={{
+                            background: 'rgba(245, 158, 11, 0.08)',
+                            border: '1px solid rgba(245, 158, 11, 0.25)',
+                            borderRadius: '16px',
+                            padding: '0.9rem 1.4rem',
+                            textAlign: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fbbf24' }}>
+                                {totalEarnedAll} / 450 pts
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+                                Meta Certificado (Faltan {Math.max(0, 450 - totalEarnedAll)} pts)
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

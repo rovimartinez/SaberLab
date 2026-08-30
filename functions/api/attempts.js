@@ -40,13 +40,14 @@ export async function onRequestPost({ request, env, data }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { evaluation_key, answers, score, passed, completed_at } = body;
+  const { evaluation_key, answers, score, passed, completed_at, points_obtained } = body;
   if (!evaluation_key) {
     return Response.json({ error: 'Falta evaluation_key' }, { status: 400 });
   }
 
   const answersJson = answers !== undefined ? JSON.stringify(answers) : null;
   const isFinal = completed_at != null;
+  const finalScore = typeof points_obtained === 'number' ? points_obtained : (typeof score === 'number' ? score : null);
 
   // Coincide con la lógica del frontend:
   // - auto-guardado busca el intento incompleto (completed_at IS NULL)
@@ -73,7 +74,7 @@ export async function onRequestPost({ request, env, data }) {
        WHERE id = ?`
     ).bind(
       answersJson ?? null,
-      typeof score === 'number' ? score : null,
+      finalScore,
       typeof passed === 'boolean' ? (passed ? 1 : 0) : null,
       completed_at ?? null,
       existing.id
@@ -87,7 +88,7 @@ export async function onRequestPost({ request, env, data }) {
       data.user.id,
       evaluation_key,
       answersJson,
-      typeof score === 'number' ? score : 0,
+      finalScore ?? 0,
       passed ? 1 : 0,
       completed_at ?? null
     ).run();

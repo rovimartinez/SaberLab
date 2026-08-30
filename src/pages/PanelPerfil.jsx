@@ -5,11 +5,11 @@ import { getRankByLessons, getNextRank, getRankProgress, ranks } from '../data/r
 import '../styles/PanelPerfil.css';
 
 export default function PanelPerfil() {
-    const { user, profile, enrolledCourses, userProgress } = useAuth();
+    const { user, profile, enrolledCourses, userProgress, canAccessCertificate } = useAuth();
 
     const lessonsCompleted = userProgress?.lessons_completed || 0;
     const streakDays       = userProgress?.streak_days || 0;
-    const certificates     = userProgress?.certificates || 0;
+    const certificates     = canAccessCertificate ? (userProgress?.certificates || 1) : 0;
 
     const rank        = getRankByLessons(lessonsCompleted);
     const nextRank    = getNextRank(lessonsCompleted);

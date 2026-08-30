@@ -370,7 +370,21 @@ export const COURSES_DEFINITION = [
                 ]
             }
         ],
-        groups: []
+        groups: [],
+        resources: {
+            software: [
+                'Autodesk Tinkercad (https://www.tinkercad.com/)',
+                'Simulador Virtual Arduino SaberLab',
+                'Videos oficiales de C++ para Arduino - Prof. Ronny Martinez'
+            ],
+            fuentes: [
+                { title: 'Autodesk Tinkercad: Laboratorio y Simulación Virtual', url: 'https://www.tinkercad.com/' },
+                { title: '01   Control de un LED con C++', url: 'https://www.youtube.com/watch?v=vQbSGJRJoJ8' },
+                { title: '02   Variable int', url: 'https://www.youtube.com/watch?v=_SoRsNnhs9s' },
+                { title: '03   Monitor en serie', url: 'https://www.youtube.com/watch?v=Aq6lEjhf0CQ' },
+                { title: '04   Control dos LED con C++', url: 'https://www.youtube.com/watch?v=Ll6Z0f0AN44' }
+            ]
+        }
     }
 ];
 

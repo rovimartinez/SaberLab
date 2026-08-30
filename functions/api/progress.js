@@ -40,13 +40,15 @@ export async function onRequestGet({ env, data }) {
     const completedLessonIds = (completedLessons || []).map(r => r.lesson_id);
     const lessonsCount = completedLessonIds.length;
 
-    // 3. Obtener exámenes completados y promedio de calificación
+    // 3. Obtener exámenes completados y acumulación de puntos (Cloudflare D1)
     const examStats = await env.DB.prepare(
-      "SELECT COUNT(*) as total_exams, AVG(grade) as avg_grade, MAX(grade) as max_grade FROM intentos_evaluacion WHERE user_id = ? AND status = 'completed'"
+      "SELECT COUNT(*) as total_exams, SUM(COALESCE(score, 0)) as total_points, AVG(score) as avg_grade, MAX(score) as max_score FROM intentos_evaluacion WHERE user_id = ? AND (completed_at IS NOT NULL OR score > 0)"
     ).bind(userId).first();
 
     const examsCompleted = examStats?.total_exams || 0;
+    const totalPoints = examStats?.total_points || 0;
     const averageGrade = examStats?.avg_grade ? Math.round(examStats.avg_grade * 10) / 10 : 0;
+    const certificatesCount = totalPoints >= 450 ? 1 : 0;
 
     // 4. Calcular desglose por curso
     // Definición estándar de cursos y sus lecciones
@@ -97,6 +99,8 @@ export async function onRequestGet({ env, data }) {
       streak_days: streakDays,
       total_hours: estimatedHours,
       exams_completed: examsCompleted,
+      total_points: totalPoints,
+      certificates: certificatesCount,
       average_grade: averageGrade,
       courses_progress: coursesBreakdown,
       weekly_hours: weeklyHours
@@ -110,6 +114,8 @@ export async function onRequestGet({ env, data }) {
       streak_days: 0,
       total_hours: 0,
       exams_completed: 0,
+      total_points: 0,
+      certificates: 0,
       average_grade: 0,
       courses_progress: {},
       weekly_hours: [0, 0, 0, 0, 0, 0, 0]

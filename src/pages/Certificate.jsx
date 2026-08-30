@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Award, GraduationCap, Share2, CheckCircle2, ShieldCheck, Sparkles, QrCode, Cpu, Terminal, Zap, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Download, Award, GraduationCap, Share2, CheckCircle2, ShieldCheck, Sparkles, QrCode, Cpu, Terminal, Zap, ExternalLink, Lock } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 import '../styles/Certificate.css';
@@ -109,7 +109,7 @@ function getCourseInfo(courseId) {
 
 export default function Certificate() {
     const { courseId } = useParams();
-    const { user, profile, loading } = useAuth();
+    const { user, profile, loading, canAccessCertificate, totalPoints } = useAuth();
     const navigate = useNavigate();
 
     const activeCourseId = courseId || 'ee';
@@ -147,6 +147,147 @@ export default function Certificate() {
     if (!user) {
         navigate('/login');
         return null;
+    }
+
+    // 🔒 Candado de Seguridad: Solo disponible al superar los 450 puntos (o docentes/admin)
+    if (!canAccessCertificate) {
+        const requiredPoints = 450;
+        const currentPoints = totalPoints || 0;
+        const missingPoints = Math.max(0, requiredPoints - currentPoints);
+        const progressPct = Math.min(100, Math.round((currentPoints / requiredPoints) * 100));
+
+        return (
+            <div className="certificate-page-light-tech" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '82vh', padding: '2rem' }}>
+                <div style={{
+                    maxWidth: '560px',
+                    width: '100%',
+                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 100%)',
+                    border: '1px solid rgba(245, 158, 11, 0.35)',
+                    borderRadius: '24px',
+                    padding: '2.75rem 2rem',
+                    textAlign: 'center',
+                    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.12)',
+                    position: 'relative'
+                }}>
+                    <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '74px',
+                        height: '74px',
+                        borderRadius: '22px',
+                        background: 'rgba(245, 158, 11, 0.12)',
+                        border: '1px solid rgba(245, 158, 11, 0.35)',
+                        marginBottom: '1.25rem'
+                    }}>
+                        <Lock size={38} color="#f59e0b" />
+                    </div>
+
+                    <div style={{
+                        display: 'inline-block',
+                        padding: '0.35rem 0.9rem',
+                        borderRadius: '999px',
+                        background: 'rgba(245, 158, 11, 0.15)',
+                        color: '#fbbf24',
+                        fontSize: '0.78rem',
+                        fontWeight: 800,
+                        letterSpacing: '0.8px',
+                        textTransform: 'uppercase',
+                        marginBottom: '0.85rem',
+                        border: '1px solid rgba(245, 158, 11, 0.3)'
+                    }}>
+                        Reconocimiento Restringido
+                    </div>
+
+                    <h2 style={{ color: '#fff', fontSize: '1.75rem', fontWeight: 800, margin: '0 0 0.75rem 0' }}>
+                        Certificación Bloqueada
+                    </h2>
+
+                    <p style={{ color: '#94a3b8', fontSize: '0.96rem', lineHeight: '1.6', margin: '0 0 1.75rem 0' }}>
+                        Para expedir tu <strong style={{ color: '#f8fafc' }}>Diploma Oficial y Credencial Criptográfica</strong> de SaberLab, debes acumular al menos <strong style={{ color: '#fbbf24' }}>450 puntos</strong> en tus evaluaciones y retos prácticos.
+                    </p>
+
+                    {/* Barra de progreso de puntos */}
+                    <div style={{
+                        background: 'rgba(15, 23, 42, 0.65)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '16px',
+                        padding: '1.25rem',
+                        marginBottom: '1.75rem'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem', fontSize: '0.88rem' }}>
+                            <span style={{ color: '#cbd5e1', fontWeight: 700 }}>Progreso Hacia la Meta:</span>
+                            <span style={{ color: '#fbbf24', fontWeight: 900 }}>{currentPoints} / {requiredPoints} pts ({progressPct}%)</span>
+                        </div>
+                        <div style={{
+                            width: '100%',
+                            height: '10px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            borderRadius: '999px',
+                            overflow: 'hidden'
+                        }}>
+                            <div style={{
+                                width: `${progressPct}%`,
+                                height: '100%',
+                                background: 'linear-gradient(90deg, #f59e0b, #10b981)',
+                                borderRadius: '999px',
+                                transition: 'width 0.6s ease'
+                            }} />
+                        </div>
+                        <div style={{ marginTop: '0.6rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+                            Te faltan <strong style={{ color: '#38bdf8' }}>{missingPoints} puntos</strong> para desbloquear la certificación.
+                        </div>
+                    </div>
+
+                    {/* Acciones */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <button
+                            onClick={() => navigate('/dashboard/grades')}
+                            style={{
+                                width: '100%',
+                                padding: '0.85rem',
+                                borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                color: '#fff',
+                                fontWeight: 800,
+                                fontSize: '0.92rem',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.3)'
+                            }}
+                        >
+                            <Award size={18} />
+                            Ver Mis Calificaciones
+                        </button>
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '12px',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                color: '#cbd5e1',
+                                fontWeight: 700,
+                                fontSize: '0.88rem',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                        >
+                            <ArrowLeft size={16} />
+                            Volver al Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (

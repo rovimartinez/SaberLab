@@ -6,7 +6,7 @@ import { useApps } from '../../context/useApps';
 import { api } from '../../lib/api';
 
 const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
-    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses, isStaffUser, isImpersonating, toggleViewMode, viewMode } = useAuth();
+    const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses, isStaffUser, isImpersonating, toggleViewMode, viewMode, canAccessCertificate } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [publishedEvaluationsCount, setPublishedEvaluationsCount] = useState(0);
@@ -66,7 +66,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
                 ...(isStaff ? [{ name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }] : []),
-                { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
+                ...(canAccessCertificate ? [{ name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }] : [])
             ]
         },
         ...(isStaff ? [{
