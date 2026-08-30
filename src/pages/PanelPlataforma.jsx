@@ -89,16 +89,17 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
         if (!editingUser) return;
         setSavingUser(true);
         try {
-            const { error } = await api('/admin/plataforma', {
-                method: 'PATCH',
+            const res = await api('/admin/plataforma', {
+                method: 'POST',
                 body: {
+                    action: 'update',
                     user_id: editingUser.id,
                     full_name: editingUser.full_name,
                     role: editingUser.role,
                     group_id: editingUser.group_id
                 }
             });
-            if (error) throw new Error(error.message);
+            if (res?.error) throw new Error(res.error.message || res.error || 'Error al guardar');
 
             // Actualizar lista local de usuarios
             setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, full_name: editingUser.full_name, role: editingUser.role } : u));
@@ -126,11 +127,11 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const handleRoleChange = async (userId, newRole) => {
         setUpdatingUserId(userId);
         try {
-            const { error } = await api('/admin/plataforma', {
-                method: 'PATCH',
-                body: { user_id: userId, role: newRole }
+            const res = await api('/admin/plataforma', {
+                method: 'POST',
+                body: { action: 'update', user_id: userId, role: newRole }
             });
-            if (error) throw new Error(error.message);
+            if (res?.error) throw new Error(res.error.message || res.error || 'Error al cambiar rol');
 
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
             showToast('success', 'Rol actualizado con éxito');
@@ -148,11 +149,11 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
         }
 
         try {
-            const { error } = await api('/admin/plataforma', {
-                method: 'DELETE',
-                body: { user_id: user.id }
+            const res = await api('/admin/plataforma', {
+                method: 'POST',
+                body: { action: 'delete', user_id: user.id }
             });
-            if (error) throw new Error(error.message);
+            if (res?.error) throw new Error(res.error.message || res.error || 'Error al eliminar usuario');
 
             setUsers(prev => prev.filter(u => u.id !== user.id));
             setUserGroups(prev => {

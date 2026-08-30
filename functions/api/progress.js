@@ -2,6 +2,7 @@
 
 export async function onRequestGet({ env, data }) {
   const userId = data.user.id;
+  const userEmail = (data.user.email || '').toLowerCase();
 
   // 1. Asegurar tablas necesarias
   await env.DB.prepare(`
@@ -32,18 +33,18 @@ export async function onRequestGet({ env, data }) {
   `).run();
 
   try {
-    // 2. Obtener todas las lecciones completadas por el usuario
+    // 2. Obtener todas las lecciones completadas por el usuario (buscando por ID o por email)
     const { results: completedLessons } = await env.DB.prepare(
-      "SELECT lesson_id, status, progress, updated_at FROM progreso_lecciones WHERE user_id = ? AND (status = 'completed' OR progress = 100)"
-    ).bind(userId).all();
+      "SELECT DISTINCT lesson_id FROM progreso_lecciones WHERE (user_id = ? OR LOWER(user_id) = LOWER(?)) AND (status = 'completed' OR progress = 100)"
+    ).bind(userId, userEmail).all();
 
     const completedLessonIds = (completedLessons || []).map(r => r.lesson_id);
     const lessonsCount = completedLessonIds.length;
 
     // 3. Obtener exámenes completados y acumulación de puntos (Cloudflare D1)
     const examStats = await env.DB.prepare(
-      "SELECT COUNT(*) as total_exams, SUM(COALESCE(score, 0)) as total_points, AVG(score) as avg_grade, MAX(score) as max_score FROM intentos_evaluacion WHERE user_id = ? AND (completed_at IS NOT NULL OR score > 0)"
-    ).bind(userId).first();
+      "SELECT COUNT(*) as total_exams, SUM(COALESCE(score, 0)) as total_points, AVG(score) as avg_grade, MAX(score) as max_score FROM intentos_evaluacion WHERE (user_id = ? OR LOWER(user_id) = LOWER(?)) AND (finished_at IS NOT NULL OR score > 0)"
+    ).bind(userId, userEmail).first();
 
     const examsCompleted = examStats?.total_exams || 0;
     const totalPoints = examStats?.total_points || 0;

@@ -1,8 +1,14 @@
 // ── API de Administración de Plataforma (Cloudflare D1) ──────────────────────
 
-export async function onRequestGet({ env, data }) {
+function checkIsAdmin(data, env) {
   const role = (data.user?.role || '').toLowerCase();
-  if (role !== 'admin') {
+  const email = (data.user?.email || '').toLowerCase();
+  const adminEmail = (env.ADMIN_EMAIL || '').toLowerCase();
+  return role === 'admin' || role === 'docente' || role === 'profesor' || (adminEmail && email === adminEmail);
+}
+
+export async function onRequestGet({ env, data }) {
+  if (!checkIsAdmin(data, env)) {
     return Response.json({ error: 'Solo administradores' }, { status: 403 });
   }
 
@@ -36,7 +42,6 @@ export async function onRequestGet({ env, data }) {
       } catch {}
     }
 
-    // Cursos disponibles
     let cursos = [];
     try {
       const { results } = await env.DB.prepare('SELECT id, name, abbr, slug FROM cursos').all();
@@ -63,9 +68,8 @@ export async function onRequestGet({ env, data }) {
   }
 }
 
-export async function onRequestPatch({ request, env, data }) {
-  const adminRole = (data.user?.role || '').toLowerCase();
-  if (adminRole !== 'admin') {
+export async function onRequestPost({ request, env, data }) {
+  if (!checkIsAdmin(data, env)) {
     return Response.json({ error: 'Solo administradores' }, { status: 403 });
   }
 
@@ -78,13 +82,56 @@ export async function onRequestPatch({ request, env, data }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
+  if (body.action === 'delete') {
+    return await executeDeleteUser(body.user_id, env, data);
+  }
+
+  return await executeUpdateUser(body, env, data);
+}
+
+export async function onRequestPatch({ request, env, data }) {
+  if (!checkIsAdmin(data, env)) {
+    return Response.json({ error: 'Solo administradores' }, { status: 403 });
+  }
+
+  await ensureAdminTables(env);
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'JSON inválido' }, { status: 400 });
+  }
+
+  return await executeUpdateUser(body, env, data);
+}
+
+export async function onRequestDelete({ request, env, data }) {
+  if (!checkIsAdmin(data, env)) {
+    return Response.json({ error: 'Solo administradores' }, { status: 403 });
+  }
+
+  await ensureAdminTables(env);
+
+  let userId;
+  try {
+    const body = await request.json();
+    userId = body?.user_id;
+  } catch {
+    const url = new URL(request.url);
+    userId = url.searchParams.get('user_id');
+  }
+
+  return await executeDeleteUser(userId, env, data);
+}
+
+async function executeUpdateUser(body, env, data) {
   const { user_id, full_name, role, group_id } = body;
   if (!user_id) {
     return Response.json({ error: 'Falta user_id' }, { status: 400 });
   }
 
   try {
-    // 1. Obtener perfil canónico para tener su ID exacto y su email
     const profileRow = await env.DB.prepare(
       'SELECT id, email, full_name, role FROM perfiles WHERE id = ? OR LOWER(email) = LOWER(?)'
     ).bind(user_id, user_id).first();
@@ -92,7 +139,7 @@ export async function onRequestPatch({ request, env, data }) {
     const targetUserId = profileRow?.id || user_id;
     const targetEmail = (profileRow?.email || user_id).toLowerCase();
 
-    // 2. Actualizar datos en perfiles si se enviaron
+    // 1. Actualizar datos en perfiles si se enviaron
     if (role !== undefined || full_name !== undefined) {
       await env.DB.prepare(`
         UPDATE perfiles SET
@@ -102,7 +149,7 @@ export async function onRequestPatch({ request, env, data }) {
       `).bind(role || null, full_name || null, targetUserId, targetEmail).run();
     }
 
-    // 3. Si se solicitó asignar o cambiar grupo
+    // 2. Si se solicitó asignar o cambiar grupo
     if (group_id !== undefined) {
       // Retirar del grupo actual si existe
       await env.DB.prepare(
@@ -119,7 +166,7 @@ export async function onRequestPatch({ request, env, data }) {
         ).bind(targetUserId, targetGid).run();
 
         // Buscar el curso del grupo para inscribir al usuario
-        let courseId = (targetGid === 5) ? 5 : 1;
+        let courseId = (targetGid === 5 || targetGid === 4) ? 5 : 1;
         try {
           const groupRow = await env.DB.prepare(
             'SELECT course_id, name FROM grupos WHERE id = ? OR CAST(id AS TEXT) = ?'
@@ -134,13 +181,12 @@ export async function onRequestPatch({ request, env, data }) {
           }
         } catch {}
 
-        // Inscribir en la tabla inscripciones
+        // Inscribir en inscripciones
         try {
           await env.DB.prepare(
             'INSERT OR REPLACE INTO inscripciones (user_id, course_id, group_id) VALUES (?, ?, ?)'
           ).bind(targetUserId, courseId, targetGid).run();
         } catch {
-          // Fallback por si la tabla no tiene group_id
           try {
             await env.DB.prepare(
               'INSERT OR REPLACE INTO inscripciones (user_id, course_id) VALUES (?, ?)'
@@ -150,7 +196,7 @@ export async function onRequestPatch({ request, env, data }) {
           }
         }
 
-        // Auto-aprobar si tenía solicitud pendiente
+        // Auto-aprobar solicitud si existía
         try {
           await env.DB.prepare(
             "UPDATE solicitudes_acceso SET status = 'approved' WHERE LOWER(email) = LOWER(?)"
@@ -161,39 +207,22 @@ export async function onRequestPatch({ request, env, data }) {
 
     return Response.json({ success: true, message: 'Usuario actualizado con éxito' });
   } catch (err) {
-    console.error('Error in onRequestPatch plataforma:', err);
+    console.error('Error in executeUpdateUser:', err);
     return Response.json({ error: err.message || 'Error al actualizar usuario' }, { status: 500 });
   }
 }
 
-export async function onRequestDelete({ request, env, data }) {
-  const adminRole = (data.user?.role || '').toLowerCase();
-  if (adminRole !== 'admin') {
-    return Response.json({ error: 'Solo administradores' }, { status: 403 });
-  }
-
-  await ensureAdminTables(env);
-
-  let userId;
-  try {
-    const body = await request.json();
-    userId = body.user_id;
-  } catch {
-    const url = new URL(request.url);
-    userId = url.searchParams.get('user_id');
-  }
-
+async function executeDeleteUser(userId, env, data) {
   if (!userId) {
     return Response.json({ error: 'Falta user_id' }, { status: 400 });
   }
 
-  // Protección: No permitir eliminar al propio admin logueado
+  // Protección: No permitir eliminar al propio usuario autenticado
   if (userId === data.user.id || (data.user.email && userId.toLowerCase() === data.user.email.toLowerCase())) {
     return Response.json({ error: 'No puedes eliminar tu propia cuenta de administrador' }, { status: 400 });
   }
 
   try {
-    // Obtener email del perfil antes de borrar
     const profileRow = await env.DB.prepare(
       'SELECT id, email FROM perfiles WHERE id = ? OR LOWER(email) = LOWER(?)'
     ).bind(userId, userId).first();
@@ -230,7 +259,7 @@ export async function onRequestDelete({ request, env, data }) {
 
     return Response.json({ success: true, message: 'Usuario eliminado correctamente' });
   } catch (err) {
-    console.error('Error in onRequestDelete plataforma:', err);
+    console.error('Error in executeDeleteUser:', err);
     return Response.json({ error: err.message || 'Error al eliminar usuario' }, { status: 500 });
   }
 }

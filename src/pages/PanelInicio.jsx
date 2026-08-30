@@ -40,11 +40,18 @@ const PanelInicio = () => {
     const fullName = profile?.full_name?.split(' ')[0] || userMetadata.full_name?.split(' ')[0] || userMetadata.name?.split(' ')[0] || 'Estudiante';
 
     useEffect(() => {
+        if (cachedProgress) {
+            setUserProgress(cachedProgress);
+        }
+    }, [cachedProgress]);
+
+    useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user) return;
 
             if (!cachedProgress) {
-                await refreshUserProgress();
+                const freshProg = await refreshUserProgress();
+                if (freshProg) setUserProgress(freshProg);
             } else {
                 setUserProgress(cachedProgress);
             }
@@ -100,8 +107,9 @@ const PanelInicio = () => {
         fetchDashboardData();
     }, [user, cachedProgress, refreshUserProgress]);
 
-    const streakDays = userProgress?.streak_days || 0;
-    const lessonsCompleted = userProgress?.lessons_completed || 0;
+    const completedLessonsCount = Object.keys(completedLessonsMap).length;
+    const lessonsCompleted = Math.max(userProgress?.lessons_completed || 0, completedLessonsCount);
+    const streakDays = userProgress?.streak_days || (lessonsCompleted > 0 ? 1 : 0);
     
     // Rango y progresión STEAM
     const rank = getRankByLessons(lessonsCompleted);
@@ -120,13 +128,13 @@ const PanelInicio = () => {
     const allCourseLessons = courseModules.flatMap(m => (m.lessons || []).map(l => ({ ...l, moduleId: m.id, moduleName: m.name })));
     const totalLessons = hasEnrolledCourses ? (allCourseLessons.length || 16) : 0;
 
-    const completedLessonsCount = allCourseLessons.filter(l => 
+    const courseCompletedCount = allCourseLessons.filter(l => 
         completedLessonsMap[l.id] || 
         completedLessonsMap[l.id.toLowerCase()] || 
         completedLessonsMap[`ee-${l.moduleId}-${l.id}`]
     ).length;
 
-    const courseProgressPercent = totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
+    const courseProgressPercent = totalLessons > 0 ? Math.round((courseCompletedCount / totalLessons) * 100) : 0;
 
     let nextLessonTarget = null;
     let lastCompletedLesson = null;

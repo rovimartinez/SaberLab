@@ -312,10 +312,12 @@ export const AuthProvider = ({ children }) => {
             return course;
           }));
         }
+        return data;
       }
     } catch (err) {
       console.error('Error loading user progress:', err);
     }
+    return null;
   };
 
   const getLatestAccessRequest = async (email) => {

@@ -13,11 +13,18 @@ const PanelProgreso = () => {
     const [timeRange, setTimeRange] = useState('week');
 
     useEffect(() => {
+        if (cachedProgress) {
+            setUserProgress(cachedProgress);
+        }
+    }, [cachedProgress]);
+
+    useEffect(() => {
         const fetchData = async () => {
             if (!user) return;
 
             if (!cachedProgress) {
-                await refreshUserProgress();
+                const freshProg = await refreshUserProgress();
+                if (freshProg) setUserProgress(freshProg);
             } else {
                 setUserProgress(cachedProgress);
             }
