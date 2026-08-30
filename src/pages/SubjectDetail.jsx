@@ -370,8 +370,8 @@ const SubjectDetail = () => {
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <span className="lesson-duration-text" style={{ color: isExamHidden ? '#64748b' : '#94a3b8' }}>
-                                                                    {isExamHidden ? 'Bloqueado por el docente' : `Fecha programada: ${module.evaluation.date}`}
+                                                                <span className="lesson-duration-text" style={{ color: '#94a3b8' }}>
+                                                                    {module.evaluation.date ? `Fecha: ${module.evaluation.date}` : 'Evaluación del módulo'}
                                                                 </span>
                                                             </div>
                                                             <div className="lesson-action-area">
