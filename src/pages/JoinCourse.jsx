@@ -34,6 +34,7 @@ export default function JoinCourse() {
             setEnrolledCourse(data.curso);
             setStatus('success');
             sessionStorage.removeItem('pending_join_code');
+            localStorage.removeItem('pending_join_code');
 
             if (refreshSession) {
                 await refreshSession();
@@ -41,16 +42,22 @@ export default function JoinCourse() {
             if (refreshEnrolledCourses) {
                 await refreshEnrolledCourses();
             }
+
+            // Redirigir automáticamente al curso tras breve confirmación
+            setTimeout(() => {
+                const targetSlug = data.curso?.slug || 'robotica-educativa';
+                navigate(`/dashboard/my-courses/${targetSlug}`, { replace: true });
+            }, 1800);
         } catch (err) {
             setErrorMsg(err.message || 'No fue posible unirse al curso con este enlace');
             setStatus('error');
         }
-    }, [refreshSession, refreshEnrolledCourses]);
+    }, [refreshSession, refreshEnrolledCourses, navigate]);
 
     useEffect(() => {
         if (authLoading) return;
 
-        const targetCode = codeFromUrl || sessionStorage.getItem('pending_join_code');
+        const targetCode = codeFromUrl || localStorage.getItem('pending_join_code') || sessionStorage.getItem('pending_join_code');
 
         if (targetCode) {
             if (user) {
@@ -60,10 +67,20 @@ export default function JoinCourse() {
                 }
             } else {
                 // Guardar código para después de que inicie sesión
+                localStorage.setItem('pending_join_code', targetCode);
                 sessionStorage.setItem('pending_join_code', targetCode);
             }
         }
     }, [authLoading, user, codeFromUrl, executeJoin]);
+
+    const handleGoogleLogin = () => {
+        const targetCode = codeFromUrl || manualCode || localStorage.getItem('pending_join_code') || sessionStorage.getItem('pending_join_code');
+        if (targetCode) {
+            localStorage.setItem('pending_join_code', targetCode);
+            sessionStorage.setItem('pending_join_code', targetCode);
+        }
+        window.location.assign(`/api/auth/start?join_code=${encodeURIComponent(targetCode || '')}`);
+    };
 
     const handleManualSubmit = (e) => {
         e.preventDefault();
@@ -142,16 +159,16 @@ export default function JoinCourse() {
                         </h2>
 
                         <p style={{ color: '#94a3b8', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-                            Para unirte automáticamente con este enlace directo ({codeFromUrl || 'Código'}), por favor inicia sesión con tu cuenta escolar.
+                            Para unirte de forma automática con este enlace directo ({codeFromUrl || manualCode || 'Código'}), continúa con tu cuenta de Google.
                         </p>
 
                         <button
-                            onClick={() => navigate('/login')}
+                            onClick={handleGoogleLogin}
                             style={{
                                 width: '100%',
-                                background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                                background: '#ffffff',
                                 color: '#0f172a',
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 fontSize: '1rem',
                                 padding: '1rem',
                                 borderRadius: '14px',
@@ -160,12 +177,33 @@ export default function JoinCourse() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: '0.5rem',
-                                boxShadow: '0 8px 20px rgba(56, 189, 248, 0.3)'
+                                gap: '0.75rem',
+                                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.4)',
+                                transition: 'all 0.2s ease',
+                                marginBottom: '1rem'
                             }}
                         >
-                            <LogIn size={18} />
-                            <span>Iniciar Sesión para Unirme</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                            <span>Continuar con Google y Unirme</span>
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/login')}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#94a3b8',
+                                fontSize: '0.85rem',
+                                cursor: 'pointer',
+                                textDecoration: 'underline'
+                            }}
+                        >
+                            Otras opciones de inicio de sesión
                         </button>
                     </div>
                 ) : status === 'success' ? (
@@ -199,7 +237,7 @@ export default function JoinCourse() {
                             border: '1px solid rgba(16, 185, 129, 0.3)',
                             borderRadius: '16px',
                             padding: '1.25rem',
-                            marginBottom: '2rem'
+                            marginBottom: '1.5rem'
                         }}>
                             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#fff' }}>
                                 {enrolledCourse?.name || 'Curso Asignado'}
@@ -207,7 +245,10 @@ export default function JoinCourse() {
                         </div>
 
                         <button
-                            onClick={() => navigate('/dashboard/my-courses')}
+                            onClick={() => {
+                                const targetSlug = enrolledCourse?.slug || 'robotica-educativa';
+                                navigate(`/dashboard/my-courses/${targetSlug}`, { replace: true });
+                            }}
                             style={{
                                 width: '100%',
                                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
@@ -228,6 +269,9 @@ export default function JoinCourse() {
                             <span>Ir al Curso Ahora</span>
                             <ArrowRight size={18} />
                         </button>
+                        <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.75rem', marginBottom: 0 }}>
+                            Entrando al curso automáticamente...
+                        </p>
                     </div>
                 ) : status === 'error' ? (
                     /* Error / Código vencido */

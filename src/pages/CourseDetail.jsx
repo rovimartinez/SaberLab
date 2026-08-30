@@ -47,6 +47,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     const [studentsModal, setStudentsModal] = useState({ isOpen: false, group: null, students: [] });
     const [studentsList, setStudentsList] = useState([]);
     const [showStudentsModal, setShowStudentsModal] = useState(false);
+    const [selectedGroupForStudents, setSelectedGroupForStudents] = useState(null);
+    const [deletingStudentId, setDeletingStudentId] = useState(null);
     const [editCourseModal, setEditCourseModal] = useState({ isOpen: false, name: '', teacher: '' });
     const [editGroupModal, setEditGroupModal] = useState({ isOpen: false, group: null, name: '', teacher: '' });
     const [codeModal, setCodeModal] = useState({ isOpen: false, group: null, code: null, codeId: null, expiresAt: null });
@@ -122,12 +124,60 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     }, []);
 
     const openStudentsModal = async (group) => {
+        setSelectedGroupForStudents(group);
         const groupId = String(group.id);
         
-        const { data } = await api(`/groups?group_id=${encodeURIComponent(groupId)}`);
-        
-        setStudentsList(data || []);
+        try {
+            const { data } = await api(`/groups?group_id=${encodeURIComponent(groupId)}`);
+            setStudentsList(data || []);
+        } catch (err) {
+            console.error('Error al cargar estudiantes del grupo:', err);
+            setStudentsList([]);
+        }
         setShowStudentsModal(true);
+    };
+
+    const handleRemoveStudentFromGroup = async (student) => {
+        if (!selectedGroupForStudents?.id) return;
+        const studentName = student.full_name || student.email || 'este estudiante';
+        if (!window.confirm(`¿Deseas eliminar a "${studentName}" de este grupo y del curso?`)) {
+            return;
+        }
+
+        setDeletingStudentId(student.id);
+        try {
+            const { error } = await api('/groups', {
+                method: 'PATCH',
+                body: {
+                    group_id: selectedGroupForStudents.id,
+                    user_id: student.id,
+                    course_id: course?.id
+                }
+            });
+
+            if (error) {
+                alert(error.message || 'Error al desvincular estudiante');
+                return;
+            }
+
+            // Actualizar lista local del modal
+            setStudentsList(prev => prev.filter(s => s.id !== student.id));
+
+            // Actualizar contador del grupo en pantalla
+            setDbGroups(prev => prev.map(g => {
+                if (g.id === selectedGroupForStudents.id) {
+                    return { ...g, studentCount: Math.max(0, (g.studentCount || 1) - 1) };
+                }
+                return g;
+            }));
+
+            showDbToast('success', 'Estudiante Desvinculado', `"${studentName}" fue retirado del grupo con éxito.`);
+        } catch (err) {
+            console.error('Error desvinculando estudiante:', err);
+            alert('No fue posible retirar al estudiante');
+        } finally {
+            setDeletingStudentId(null);
+        }
     };
 
     const openEditCourseModal = () => {
@@ -780,50 +830,108 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             {showStudentsModal && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     zIndex: 9999
                 }} onClick={() => setShowStudentsModal(false)}>
                     <div style={{
-                        background: '#1e293b', padding: '1.5rem', borderRadius: '12px',
-                        maxWidth: '400px', width: '90%', maxHeight: '80vh', overflow: 'auto',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                        background: '#1e293b', padding: '1.5rem', borderRadius: '16px',
+                        maxWidth: '460px', width: '92%', maxHeight: '82vh', overflow: 'hidden',
+                        display: 'flex', flexDirection: 'column',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
                     }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ color: 'white', margin: 0 }}>Estudiantes del Grupo</h3>
-                            <button onClick={() => setShowStudentsModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                            <div>
+                                <h3 style={{ color: 'white', margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>Estudiantes del Grupo</h3>
+                                {selectedGroupForStudents && (
+                                    <span style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                                        {selectedGroupForStudents.name} ({studentsList.length} alumno{studentsList.length !== 1 ? 's' : ''})
+                                    </span>
+                                )}
+                            </div>
+                            <button onClick={() => setShowStudentsModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.35rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
                                 <X size={20} />
                             </button>
                         </div>
-                        {studentsList.length === 0 ? (
-                            <p style={{ color: '#94a3b8' }}>No hay estudiantes</p>
-                        ) : (
-                            studentsList.map(s => (
-                                <div key={s.id} style={{
-                                    display: 'flex', alignItems: 'center', gap: '0.75rem',
-                                    padding: '0.5rem'
-                                }}>
-                                    {s.avatar_url ? (
-                                        <img 
-                                            src={s.avatar_url} 
-                                            alt={s.full_name || 'Avatar'}
-                                            style={{
-                                                width: 32, height: 32, borderRadius: '4px',
-                                                objectFit: 'cover', background: 'white'
-                                            }}
-                                        />
-                                    ) : (
-                                        <div style={{
-                                            width: 32, height: 32, borderRadius: '50%', background: '#3b82f6',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: 'white', fontWeight: 'bold', fontSize: '0.875rem'
-                                        }}>
-                                            {(s.full_name || '?').charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                    <span style={{ color: 'white' }}>{s.full_name || 'Sin nombre'}</span>
+
+                        <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+                            {studentsList.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
+                                    <Users size={36} style={{ opacity: 0.35, margin: '0 auto 0.5rem', display: 'block' }} />
+                                    <p style={{ margin: 0, fontSize: '0.92rem' }}>No hay estudiantes inscritos en este grupo</p>
                                 </div>
-                            ))
-                        )}
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {studentsList.map(s => (
+                                        <div key={s.id} style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            padding: '0.65rem 0.85rem',
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            borderRadius: '12px',
+                                            border: '1px solid rgba(255, 255, 255, 0.06)'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                                                {s.avatar_url ? (
+                                                    <img 
+                                                        src={s.avatar_url} 
+                                                        alt={s.full_name || 'Avatar'}
+                                                        style={{
+                                                            width: 36, height: 36, borderRadius: '50%',
+                                                            objectFit: 'cover', background: '#334155', flexShrink: 0
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div style={{
+                                                        width: 36, height: 36, borderRadius: '50%',
+                                                        background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: 'white', fontWeight: 'bold', fontSize: '0.9rem', flexShrink: 0
+                                                    }}>
+                                                        {(s.full_name || s.email || '?').charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div style={{ minWidth: 0 }}>
+                                                    <div style={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.92rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {s.full_name || 'Sin nombre'}
+                                                    </div>
+                                                    {s.email && (
+                                                        <div style={{ color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                            {s.email}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleRemoveStudentFromGroup(s)}
+                                                disabled={deletingStudentId === s.id}
+                                                title={`Eliminar a ${s.full_name || 'estudiante'} del grupo`}
+                                                style={{
+                                                    background: 'rgba(239, 68, 68, 0.12)',
+                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                    color: '#f87171',
+                                                    padding: '6px 10px',
+                                                    borderRadius: '8px',
+                                                    cursor: deletingStudentId === s.id ? 'not-allowed' : 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    fontSize: '0.78rem',
+                                                    fontWeight: 600,
+                                                    flexShrink: 0,
+                                                    transition: 'all 0.15s ease'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'}
+                                            >
+                                                <Trash2 size={13} />
+                                                <span>{deletingStudentId === s.id ? 'Borrando...' : 'Eliminar'}</span>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

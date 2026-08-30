@@ -6,14 +6,15 @@ export async function onRequestGet({ request, env, data }) {
   const groupId = url.searchParams.get('group_id');
 
   if (groupId) {
+    const numGroupId = parseInt(groupId, 10);
     const { results } = await env.DB.prepare(
-      `SELECT p.id, p.email, p.full_name
+      `SELECT p.id, p.email, p.full_name, p.avatar_url
        FROM grupos_usuario gu
        JOIN perfiles p ON p.id = gu.user_id
-       WHERE gu.group_id = ?`
-    ).bind(groupId).all();
+       WHERE gu.group_id = ? OR gu.group_id = ? OR CAST(gu.group_id AS TEXT) = ?`
+    ).bind(isNaN(numGroupId) ? groupId : numGroupId, groupId, groupId).all();
 
-    return Response.json(results);
+    return Response.json(results || []);
   }
 
   if (courseId) {
@@ -86,8 +87,9 @@ export async function onRequestPost({ request, env, data }) {
 export async function onRequestPatch({ request, env, data }) {
   await ensureGroupsSchema(env);
 
-  if (data.user.role !== 'admin') {
-    return Response.json({ error: 'Solo administradores' }, { status: 403 });
+  const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(data.user?.role);
+  if (!isStaff) {
+    return Response.json({ error: 'Solo administradores o docentes' }, { status: 403 });
   }
 
   let body;
@@ -97,7 +99,7 @@ export async function onRequestPatch({ request, env, data }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { group_id, user_id } = body;
+  const { group_id, user_id, course_id } = body;
   if (!group_id || !user_id) {
     return Response.json({ error: 'Faltan group_id o user_id' }, { status: 400 });
   }
@@ -107,18 +109,55 @@ export async function onRequestPatch({ request, env, data }) {
     `DELETE FROM grupos_usuario WHERE (group_id = ? OR group_id = ? OR CAST(group_id AS TEXT) = ?) AND user_id = ?`
   ).bind(isNaN(numGroupId) ? group_id : numGroupId, group_id, group_id, user_id).run();
 
+  await env.DB.prepare(
+    `DELETE FROM inscripciones WHERE (group_id = ? OR group_id = ? OR CAST(group_id AS TEXT) = ?) AND user_id = ?`
+  ).bind(isNaN(numGroupId) ? group_id : numGroupId, group_id, group_id, user_id).run();
+
+  if (course_id) {
+    const numCourseId = parseInt(course_id, 10);
+    await env.DB.prepare(
+      `DELETE FROM inscripciones WHERE (course_id = ? OR course_id = ? OR CAST(course_id AS TEXT) = ?) AND user_id = ?`
+    ).bind(isNaN(numCourseId) ? course_id : numCourseId, course_id, course_id, user_id).run();
+  }
+
   return Response.json({ success: true });
 }
 
 export async function onRequestDelete({ request, env, data }) {
   await ensureGroupsSchema(env);
 
-  if (data.user.role !== 'admin') {
-    return Response.json({ error: 'Solo administradores' }, { status: 403 });
+  const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(data.user?.role);
+  if (!isStaff) {
+    return Response.json({ error: 'Solo administradores o docentes' }, { status: 403 });
   }
 
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
+  const userId = url.searchParams.get('user_id');
+  const groupId = url.searchParams.get('group_id') || id;
+  const courseId = url.searchParams.get('course_id');
+
+  // Si viene user_id, desvincular al estudiante
+  if (userId && groupId) {
+    const numGroupId = parseInt(groupId, 10);
+    await env.DB.prepare(
+      `DELETE FROM grupos_usuario WHERE (group_id = ? OR group_id = ? OR CAST(group_id AS TEXT) = ?) AND user_id = ?`
+    ).bind(isNaN(numGroupId) ? groupId : numGroupId, groupId, groupId, userId).run();
+
+    await env.DB.prepare(
+      `DELETE FROM inscripciones WHERE (group_id = ? OR group_id = ? OR CAST(group_id AS TEXT) = ?) AND user_id = ?`
+    ).bind(isNaN(numGroupId) ? groupId : numGroupId, groupId, groupId, userId).run();
+
+    if (courseId) {
+      const numCourseId = parseInt(course_id, 10);
+      await env.DB.prepare(
+        `DELETE FROM inscripciones WHERE (course_id = ? OR course_id = ? OR CAST(course_id AS TEXT) = ?) AND user_id = ?`
+      ).bind(isNaN(numCourseId) ? course_id : numCourseId, course_id, course_id, userId).run();
+    }
+
+    return Response.json({ success: true, removed_user_id: userId });
+  }
+
   if (!id) {
     return Response.json({ error: 'Falta el id' }, { status: 400 });
   }

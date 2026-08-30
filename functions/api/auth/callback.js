@@ -36,13 +36,17 @@ export async function onRequestGet({ request, env }) {
   const error = url.searchParams.get('error');
   const rawState = url.searchParams.get('state');
 
-  // Recuperar el origen exacto desde state o fallback
+  // Recuperar el origen exacto y código de invitación desde state o fallback
   let appUrl = getBaseAppUrl(request, env);
+  let joinCode = '';
   if (rawState) {
     try {
       const parsedState = JSON.parse(atob(rawState));
       if (parsedState?.appUrl) {
         appUrl = parsedState.appUrl;
+      }
+      if (parsedState?.joinCode) {
+        joinCode = parsedState.joinCode;
       }
     } catch {
       if (rawState.startsWith('http')) {
@@ -160,8 +164,11 @@ export async function onRequestGet({ request, env }) {
     // 6. Emitir nuestro token de sesión JWT
     const token = await createSessionToken(profile, env);
 
-    // 7. Redirigir al panel o a solicitud de acceso según el estado
-    const destination = isApproved ? '/dashboard' : '/request-access';
+    // 7. Redirigir al panel, solicitud de acceso o directamente a unirse al curso si viene de invitación
+    let destination = isApproved ? '/dashboard' : '/request-access';
+    if (joinCode) {
+      destination = `/join?code=${encodeURIComponent(joinCode)}`;
+    }
     return Response.redirect(`${appUrl}${destination}#token=${encodeURIComponent(token)}`, 302);
   } catch (err) {
     return new Response(`Auth callback error: ${err.message || err}`, { status: 500 });

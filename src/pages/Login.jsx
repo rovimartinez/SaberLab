@@ -33,13 +33,23 @@ const Login = () => {
 
     // Redirigir si ya está autenticado (protección extra)
     if (user) {
-        navigate('/dashboard');
+        const pendingCode = localStorage.getItem('pending_join_code') || sessionStorage.getItem('pending_join_code');
+        if (pendingCode) {
+            navigate(`/join?code=${encodeURIComponent(pendingCode)}`, { replace: true });
+        } else {
+            navigate('/dashboard');
+        }
     }
 
     const handleGoogleLogin = async () => {
         setIsLoading(true);
         try {
-            await signInWithGoogle();
+            const pendingCode = localStorage.getItem('pending_join_code') || sessionStorage.getItem('pending_join_code');
+            if (pendingCode) {
+                window.location.assign(`/api/auth/start?join_code=${encodeURIComponent(pendingCode)}`);
+            } else {
+                await signInWithGoogle();
+            }
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
             window.alert(error?.message || 'No se pudo iniciar sesion con Google. Revisa la configuracion de Google OAuth y Cloudflare.');

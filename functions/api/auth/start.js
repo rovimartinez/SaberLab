@@ -35,10 +35,13 @@ export async function onRequestGet({ request, env }) {
   const appUrl = getBaseAppUrl(request, env);
   const redirectUri = new URL('/api/auth/callback', appUrl).toString();
 
-  // Encodear el origen en state para que el callback regrese con precisión
+  const url = new URL(request.url);
+  const joinCode = (url.searchParams.get('join_code') || url.searchParams.get('code') || '').trim().toUpperCase();
+
+  // Encodear el origen y joinCode en state para que el callback regrese con precisión
   let state = '';
   try {
-    state = btoa(JSON.stringify({ appUrl, t: Date.now() }));
+    state = btoa(JSON.stringify({ appUrl, joinCode, t: Date.now() }));
   } catch {
     state = appUrl;
   }

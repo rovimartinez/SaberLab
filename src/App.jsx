@@ -66,6 +66,10 @@ const PublicRoute = ({ children }) => {
     if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>Cargando...</div>;
 
     if (user) {
+        const pendingCode = localStorage.getItem('pending_join_code') || sessionStorage.getItem('pending_join_code');
+        if (pendingCode) {
+            return <Navigate to={`/join?code=${encodeURIComponent(pendingCode)}`} replace />;
+        }
         const isApproved = profile?.role === 'admin' || profile?.access_status === 'approved';
         return isApproved ? <Navigate to="/dashboard" replace /> : <Navigate to="/request-access" replace />;
     }

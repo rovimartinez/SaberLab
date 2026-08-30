@@ -398,12 +398,18 @@ export const AuthProvider = ({ children }) => {
         token = params.get('token');
         if (token) {
           setToken(token);
-          // Limpiar el hash para no dejar el token en la URL
-          window.history.replaceState(null, '', window.location.pathname);
+          // Limpiar solo el hash preservando los query params (?code=...)
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
         }
       }
 
       await validateSession(token);
+
+      // Si hay un código de invitación pendiente y no estamos en /join, redirigir a /join para auto-inscribir
+      const pendingCode = localStorage.getItem('pending_join_code') || sessionStorage.getItem('pending_join_code');
+      if (pendingCode && !window.location.pathname.startsWith('/join')) {
+        window.location.replace(`/join?code=${encodeURIComponent(pendingCode)}`);
+      }
     };
 
     initSession();
