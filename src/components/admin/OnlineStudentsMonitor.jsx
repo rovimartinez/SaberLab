@@ -247,7 +247,23 @@ export default function OnlineStudentsMonitor() {
                                     justifyContent: 'center',
                                     flexShrink: 0
                                 }}>
-                                    {(student.full_name || student.email || 'E')[0].toUpperCase()}
+                                    {student.avatar_url ? (
+                                        <img 
+                                            src={student.avatar_url} 
+                                            alt={student.full_name || 'Estudiante'} 
+                                            referrerPolicy="no-referrer"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                if (e.currentTarget.nextSibling) {
+                                                    e.currentTarget.nextSibling.style.display = 'block';
+                                                }
+                                            }}
+                                            style={{ width: '100%', height: '100%', borderRadius: '12px', objectFit: 'cover' }}
+                                        />
+                                    ) : null}
+                                    <span style={{ display: student.avatar_url ? 'none' : 'block' }}>
+                                        {(student.full_name || student.email || 'E')[0].toUpperCase()}
+                                    </span>
                                     <span style={{
                                         position: 'absolute',
                                         bottom: '-2px',
@@ -256,7 +272,8 @@ export default function OnlineStudentsMonitor() {
                                         height: '12px',
                                         borderRadius: '50%',
                                         background: '#10b981',
-                                        border: '2px solid #0f172a'
+                                        border: '2px solid #0f172a',
+                                        zIndex: 2
                                     }}></span>
                                 </div>
                                 <div style={{ overflow: 'hidden' }}>

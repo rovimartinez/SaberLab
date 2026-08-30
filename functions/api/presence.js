@@ -54,27 +54,30 @@ export async function onRequestPost({ request, env, data }) {
 export async function onRequestGet({ env, data }) {
   await ensurePresenceSchema(env);
 
-  const isStaff = data.user.role === 'admin' || data.user.role === 'docente';
+  const role = (data.user?.role || '').toLowerCase();
+  const isStaff = ['admin', 'docente', 'profesor', 'teacher'].includes(role);
   if (!isStaff) {
     return Response.json({ error: 'Solo docentes o administradores' }, { status: 403 });
   }
 
   try {
-    // Estudiantes activos en los últimos 2 minutos
+    // Estudiantes activos en los últimos 5 minutos
     const { results } = await env.DB.prepare(`
       SELECT 
-        user_id, 
-        email, 
-        full_name, 
-        role, 
-        current_page, 
-        activity, 
-        last_seen,
-        CAST((julianday('now') - julianday(last_seen)) * 86400 AS INTEGER) AS seconds_ago
-      FROM presencia_usuarios
-      WHERE datetime(last_seen) >= datetime('now', '-2 minutes')
-        AND (role = 'student' OR role IS NULL)
-      ORDER BY last_seen DESC
+        pu.user_id, 
+        pu.email, 
+        COALESCE(p.full_name, pu.full_name) AS full_name, 
+        p.avatar_url,
+        pu.role, 
+        pu.current_page, 
+        pu.activity, 
+        pu.last_seen,
+        CAST((julianday('now') - julianday(pu.last_seen)) * 86400 AS INTEGER) AS seconds_ago
+      FROM presencia_usuarios pu
+      LEFT JOIN perfiles p ON (p.id = pu.user_id OR LOWER(p.email) = LOWER(pu.email))
+      WHERE datetime(pu.last_seen) >= datetime('now', '-5 minutes')
+        AND (pu.role != 'admin' AND pu.role != 'docente' AND pu.role != 'profesor')
+      ORDER BY pu.last_seen DESC
     `).all();
 
     return Response.json({ online_students: results || [] });

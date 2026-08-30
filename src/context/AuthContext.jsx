@@ -468,6 +468,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{ 
         user, 
         profile: effectiveProfile, 
+        effectiveRole: effectiveProfile?.role || 'student',
         realRole,
         viewMode,
         isStaffUser,

@@ -128,19 +128,31 @@ export async function onRequestGet({ request, env }) {
     const userId = googleUser.id || email;
     const isAdmin = email === (env.ADMIN_EMAIL || '').toLowerCase();
     let profile = await env.DB.prepare(
-      'SELECT id, email, full_name, avatar_url, role FROM perfiles WHERE id = ?'
-    ).bind(userId).first();
+      'SELECT id, email, full_name, avatar_url, role FROM perfiles WHERE id = ? OR LOWER(email) = LOWER(?)'
+    ).bind(userId, email).first();
+
+    const avatarUrl = googleUser.picture || (profile ? profile.avatar_url : null);
+    const fullName = googleUser.name || (profile ? profile.full_name : null);
 
     if (!profile) {
       const role = isAdmin ? 'admin' : 'student';
       await env.DB.prepare(
         `INSERT INTO perfiles (id, email, full_name, avatar_url, role, created_at)
          VALUES (?, ?, ?, ?, ?, datetime('now'))`
-      ).bind(userId, email, googleUser.name || null, googleUser.picture || null, role).run();
-      profile = { id: userId, email, full_name: googleUser.name || null, avatar_url: googleUser.picture || null, role };
-    } else if (isAdmin && profile.role !== 'admin') {
-      await env.DB.prepare("UPDATE perfiles SET role = 'admin' WHERE id = ?").bind(userId).run();
-      profile.role = 'admin';
+      ).bind(userId, email, fullName, avatarUrl, role).run();
+      profile = { id: userId, email, full_name: fullName, avatar_url: avatarUrl, role };
+    } else {
+      // Actualizar avatar_url y full_name siempre que Google envíe datos nuevos
+      await env.DB.prepare(
+        `UPDATE perfiles SET 
+           avatar_url = COALESCE(?, avatar_url),
+           full_name = COALESCE(?, full_name),
+           role = CASE WHEN ? THEN 'admin' ELSE role END
+         WHERE id = ? OR LOWER(email) = LOWER(?)`
+      ).bind(avatarUrl, fullName, isAdmin ? 1 : 0, profile.id, email).run();
+      profile.avatar_url = avatarUrl || profile.avatar_url;
+      profile.full_name = fullName || profile.full_name;
+      if (isAdmin) profile.role = 'admin';
     }
 
     // 5. Gestionar solicitud de acceso para no administradores

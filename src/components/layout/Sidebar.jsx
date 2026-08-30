@@ -186,6 +186,10 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                 <img
                                     src={avatarUrl}
                                     alt={fullName}
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                    }}
                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                             </div>

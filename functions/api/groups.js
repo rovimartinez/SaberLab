@@ -10,7 +10,7 @@ export async function onRequestGet({ request, env, data }) {
     const { results } = await env.DB.prepare(
       `SELECT p.id, p.email, p.full_name, p.avatar_url
        FROM grupos_usuario gu
-       JOIN perfiles p ON p.id = gu.user_id
+       JOIN perfiles p ON (p.id = gu.user_id OR LOWER(p.email) = LOWER(gu.user_id))
        WHERE gu.group_id = ? OR gu.group_id = ? OR CAST(gu.group_id AS TEXT) = ?`
     ).bind(isNaN(numGroupId) ? groupId : numGroupId, groupId, groupId).all();
 

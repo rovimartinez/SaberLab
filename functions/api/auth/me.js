@@ -1,9 +1,10 @@
 export async function onRequestGet({ env, data }) {
   const userId = data.user.id;
+  const userEmail = data.user.email || '';
 
   const profile = await env.DB.prepare(
-    'SELECT id, email, full_name, avatar_url, role FROM perfiles WHERE id = ?'
-  ).bind(userId).first();
+    'SELECT id, email, full_name, avatar_url, role FROM perfiles WHERE id = ? OR LOWER(email) = LOWER(?)'
+  ).bind(userId, userEmail).first();
 
   if (!profile) {
     return Response.json({ error: 'Perfil no encontrado' }, { status: 404 });

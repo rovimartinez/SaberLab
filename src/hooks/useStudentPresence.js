@@ -6,12 +6,13 @@ import { api } from '../lib/api';
 const HEARTBEAT_INTERVAL_MS = 25000; // Cada 25 segundos
 
 export function useStudentPresence() {
-    const { user, effectiveRole } = useAuth();
+    const { user, profile, isStaff } = useAuth();
     const location = useLocation();
     const [pendingMessage, setPendingMessage] = useState(null);
     const lastDismissedIdRef = useRef(null);
 
-    const isStudent = Boolean(user && effectiveRole === 'student');
+    const userRole = (profile?.role || user?.role || 'student').toLowerCase();
+    const isStudent = Boolean(user && !isStaff && userRole !== 'admin' && userRole !== 'docente' && userRole !== 'profesor');
 
     const getActivityFromPath = (pathname) => {
         if (pathname.includes('/evaluations/') || pathname.includes('/re-m1-e2')) {

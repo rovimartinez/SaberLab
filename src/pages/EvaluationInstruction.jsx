@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Bell, Clock, ShieldCheck, Award, Zap, CheckCircle, Eye } from 'lucide-react';
+import { Bell, Clock, ShieldCheck, Award, Zap, CheckCircle, Eye, Lock } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
 import { getLessonInfo, LESSONS_REGISTRY } from '../data/coursesData.jsx';
 import '../styles/EvaluationInstruction.css';
@@ -8,6 +9,7 @@ import '../styles/EvaluationInstruction.css';
 const EvaluationInstruction = () => {
     const { evaluationKey } = useParams();
     const navigate = useNavigate();
+    const { isStaff, lessonVisibility } = useAuth();
     const [evaluation, setEvaluation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isResuming, setIsResuming] = useState(false);
@@ -258,6 +260,45 @@ const EvaluationInstruction = () => {
                             Salir a Evaluaciones
                         </button>
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Si el examen fue bloqueado por el docente, los estudiantes no pueden ingresar
+    const normKey = (evaluationKey || '').toLowerCase();
+    const isLocked = !isStaff && !isCompleted && (
+        Object.values(lessonVisibility || {}).some(courseMap => courseMap && (courseMap[normKey] === false || courseMap[evaluationKey] === false))
+    );
+
+    if (isLocked) {
+        return (
+            <div className="eval-instruction-container animate-fade-in" style={{ textAlign: 'center', padding: '3rem 1.5rem' }}>
+                <div style={{ maxWidth: '480px', margin: '2rem auto', background: 'rgba(30, 41, 59, 0.8)', borderRadius: '24px', padding: '2.5rem', border: '1px solid rgba(239, 68, 68, 0.3)', backdropFilter: 'blur(16px)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', border: '2px solid rgba(239, 68, 68, 0.4)' }}>
+                        <Lock size={32} />
+                    </div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f87171', marginBottom: '0.75rem' }}>
+                        Examen Bloqueado por el Docente
+                    </h2>
+                    <p style={{ color: '#94a3b8', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                        Esta evaluación no se encuentra habilitada en este momento. Consulta con tu profesor para que active el acceso a tu clase.
+                    </p>
+                    <button 
+                        onClick={() => navigate('/dashboard/my-courses')}
+                        style={{
+                            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                            border: 'none',
+                            color: '#fff',
+                            fontWeight: 700,
+                            padding: '0.85rem 1.75rem',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 15px rgba(2, 132, 199, 0.3)'
+                        }}
+                    >
+                        ← Volver a Mis Cursos
+                    </button>
                 </div>
             </div>
         );

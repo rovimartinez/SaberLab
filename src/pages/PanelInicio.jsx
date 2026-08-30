@@ -26,7 +26,7 @@ const getCourseColor = (abbr) => {
 };
 
 const PanelInicio = () => {
-    const { user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress } = useAuth();
+    const { user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress, lessonVisibility } = useAuth();
     const { openLauncher } = useApps();
     const navigate = useNavigate();
     
@@ -181,13 +181,22 @@ const PanelInicio = () => {
     const upcomingActivities = [];
     enrolledCourses.forEach(c => {
         const def = COURSES_DEFINITION.find(d => d.id === c.id || d.abbr === c.abbr || d.id === c.slug) || c;
+        const courseIdKey = def.id || c.id;
+        const courseVis = (lessonVisibility && (lessonVisibility[courseIdKey] || lessonVisibility[String(courseIdKey)] || lessonVisibility[def.abbr])) || {};
+
         if (def.modules) {
             def.modules.forEach((m, idx) => {
                 if (m.evaluation) {
-                    const evalKey = idx === 0 ? 'ee-m1-l6' : `ee-m${idx + 1}-l${idx === 1 ? 10 : (idx === 2 ? 14 : 16)}`;
+                    const evalKey = m.evaluation.id || (idx === 0 ? 'ee-m1-l6' : `ee-m${idx + 1}-l${idx === 1 ? 10 : (idx === 2 ? 14 : 16)}`);
                     const isDone = !!(completedAttemptsMap[evalKey] || completedAttemptsMap[evalKey.toLowerCase()]);
                     const attempt = completedAttemptsMap[evalKey] || completedAttemptsMap[evalKey.toLowerCase()];
                     const pointsEarned = attempt ? (attempt.points_obtained ?? attempt.totalPts ?? attempt.score ?? m.evaluation.points) : m.evaluation.points;
+
+                    // Un examen está bloqueado si el docente lo ocultó (false) o si es de un módulo futuro que no se ha habilitado explícitamente
+                    const isExplicitlyLocked = courseVis[evalKey] === false || courseVis[evalKey.toLowerCase()] === false;
+                    const isExplicitlyUnlocked = courseVis[evalKey] === true || courseVis[evalKey.toLowerCase()] === true;
+                    // Si el docente lo bloqueó O si es un módulo futuro no habilitado
+                    const isLocked = isExplicitlyLocked || (idx > 0 && !isExplicitlyUnlocked);
 
                     upcomingActivities.push({
                         id: `${def.id || def.slug}-${m.id}`,
@@ -198,6 +207,7 @@ const PanelInicio = () => {
                         points: m.evaluation.points,
                         pointsEarned,
                         isDone,
+                        isLocked,
                         type: 'Examen Oficial'
                     });
                 }
@@ -462,12 +472,16 @@ const PanelInicio = () => {
                                 <div 
                                     key={act.id} 
                                     className="agenda-item-row"
-                                    style={act.isDone ? { borderColor: 'rgba(16, 185, 129, 0.25)', background: 'rgba(16, 185, 129, 0.04)' } : {}}
+                                    style={act.isDone ? { borderColor: 'rgba(16, 185, 129, 0.25)', background: 'rgba(16, 185, 129, 0.04)' } : (act.isLocked ? { opacity: 0.85 } : {})}
                                 >
                                     <div className="agenda-item-left">
                                         <div className="agenda-badge-row">
                                             {act.isDone ? (
                                                 <span className="badge-pill done">✓ Rendido</span>
+                                            ) : act.isLocked ? (
+                                                <span className="badge-pill" style={{ background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                                                    🔒 Bloqueado
+                                                </span>
                                             ) : (
                                                 <span className="badge-pill upcoming">📅 {act.type}</span>
                                             )}
@@ -489,6 +503,25 @@ const PanelInicio = () => {
                                             >
                                                 <Eye size={13} />
                                             </Link>
+                                        ) : act.isLocked ? (
+                                            <div 
+                                                className="action-btn-mini locked"
+                                                title="Examen bloqueado por el docente"
+                                                style={{
+                                                    background: 'rgba(100, 116, 139, 0.12)',
+                                                    border: '1px solid rgba(100, 116, 139, 0.25)',
+                                                    color: '#64748b',
+                                                    cursor: 'not-allowed',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    borderRadius: '8px'
+                                                }}
+                                            >
+                                                <Lock size={13} />
+                                            </div>
                                         ) : (
                                             <Link 
                                                 to={`/dashboard/evaluations/${act.evalKey}`} 

@@ -875,21 +875,28 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                                     <img 
                                                         src={s.avatar_url} 
                                                         alt={s.full_name || 'Avatar'}
+                                                        referrerPolicy="no-referrer"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = 'none';
+                                                            if (e.currentTarget.nextSibling) {
+                                                                e.currentTarget.nextSibling.style.display = 'flex';
+                                                            }
+                                                        }}
                                                         style={{
                                                             width: 36, height: 36, borderRadius: '50%',
                                                             objectFit: 'cover', background: '#334155', flexShrink: 0
                                                         }}
                                                     />
-                                                ) : (
-                                                    <div style={{
-                                                        width: 36, height: 36, borderRadius: '50%',
-                                                        background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        color: 'white', fontWeight: 'bold', fontSize: '0.9rem', flexShrink: 0
-                                                    }}>
-                                                        {(s.full_name || s.email || '?').charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
+                                                ) : null}
+                                                <div style={{
+                                                    width: 36, height: 36, borderRadius: '50%',
+                                                    background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                                                    display: s.avatar_url ? 'none' : 'flex',
+                                                    alignItems: 'center', justifyContent: 'center',
+                                                    color: 'white', fontWeight: 'bold', fontSize: '0.9rem', flexShrink: 0
+                                                }}>
+                                                    {(s.full_name || s.email || '?').charAt(0).toUpperCase()}
+                                                </div>
                                                 <div style={{ minWidth: 0 }}>
                                                     <div style={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.92rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {s.full_name || 'Sin nombre'}

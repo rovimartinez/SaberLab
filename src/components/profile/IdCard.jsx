@@ -114,7 +114,7 @@ export default function IdCard({ user, profile, lessonsCompleted = 0 }) {
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
                             {avatarUrl
-                                ? <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ? <img src={avatarUrl} alt="Avatar" referrerPolicy="no-referrer" onError={(e) => e.currentTarget.style.display = 'none'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 : <span style={{ fontSize: '1.75rem' }}>{name.charAt(0).toUpperCase()}</span>
                             }
                         </div>
