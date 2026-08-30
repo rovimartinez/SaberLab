@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, FlaskConical, Box, Gift, ArrowRight, Trophy, Eye, Play, Sparkles } from 'lucide-react';
+import { PlayCircle, FileText, CheckCircle, Lock, Zap, Bot, BookOpen, FlaskConical, Box, Gift, ArrowRight, Trophy, Eye, Play, Sparkles, Award } from 'lucide-react';
 import { getCourseByIdentifier, getLessonInfo } from '../data/coursesData.jsx';
 import { gadgets } from '../data/gadgetsData';
 import { useAuth } from '../context/useAuth';
@@ -91,14 +91,24 @@ const SubjectDetail = () => {
         ];
     }, [courseModules]);
 
-    // Calcular progreso dinámico del curso
+    // Calcular progreso dinámico del curso (lecciones + exámenes de cada módulo)
     const { completedCount, totalLessonsCount, progressPercent } = useMemo(() => {
-        const all = courseModules.flatMap(m => (m.lessons || []).map(l => ({
+        const isExamLesson = (lessonId) => lessonId === 'ee-m1-l6' || lessonId === 'ee-m2-l10' || lessonId === 'ee-m3-l14' || lessonId === 'ee-m4-l16' || lessonId.endsWith('-eval');
+        const regularLessons = courseModules.flatMap(m => (m.lessons || []).filter(l => !isExamLesson(l.id)).map(l => ({
             ...l,
             normalizedId: normalizeLessonId(l.id, m.id)
         })));
-        const total = all.length;
-        const done = all.filter(l => completedLessons[l.normalizedId] || completedLessons[l.id]).length;
+        const evaluations = courseModules.filter(m => m.evaluation).map(m => {
+            const evalId = m.evaluation.id || `${abbr.toLowerCase()}-${m.id}-eval`;
+            return {
+                id: evalId,
+                normalizedId: evalId
+            };
+        });
+
+        const allItems = [...regularLessons, ...evaluations];
+        const total = allItems.length;
+        const done = allItems.filter(item => completedLessons[item.normalizedId] || completedLessons[item.id] || localStorage.getItem(`exam_completed_${item.id}`)).length;
         const pct = total > 0 ? Math.round((done / total) * 100) : 0;
         return { completedCount: done, totalLessonsCount: total, progressPercent: pct };
     }, [courseModules, completedLessons, abbr]);
@@ -183,12 +193,17 @@ const SubjectDetail = () => {
                                     </div>
                                     <div className="module-meta-info">
                                         {(() => {
-                                            const modLessons = module.lessons || [];
-                                            const doneCount = modLessons.filter(l => {
+                                            const isExamLesson = (lessonId) => lessonId === 'ee-m1-l6' || lessonId === 'ee-m2-l10' || lessonId === 'ee-m3-l14' || lessonId === 'ee-m4-l16' || lessonId.endsWith('-eval');
+                                            const regularLessons = (module.lessons || []).filter(l => !isExamLesson(l.id));
+                                            const hasExam = !!module.evaluation;
+                                            const evalId = module.evaluation ? (module.evaluation.id || `${abbr.toLowerCase()}-${module.id}-eval`) : null;
+                                            const isExamDone = hasExam && !!(completedLessons[evalId] || localStorage.getItem(`exam_completed_${evalId}`));
+                                            const doneCount = regularLessons.filter(l => {
                                                 const norm = normalizeLessonId(l.id, module.id);
-                                                return completedLessons[norm] || completedLessons[l.id] || localStorage.getItem(`exam_completed_${l.id}`);
-                                            }).length;
-                                            const isAllDone = modLessons.length > 0 && doneCount === modLessons.length;
+                                                return completedLessons[norm] || completedLessons[l.id];
+                                            }).length + (isExamDone ? 1 : 0);
+                                            const totalCount = regularLessons.length + (hasExam ? 1 : 0);
+                                            const isAllDone = totalCount > 0 && doneCount === totalCount;
 
                                             if (isAllDone) {
                                                 return (
@@ -199,7 +214,7 @@ const SubjectDetail = () => {
                                             }
                                             return (
                                                 <span style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
-                                                    {doneCount}/{modLessons.length} lecciones
+                                                    {doneCount}/{totalCount} lecciones y examen
                                                 </span>
                                             );
                                         })()}
@@ -208,92 +223,207 @@ const SubjectDetail = () => {
                                 </div>
                                 {expandedModules[module.id] && (
                                     <div className="lessons-list-premium">
-                                        {module.lessons.filter(lesson => {
-                                            const normalizedId = normalizeLessonId(lesson.id, module.id);
-                                            const visibility = courseVisibility[normalizedId];
-                                            return visibility === undefined || visibility === true || visibility === false;
-                                        }).map((lesson, lIdx) => {
-                                            const normalizedId = normalizeLessonId(lesson.id, module.id);
-                                            const visibility = courseVisibility[normalizedId];
-                                            const isHidden = visibility === false;
-                                            const isExam = lesson.id === 'ee-m1-l6' || lesson.id.endsWith('-l6') || lesson.id.endsWith('-l10') || lesson.id.endsWith('-l14') || lesson.id.endsWith('-l16');
-                                            const isCompleted = !!(completedLessons[normalizedId] || completedLessons[lesson.id] || (isExam && localStorage.getItem(`exam_completed_${lesson.id}`)));
-                                            const lessonInfo = getLessonInfo(lesson.id);
-                                            const lessonIndexStr = String(lIdx + 1).padStart(2, '0');
+                                        {(() => {
+                                            const isExamLesson = (lessonId) => lessonId === 'ee-m1-l6' || lessonId === 'ee-m2-l10' || lessonId === 'ee-m3-l14' || lessonId === 'ee-m4-l16' || lessonId.endsWith('-eval');
+                                            const regularLessons = (module.lessons || []).filter(l => !isExamLesson(l.id));
+                                            const hasExam = !!module.evaluation;
+                                            const evalId = module.evaluation ? (module.evaluation.id || `${abbr.toLowerCase()}-${module.id}-eval`) : null;
+                                            const isExamHidden = hasExam ? (courseVisibility[evalId] === false) : false;
+                                            const isExamCompleted = hasExam && !!(completedLessons[evalId] || localStorage.getItem(`exam_completed_${evalId}`));
 
                                             return (
-                                            <div key={lesson.id} className="lesson-item-improved">
-                                                <div className="lesson-indicator-line" style={isCompleted ? { background: '#10b981' } : {}}></div>
-                                                <div className="lesson-icon-circle" style={isCompleted ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', fontWeight: 800, fontSize: '0.8rem' } : {}}>
-                                                    {isHidden ? <Lock size={16} /> : isCompleted ? <CheckCircle size={18} color="#10b981" /> : <span>{lessonIndexStr}</span>}
-                                                </div>
-                                                <div className="lesson-main-info">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <h4 className="lesson-title-text" style={isHidden ? { opacity: 0.5 } : {}}>
-                                                            {lessonInfo.title || lesson.id}
-                                                        </h4>
-                                                        {isCompleted && !isHidden && (
-                                                            <span style={{ fontSize: '0.68rem', background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                                                                {isExam ? 'Aprobado ✓' : 'Completada ✓'}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="lesson-action-area">
-                                                    {isHidden ? (
-                                                        <div className="locked-badge"><Lock size={14} /></div>
-                                                    ) : (
-                                                        <button 
-                                                             className="lesson-btn-action"
-                                                             style={{ 
-                                                                 background: isCompleted 
-                                                                     ? 'rgba(16, 185, 129, 0.12)' 
-                                                                     : isExam 
-                                                                         ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                                                                         : subject.color, 
-                                                                 color: isCompleted ? '#10b981' : '#0f172a', 
-                                                                 border: isCompleted ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
-                                                                 display: 'inline-flex',
-                                                                 alignItems: 'center',
-                                                                 gap: '5px',
-                                                                 padding: '0.38rem 0.85rem',
-                                                                 borderRadius: '8px',
-                                                                 fontSize: '0.78rem',
-                                                                 fontWeight: 800,
-                                                                 cursor: 'pointer',
-                                                                 transition: 'all 0.2s ease'
-                                                             }}
-                                                             onClick={() => {
-                                                                 if (isExam) {
-                                                                     if (isCompleted) {
-                                                                         navigate(`/dashboard/evaluations/${normalizedId}/play?review=true`);
-                                                                     } else {
-                                                                         navigate(`/dashboard/evaluations/${normalizedId}`);
-                                                                     }
-                                                                 } else {
-                                                                     navigate(`/dashboard/my-courses/${subject.slug}/${module.id}/${lesson.id}`);
-                                                                 }
-                                                             }}
-                                                             title={isCompleted 
-                                                                 ? (isExam ? 'Ver Revisión del Examen' : 'Repasar Lección') 
-                                                                 : (isExam ? 'Ir al Examen Oficial' : 'Comenzar Lección')}
-                                                           >
-                                                             {isCompleted ? (
-                                                                <>
-                                                                    <Eye size={13} />
-                                                                    <span>{isExam ? 'Revisar' : 'Repasar'}</span>
-                                                                </>
-                                                             ) : (
-                                                                <>
-                                                                    <Play size={13} fill="currentColor" />
-                                                                    <span>Iniciar</span>
-                                                                </>
-                                                             )}
-                                                           </button>
+                                                <>
+                                                    {regularLessons.filter(lesson => {
+                                                        const normalizedId = normalizeLessonId(lesson.id, module.id);
+                                                        const visibility = courseVisibility[normalizedId];
+                                                        return visibility === undefined || visibility === true || visibility === false;
+                                                    }).map((lesson, lIdx) => {
+                                                        const normalizedId = normalizeLessonId(lesson.id, module.id);
+                                                        const visibility = courseVisibility[normalizedId];
+                                                        const isHidden = visibility === false;
+                                                        const isCompleted = !!(completedLessons[normalizedId] || completedLessons[lesson.id]);
+                                                        const lessonInfo = getLessonInfo(lesson.id);
+                                                        const lessonIndexStr = String(lIdx + 1).padStart(2, '0');
+
+                                                        return (
+                                                        <div key={lesson.id} className="lesson-item-improved">
+                                                            <div className="lesson-indicator-line" style={isCompleted ? { background: '#10b981' } : {}}></div>
+                                                            <div className="lesson-icon-circle" style={isCompleted ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', fontWeight: 800, fontSize: '0.8rem' } : {}}>
+                                                                {isHidden ? <Lock size={16} /> : isCompleted ? <CheckCircle size={18} color="#10b981" /> : <span>{lessonIndexStr}</span>}
+                                                            </div>
+                                                            <div className="lesson-main-info">
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <h4 className="lesson-title-text" style={isHidden ? { opacity: 0.5 } : {}}>
+                                                                        {lessonInfo.title || lesson.id}
+                                                                    </h4>
+                                                                    {isCompleted && !isHidden && (
+                                                                        <span style={{ fontSize: '0.68rem', background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                                                                            Completada ✓
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="lesson-action-area">
+                                                                {isHidden ? (
+                                                                    <div className="locked-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                        <Lock size={14} />
+                                                                        <span>Bloqueada</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button 
+                                                                        className="lesson-btn-action"
+                                                                        style={{ 
+                                                                            background: isCompleted 
+                                                                                ? 'rgba(16, 185, 129, 0.12)' 
+                                                                                : subject.color, 
+                                                                            color: isCompleted ? '#10b981' : '#0f172a', 
+                                                                            border: isCompleted ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '5px',
+                                                                            padding: '0.38rem 0.85rem',
+                                                                            borderRadius: '8px',
+                                                                            fontSize: '0.78rem',
+                                                                            fontWeight: 800,
+                                                                            cursor: 'pointer',
+                                                                            transition: 'all 0.2s ease'
+                                                                        }}
+                                                                        onClick={() => {
+                                                                            navigate(`/dashboard/my-courses/${subject.slug}/${module.id}/${lesson.id}`);
+                                                                        }}
+                                                                        title={isCompleted ? 'Repasar Lección' : 'Comenzar Lección'}
+                                                                    >
+                                                                        {isCompleted ? (
+                                                                            <>
+                                                                                <Eye size={13} />
+                                                                                <span>Repasar</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Play size={13} fill="currentColor" />
+                                                                                <span>Iniciar</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )})}
+
+                                                    {/* Examen / Evaluación Oficial al final del Módulo */}
+                                                    {hasExam && (
+                                                        <div 
+                                                            key={evalId} 
+                                                            className="lesson-item-improved" 
+                                                            style={{
+                                                                background: isExamHidden 
+                                                                    ? 'rgba(15, 23, 42, 0.5)' 
+                                                                    : isExamCompleted 
+                                                                        ? 'rgba(16, 185, 129, 0.06)' 
+                                                                        : 'rgba(245, 158, 11, 0.08)',
+                                                                border: isExamHidden 
+                                                                    ? '1px dashed rgba(255, 255, 255, 0.1)' 
+                                                                    : isExamCompleted 
+                                                                        ? '1px solid rgba(16, 185, 129, 0.35)' 
+                                                                        : '1px solid rgba(245, 158, 11, 0.38)',
+                                                                marginTop: '0.65rem'
+                                                            }}
+                                                        >
+                                                            <div className="lesson-indicator-line" style={isExamCompleted ? { background: '#10b981' } : isExamHidden ? { background: '#64748b' } : { background: '#f59e0b' }}></div>
+                                                            <div className="lesson-icon-circle" style={{
+                                                                background: isExamCompleted ? 'rgba(16, 185, 129, 0.15)' : isExamHidden ? 'rgba(255, 255, 255, 0.05)' : 'rgba(245, 158, 11, 0.15)',
+                                                                color: isExamCompleted ? '#10b981' : isExamHidden ? '#64748b' : '#fbbf24',
+                                                                borderColor: isExamCompleted ? 'rgba(16, 185, 129, 0.3)' : isExamHidden ? 'rgba(255, 255, 255, 0.1)' : 'rgba(245, 158, 11, 0.35)'
+                                                            }}>
+                                                                {isExamHidden ? <Lock size={16} /> : isExamCompleted ? <CheckCircle size={18} color="#10b981" /> : <Award size={18} color="#fbbf24" />}
+                                                            </div>
+                                                            <div className="lesson-main-info">
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                    <span style={{
+                                                                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                                                        color: '#fff',
+                                                                        fontSize: '0.68rem',
+                                                                        fontWeight: 900,
+                                                                        padding: '2px 7px',
+                                                                        borderRadius: '5px',
+                                                                        letterSpacing: '0.5px'
+                                                                    }}>
+                                                                        EXAMEN
+                                                                    </span>
+                                                                    <h4 className="lesson-title-text" style={isExamHidden ? { opacity: 0.5 } : {}}>
+                                                                        {module.evaluation.title}
+                                                                    </h4>
+                                                                    <span style={{
+                                                                        fontSize: '0.72rem',
+                                                                        background: isExamCompleted ? 'rgba(16, 185, 129, 0.12)' : 'rgba(251, 191, 36, 0.12)',
+                                                                        color: isExamCompleted ? '#34d399' : '#fbbf24',
+                                                                        border: isExamCompleted ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(251, 191, 36, 0.25)',
+                                                                        padding: '1px 6px',
+                                                                        borderRadius: '4px',
+                                                                        fontWeight: 800
+                                                                    }}>
+                                                                        {module.evaluation.points} pts
+                                                                    </span>
+                                                                    {isExamCompleted && !isExamHidden && (
+                                                                        <span style={{ fontSize: '0.68rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                                                                            Aprobado ✓
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="lesson-duration-text" style={{ color: isExamHidden ? '#64748b' : '#94a3b8' }}>
+                                                                    {isExamHidden ? 'Bloqueado por el docente' : `Fecha programada: ${module.evaluation.date}`}
+                                                                </span>
+                                                            </div>
+                                                            <div className="lesson-action-area">
+                                                                {isExamHidden ? (
+                                                                    <div className="locked-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                        <Lock size={14} />
+                                                                        <span>Bloqueado</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button
+                                                                        className="lesson-btn-action"
+                                                                        style={{
+                                                                            background: isExamCompleted ? 'rgba(16, 185, 129, 0.15)' : 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                                                            color: isExamCompleted ? '#10b981' : '#0f172a',
+                                                                            border: isExamCompleted ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '5px',
+                                                                            padding: '0.38rem 0.85rem',
+                                                                            borderRadius: '8px',
+                                                                            fontSize: '0.78rem',
+                                                                            fontWeight: 800,
+                                                                            cursor: 'pointer',
+                                                                            boxShadow: isExamCompleted ? 'none' : '0 4px 12px rgba(245, 158, 11, 0.25)'
+                                                                        }}
+                                                                        onClick={() => {
+                                                                            if (isExamCompleted) {
+                                                                                navigate(`/dashboard/evaluations/${evalId}/play?review=true`);
+                                                                            } else {
+                                                                                navigate(`/dashboard/evaluations/${evalId}`);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        {isExamCompleted ? (
+                                                                            <>
+                                                                                <Eye size={13} />
+                                                                                <span>Revisar</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Play size={13} fill="currentColor" />
+                                                                                <span>Presentar</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     )}
-                                                </div>
-                                            </div>
-                                        )})}
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 )}
                             </div>
@@ -301,129 +431,11 @@ const SubjectDetail = () => {
                     </div>
                 </div>
 
-                {/* ── Columna Derecha: Agenda + Tarjeta de Recompensas del Curso ── */}
+                {/* ── Columna Derecha: Mis Recompensas + Información del Curso ── */}
                 <div className="course-sidebar-improved">
-                    
-                    {/* 1. Agenda y Evaluación */}
-                    <div className="sidebar-card-premium agenda-container">
-                        <div className="sidebar-header-row">
-                            <div className="sidebar-header-icon" style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e' }}>
-                                <CheckCircle size={20} />
-                            </div>
-                            <h2 className="section-title-premium">Agenda y Evaluación</h2>
-                        </div>
-                        
-                        <div className="agenda-list">
-                            {agendaItems.map((item, index) => {
-                                const parts = item.title.split(' - ');
-                                const modulePart = parts[0];
-                                const mainTitle = parts.length > 1 ? parts.slice(1).join(' - ') : item.title;
-                                const evalKeyMap = { 0: 'ee-m1-l6', 1: 'ee-m2-l10', 2: 'ee-m3-l14', 3: 'ee-m4-l16' };
-                                const targetKey = evalKeyMap[index] || 'ee-m1-l6';
-                                const isDone = !!(completedLessons[targetKey] || localStorage.getItem(`exam_completed_${targetKey}`));
-                                
-                                const formatAgendaDate = (fullDate) => {
-                                    if (!fullDate) return '';
-                                    return fullDate
-                                        .replace(' de septiembre de ', ' Sep ')
-                                        .replace(' de octubre de ', ' Oct ')
-                                        .replace(' de noviembre de ', ' Nov ')
-                                        .replace(' de diciembre de ', ' Dic ')
-                                        .replace(' de enero de ', ' Ene ')
-                                        .replace(' de febrero de ', ' Feb ')
-                                        .replace(' de marzo de ', ' Mar ')
-                                        .replace(' de abril de ', ' Abr ')
-                                        .replace(' de mayo de ', ' May ')
-                                        .replace(' de junio de ', ' Jun ')
-                                        .replace(' de julio de ', ' Jul ')
-                                        .replace(' de agosto de ', ' Ago ');
-                                };
-
-                                return (
-                                    <div 
-                                        key={index} 
-                                        className="agenda-card-classic" 
-                                        style={{ 
-                                            padding: '0.75rem 0.9rem', 
-                                            cursor: 'pointer', 
-                                            transition: 'all 0.2s ease',
-                                            borderColor: isDone ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.07)',
-                                            background: isDone ? 'rgba(16, 185, 129, 0.04)' : 'rgba(30, 41, 59, 0.4)'
-                                        }}
-                                        onClick={() => {
-                                            if (isDone) {
-                                                navigate(`/dashboard/evaluations/${targetKey}/play?review=true`);
-                                            } else {
-                                                navigate(`/dashboard/evaluations/${targetKey}`);
-                                            }
-                                        }}
-                                        title={`Presentar ${item.title}`}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '0.75rem' }}>
-                                            
-                                            {/* Lado Izquierdo: Módulo + Tipo de Evaluación */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
-                                                <span style={{ 
-                                                    backgroundColor: `${subject.color}20`, 
-                                                    color: subject.color, 
-                                                    padding: '0.2rem 0.5rem', 
-                                                    borderRadius: '6px', 
-                                                    fontSize: '0.7rem', 
-                                                    fontWeight: 800,
-                                                    minWidth: '66px',
-                                                    textAlign: 'center',
-                                                    flexShrink: 0
-                                                }}>
-                                                    {modulePart}
-                                                </span>
-                                                <span style={{ 
-                                                    color: isDone ? '#10b981' : '#f43f5e', 
-                                                    fontSize: '0.82rem', 
-                                                    fontWeight: 800,
-                                                    whiteSpace: 'nowrap'
-                                                }}>
-                                                    {item.type} {mainTitle.split(' ').pop()}
-                                                </span>
-                                            </div>
-
-                                            {/* Lado Derecho: Puntos + Fecha (Rodados a la Derecha) */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
-                                                <span style={{ 
-                                                    background: isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(251, 191, 36, 0.12)', 
-                                                    color: isDone ? '#10b981' : '#fbbf24', 
-                                                    border: isDone ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(251, 191, 36, 0.25)',
-                                                    padding: '0.2rem 0.5rem', 
-                                                    borderRadius: '6px', 
-                                                    fontSize: '0.72rem', 
-                                                    fontWeight: 800,
-                                                    minWidth: '58px',
-                                                    textAlign: 'center',
-                                                    whiteSpace: 'nowrap'
-                                                }}>
-                                                    {item.points} pts
-                                                </span>
-                                                <span style={{ 
-                                                    fontSize: '0.75rem', 
-                                                    color: '#94a3b8', 
-                                                    fontWeight: 600,
-                                                    whiteSpace: 'nowrap',
-                                                    minWidth: '76px',
-                                                    textAlign: 'right'
-                                                }}>
-                                                    {formatAgendaDate(item.date)}
-                                                </span>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* 2. Opción de Entrada a Recompensas del Curso (Debajo de Agenda y Evaluación) */}
+                    {/* Opción de Entrada a Recompensas del Curso */}
                     {courseRewards.length > 0 && (
-                        <div className="sidebar-card-premium" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+                        <div className="sidebar-card-premium" style={{ marginTop: 0, padding: '1.25rem' }}>
                             <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
                                 <div className="sidebar-header-icon" style={{ background: 'rgba(250, 204, 21, 0.15)', color: '#facc15' }}>
                                     <Gift size={20} />
@@ -501,6 +513,35 @@ const SubjectDetail = () => {
                             </button>
                         </div>
                     )}
+
+                    {/* Tarjeta de Información y Metodología */}
+                    <div className="sidebar-card-premium" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+                        <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
+                            <div className="sidebar-header-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
+                                <BookOpen size={20} />
+                            </div>
+                            <div>
+                                <h2 className="section-title-premium" style={{ margin: 0 }}>Información del Curso</h2>
+                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                    Detalles y metodología activa
+                                </span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '8px' }}>
+                                <span style={{ color: '#94a3b8' }}>Docente:</span>
+                                <span style={{ fontWeight: 700, color: '#f8fafc' }}>{subject.teacher}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '8px' }}>
+                                <span style={{ color: '#94a3b8' }}>Modalidad:</span>
+                                <span style={{ fontWeight: 700, color: '#38bdf8' }}>ABP STEAM + Simuladores</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '8px' }}>
+                                <span style={{ color: '#94a3b8' }}>Evaluaciones:</span>
+                                <span style={{ fontWeight: 700, color: '#fbbf24' }}>Al final de cada módulo</span>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
             </div>

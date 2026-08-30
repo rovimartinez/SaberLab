@@ -377,9 +377,19 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         });
     };
 
+    const isExamLesson = (lessonId) => {
+        return lessonId === 'ee-m1-l6' || lessonId === 'ee-m2-l10' || lessonId === 'ee-m3-l14' || lessonId === 'ee-m4-l16' || lessonId.endsWith('-eval');
+    };
+
     const toggleModuleVisibility = async (moduleId) => {
         const module = courseModules.find(m => m.id === moduleId);
-        const allVisible = module?.lessons.every(l => getLessonVisibility(l.id));
+        const regularLessons = module?.lessons.filter(l => !isExamLesson(l.id)) || [];
+        const hasExam = !!module?.evaluation;
+        const examId = module?.evaluation ? (module.evaluation.id || `${course.abbr?.toLowerCase() || 're'}-${module.id}-eval`) : null;
+
+        const allRegularVisible = regularLessons.every(l => getLessonVisibility(l.id));
+        const examVisible = hasExam ? getLessonVisibility(examId) : true;
+        const allVisible = allRegularVisible && examVisible;
         const newVisibility = !allVisible;
         
         // Normalizar IDs
@@ -392,6 +402,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
             const normalizedId = l.id.includes('-') ? l.id : `${normalizedModuleId.split('-').slice(0,2).join('-')}-${l.id}`;
             newLecciones[normalizedId] = newVisibility;
         });
+
+        if (examId) {
+            newLecciones[examId] = newVisibility;
+        }
         
         try {
             await api('/visibility', {
@@ -532,35 +546,41 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                             <p className="panel-description">Controla qué contenido ven los estudiantes</p>
                         </div>
                         <div className="modules-list">
-                            {courseModules.map((module, idx) => (
+                            {courseModules.map((module, idx) => {
+                                const regularLessons = module.lessons.filter(l => !isExamLesson(l.id));
+                                const hasExam = !!module.evaluation;
+                                const examId = module.evaluation ? (module.evaluation.id || `${course.abbr?.toLowerCase() || 're'}-${module.id}-eval`) : null;
+                                const isExamVisible = hasExam ? getLessonVisibility(examId) : true;
+                                
+                                const totalItems = regularLessons.length + (hasExam ? 1 : 0);
+                                const visibleItems = regularLessons.filter(l => getLessonVisibility(l.id)).length + (hasExam && isExamVisible ? 1 : 0);
+                                const allVisible = visibleItems === totalItems;
+                                const someVisible = visibleItems > 0;
+
+                                return (
                                 <div key={module.id} className="module-card">
-                                        <div className="module-card-header" onClick={() => toggleExpandModule(module.id)}>
+                                    <div className="module-card-header" onClick={() => toggleExpandModule(module.id)}>
                                         <div className="module-card-info">
                                             <span className="module-card-number">{idx + 1}</span>
                                             <span className="module-card-name">{module.name}</span>
                                         </div>
                                         <div className="module-card-actions">
                                             <button 
-                                                className={`visibility-btn ${
-                                                    module.lessons.every(l => getLessonVisibility(l.id)) ? 'all' : 
-                                                    module.lessons.some(l => getLessonVisibility(l.id)) ? 'partial' : 'none'
-                                                }`}
+                                                className={`visibility-btn ${allVisible ? 'all' : someVisible ? 'partial' : 'none'}`}
                                                 onClick={(e) => { e.stopPropagation(); toggleModuleVisibility(module.id); }}
+                                                title={allVisible ? 'Ocultar todo el módulo' : 'Hacer visible todo el módulo'}
                                             >
                                                 <Eye size={18} />
                                             </button>
-                                            <span className={`module-visibility-count ${
-                                                module.lessons.every(l => getLessonVisibility(l.id)) ? 'all' : 
-                                                module.lessons.some(l => getLessonVisibility(l.id)) ? 'partial' : 'none'
-                                            }`}>
-                                                {module.lessons.filter(l => getLessonVisibility(l.id)).length}/{module.lessons.length}
+                                            <span className={`module-visibility-count ${allVisible ? 'all' : someVisible ? 'partial' : 'none'}`}>
+                                                {visibleItems}/{totalItems}
                                             </span>
                                             <span className={`expand-arrow ${expandedModules[module.id] ? 'expanded' : ''}`}>▼</span>
                                         </div>
                                     </div>
                                     {expandedModules[module.id] && (
                                         <div className="module-card-lessons">
-                                            {module.lessons.map((lesson) => {
+                                            {regularLessons.map((lesson) => {
                                                 const isVisible = getLessonVisibility(lesson.id);
                                                 return (
                                                 <div key={lesson.id} className={`lesson-item ${isVisible ? 'visible' : 'hidden'}`}>
@@ -574,10 +594,73 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                                     </button>
                                                 </div>
                                             )})}
+
+                                            {/* Examen / Evaluación del Módulo bloqueable */}
+                                            {hasExam && (
+                                                <div 
+                                                    className={`lesson-item exam-item ${isExamVisible ? 'visible' : 'hidden'}`}
+                                                    style={{
+                                                        marginTop: '0.65rem',
+                                                        padding: '0.85rem 1rem',
+                                                        background: isExamVisible ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.06)',
+                                                        border: `1px dashed ${isExamVisible ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.3)'}`,
+                                                        borderRadius: '12px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        gap: '0.75rem'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                                                        <span style={{
+                                                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                                            color: '#fff',
+                                                            fontWeight: 900,
+                                                            fontSize: '0.68rem',
+                                                            padding: '3px 8px',
+                                                            borderRadius: '6px',
+                                                            letterSpacing: '0.5px',
+                                                            flexShrink: 0
+                                                        }}>
+                                                            EXAMEN
+                                                        </span>
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {module.evaluation.title}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.73rem', color: '#fbbf24', marginTop: '1px' }}>
+                                                                {module.evaluation.points} pts {module.evaluation.date ? `· ${module.evaluation.date}` : ''}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <button 
+                                                        className={`visibility-btn ${isExamVisible ? 'is-visible' : ''}`}
+                                                        onClick={() => toggleLessonVisibility(module.id, examId)}
+                                                        style={{
+                                                            background: isExamVisible ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.15)',
+                                                            color: isExamVisible ? '#fbbf24' : '#f87171',
+                                                            border: `1px solid ${isExamVisible ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.3)'}`,
+                                                            padding: '0.45rem 0.85rem',
+                                                            borderRadius: '8px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.4rem',
+                                                            cursor: 'pointer',
+                                                            fontSize: '0.8rem',
+                                                            fontWeight: 700,
+                                                            flexShrink: 0
+                                                        }}
+                                                    >
+                                                        {isExamVisible ? <Eye size={15} /> : <EyeOff size={15} />}
+                                                        <span>{isExamVisible ? 'Visible' : 'Bloqueado'}</span>
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 )}

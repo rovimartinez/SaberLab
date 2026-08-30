@@ -117,20 +117,21 @@ export async function onRequestPost({ request, env, data }) {
     return Response.json({ error: 'Grupo o curso no encontrado para este código' }, { status: 404 });
   }
 
-  // 3. Buscar el curso asociado
+  // 3. Buscar el curso asociado (dar prioridad a codeRow.course_id si fue configurado en el enlace)
+  const targetCourseId = codeRow.course_id || group.course_id || 1;
   let course = null;
-  if (group.course_id) {
+  try {
     course = await env.DB.prepare(
       'SELECT id, name, abbr, slug FROM cursos WHERE id = ? OR abbr = ? OR slug = ? OR CAST(id AS TEXT) = CAST(? AS TEXT)'
-    ).bind(group.course_id, group.course_id, group.course_id, group.course_id).first();
-  }
+    ).bind(targetCourseId, targetCourseId, targetCourseId, targetCourseId).first();
+  } catch {}
 
-  const courseId = course?.id || (typeof group.course_id === 'number' ? group.course_id : 1);
+  const courseId = course?.id || (typeof targetCourseId === 'number' ? targetCourseId : 1);
   const resolvedCourse = course || {
     id: courseId,
-    name: group.name || 'Electricidad y Electrónica Básica',
-    abbr: 'EE',
-    slug: 'electricidad-y-electronica'
+    name: (courseId === 5) ? 'Robótica Educativa' : (group.name || 'Electricidad y Electrónica Básica'),
+    abbr: (courseId === 5) ? 'RE' : 'EE',
+    slug: (courseId === 5) ? 'robotica-educativa' : 'electricidad-y-electronica'
   };
 
   // 4. Inscribir usuario en el grupo
@@ -142,6 +143,19 @@ export async function onRequestPost({ request, env, data }) {
   await env.DB.prepare(
     'INSERT OR REPLACE INTO inscripciones (user_id, course_id, group_id) VALUES (?, ?, ?)'
   ).bind(userId, courseId, group.id).run();
+
+  // 6. Auto-aprobar al usuario: si se une con enlace o código generado por el docente, queda aprobado directamente
+  try {
+    await env.DB.prepare(
+      "UPDATE perfiles SET access_status = 'approved' WHERE id = ?"
+    ).bind(userId).run();
+
+    await env.DB.prepare(
+      "UPDATE solicitudes_acceso SET status = 'approved', reviewed_at = CURRENT_TIMESTAMP WHERE email = (SELECT email FROM perfiles WHERE id = ?)"
+    ).bind(userId).run();
+  } catch (approvalErr) {
+    console.error('Error auto-approving profile on code redeem:', approvalErr);
+  }
 
   return Response.json({
     success: true,

@@ -7,13 +7,14 @@ import { api } from '../lib/api';
 export default function JoinCourse() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { user, loading: authLoading, refreshEnrolledCourses } = useAuth();
+    const { user, loading: authLoading, refreshSession, refreshEnrolledCourses } = useAuth();
 
     const codeFromUrl = (searchParams.get('code') || '').trim().toUpperCase();
     const [manualCode, setManualCode] = useState(codeFromUrl);
     const [status, setStatus] = useState('idle'); // 'idle' | 'joining' | 'success' | 'error'
     const [errorMsg, setErrorMsg] = useState('');
     const [enrolledCourse, setEnrolledCourse] = useState(null);
+    const hasExecutedRef = React.useRef(false);
 
     const executeJoin = useCallback(async (codeToRedeem) => {
         if (!codeToRedeem) return;
@@ -32,15 +33,19 @@ export default function JoinCourse() {
 
             setEnrolledCourse(data.curso);
             setStatus('success');
+            sessionStorage.removeItem('pending_join_code');
+
+            if (refreshSession) {
+                await refreshSession();
+            }
             if (refreshEnrolledCourses) {
                 await refreshEnrolledCourses();
             }
-            sessionStorage.removeItem('pending_join_code');
         } catch (err) {
             setErrorMsg(err.message || 'No fue posible unirse al curso con este enlace');
             setStatus('error');
         }
-    }, [refreshEnrolledCourses]);
+    }, [refreshSession, refreshEnrolledCourses]);
 
     useEffect(() => {
         if (authLoading) return;
@@ -49,7 +54,10 @@ export default function JoinCourse() {
 
         if (targetCode) {
             if (user) {
-                executeJoin(targetCode);
+                if (!hasExecutedRef.current) {
+                    hasExecutedRef.current = true;
+                    executeJoin(targetCode);
+                }
             } else {
                 // Guardar código para después de que inicie sesión
                 sessionStorage.setItem('pending_join_code', targetCode);

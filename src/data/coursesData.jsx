@@ -131,8 +131,9 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m1-l6', visible: true }
                 ],
                 evaluation: {
-                    title: 'Examen 1 - Circuitos Básicos',
-                    date: '2 de septiembre de 2026',
+                    id: 'ee-m1-l6',
+                    title: 'Examen 1 - Fundamentos Eléctricos',
+                    date: '2 Sep 2026',
                     points: 150
                 }
             },
@@ -154,8 +155,9 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m2-l10', visible: true }
                 ],
                 evaluation: {
+                    id: 'ee-m2-l10',
                     title: 'Examen 2 - Uso de Componentes Electrónicos',
-                    date: '28 de septiembre de 2026',
+                    date: '28 Sep 2026',
                     points: 125
                 }
             },
@@ -176,8 +178,9 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m3-l14', visible: true }
                 ],
                 evaluation: {
+                    id: 'ee-m3-l14',
                     title: 'Examen 3 - Implementación de Circuitos Integrados',
-                    date: '21 de octubre de 2026',
+                    date: '21 Oct 2026',
                     points: 125
                 }
             },
@@ -195,8 +198,9 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m4-l16', visible: true }
                 ],
                 evaluation: {
+                    id: 'ee-m4-l16',
                     title: 'Presentación del Proyecto Final',
-                    date: '11 de noviembre de 2026',
+                    date: '11 Nov 2026',
                     points: 100
                 }
             }
@@ -337,7 +341,13 @@ export const COURSES_DEFINITION = [
                     { id: 're-m1-l3', visible: true },
                     { id: 're-m1-l4', visible: true },
                     { id: 're-m1-l5', visible: true }
-                ]
+                ],
+                evaluation: {
+                    id: 're-m1-eval',
+                    title: 'Evaluación 1: Fundamentos y Lógica Digital',
+                    date: '2 Sep 2026',
+                    points: 150
+                }
             },
             {
                 id: 'm2',
@@ -347,7 +357,13 @@ export const COURSES_DEFINITION = [
                     { id: 're-m2-l2', visible: true },
                     { id: 're-m2-l3', visible: true },
                     { id: 're-m2-l4', visible: true }
-                ]
+                ],
+                evaluation: {
+                    id: 're-m2-eval',
+                    title: 'Evaluación 2: Sensores y Mundo Físico',
+                    date: '28 Sep 2026',
+                    points: 125
+                }
             },
             {
                 id: 'm3',
@@ -357,7 +373,13 @@ export const COURSES_DEFINITION = [
                     { id: 're-m3-l2', visible: true },
                     { id: 're-m3-l3', visible: true },
                     { id: 're-m3-l4', visible: true }
-                ]
+                ],
+                evaluation: {
+                    id: 're-m3-eval',
+                    title: 'Evaluación 3: Movimiento y Actuadores',
+                    date: '21 Oct 2026',
+                    points: 125
+                }
             },
             {
                 id: 'm4',
@@ -367,7 +389,13 @@ export const COURSES_DEFINITION = [
                     { id: 're-m4-l2', visible: true },
                     { id: 're-m4-l3', visible: true },
                     { id: 're-m4-l4', visible: true }
-                ]
+                ],
+                evaluation: {
+                    id: 're-m4-eval',
+                    title: 'Proyecto Final Integrador',
+                    date: '11 Nov 2026',
+                    points: 100
+                }
             }
         ],
         groups: [],

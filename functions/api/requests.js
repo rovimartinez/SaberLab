@@ -88,5 +88,34 @@ export async function onRequestPatch({ request, env, data }) {
      WHERE id = ?`
   ).bind(name || null, normalizedEmail || null, status || null, id).run();
 
+  if (status === 'approved') {
+    const targetEmail = (normalizedEmail || row.email).toLowerCase();
+    try {
+      await env.DB.prepare(
+        "UPDATE perfiles SET access_status = 'approved' WHERE LOWER(email) = LOWER(?)"
+      ).bind(targetEmail).run();
+
+      // Si no tiene cursos inscritos aún, inscribir en el curso base por defecto (Electricidad y Electrónica)
+      const userProfile = await env.DB.prepare(
+        "SELECT id FROM perfiles WHERE LOWER(email) = LOWER(?)"
+      ).bind(targetEmail).first();
+
+      if (userProfile?.id) {
+        const existingEnrollment = await env.DB.prepare(
+          "SELECT course_id FROM inscripciones WHERE user_id = ? LIMIT 1"
+        ).bind(userProfile.id).first();
+
+        if (!existingEnrollment) {
+          let defaultGroup = await env.DB.prepare("SELECT id FROM grupos WHERE course_id = 1 LIMIT 1").first();
+          const groupId = defaultGroup?.id || 1;
+          await env.DB.prepare("INSERT OR IGNORE INTO inscripciones (user_id, course_id, group_id) VALUES (?, 1, ?)").bind(userProfile.id, groupId).run();
+          await env.DB.prepare("INSERT OR IGNORE INTO grupos_usuario (user_id, group_id) VALUES (?, ?)").bind(userProfile.id, groupId).run();
+        }
+      }
+    } catch (profileSyncErr) {
+      console.error('Error synchronizing approved status to perfiles:', profileSyncErr);
+    }
+  }
+
   return Response.json({ success: true });
 }

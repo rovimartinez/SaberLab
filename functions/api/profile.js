@@ -61,7 +61,27 @@ export async function onRequestGet({ env, data }) {
   let courses = [];
   try {
     const { results } = await env.DB.prepare(
-      `SELECT DISTINCT c.id, c.name, c.abbr, c.slug
+      `SELECT DISTINCT 
+         COALESCE(c.id, u_c.course_id) AS id,
+         COALESCE(c.name, CASE u_c.course_id 
+           WHEN 1 THEN 'Electricidad y Electrónica Básica'
+           WHEN 2 THEN 'Fundamentos de Programación'
+           WHEN 3 THEN 'Mediaciones Tecnológicas en la Química'
+           WHEN 4 THEN 'Modelado y Animación 3D'
+           WHEN 5 THEN 'Robótica Educativa'
+           WHEN 6 THEN 'Tendencias y Desarrollo en Tecnología'
+           ELSE 'Curso Asignado' END) AS name,
+         COALESCE(c.abbr, CASE u_c.course_id 
+           WHEN 1 THEN 'EE' WHEN 2 THEN 'FP' WHEN 3 THEN 'MQ' WHEN 4 THEN 'MA' WHEN 5 THEN 'RE' WHEN 6 THEN 'TD' 
+           ELSE 'SL' END) AS abbr,
+         COALESCE(c.slug, CASE u_c.course_id 
+           WHEN 1 THEN 'electricidad-y-electronica'
+           WHEN 2 THEN 'programacion'
+           WHEN 3 THEN 'quimica-tecnologica'
+           WHEN 4 THEN 'modelado-y-animacion-3d'
+           WHEN 5 THEN 'robotica-educativa'
+           WHEN 6 THEN 'tendencias-desarrollo'
+           ELSE 'curso' END) AS slug
        FROM (
          SELECT course_id FROM inscripciones WHERE user_id = ?
          UNION
@@ -69,8 +89,8 @@ export async function onRequestGet({ env, data }) {
          JOIN grupos g ON g.id = gu.group_id
          WHERE gu.user_id = ?
        ) u_c
-       JOIN cursos c ON (c.id = u_c.course_id OR c.abbr = u_c.course_id OR c.slug = u_c.course_id OR CAST(c.id AS TEXT) = CAST(u_c.course_id AS TEXT))
-       ORDER BY c.id ASC`
+       LEFT JOIN cursos c ON (c.id = u_c.course_id OR c.abbr = u_c.course_id OR c.slug = u_c.course_id OR CAST(c.id AS TEXT) = CAST(u_c.course_id AS TEXT))
+       ORDER BY id ASC`
     ).bind(userId, userId).all();
 
     courses = results || [];
