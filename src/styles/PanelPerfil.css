@@ -9,6 +9,11 @@
     align-items: start;
 }
 
+.perfil-page-floating {
+    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    gap: 1.1rem;
+}
+
 @media (max-width: 900px) {
     .perfil-page {
         grid-template-columns: 1fr;
@@ -44,59 +49,6 @@
 }
 
 /* ── Rango actual ── */
-.perfil-rank-section {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-    padding: 1.25rem;
-}
-
-.perfil-rank-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.perfil-rank-emoji {
-    font-size: 2rem;
-}
-
-.perfil-rank-name {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.perfil-rank-desc {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    margin: 0;
-}
-
-.perfil-rank-progress-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.35rem;
-}
-
-.perfil-rank-bar-bg {
-    height: 8px;
-    background: var(--glass-border);
-    border-radius: 99px;
-    overflow: hidden;
-}
-
-.perfil-rank-bar-fill {
-    height: 100%;
-    border-radius: 99px;
-    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 /* ── Columna derecha: Estadísticas + Avatar selector ── */
 .perfil-right {
     display: flex;
@@ -105,33 +57,43 @@
 }
 
 /* ── Stats grid ── */
-.perfil-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+.perfil-stats-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 1.25rem;
 }
 
-@media (max-width: 600px) {
+.perfil-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+@media (max-width: 700px) {
     .perfil-stats-grid {
         grid-template-columns: 1fr;
     }
 }
 
 .perfil-stat-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 14px;
-    padding: 1.25rem;
+    min-height: 126px;
+    background: rgba(15, 23, 42, 0.34);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 12px;
+    padding: 0.95rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    transition: border-color 0.2s;
+    justify-content: space-between;
+    gap: 0.45rem;
+    transition: border-color 0.2s, background 0.2s;
 }
 
 .perfil-stat-card:hover {
-    border-color: rgba(168, 85, 247, 0.3);
+    background: rgba(15, 23, 42, 0.48);
+    border-color: rgba(56, 189, 248, 0.28);
 }
 
 .perfil-stat-icon {
@@ -141,11 +103,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
 }
 
 .perfil-stat-value {
-    font-size: 2rem;
+    font-size: 2.15rem;
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1;
@@ -153,8 +114,15 @@
 }
 
 .perfil-stat-label {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.perfil-stat-detail {
+    font-size: 0.72rem;
     color: var(--text-secondary);
+    line-height: 1.25;
 }
 
 /* ── Todos los rangos ── */
@@ -178,6 +146,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
+}
+
+.perfil-page-floating .perfil-ranks-list {
+    max-height: 330px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
 }
 
 .perfil-rank-item {
@@ -249,8 +223,29 @@
 /* Light mode */
 :root[data-theme='light'] .perfil-stat-card,
 :root[data-theme='light'] .perfil-card-section,
-:root[data-theme='light'] .perfil-rank-section,
+:root[data-theme='light'] .perfil-stats-panel,
 :root[data-theme='light'] .perfil-ranks-card {
     background: rgba(255, 255, 255, 0.8);
     border-color: rgba(148, 163, 184, 0.2);
+}
+
+:root[data-theme='light'] .perfil-stat-card {
+    background: rgba(248, 250, 252, 0.8);
+}
+
+@media (max-width: 768px) {
+    .perfil-page {
+        gap: 1rem;
+    }
+
+    .perfil-card-section,
+    .perfil-stats-panel,
+    .perfil-ranks-card,
+    .perfil-stat-card {
+        border-radius: 12px;
+    }
+
+    .perfil-page-floating .perfil-ranks-list {
+        max-height: none;
+    }
 }

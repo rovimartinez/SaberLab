@@ -385,6 +385,118 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+.profile-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(2, 6, 23, 0.62);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: modalFadeIn 0.18s ease-out;
+}
+
+.profile-modal-window {
+    width: min(1080px, calc(100vw - 2.5rem));
+    max-height: min(860px, calc(100vh - 2.5rem));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96)),
+        var(--bg-primary);
+    box-shadow: 0 26px 80px rgba(0, 0, 0, 0.56);
+    animation: modalFloatIn 0.22s ease-out;
+}
+
+.profile-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    flex-shrink: 0;
+}
+
+.profile-modal-kicker {
+    margin: 0 0 0.18rem;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.profile-modal-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.12rem;
+    line-height: 1.2;
+}
+
+.profile-modal-close {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.62);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-modal-close:hover {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.34);
+    color: #38bdf8;
+}
+
+.profile-modal-body {
+    overflow: auto;
+    padding: 1.25rem;
+}
+
+:root[data-theme='light'] .profile-modal-backdrop {
+    background: rgba(15, 23, 42, 0.28);
+}
+
+:root[data-theme='light'] .profile-modal-window {
+    background:
+        linear-gradient(135deg, rgba(248, 250, 252, 0.99), rgba(239, 246, 255, 0.98)),
+        var(--bg-primary);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: 0 26px 70px rgba(15, 23, 42, 0.22);
+}
+
+:root[data-theme='light'] .profile-modal-close {
+    background: rgba(255, 255, 255, 0.82);
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalFloatIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 /* Sidebar Handle Hidden by Default for PC */
 .mobile-sidebar-handle {
     display: none;
@@ -486,6 +598,25 @@
 
     .user-profile {
         padding-right: 0.25rem;
+    }
+
+    .profile-modal-backdrop {
+        padding: 0.75rem;
+        align-items: stretch;
+    }
+
+    .profile-modal-window {
+        width: 100%;
+        max-height: calc(100vh - 1.5rem);
+        border-radius: 16px;
+    }
+
+    .profile-modal-header {
+        padding: 0.9rem 1rem;
+    }
+
+    .profile-modal-body {
+        padding: 1rem;
     }
 }
 

@@ -5,7 +5,7 @@ import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 import { api } from '../../lib/api';
 
-const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
+const Sidebar = ({ isOpen, closeSidebar, toggleSidebar, onOpenProfile }) => {
     const { user, profile, signOut, unreadNotificationsCount, pendingAccessRequestsCount, enrolledCourses, isStaffUser, isImpersonating, toggleViewMode, viewMode, canAccessCertificate } = useAuth();
     const { openLauncher } = useApps();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,68 +25,6 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        const fetchPublishedEvaluationsCount = async () => {
-            if (!isStaff && (!user || enrolledCourses.length === 0)) {
-                setPublishedEvaluationsCount(0);
-                return;
-            }
-
-            try {
-                const { data } = await api('/evaluations');
-                const published = (data || []).filter(e => e.is_published === 1 || e.is_published === true);
-                setPublishedEvaluationsCount(published.length);
-            } catch (error) {
-                console.error('Error fetching published evaluations count:', error);
-            }
-        };
-
-        fetchPublishedEvaluationsCount();
-    }, [isStaff, user, enrolledCourses]);
-
-    const navCategories = [
-        {
-            title: 'PRINCIPAL',
-            items: [
-                { name: 'Inicio', path: '/dashboard', icon: <Home size={18} /> },
-                { name: 'Mis Cursos', path: '/dashboard/my-courses', icon: <Layers size={18} /> },
-                { name: 'Calificaciones', path: '/dashboard/grades', icon: <Award size={18} /> },
-                { name: 'Evaluaciones', path: '/dashboard/evaluations', icon: <Target size={18} /> },
-                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: pendingAccessRequestsCount }
-            ]
-        },
-        {
-            title: 'RECURSOS',
-            items: [
-                { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                ...(isStaff ? [{ name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }] : [])
-            ]
-        },
-        ...(isStaff ? [{
-            title: isAdmin ? 'ADMIN' : 'DOCENTE',
-            items: [
-                { name: 'Analítica', path: '/dashboard/analytics', icon: <Activity size={18} /> },
-                { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> },
-                { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
-            ]
-        }] : (canAccessCertificate ? [{
-            title: 'CERTIFICACIÓN',
-            items: [
-                { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
-            ]
-        }] : []))
-    ];
-
-    return (
-        <aside className={`sidebar glass-panel ${isOpen ? 'open' : ''}`}>
-            <div className="sidebar-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <img
                         src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png"
                         alt="SaberLab Logo"
@@ -298,10 +236,18 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                     <div className="dropdown-divider"></div>
                                 </>
                             )}
-                            <Link to="/dashboard/profile" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
+                            <button
+                                type="button"
+                                className="dropdown-item"
+                                onClick={() => {
+                                    setIsMenuOpen(false);
+                                    closeSidebar();
+                                    onOpenProfile?.();
+                                }}
+                            >
                                 <User size={16} />
                                 Mi Perfil
-                            </Link>
+                            </button>
                             <Link to="/dashboard/settings" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
                                 <Settings size={16} />
                                 Configuracion

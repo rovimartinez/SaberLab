@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Eye, Shield } from 'lucide-react';
+import { Eye, Shield, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import PanelPerfil from '../../pages/PanelPerfil';
 import { useAuth } from '../../context/useAuth';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
 import { AppsProvider } from '../../context/AppsContext';
@@ -15,6 +16,7 @@ import '../../styles/Layout.css';
 const LayoutContent = () => {
     const { isImpersonating, setViewMode } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const location = useLocation();
     const isEvaluationRoute = /^\/dashboard\/evaluations\/[^/]+$/.test(location.pathname);
     const isPracticeEvaluation = location.pathname.includes('re-m1-e2');
@@ -41,13 +43,27 @@ const LayoutContent = () => {
 
     const showSidebar = !isEvaluationRoute || isPracticeEvaluation || !isEvaluationMode;
 
+    useEffect(() => {
+        if (!isProfileModalOpen) return undefined;
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                setIsProfileModalOpen(false);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isProfileModalOpen]);
+
     return (
         <div className="app-layout">
             {showSidebar && (
                 <Sidebar 
                     isOpen={isSidebarOpen} 
                     toggleSidebar={toggleSidebar}
-                    closeSidebar={() => setIsSidebarOpen(false)} 
+                    closeSidebar={() => setIsSidebarOpen(false)}
+                    onOpenProfile={() => setIsProfileModalOpen(true)}
                 />
             )}
             {isSidebarOpen && showSidebar && (
@@ -118,6 +134,41 @@ const LayoutContent = () => {
                     message={pendingMessage} 
                     onConfirm={clearPendingMessage} 
                 />
+            )}
+
+            {isProfileModalOpen && (
+                <div
+                    className="profile-modal-backdrop"
+                    onMouseDown={() => setIsProfileModalOpen(false)}
+                    role="presentation"
+                >
+                    <section
+                        className="profile-modal-window"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="profile-modal-title"
+                        onMouseDown={(event) => event.stopPropagation()}
+                    >
+                        <header className="profile-modal-header">
+                            <div>
+                                <p className="profile-modal-kicker">Cuenta SaberLab</p>
+                                <h2 id="profile-modal-title">Mi Perfil</h2>
+                            </div>
+                            <button
+                                type="button"
+                                className="profile-modal-close"
+                                onClick={() => setIsProfileModalOpen(false)}
+                                aria-label="Cerrar perfil"
+                                title="Cerrar perfil"
+                            >
+                                <X size={18} />
+                            </button>
+                        </header>
+                        <div className="profile-modal-body">
+                            <PanelPerfil variant="floating" />
+                        </div>
+                    </section>
+                </div>
             )}
         </div>
     );
