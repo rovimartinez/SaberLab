@@ -2,11 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, BookOpen, Layers, CheckCircle2, FileText, X, Lock, PlayCircle, Circle } from 'lucide-react';
 import { LESSONS_REGISTRY } from '../../data/coursesData';
+import { useAuth } from '../../context/useAuth';
+import { api } from '../../lib/api';
 import '../../styles/CourseSidebar.css';
 
 const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lessonVisibility = {} }) => {
     const navigate = useNavigate();
+    const { profile } = useAuth();
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
     const [expandedModules, setExpandedModules] = useState({});
+    const [completedLessons, setCompletedLessons] = useState({});
+
+    // Cargar progreso real del estudiante desde D1
+    useEffect(() => {
+        const fetchProgress = async () => {
+            try {
+                const { data } = await api('/lesson-progress');
+                if (Array.isArray(data)) {
+                    const map = {};
+                    data.forEach(item => {
+                        if (item.status === 'completed' || item.progress >= 100 || (typeof item.score === 'number' && item.score >= 80)) {
+                            map[item.lesson_id.toLowerCase()] = true;
+                        }
+                    });
+                    setCompletedLessons(map);
+                }
+            } catch (err) {
+                console.error('Error cargando progreso en CourseSidebar:', err);
+            }
+        };
+
+        fetchProgress();
+
+        const handleUpdate = () => fetchProgress();
+        window.addEventListener('lesson-progress-updated', handleUpdate);
+        return () => window.removeEventListener('lesson-progress-updated', handleUpdate);
+    }, []);
 
     // Automatically expand the current module when the sidebar opens or the lesson changes
     useEffect(() => {
@@ -46,29 +77,44 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lesson
         }
     };
 
-    // Mock progress logic for demonstration
-    // In a real app, this would come from the database (user_progress table)
+    // Lógica estricta de Candado Secuencial (Regla del 80%)
     const getLessonStatus = (lessonId) => {
-        // Normalizar ID de lección
-        const normalizedId = lessonId.includes('-') 
+        const normalizedId = (lessonId.includes('-') 
             ? lessonId 
-            : `${subject.abbr.toLowerCase()}-m1-${lessonId}`;
+            : `${subject.abbr.toLowerCase()}-m1-${lessonId}`).toLowerCase();
         
-        // Prioridad 1: Visibilidad explícita en BD
+        // Prioridad 1: Visibilidad explícita del docente en BD
         const visibility = lessonVisibility[normalizedId];
-        if (visibility === false) return 'locked';
+        if (visibility === false && !isStaff) return 'locked';
 
         // Prioridad 2: Lección actual
         if (lessonId === currentLessonId) return 'active';
 
-        // Prioridad 3: Orden de las lecciones para progreso sugerido
-        const allLessons = subject.modules.flatMap(m => m.lessons.map(l => l.id));
-        const currentIdx = allLessons.indexOf(currentLessonId);
-        const thisIdx = allLessons.indexOf(lessonId);
+        // Prioridad 3: Si ya está completada (aprobada con >= 80%)
+        if (completedLessons[normalizedId]) return 'completed';
 
-        if (thisIdx < currentIdx) return 'completed';
-        
-        // Si no está bloqueada por visibilidad, está disponible
+        // Si es profesor/admin, todo lo no oculto está disponible
+        if (isStaff) return 'available';
+
+        // Prioridad 4: Candado Secuencial (la lección anterior debe estar completada)
+        const allLessons = subject.modules.flatMap(m => m.lessons.map(l => {
+            const raw = l.id;
+            return (raw.includes('-') ? raw : `${subject.abbr.toLowerCase()}-${m.id}-${raw}`).toLowerCase();
+        }));
+
+        const thisIdx = allLessons.indexOf(normalizedId);
+        if (thisIdx <= 0) {
+            // Primera lección siempre disponible
+            return 'available';
+        }
+
+        const previousId = allLessons[thisIdx - 1];
+        const isPrevDone = completedLessons[previousId];
+
+        if (!isPrevDone) {
+            return 'locked';
+        }
+
         return 'available';
     };
 

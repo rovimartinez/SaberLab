@@ -71,9 +71,16 @@ const PanelCalificaciones = () => {
                 } catch {}
             }
 
+            const rawTitle = evalData.title || `Examen ${idx + 1}`;
+            const cleanTitle = rawTitle
+                .replace(/^Evaluaci[oó]n\s*\d*\s*:?\s*/i, '')
+                .replace(/^Examen\s*\d*\s*:?\s*/i, '')
+                .trim();
+            const formattedTitle = `Evaluación Módulo ${idx + 1}: ${cleanTitle || m.name || rawTitle}`;
+
             return {
                 id: evalKey,
-                title: evalData.title,
+                title: formattedTitle,
                 moduleName: m.name,
                 date: evalData.date,
                 maxPoints,
@@ -156,7 +163,7 @@ const PanelCalificaciones = () => {
                         <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10b981' }}>{overallGPA}</div>
                         <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>Nota Equivalente (0-5.0)</div>
                     </div>
-                    {totalEarnedAll >= 450 ? (
+                    {totalEarnedAll >= 450 && (
                         <div 
                             onClick={() => navigate('/dashboard/certificate/ee')}
                             style={{
@@ -177,25 +184,6 @@ const PanelCalificaciones = () => {
                                 <Award size={20} /> Desbloqueado
                             </div>
                             <div style={{ fontSize: '0.75rem', color: '#6ee7b7', fontWeight: 600 }}>Certificado Oficial (450+ pts) ↗</div>
-                        </div>
-                    ) : (
-                        <div style={{
-                            background: 'rgba(245, 158, 11, 0.08)',
-                            border: '1px solid rgba(245, 158, 11, 0.25)',
-                            borderRadius: '16px',
-                            padding: '0.9rem 1.4rem',
-                            textAlign: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center'
-                        }}>
-                            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fbbf24' }}>
-                                {totalEarnedAll} / 450 pts
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
-                                Meta Certificado (Faltan {Math.max(0, 450 - totalEarnedAll)} pts)
-                            </div>
                         </div>
                     )}
                 </div>
@@ -256,12 +244,11 @@ const PanelCalificaciones = () => {
                             <thead>
                                 <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#94a3b8', fontSize: '0.85rem' }}>
                                     <th style={{ padding: '0.75rem 1rem' }}>EVALUACIÓN</th>
-                                    <th style={{ padding: '0.75rem 1rem' }}>MÓDULO</th>
                                     <th style={{ padding: '0.75rem 1rem' }}>FECHA OFICIAL</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>PESO</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>PUNTAJE</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>ESTADO</th>
-                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>ACCIÓN</th>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>ACCIÓN</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -272,9 +259,6 @@ const PanelCalificaciones = () => {
                                     }}>
                                         <td style={{ padding: '1rem', color: '#fff', fontWeight: 700, fontSize: '0.95rem' }}>
                                             {ev.title}
-                                        </td>
-                                        <td style={{ padding: '1rem', color: '#cbd5e1', fontSize: '0.85rem' }}>
-                                            {ev.moduleName}
                                         </td>
                                         <td style={{ padding: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
                                             {ev.date}
@@ -390,31 +374,7 @@ const PanelCalificaciones = () => {
                                                     Ver Examen
                                                 </button>
                                             ) : (
-                                                <Link
-                                                    to={`/dashboard/evaluations/${ev.id}`}
-                                                    style={{
-                                                        minWidth: '125px',
-                                                        height: '36px',
-                                                        boxSizing: 'border-box',
-                                                        padding: '0 1rem',
-                                                        borderRadius: '9px',
-                                                        background: 'rgba(255, 255, 255, 0.06)',
-                                                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                                                        color: '#f8fafc',
-                                                        fontSize: '0.82rem',
-                                                        fontWeight: 800,
-                                                        textDecoration: 'none',
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '6px',
-                                                        whiteSpace: 'nowrap',
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                >
-                                                    <Play size={13} fill="currentColor" />
-                                                    Presentar
-                                                </Link>
+                                                <span style={{ color: '#64748b', fontSize: '0.95rem' }}>—</span>
                                             )}
                                         </td>
                                     </tr>

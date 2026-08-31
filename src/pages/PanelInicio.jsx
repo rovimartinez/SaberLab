@@ -227,6 +227,7 @@ const PanelInicio = () => {
 
     const quickActions = [
         { label: 'Mi Perfil', icon: <User size={14} />, to: '/dashboard/profile' },
+        ...(isStaff ? [{ label: 'Analítica', icon: <Activity size={14} />, to: '/dashboard/analytics' }] : []),
         ...(isStaff ? [{ label: 'Widgets', icon: <Wrench size={14} />, onClick: openLauncher }] : []),
         { label: 'Recompensas', icon: <Gift size={14} />, to: '/dashboard/gadgets' },
         { label: 'Calificaciones', icon: <Award size={14} />, to: '/dashboard/grades' },

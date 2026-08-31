@@ -509,3 +509,36 @@ export const getNextLesson = (currentFullId) => {
     }
     return null;
 };
+
+// Obtiene la lección previa dentro del mismo curso
+export const getPreviousLesson = (currentFullId) => {
+    if (!currentFullId) return null;
+    const lessonPath = getFullLessonPath(currentFullId);
+    if (!lessonPath || !lessonPath.course) return null;
+
+    const course = lessonPath.course;
+    const allLessons = [];
+
+    (course.modules || []).forEach(m => {
+        (m.lessons || []).forEach(l => {
+            const rawId = l.id;
+            const fullId = rawId.includes('-') ? rawId : `${course.abbr.toLowerCase()}-${m.id}-${rawId}`;
+            const shortId = rawId.includes('-') ? rawId.split('-').pop() : rawId;
+            const info = LESSONS_REGISTRY[fullId] || { title: l.title || 'Lección' };
+            allLessons.push({
+                fullId,
+                shortId,
+                moduleId: m.id,
+                title: info.title || 'Lección',
+                courseSlug: course.slug
+            });
+        });
+    });
+
+    const currentIndex = allLessons.findIndex(l => l.fullId === currentFullId);
+    if (currentIndex > 0) {
+        return allLessons[currentIndex - 1];
+    }
+    return null;
+};
+

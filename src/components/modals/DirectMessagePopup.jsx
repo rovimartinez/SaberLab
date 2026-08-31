@@ -1,5 +1,5 @@
-import React from 'react';
-import { MessageSquareQuote, CheckCircle2, UserCheck, BellRing } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageSquareQuote, CheckCircle2, UserCheck, BellRing, Zap, X, Clock } from 'lucide-react';
 
 export default function DirectMessagePopup({ message, onConfirm }) {
     if (!message) return null;
@@ -7,7 +7,164 @@ export default function DirectMessagePopup({ message, onConfirm }) {
     const sender = message.sender_name || 'Prof. Ronny Martinez';
     const title = message.title || 'Mensaje del Docente';
     const content = message.message;
+    const isTemporary = Boolean(message.is_temporary);
+    const duration = Number(message.duration) || 8;
 
+    const [timeLeft, setTimeLeft] = useState(duration);
+    const [progress, setProgress] = useState(100);
+
+    useEffect(() => {
+        if (!isTemporary) return;
+
+        setTimeLeft(duration);
+        setProgress(100);
+
+        const startTime = Date.now();
+        const totalMs = duration * 1000;
+
+        const timer = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const remainingMs = Math.max(0, totalMs - elapsed);
+            const remainingSec = Math.ceil(remainingMs / 1000);
+            
+            setTimeLeft(remainingSec);
+            setProgress((remainingMs / totalMs) * 100);
+
+            if (remainingMs <= 0) {
+                clearInterval(timer);
+                onConfirm();
+            }
+        }, 100);
+
+        return () => clearInterval(timer);
+    }, [isTemporary, duration, onConfirm]);
+
+    // ── VISTA 1: VENTANITA TEMPORAL FLOTANTE (FLASH TOAST) ──
+    if (isTemporary) {
+        return (
+            <div style={{
+                position: 'fixed',
+                top: '24px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 9999999,
+                width: 'calc(100% - 2rem)',
+                maxWidth: '540px',
+                animation: 'slideDownToast 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                filter: 'drop-shadow(0 20px 35px rgba(0, 0, 0, 0.65))'
+            }}>
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%)',
+                    border: '1.5px solid #38bdf8',
+                    borderRadius: '20px',
+                    padding: '1.2rem 1.4rem',
+                    color: '#fff',
+                    backdropFilter: 'blur(16px)',
+                    boxShadow: '0 0 25px rgba(56, 189, 248, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    {/* Barra de cuenta regresiva en el borde superior */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'rgba(255, 255, 255, 0.1)'
+                    }}>
+                        <div style={{
+                            height: '100%',
+                            width: `${progress}%`,
+                            background: 'linear-gradient(90deg, #38bdf8, #818cf8)',
+                            transition: 'width 0.1s linear'
+                        }} />
+                    </div>
+
+                    {/* Cabecera de la ventanita */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <div style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '8px',
+                                background: 'rgba(56, 189, 248, 0.18)',
+                                color: '#38bdf8',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <Zap size={16} />
+                            </div>
+                            <div>
+                                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    Aviso en Pantalla
+                                </span>
+                                <span style={{ color: '#64748b', margin: '0 0.4rem' }}>•</span>
+                                <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600 }}>
+                                    {sender}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <div style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '0.72rem',
+                                color: '#94a3b8',
+                                background: 'rgba(255, 255, 255, 0.06)',
+                                padding: '2px 8px',
+                                borderRadius: '20px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)'
+                            }}>
+                                <Clock size={11} />
+                                <span>{timeLeft}s</span>
+                            </div>
+                            <button
+                                onClick={onConfirm}
+                                title="Cerrar ventanita"
+                                style={{
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    width: '24px',
+                                    height: '24px',
+                                    borderRadius: '50%',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 0
+                                }}
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Título y Mensaje */}
+                    {title && title !== 'Mensaje del Docente' && (
+                        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.25rem' }}>
+                            {title}
+                        </div>
+                    )}
+                    <div style={{ fontSize: '0.95rem', color: '#e2e8f0', lineHeight: 1.5, fontWeight: 500, whiteSpace: 'pre-wrap' }}>
+                        {content}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.6rem' }}>
+                        <span style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                            ⚡ Ventanita temporal (no se guardará en tu buzón de mensajes)
+                        </span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ── VISTA 2: MODAL PERSISTENTE FORMAL (GUARDA EN BANDEJA) ──
     return (
         <div style={{
             position: 'fixed',

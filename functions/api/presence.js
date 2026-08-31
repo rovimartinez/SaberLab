@@ -35,17 +35,28 @@ export async function onRequestPost({ request, env, data }) {
   let directMessage = null;
   try {
     const unread = await env.DB.prepare(`
-      SELECT id, title, message, sender_name, created_at 
+      SELECT id, title, message, sender_name, is_temporary, duration, created_at 
       FROM notificaciones 
-      WHERE user_id = ? AND read = 0 AND (is_popup = 1 OR is_popup IS NULL)
+      WHERE (user_id = ? OR LOWER(user_id) = LOWER(?)) 
+        AND read = 0 
+        AND (is_popup = 1 OR is_popup IS NULL)
       ORDER BY id DESC LIMIT 1
-    `).bind(userId).first();
+    `).bind(userId, email).first();
 
     if (unread) {
-      directMessage = unread;
+      directMessage = {
+        ...unread,
+        is_temporary: Boolean(unread.is_temporary),
+        duration: unread.duration || 8
+      };
+
+      // Si es un mensaje temporal, marcarlo inmediatamente como leído en D1 para que no se repita
+      if (unread.is_temporary) {
+        await env.DB.prepare('UPDATE notificaciones SET read = 1 WHERE id = ?').bind(unread.id).run();
+      }
     }
   } catch (err) {
-    // Silencioso si no hay tabla o error
+    console.error('Error fetching unread message in presence:', err);
   }
 
   return Response.json({ ok: true, direct_message: directMessage });

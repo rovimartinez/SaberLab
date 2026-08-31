@@ -21,6 +21,7 @@ import PanelWidgets from './pages/PanelWidgets';
 import SettingsPage from './pages/Settings';
 import AccessRequests from './pages/AccessRequests';
 import PanelGestion from './pages/PanelGestion';
+import PanelAnalitica from './pages/PanelAnalitica';
 import Landing from './pages/Landing';
 import RequestAccess from './pages/RequestAccess';
 import Certificate from './pages/Certificate';
@@ -110,6 +111,7 @@ function AppRoutes() {
                     <Route path="admin" element={<AdminRoute><PanelPlataforma /></AdminRoute>} />
                     <Route path="admin-panel" element={<AdminRoute><PanelGestion /></AdminRoute>} />
                     <Route path="requests" element={<AdminRoute><AccessRequests /></AdminRoute>} />
+                    <Route path="analytics" element={<AdminRoute><PanelAnalitica /></AdminRoute>} />
                     <Route path="learn/:id" element={<RedirectToMyCourses />} />
                     <Route path="learn/:courseId/:moduleId/:lessonId" element={<RedirectLessonToMyCourses />} />
                     <Route path="my-courses/:id" element={<SubjectDetail />} />

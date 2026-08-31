@@ -19,7 +19,24 @@ export const upsertLessonProgress = async (payload) => {
     return data ?? null;
 };
 
-export const saveQuizAttempt = async () => null;
+export const saveQuizAttempt = async (payload) => {
+    if (!payload?.lesson_id && !payload?.evaluation_key) return null;
+    const evalKey = payload.evaluation_key || payload.lesson_id;
+    const reqScore = payload.answers?.required_score_percent ?? 80;
+    const { data, error } = await api('/attempts', {
+        method: 'POST',
+        body: {
+            evaluation_key: evalKey,
+            score: payload.score,
+            passed: payload.score >= reqScore,
+            completed_at: payload.finished_at || new Date().toISOString(),
+            answers: payload.answers,
+            points_obtained: payload.score
+        }
+    });
+    if (error) return null;
+    return data ?? null;
+};
 
 export const fetchMissionProgress = async () => [];
 

@@ -43,8 +43,9 @@ export async function onRequestGet({ request, env, data }) {
 export async function onRequestPost({ request, env, data }) {
   await ensureGroupsSchema(env);
 
-  if (data.user.role !== 'admin') {
-    return Response.json({ error: 'Solo administradores' }, { status: 403 });
+  const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(data.user?.role);
+  if (!isStaff) {
+    return Response.json({ error: 'Solo administradores o docentes' }, { status: 403 });
   }
 
   let body;
@@ -60,12 +61,29 @@ export async function onRequestPost({ request, env, data }) {
   }
 
   if (id) {
+    // Obtener datos del grupo previo para sincronizar cambios de nombre
+    const oldGroup = await env.DB.prepare('SELECT * FROM grupos WHERE id = ?').bind(id).first();
+
     await env.DB.prepare(
       `UPDATE grupos SET
          name = COALESCE(?, name),
          teacher = COALESCE(?, teacher)
        WHERE id = ?`
     ).bind(name, teacher ?? null, id).run();
+
+    // Si el nombre del grupo cambió, actualizar en cascada la tabla usuarios y perfiles
+    if (oldGroup && oldGroup.name && oldGroup.name !== name) {
+      try {
+        await env.DB.prepare('UPDATE usuarios SET group_name = ? WHERE group_name = ?').bind(name, oldGroup.name).run();
+      } catch (e) {
+        console.warn('No se pudo actualizar group_name en usuarios:', e);
+      }
+      try {
+        await env.DB.prepare('UPDATE perfiles SET group_name = ? WHERE group_name = ?').bind(name, oldGroup.name).run();
+      } catch (e) {
+        console.warn('No se pudo actualizar group_name en perfiles:', e);
+      }
+    }
 
     const row = await env.DB.prepare('SELECT * FROM grupos WHERE id = ?').bind(id).first();
     return Response.json(row);

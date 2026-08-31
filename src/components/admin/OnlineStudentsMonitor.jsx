@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Users, Radio, Send, RefreshCw, MessageSquare, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Users, Radio, Send, RefreshCw, MessageSquare, AlertCircle, CheckCircle, Clock, Zap, Bell } from 'lucide-react';
 import { api } from '../../lib/api';
 
 export default function OnlineStudentsMonitor() {
@@ -12,6 +12,8 @@ export default function OnlineStudentsMonitor() {
     const [modalTarget, setModalTarget] = useState(null); // null = broadcast, { user_id, full_name } = 1-to-1
     const [messageTitle, setMessageTitle] = useState('Aviso del Docente');
     const [messageText, setMessageText] = useState('');
+    const [isTemporary, setIsTemporary] = useState(true); // true = ventanita flash que desaparece sola
+    const [duration, setDuration] = useState(8); // segundos de duración
     const [sending, setSending] = useState(false);
     const [feedback, setFeedback] = useState(null);
 
@@ -37,8 +39,10 @@ export default function OnlineStudentsMonitor() {
 
     const handleOpenMessageModal = (student = null) => {
         setModalTarget(student);
-        setMessageTitle(student ? `Mensaje para ${student.full_name || student.email}` : 'Comunicado a la Clase');
+        setMessageTitle(student ? `Aviso para ${student.full_name || student.email}` : 'Aviso para la Clase');
         setMessageText('');
+        setIsTemporary(true); // Por defecto ventanita temporal
+        setDuration(8);
         setFeedback(null);
         setShowModal(true);
     };
@@ -54,8 +58,10 @@ export default function OnlineStudentsMonitor() {
             const payload = {
                 mode: modalTarget ? 'single' : 'broadcast',
                 target_user_id: modalTarget ? modalTarget.user_id : undefined,
-                title: messageTitle.trim() || 'Mensaje del Docente',
-                message: messageText.trim()
+                title: messageTitle.trim() || 'Aviso del Docente',
+                message: messageText.trim(),
+                is_temporary: isTemporary,
+                duration: duration
             };
 
             const { data, error } = await api('/admin/send-message', {
@@ -65,18 +71,19 @@ export default function OnlineStudentsMonitor() {
 
             if (error) throw new Error(error.message || 'Error al enviar');
 
+            const targetName = modalTarget ? (modalTarget.full_name || modalTarget.email) : 'los alumnos conectados';
             setFeedback({
                 type: 'success',
-                text: modalTarget
-                    ? `¡Mensaje enviado a la pantalla de ${modalTarget.full_name || modalTarget.email}!`
-                    : `¡Mensaje enviado a las pantallas de los ${data.count || onlineStudents.length} alumnos conectados!`
+                text: isTemporary
+                    ? `¡Ventanita temporal (${duration}s) enviada a la pantalla de ${targetName}! (No queda guardada)`
+                    : `¡Notificación enviada a ${targetName}! (Guardada en su historial)`
             });
 
             setTimeout(() => {
                 setShowModal(false);
                 setMessageText('');
                 setFeedback(null);
-            }, 1800);
+            }, 2000);
         } catch (err) {
             setFeedback({ type: 'error', text: err.message || 'No se pudo enviar el mensaje' });
         } finally {
@@ -468,6 +475,113 @@ export default function OnlineStudentsMonitor() {
                                 />
                             </div>
 
+                            {/* Selector de Modalidad: Ventanita Flash vs Notificación Formal */}
+                            <div style={{
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                borderRadius: '14px',
+                                padding: '1rem',
+                                marginBottom: '1.5rem'
+                            }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.65rem' }}>
+                                    Modalidad de Entrega en Pantalla
+                                </label>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: isTemporary ? '0.85rem' : 0 }}>
+                                    {/* Opción 1: Ventanita Flash */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsTemporary(true)}
+                                        style={{
+                                            padding: '0.75rem 0.6rem',
+                                            borderRadius: '10px',
+                                            border: isTemporary ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                                            background: isTemporary ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                                            color: isTemporary ? '#38bdf8' : '#94a3b8',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '0.35rem',
+                                            textAlign: 'center',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800, fontSize: '0.86rem' }}>
+                                            <Zap size={16} />
+                                            <span>Ventanita Flash</span>
+                                        </div>
+                                        <span style={{ fontSize: '0.72rem', color: isTemporary ? '#cbd5e1' : '#64748b' }}>
+                                            Solo unos seg. en pantalla (NO se guarda en el buzón)
+                                        </span>
+                                    </button>
+
+                                    {/* Opción 2: Notificación Formal */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsTemporary(false)}
+                                        style={{
+                                            padding: '0.75rem 0.6rem',
+                                            borderRadius: '10px',
+                                            border: !isTemporary ? '1.5px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
+                                            background: !isTemporary ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                                            color: !isTemporary ? '#34d399' : '#94a3b8',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '0.35rem',
+                                            textAlign: 'center',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800, fontSize: '0.86rem' }}>
+                                            <Bell size={16} />
+                                            <span>Notificación Formal</span>
+                                        </div>
+                                        <span style={{ fontSize: '0.72rem', color: !isTemporary ? '#cbd5e1' : '#64748b' }}>
+                                            Requiere 'Entendido' y se guarda en su buzón
+                                        </span>
+                                    </button>
+                                </div>
+
+                                {/* Si es temporal: selector de duración */}
+                                {isTemporary && (
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        paddingTop: '0.75rem',
+                                        borderTop: '1px solid rgba(255, 255, 255, 0.06)'
+                                    }}>
+                                        <span style={{ fontSize: '0.76rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                            <Clock size={13} color="#38bdf8" /> Duración en pantalla:
+                                        </span>
+                                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                            {[5, 8, 12, 15].map((sec) => (
+                                                <button
+                                                    key={sec}
+                                                    type="button"
+                                                    onClick={() => setDuration(sec)}
+                                                    style={{
+                                                        padding: '3px 9px',
+                                                        borderRadius: '6px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 700,
+                                                        border: duration === sec ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                        background: duration === sec ? '#38bdf8' : 'rgba(255, 255, 255, 0.05)',
+                                                        color: duration === sec ? '#0f172a' : '#94a3b8',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {sec}s
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                                 <button
                                     type="button"
@@ -490,7 +604,7 @@ export default function OnlineStudentsMonitor() {
                                     type="submit"
                                     disabled={sending || !messageText.trim()}
                                     style={{
-                                        background: modalTarget
+                                        background: isTemporary
                                             ? 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'
                                             : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                         color: '#fff',
@@ -506,8 +620,12 @@ export default function OnlineStudentsMonitor() {
                                         boxShadow: '0 4px 15px rgba(0,0,0,0.3)'
                                     }}
                                 >
-                                    <Send size={15} />
-                                    <span>{sending ? 'Enviando...' : (modalTarget ? 'Enviar a Pantalla' : 'Difundir a Todos')}</span>
+                                    {isTemporary ? <Zap size={15} /> : <Send size={15} />}
+                                    <span>
+                                        {sending
+                                            ? 'Enviando...'
+                                            : (isTemporary ? `Mostrar Ventanita (${duration}s)` : 'Enviar Notificación')}
+                                    </span>
                                 </button>
                             </div>
                         </form>

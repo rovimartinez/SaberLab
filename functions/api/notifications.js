@@ -6,14 +6,38 @@ export async function onRequestGet({ env, data }) {
       title TEXT,
       message TEXT,
       read INTEGER NOT NULL DEFAULT 0,
+      sender_name TEXT,
+      is_popup INTEGER DEFAULT 1,
+      is_temporary INTEGER DEFAULT 0,
+      duration INTEGER DEFAULT 8,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
 
-  const { results } = await env.DB.prepare(
-    'SELECT * FROM notificaciones WHERE user_id = ? ORDER BY created_at DESC'
-  ).bind(data.user.id).all();
-  return Response.json(results);
+  try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN is_temporary INTEGER DEFAULT 0').run(); } catch {}
+  try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN duration INTEGER DEFAULT 8').run(); } catch {}
+
+  const userId = data.user.id;
+  const userEmail = (data.user.email || '').toLowerCase();
+
+  // Limpiar mensajes temporales antiguos de más de 10 minutos
+  try {
+    await env.DB.prepare(`
+      DELETE FROM notificaciones 
+      WHERE is_temporary = 1 AND datetime(created_at) <= datetime('now', '-10 minutes')
+    `).run();
+  } catch {}
+
+  // Devolver solo las notificaciones persistentes que NO sean temporales
+  const { results } = await env.DB.prepare(`
+    SELECT id, title, message, read, sender_name, created_at 
+    FROM notificaciones 
+    WHERE (user_id = ? OR LOWER(user_id) = LOWER(?))
+      AND (is_temporary = 0 OR is_temporary IS NULL)
+    ORDER BY created_at DESC
+  `).bind(userId, userEmail).all();
+
+  return Response.json(results || []);
 }
 
 export async function onRequestPost({ request, env, data }) {

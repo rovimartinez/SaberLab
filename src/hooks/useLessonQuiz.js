@@ -142,6 +142,16 @@ export const useLessonQuiz = ({
                 }
             });
             sessionIdRef.current = null;
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('lesson-progress-updated', {
+                    detail: {
+                        lessonId: lessonKey,
+                        score: scorePercent,
+                        passed: scorePercent >= requiredScorePercent
+                    }
+                }));
+            }
         } catch (error) {
             console.error('Error guardando intento de quiz:', error);
         }

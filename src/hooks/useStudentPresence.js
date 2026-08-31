@@ -3,16 +3,17 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
 
-const HEARTBEAT_INTERVAL_MS = 25000; // Cada 25 segundos
+const HEARTBEAT_INTERVAL_MS = 6000; // Cada 6 segundos para entrega rápida de alertas
 
 export function useStudentPresence() {
-    const { user, profile, isStaff } = useAuth();
+    const { user, profile, isStaff, isImpersonating, viewMode } = useAuth();
     const location = useLocation();
     const [pendingMessage, setPendingMessage] = useState(null);
     const lastDismissedIdRef = useRef(null);
 
     const userRole = (profile?.role || user?.role || 'student').toLowerCase();
-    const isStudent = Boolean(user && !isStaff && userRole !== 'admin' && userRole !== 'docente' && userRole !== 'profesor');
+    // Estudiante real o administrador en Modo Vista de Estudiante
+    const isStudent = Boolean(user && (!isStaff || isImpersonating || viewMode === 'student' || userRole === 'student'));
 
     const getActivityFromPath = (pathname) => {
         if (pathname.includes('/evaluations/') || pathname.includes('/re-m1-e2')) {
@@ -71,24 +72,38 @@ export function useStudentPresence() {
         // Enviar ping inicial de inmediato
         sendPing();
 
-        // Enviar periódicamente
+        // Enviar periódicamente cada 6s
         const interval = setInterval(sendPing, HEARTBEAT_INTERVAL_MS);
-        return () => clearInterval(interval);
+
+        // También chequear inmediatamente cuando la pestaña vuelve a enfocarse
+        const handleFocus = () => sendPing();
+        window.addEventListener('focus', handleFocus);
+        document.addEventListener('visibilitychange', handleFocus);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleFocus);
+        };
     }, [isStudent, sendPing]);
 
     const clearPendingMessage = useCallback(async () => {
         if (pendingMessage) {
             lastDismissedIdRef.current = pendingMessage.id;
-            try {
-                // Marcar como leída en el backend
-                await api('/notifications', {
-                    method: 'POST',
-                    body: { ids: [pendingMessage.id] }
-                });
-            } catch (e) {
-                console.error('Error marcando notificación:', e);
-            }
+            const isTemp = pendingMessage.is_temporary;
             setPendingMessage(null);
+
+            // Si es notificación persistente, marcar como leída en el backend
+            if (!isTemp) {
+                try {
+                    await api('/notifications', {
+                        method: 'POST',
+                        body: { ids: [pendingMessage.id] }
+                    });
+                } catch (e) {
+                    console.error('Error marcando notificación:', e);
+                }
+            }
         }
     }, [pendingMessage]);
 

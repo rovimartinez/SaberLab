@@ -563,7 +563,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                         </span>
                                         {group.teacher && (
                                             <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>
-                                                Prof. {group.teacher}
+                                                {group.teacher.startsWith('Prof.') ? group.teacher : `Prof. ${group.teacher}`}
                                             </span>
                                         )}
                                     </div>
@@ -573,6 +573,9 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                         </button>
                                         <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openCodeModal(group)} title="Generar Código">
                                             <Key size={14} />
+                                        </button>
+                                        <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openEditGroupModal(group)} title="Editar Nombre del Grupo">
+                                            <Edit2 size={14} />
                                         </button>
                                         <button className="btn btn-small btn-danger" style={{ padding: '0.5rem 0.75rem' }} onClick={() => handleDeleteGroup(group)} title="Eliminar Grupo de BD">
                                             <Trash2 size={14} />
@@ -822,6 +825,56 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                 {groupSaveStatus}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Group Modal */}
+            {editGroupModal.isOpen && (
+                <div className="code-modal-overlay" onClick={() => setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' })}>
+                    <div className="code-modal glass-panel" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <span className="modal-label">Editar información del grupo</span>
+                            <h2 className="modal-course-name">#DB-{editGroupModal.group?.id} {editGroupModal.group?.name}</h2>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Nombre del Grupo</label>
+                            <input
+                                type="text"
+                                placeholder="Nombre del grupo"
+                                value={editGroupModal.name}
+                                onChange={(e) => setEditGroupModal(prev => ({ ...prev, name: e.target.value }))}
+                                autoFocus
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Docente Encargado <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>(opcional)</span></label>
+                            <input
+                                type="text"
+                                placeholder="Nombre del docente"
+                                value={editGroupModal.teacher}
+                                onChange={(e) => setEditGroupModal(prev => ({ ...prev, teacher: e.target.value }))}
+                            />
+                        </div>
+
+                        <div className="modal-actions">
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleUpdateGroup} 
+                                disabled={!editGroupModal.name.trim()}
+                            >
+                                <Check size={18} />
+                                Guardar Cambios
+                            </button>
+                            <button 
+                                className="btn btn-secondary" 
+                                onClick={() => setEditGroupModal({ isOpen: false, group: null, name: '', teacher: '' })}
+                            >
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

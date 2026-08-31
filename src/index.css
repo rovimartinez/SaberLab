@@ -261,3 +261,11 @@ h6 {
 .animate-energy-flow {
   animation: energy-flow 1.5s linear infinite;
 }
+
+/* Evitar que Microsoft Edge active el botón flotante de 'Búsqueda Visual' (lupita) en iconos SVG */
+svg {
+  pointer-events: none;
+}
+button, a, input, select, textarea {
+  pointer-events: auto;
+}

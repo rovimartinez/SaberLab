@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye, Activity } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 import { api } from '../../lib/api';
@@ -72,6 +72,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
         ...(isStaff ? [{
             title: isAdmin ? 'ADMIN' : 'DOCENTE',
             items: [
+                { name: 'Analítica', path: '/dashboard/analytics', icon: <Activity size={18} /> },
                 { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> },
             ]
         }] : [])

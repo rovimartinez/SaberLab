@@ -17,7 +17,7 @@ import { l1Missions } from '../lessons/RE/m1/l1.missions';
 import { l2Missions } from '../lessons/RE/m1/l2.missions';
 import { l3Missions } from '../lessons/RE/m1/l3.missions';
 import { l4Missions } from '../lessons/RE/m1/l4.missions';
-import { COURSES_DEFINITION, getCourseByIdentifier, getFullLessonPath, getLessonContent, getNextLesson } from '../data/coursesData.jsx';
+import { COURSES_DEFINITION, getCourseByIdentifier, getFullLessonPath, getLessonContent, getNextLesson, getPreviousLesson } from '../data/coursesData.jsx';
 import CourseSidebar from '../components/course/CourseSidebar';
 import LessonRenderer from '../components/lesson/LessonRenderer';
 import LessonLegacyBridge from '../components/lesson/legacy/LessonLegacyBridge';
@@ -63,7 +63,13 @@ const Lesson = () => {
         return `${courseCode}-${cleanMod}-${cleanLes}`;
     }, [courseCode, moduleId, lessonId]);
 
-    const isLocked = profile?.role !== 'admin' && courseVisibility[internalId] === false;
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
+    const previousLesson = useMemo(() => getPreviousLesson(internalId), [internalId]);
+    const [isPreviousCompleted, setIsPreviousCompleted] = useState(true);
+
+    const isLockedByVisibility = !isStaff && courseVisibility[internalId] === false;
+    const isLockedByPrerequisite = !isStaff && !isPreviousCompleted;
+    const isLocked = isLockedByVisibility || isLockedByPrerequisite;
 
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -81,20 +87,40 @@ const Lesson = () => {
     const [isSavingProgress, setIsSavingProgress] = useState(false);
     const hasTrackedInitialTabRef = useRef(false);
 
-    useEffect(() => {
-        const checkProgress = async () => {
-            if (!user?.id || !internalId) return;
-            try {
-                const prog = await fetchLessonProgress(user.id, internalId);
-                if (prog && (prog.status === 'completed' || prog.progress === 100)) {
-                    setIsCompleted(true);
-                }
-            } catch (err) {
-                console.error('Error cargando progreso de lección:', err);
+    const checkProgress = useCallback(async () => {
+        if (!user?.id || !internalId) return;
+        try {
+            const prog = await fetchLessonProgress(user.id, internalId);
+            if (prog && (prog.status === 'completed' || prog.progress === 100 || (typeof prog.score === 'number' && prog.score >= 80))) {
+                setIsCompleted(true);
+            } else {
+                setIsCompleted(false);
             }
-        };
+
+            // Verificar si la lección previa está completada
+            if (previousLesson) {
+                const prevProg = await fetchLessonProgress(user.id, previousLesson.fullId);
+                const prevDone = Boolean(prevProg && (prevProg.status === 'completed' || prevProg.progress >= 80 || (typeof prevProg.score === 'number' && prevProg.score >= 80)));
+                setIsPreviousCompleted(prevDone);
+            } else {
+                setIsPreviousCompleted(true);
+            }
+        } catch (err) {
+            console.error('Error cargando progreso de lección:', err);
+        }
+    }, [user?.id, internalId, previousLesson]);
+
+    useEffect(() => {
         checkProgress();
-    }, [user?.id, internalId]);
+    }, [checkProgress]);
+
+    useEffect(() => {
+        const handleProgressEvent = () => {
+            checkProgress();
+        };
+        window.addEventListener('lesson-progress-updated', handleProgressEvent);
+        return () => window.removeEventListener('lesson-progress-updated', handleProgressEvent);
+    }, [checkProgress]);
 
     useEffect(() => {
         if (internalId && (internalId === 'ee-m1-l6' || internalId.endsWith('-l6') || internalId.endsWith('-l10') || internalId.endsWith('-l14') || internalId.endsWith('-l16'))) {
@@ -230,22 +256,42 @@ const Lesson = () => {
     if (isLocked) {
         return (
             <div className="lesson-view-container animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh', padding: '2rem' }}>
-                <div className="glass-panel" style={{ maxWidth: '480px', width: '100%', padding: '2.5rem 2rem', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', textAlign: 'center' }}>
+                <div className="glass-panel" style={{ maxWidth: '520px', width: '100%', padding: '2.5rem 2rem', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.3)', textAlign: 'center' }}>
                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
                         <Lock size={32} />
                     </div>
-                    <h2 style={{ color: 'white', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.75rem' }}>Lección Bloqueada</h2>
-                    <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
-                        Esta lección aún no ha sido habilitada por el docente para este curso. Consulta con tu profesor o regresa al panel del curso.
+                    <h2 style={{ color: 'white', fontWeight: 800, fontSize: '1.4rem', marginBottom: '0.75rem' }}>
+                        {isLockedByPrerequisite ? 'Lección Aún No Desbloqueada' : 'Lección Bloqueada'}
+                    </h2>
+                    <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+                        {isLockedByPrerequisite ? (
+                            <>
+                                Para acceder a esta lección, primero debes aprobar la prueba de la lección anterior (<strong>{previousLesson?.title || 'Lección Anterior'}</strong>) con un puntaje mínimo del <strong>80%</strong>.
+                            </>
+                        ) : (
+                            'Esta lección aún no ha sido habilitada por el docente para este curso. Consulta con tu profesor o regresa al panel del curso.'
+                        )}
                     </p>
-                    <button
-                        className="btn btn-primary"
-                        style={{ padding: '0.75rem 1.5rem', margin: '0 auto', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                        onClick={() => navigate(`/dashboard/my-courses/${courseData?.slug || courseId}`)}
-                    >
-                        <ArrowLeft size={18} />
-                        <span>Volver al curso</span>
-                    </button>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        {isLockedByPrerequisite && previousLesson && (
+                            <button
+                                className="btn btn-primary"
+                                style={{ padding: '0.75rem 1.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: '#3b82f6', border: 'none', color: 'white', borderRadius: '8px', cursor: 'pointer' }}
+                                onClick={() => navigate(`/dashboard/my-courses/${previousLesson.courseSlug}/${previousLesson.moduleId}/${previousLesson.shortId}`)}
+                            >
+                                <Brain size={16} />
+                                <span>Ir a lección anterior</span>
+                            </button>
+                        )}
+                        <button
+                            className="btn"
+                            style={{ padding: '0.75rem 1.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.08)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                            onClick={() => navigate(`/dashboard/my-courses/${courseData?.slug || courseId}`)}
+                        >
+                            <ArrowLeft size={16} />
+                            <span>Volver al curso</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -404,38 +450,84 @@ const Lesson = () => {
                             <ArrowLeft size={20} />
                             <span>Módulos del curso</span>
                         </button>
-                        <button
-                            className="nav-btn nav-btn-complete"
-                            style={{
-                                background: isCompleted ? '#10b981' : subject.color,
-                                border: 'none',
-                                opacity: isSavingProgress ? 0.7 : 1,
-                                cursor: isSavingProgress ? 'not-allowed' : 'pointer'
-                            }}
-                            onClick={handleCompleteLesson}
-                            disabled={isSavingProgress}
-                        >
-                            <CheckCircle size={20} />
-                            <span>{isSavingProgress ? 'Guardando en BD...' : isCompleted ? '¡Lección Completada! ✓' : 'Marcar como completada'}</span>
-                        </button>
-                        {nextLesson && (
-                            <button
-                                className="nav-btn nav-btn-next"
+
+                        {isCompleted ? (
+                            <div
+                                className="nav-btn nav-btn-complete"
                                 style={{
-                                    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                                    color: 'white',
+                                    background: 'linear-gradient(135deg, #10b981, #059669)',
                                     border: 'none',
-                                    fontWeight: '600',
+                                    color: 'white',
+                                    cursor: 'default',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+                                }}
+                            >
+                                <CheckCircle size={20} />
+                                <span>¡Lección Aprobada! (≥80%) ✓</span>
+                            </div>
+                        ) : (
+                            <button
+                                className="nav-btn nav-btn-complete"
+                                style={{
+                                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                    border: 'none',
+                                    color: 'white',
                                     cursor: 'pointer',
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '0.5rem'
+                                    gap: '0.5rem',
+                                    boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)'
                                 }}
-                                onClick={handleNextLesson}
+                                onClick={() => setActiveTab('prueba')}
                             >
-                                <span>Siguiente lección</span>
-                                <ChevronRight size={20} />
+                                <ClipboardList size={20} />
+                                <span>Aprobar Prueba (Mínimo 80%)</span>
                             </button>
+                        )}
+
+                        {nextLesson && (
+                            (isCompleted || isStaff) ? (
+                                <button
+                                    className="nav-btn nav-btn-next"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontWeight: '600',
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                    onClick={handleNextLesson}
+                                >
+                                    <span>Siguiente lección</span>
+                                    <ChevronRight size={20} />
+                                </button>
+                            ) : (
+                                <div
+                                    title="Debes aprobar el cuestionario con un mínimo de 80% para desbloquear la siguiente lección"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        padding: '0.65rem 1.25rem',
+                                        borderRadius: '8px',
+                                        background: 'rgba(51, 65, 85, 0.45)',
+                                        color: '#94a3b8',
+                                        border: '1px dashed rgba(148, 163, 184, 0.3)',
+                                        cursor: 'not-allowed',
+                                        fontSize: '0.9rem',
+                                        userSelect: 'none'
+                                    }}
+                                >
+                                    <Lock size={16} />
+                                    <span>Siguiente lección (Bloqueada 80%)</span>
+                                </div>
+                            )
                         )}
                     </div>
                 </article>
