@@ -62,13 +62,13 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         </div>
                     )}
 
-                    <h3 style={{ color: 'white', fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.75rem', position: 'relative', zIndex: 1 }}>
+                    <h3 style={{ color: 'var(--text-primary)', fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.75rem', position: 'relative', zIndex: 1 }}>
                         {block.quizConfig?.title || block.title || 'Prueba'}
                     </h3>
-                    <p style={{ color: '#94a3b8', fontSize: '1rem', lineHeight: 1.5, marginBottom: '1.75rem', maxWidth: '550px', position: 'relative', zIndex: 1 }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.5, marginBottom: '1.75rem', maxWidth: '550px', position: 'relative', zIndex: 1 }}>
                         Demuestra lo que has aprendido en esta leccion. Completa este reto para validar tus conocimientos y desbloquear el siguiente nivel.
                     </p>
-                    <ul style={{ textAlign: 'left', color: '#cbd5e1', marginBottom: '2rem', display: 'inline-block', listStyle: 'none', padding: 0, position: 'relative', zIndex: 1 }}>
+                    <ul style={{ textAlign: 'left', color: 'var(--text-primary)', marginBottom: '2rem', display: 'inline-block', listStyle: 'none', padding: 0, position: 'relative', zIndex: 1 }}>
                         <li style={{ marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
                             {quizQuestions.length} preguntas de opcion multiple
@@ -172,7 +172,7 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         ))}
                     </div>
 
-                    <h3 style={{ color: 'white', fontSize: '1.4rem', fontWeight: 700, marginBottom: '2rem', lineHeight: 1.5 }}>
+                    <h3 style={{ color: 'var(--text-primary)', fontSize: '1.4rem', fontWeight: 700, marginBottom: '2rem', lineHeight: 1.5 }}>
                         {currentQuestion.q}
                     </h3>
 
@@ -180,16 +180,19 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         {currentQuestion.options.map((option, optIdx) => {
                             const isSelected = selectedAnswer === optIdx;
                             const isCorrect = currentQuestion.correct === optIdx;
-                            let bg = 'rgba(30, 41, 59, 0.4)';
-                            let border = '1px solid rgba(255,255,255,0.08)';
+                            let bg = 'var(--bg-secondary)';
+                            let border = '1px solid var(--glass-border)';
+                            let textColor = 'var(--text-primary)';
 
                             if (selectedAnswer !== null && isSelected) {
                                 if (isCorrect) {
-                                    bg = 'rgba(16, 185, 129, 0.2)';
+                                    bg = 'rgba(16, 185, 129, 0.18)';
                                     border = '2px solid #10b981';
+                                    textColor = '#10b981';
                                 } else {
-                                    bg = 'rgba(239, 68, 68, 0.2)';
+                                    bg = 'rgba(239, 68, 68, 0.18)';
                                     border = '2px solid #ef4444';
+                                    textColor = '#ef4444';
                                 }
                             }
 
@@ -209,9 +212,9 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        color: 'white',
+                                        color: textColor,
                                         fontSize: '1.05rem',
-                                        fontWeight: 500,
+                                        fontWeight: 600,
                                         position: 'relative',
                                         zIndex: 2
                                     }}
@@ -228,15 +231,14 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
 
             {quizMode === 'result' && (
                 <div style={{
-                    textAlign: 'center',
-                    padding: '2rem',
-                    background: 'rgba(255,255,255,0.03)',
+                    animation: 'fadeIn 0.5s ease-out',
+                    position: 'relative',
+                    padding: '3rem 1.5rem',
                     borderRadius: '24px',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    textAlign: 'center',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    position: 'relative',
                     overflow: 'hidden'
                 }}>
                     {subject?.icon && (
@@ -257,7 +259,7 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         {resultPercent >= requiredScorePercent ? <Trophy size={60} color="#10b981" /> : <AlertCircle size={60} color="#ef4444" />}
                     </div>
 
-                    <h3 style={{ color: 'white', fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem', position: 'relative', zIndex: 1 }}>
+                    <h3 style={{ color: 'var(--text-primary)', fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem', position: 'relative', zIndex: 1 }}>
                         {resultPercent >= requiredScorePercent ? '¡Dominio Alcanzado!' : 'Sigue Practicando'}
                     </h3>
 

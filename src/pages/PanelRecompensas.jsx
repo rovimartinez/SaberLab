@@ -169,28 +169,7 @@ export default function PanelRecompensas() {
                 <div style={{ marginBottom: '-0.5rem' }}>
                     <button
                         onClick={() => navigate(`/dashboard/my-courses/${activeCourse.slug}`)}
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: 'rgba(255, 255, 255, 0.06)',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            color: '#94a3b8',
-                            padding: '6px 14px',
-                            borderRadius: '10px',
-                            fontSize: '0.82rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s'
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.color = '#f8fafc';
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.color = '#94a3b8';
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                        }}
+                        className="btn-back-nav"
                     >
                         <ArrowLeft size={16} />
                         <span>Volver a {activeCourse.name}</span>
@@ -199,22 +178,22 @@ export default function PanelRecompensas() {
             )}
 
             {/* ── Encabezado Estándar SaberLab ── */}
-            <div className="recompensas-header">
-                <div>
-                    <div className="recompensas-header-title">
-                        <Gift size={30} color="#facc15" />
-                        <h1>{activeCourse ? `Recompensas de ${activeCourse.name}` : 'Mis Recompensas'}</h1>
-                    </div>
-                    <div className="recompensas-header-subtitle">
-                        Colección de instrumentos, simuladores y herramientas desbloqueables ganadas en tus lecciones.
+            <div className="page-header yellow" style={{ marginBottom: '0.5rem' }}>
+                <div className="header-title">
+                    <Gift size={28} className="text-gradient" />
+                    <div>
+                        <h1 style={{ fontSize: '1.8rem', margin: 0 }}>
+                            {activeCourse ? `Recompensas de ${activeCourse.name}` : 'Mis Recompensas'}
+                        </h1>
+                        <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
+                            Colección de instrumentos, simuladores y herramientas desbloqueables ganadas en tus lecciones.
+                        </p>
                     </div>
                 </div>
 
-                <div className="recompensas-stats-row">
-                    <div className="recompensa-stat-pill">
-                        <Trophy size={16} color="#facc15" />
-                        <span>Colección: <strong>{unlockedCount}/{totalCount}</strong></span>
-                    </div>
+                <div className="recompensa-stat-pill">
+                    <Trophy size={16} color="#facc15" />
+                    <span>Colección: <strong>{unlockedCount}/{totalCount}</strong></span>
                 </div>
             </div>
 

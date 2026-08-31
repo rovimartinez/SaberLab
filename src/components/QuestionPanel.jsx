@@ -31,9 +31,10 @@ const QuestionPanel = ({
         <div className="glass-panel" style={{ padding: '2rem' }}>
             <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ 
-                    color: '#94a3b8', 
+                    color: 'var(--text-secondary)', 
                     fontSize: '0.85rem', 
-                    background: 'rgba(255,255,255,0.05)', 
+                    background: 'var(--glass-bg)', 
+                    border: '1px solid var(--glass-border)',
                     padding: '0.4rem 0.8rem', 
                     borderRadius: '20px',
                     letterSpacing: '0.5px'
@@ -43,11 +44,11 @@ const QuestionPanel = ({
             </div>
 
             <h2 style={{ 
-                color: '#f8fafc', 
+                color: 'var(--text-primary)', 
                 fontSize: '1.35rem', 
                 lineHeight: '1.6', 
                 marginBottom: '2rem',
-                fontWeight: '600'
+                fontWeight: '700'
             }}>
                 {question?.question || question?.q || question?.question_text || question?.text || 'Pregunta sin enunciado'}
             </h2>
@@ -58,12 +59,12 @@ const QuestionPanel = ({
                     const isSelected = String(userAnswer) === String(optionValue);
                     const isCorrect = String(question?.correct) === String(optionValue);
                     
-                    let border = '1px solid rgba(255, 255, 255, 0.08)';
-                    let background = 'rgba(30, 41, 59, 0.85)';
-                    let color = '#e2e8f0';
-                    let boxShadow = '0 2px 6px rgba(0, 0, 0, 0.2)';
-                    let badgeBg = 'rgba(255, 255, 255, 0.08)';
-                    let badgeColor = '#94a3b8';
+                    let border = '1px solid var(--glass-border)';
+                    let background = 'var(--bg-secondary)';
+                    let color = 'var(--text-primary)';
+                    let boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
+                    let badgeBg = 'var(--glass-bg)';
+                    let badgeColor = 'var(--text-secondary)';
                     let transform = 'translateY(0)';
                     let fontWeight = '500';
                     
@@ -85,11 +86,12 @@ const QuestionPanel = ({
                             badgeBg = 'rgba(255, 255, 255, 0.3)';
                             badgeColor = '#ffffff';
                         } else {
-                            border = '1px solid rgba(255, 255, 255, 0.05)';
-                            background = 'rgba(15, 23, 42, 0.5)';
-                            color = '#64748b';
-                            badgeBg = 'rgba(255, 255, 255, 0.05)';
-                            badgeColor = '#64748b';
+                            border = '1px solid var(--glass-border)';
+                            background = 'var(--bg-secondary)';
+                            color = 'var(--text-muted)';
+                            badgeBg = 'var(--glass-bg)';
+                            badgeColor = 'var(--text-muted)';
+                            opacity = 0.6;
                         }
                     } else if (isSelected) {
                         border = 'none';
@@ -97,8 +99,8 @@ const QuestionPanel = ({
                         color = '#ffffff';
                         fontWeight = '800';
                         boxShadow = '0 4px 16px rgba(2, 132, 199, 0.45)';
-                        badgeBg = '#38bdf8';
-                        badgeColor = '#0f172a';
+                        badgeBg = 'rgba(255, 255, 255, 0.25)';
+                        badgeColor = '#ffffff';
                     }
                     
                     const optionLetter = String.fromCharCode(65 + index); // A, B, C, D...

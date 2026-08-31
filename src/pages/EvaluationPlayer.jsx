@@ -754,7 +754,7 @@ const EvaluationPlayer = () => {
                     <h2 style={{ color: '#f8fafc', marginBottom: '1rem' }}>Sin Preguntas</h2>
                     <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Esta evaluación aún no tiene preguntas publicadas por el docente.</p>
                     <button
-                        onClick={() => navigate('/dashboard/evaluations')}
+                        onClick={() => navigate('/dashboard/my-courses')}
                         style={{
                             background: 'rgba(255,255,255,0.1)',
                             color: 'white',
@@ -764,7 +764,7 @@ const EvaluationPlayer = () => {
                             cursor: 'pointer'
                         }}
                     >
-                        Volver a evaluaciones
+                        Volver a Cursos
                     </button>
                 </div>
             </div>
@@ -827,7 +827,7 @@ const EvaluationPlayer = () => {
                             <span>Aceptar Protocolo e Iniciar Examen en Pantalla Completa</span>
                         </button>
                         <button
-                            onClick={() => navigate('/dashboard/evaluations')}
+                            onClick={() => navigate('/dashboard/my-courses')}
                             style={{
                                 background: 'rgba(255, 255, 255, 0.08)',
                                 color: '#cbd5e1',
@@ -951,7 +951,7 @@ const EvaluationPlayer = () => {
                             🔍 Revisar Examen (Teoría y Práctica)
                         </button>
                         <button
-                            onClick={() => navigate('/dashboard/evaluations')}
+                            onClick={() => navigate('/dashboard/my-courses')}
                             style={{
                                 background: 'rgba(255, 255, 255, 0.08)',
                                 color: '#cbd5e1',
@@ -964,7 +964,7 @@ const EvaluationPlayer = () => {
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            Salir a Evaluaciones
+                            Volver a Cursos
                         </button>
                     </div>
                 </div>
@@ -1298,7 +1298,7 @@ const EvaluationPlayer = () => {
                                 </button>
                             ) : (
                                 <button
-                                    onClick={isExamenL6 ? () => setActivePhase('practica') : (reviewMode ? () => navigate('/dashboard/evaluations') : handleFinishExam)}
+                                    onClick={isExamenL6 ? () => setActivePhase('practica') : (reviewMode ? () => navigate('/dashboard/my-courses') : handleFinishExam)}
                                     style={{
                                         padding: '0.85rem 2rem',
                                         border: 'none',
@@ -1318,7 +1318,7 @@ const EvaluationPlayer = () => {
                                             : '0 4px 16px rgba(16, 185, 129, 0.4)'
                                     }}
                                 >
-                                    {isExamenL6 ? (reviewMode ? 'Ir a Fase Práctica ➔' : 'Terminar Teórico ➔') : (reviewMode ? 'Salir a Evaluaciones' : 'Finalizar Evaluación')}
+                                    {isExamenL6 ? (reviewMode ? 'Ir a Fase Práctica ➔' : 'Terminar Teórico ➔') : (reviewMode ? 'Volver a Cursos' : 'Finalizar Evaluación')}
                                 </button>
                             )}
                         </div>
@@ -1351,7 +1351,7 @@ const EvaluationPlayer = () => {
                         </button>
                         {reviewMode ? (
                             <button
-                                onClick={() => navigate('/dashboard/evaluations')}
+                                onClick={() => navigate('/dashboard/my-courses')}
                                 style={{
                                     padding: '0.9rem 2rem',
                                     border: '1px solid #38bdf8',

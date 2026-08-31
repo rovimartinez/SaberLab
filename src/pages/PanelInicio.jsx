@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useApps } from '../context/useApps';
 import { api } from '../lib/api';
-import { COURSES_DEFINITION, getLessonInfo } from '../data/coursesData.jsx';
+import { COURSES_DEFINITION, getLessonInfo, getCourseColor } from '../data/coursesData.jsx';
 import { ranks, getRankByLessons, getNextRank, getRankProgress } from '../data/ranksData';
 import '../styles/PanelInicio.css';
 
@@ -18,11 +18,6 @@ const getCourseIcon = (abbr) => {
     if (abbr === 'RE' || abbr === 'robotica') return <Bot size={22} />;
     if (abbr === 'EE' || abbr === 'electricidad') return <Zap size={22} />;
     return <GraduationCap size={22} />;
-};
-
-const getCourseColor = (abbr) => {
-    const def = COURSES_DEFINITION.find(c => c.abbr === abbr || c.id === abbr);
-    return def?.color || '#38bdf8';
 };
 
 const PanelInicio = () => {
@@ -307,11 +302,11 @@ const PanelInicio = () => {
 
                         <div className="next-mission-box">
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                                <span style={{ fontSize: '0.86rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '0.86rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <Sparkles size={15} color={courseColor} />
                                     {courseProgressPercent === 0 ? 'Primer reto:' : 'Siguiente reto:'} <strong style={{ color: courseColor }}>{nextLessonTarget?.title}</strong>
                                 </span>
-                                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 800 }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 800 }}>
                                     {courseProgressPercent}%
                                 </span>
                             </div>
@@ -343,7 +338,7 @@ const PanelInicio = () => {
                         </div>
 
                         <div className="next-mission-box">
-                            <p style={{ margin: 0, fontSize: '0.88rem', color: '#94a3b8', lineHeight: '1.5' }}>
+                            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                                 Tu docente te asignará a tu clase o puedes unirte con tu código en la sección de Mis Cursos.
                             </p>
                         </div>
@@ -381,8 +376,8 @@ const PanelInicio = () => {
 
                     <div className="next-mission-box" onClick={() => setShowRanksModal(true)} style={{ cursor: 'pointer' }} title="Haz clic para ver todos los rangos">
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                            <span style={{ fontSize: '0.86rem', color: '#cbd5e1' }}>
-                                Próximo rango: <strong style={{ color: '#fff' }}>{nextRank?.name || 'Maestro'}</strong>
+                            <span style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
+                                Próximo rango: <strong style={{ color: 'var(--text-primary)' }}>{nextRank?.name || 'Maestro'}</strong>
                             </span>
                             <span style={{ fontSize: '0.8rem', color: rank.color, fontWeight: 800 }}>
                                 {rankProgress}%

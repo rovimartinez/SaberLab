@@ -1,7 +1,152 @@
 .subject-detail-container {
-    color: white;
+    color: var(--text-primary);
     scrollbar-gutter: stable; /* Previene el salto de layout al aparecer el scroll */
 }
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — SubjectDetail (Ultra-Crisp, High Contrast & Clean)
+   ========================================================================== */
+:root[data-theme='light'] .subject-detail-container {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .subject-hero,
+:root[data-theme='light'] .detail-header-classic {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+    border-color: rgba(203, 213, 225, 0.85) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme='light'] .subject-hero-title {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .stat-label,
+:root[data-theme='light'] .subject-hero-meta,
+:root[data-theme='light'] .subject-hero-desc {
+    color: #475569 !important;
+}
+
+:root[data-theme='light'] .mini-progress-track {
+    background: rgba(203, 213, 225, 0.6) !important;
+}
+
+:root[data-theme='light'] .section-title-premium {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .module-card-improved {
+    background: #ffffff !important;
+    border-color: rgba(203, 213, 225, 0.8) !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04) !important;
+}
+
+:root[data-theme='light'] .module-header-action {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+:root[data-theme='light'] .module-header-action:hover {
+    background: #f1f5f9 !important;
+}
+
+:root[data-theme='light'] .module-name-text {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .module-meta-info {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .lessons-list-premium {
+    background: #f1f5f9 !important;
+}
+
+:root[data-theme='light'] .lesson-item-improved {
+    background: #ffffff !important;
+    border-color: rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+:root[data-theme='light'] .lesson-item-improved:hover:not(.locked) {
+    background: #ffffff !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.15) !important;
+}
+
+:root[data-theme='light'] .lesson-title-text {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .lesson-btn {
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #0284c7 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+}
+
+:root[data-theme='light'] .lesson-btn:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+:root[data-theme='light'] .locked-badge {
+    background: rgba(241, 245, 249, 0.95) !important;
+    border-color: rgba(203, 213, 225, 0.9) !important;
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .rewards-collection-banner {
+    background: linear-gradient(135deg, rgba(254, 240, 138, 0.35) 0%, #ffffff 100%) !important;
+    border: 1px solid rgba(234, 179, 8, 0.4) !important;
+    box-shadow: 0 4px 15px rgba(234, 179, 8, 0.08) !important;
+}
+
+:root[data-theme='light'] .rewards-collection-title {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .course-info-row {
+    background: #f8fafc !important;
+    border-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+:root[data-theme='light'] .info-row-label {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .info-row-val {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .info-row-val.highlight-blue {
+    color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .info-row-val.highlight-gold {
+    color: #d97706 !important;
+}
+
+:root[data-theme='light'] .course-info-sidebar .glass-panel,
+:root[data-theme='light'] .sidebar-card-premium,
+:root[data-theme='light'] .rewards-preview-card,
+:root[data-theme='light'] .agenda-card {
+    background: #ffffff !important;
+    border-color: rgba(203, 213, 225, 0.8) !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04) !important;
+}
+
+:root[data-theme='light'] .sidebar-header-row h2,
+:root[data-theme='light'] .sidebar-header-row h3 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .agenda-row-item {
+    background: #f8fafc !important;
+    border-color: rgba(226, 232, 240, 0.8) !important;
+    color: #0f172a !important;
+}
+
 
 .subject-hero {
     position: relative;
@@ -276,20 +421,73 @@
 }
 
 .locked-badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 10px;
+    gap: 6px;
+    padding: 0.35rem 0.85rem;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    width: 32px;
-    height: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    width: auto;
+    min-width: 90px;
+    height: auto;
+    font-size: 0.78rem;
+    font-weight: 700;
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 .locked-badge svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.rewards-collection-banner {
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    border-radius: 14px;
+    padding: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.rewards-collection-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.course-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.85rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.82rem;
+}
+
+.info-row-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-row-val {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.info-row-val.highlight-blue {
+    color: #38bdf8;
+}
+
+.info-row-val.highlight-gold {
+    color: #fbbf24;
 }
 
 /* Sidebar Improved */
@@ -601,3 +799,4 @@
         max-width: 100%;
     }
 }
+

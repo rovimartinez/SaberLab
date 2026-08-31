@@ -137,68 +137,18 @@ const PanelCalificaciones = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', paddingBottom: '3rem' }}>
             
-            {/* ── ENCABEZADO OFICIAL DE CALIFICACIONES ── */}
-            <div className="glass-panel" style={{
-                padding: '2.25rem',
-                borderRadius: '24px',
-                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
-                border: '1px solid rgba(56, 189, 248, 0.2)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '1.5rem'
-            }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-                        <GraduationCap size={28} color="#38bdf8" />
-                        <span style={{ color: '#38bdf8', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '0.5px' }}>
-                            REGISTRO ACADÉMICO OFICIAL • SABERLAB
-                        </span>
+            {/* ── ENCABEZADO ESTÁNDAR SABERLAB ── */}
+            <div className="page-header blue" style={{ marginBottom: '0.5rem' }}>
+                <div className="header-title">
+                    <GraduationCap size={28} className="text-gradient" />
+                    <div>
+                        <h1 style={{ fontSize: '1.8rem', margin: 0 }}>
+                            Libreta de Calificaciones
+                        </h1>
+                        <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                            Estudiante: <strong style={{ color: 'var(--text-primary)' }}>{fullName}</strong> • Periodo Académico: <strong style={{ color: '#38bdf8' }}>2026-II</strong>
+                        </p>
                     </div>
-                    <h1 style={{ color: '#fff', fontSize: '2rem', margin: '0 0 0.4rem 0', fontWeight: 800 }}>
-                        Libreta de Calificaciones
-                    </h1>
-                    <p style={{ color: '#94a3b8', fontSize: '1rem', margin: 0 }}>
-                        Estudiante: <strong style={{ color: '#fff' }}>{fullName}</strong> | Periodo Académico: <strong style={{ color: '#38bdf8' }}>2026-II</strong>
-                    </p>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{
-                        background: 'rgba(15, 23, 42, 0.7)',
-                        border: `1px solid ${totalHeaderColor}40`,
-                        borderRadius: '16px',
-                        padding: '0.9rem 1.4rem',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: '1.8rem', fontWeight: 900, color: totalHeaderColor }}>{totalEarnedAll} / {totalMaxAll}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>Puntos Totales</div>
-                    </div>
-
-                    {totalEarnedAll >= 450 && (
-                        <div 
-                            onClick={() => navigate('/dashboard/certificate/ee')}
-                            style={{
-                                background: 'rgba(16, 185, 129, 0.12)',
-                                border: '1px solid rgba(16, 185, 129, 0.4)',
-                                borderRadius: '16px',
-                                padding: '0.9rem 1.4rem',
-                                textAlign: 'center',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                alignItems: 'center'
-                            }}
-                            title="Haz clic para ver y descargar tu Certificado Oficial"
-                        >
-                            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Award size={20} /> Desbloqueado
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#6ee7b7', fontWeight: 600 }}>Certificado Oficial (450+ pts) ↗</div>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -209,7 +159,8 @@ const PanelCalificaciones = () => {
                 <div key={course.id || course.slug} className="glass-panel" style={{
                     padding: '2rem',
                     borderRadius: '24px',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    border: '1px solid var(--glass-border)',
+                    background: 'var(--bg-secondary)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '1.5rem'
@@ -221,15 +172,15 @@ const PanelCalificaciones = () => {
                         alignItems: 'center',
                         flexWrap: 'wrap',
                         gap: '1rem',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                        borderBottom: '1px solid var(--glass-border)',
                         paddingBottom: '1.25rem'
                     }}>
                         <div>
-                            <h2 style={{ color: '#fff', fontSize: '1.4rem', margin: '0 0 0.3rem 0', fontWeight: 800 }}>
+                            <h2 style={{ color: 'var(--text-primary)', fontSize: '1.4rem', margin: '0 0 0.3rem 0', fontWeight: 800 }}>
                                 {course.name}
                             </h2>
-                            <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
-                                Docente: <strong>{course.teacher || 'Ronny Martinez Reyes'}</strong>
+                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
+                                Docente: <strong style={{ color: 'var(--text-primary)' }}>{course.teacher || 'Ronny Martinez Reyes'}</strong>
                             </span>
                         </div>
 
@@ -237,7 +188,7 @@ const PanelCalificaciones = () => {
                             <div style={{ fontSize: '1.2rem', fontWeight: 800, color: courseScoreColor }}>
                                 {course.totalPointsEarned} / {course.totalMaxCoursePoints} pts ({course.coursePercentage}%)
                             </div>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                                 Ponderación acumulada
                             </span>
                         </div>
@@ -247,7 +198,7 @@ const PanelCalificaciones = () => {
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                                     <th style={{ padding: '0.75rem 1rem' }}>EVALUACIÓN</th>
                                     <th style={{ padding: '0.75rem 1rem' }}>FECHA OFICIAL</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>PESO</th>
@@ -260,13 +211,13 @@ const PanelCalificaciones = () => {
                             <tbody>
                                 {course.evaluations.map((ev, idx) => (
                                     <tr key={ev.id || idx} style={{
-                                        borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                                        borderBottom: '1px solid var(--glass-border)',
                                         transition: 'background 0.2s'
                                     }}>
-                                        <td style={{ padding: '1rem', color: '#fff', fontWeight: 700, fontSize: '0.95rem' }}>
+                                        <td style={{ padding: '1rem', color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.95rem' }}>
                                             {ev.title}
                                         </td>
-                                        <td style={{ padding: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                        <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                                             {ev.date}
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'center', color: '#fbbf24', fontWeight: 800, fontSize: '0.9rem' }}>
@@ -282,7 +233,7 @@ const PanelCalificaciones = () => {
                                                     {ev.pointsObtained} pts
                                                 </span>
                                             ) : (
-                                                <span style={{ color: '#64748b', fontSize: '0.9rem' }}>—</span>
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>—</span>
                                             )}
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'center' }}>
@@ -292,10 +243,10 @@ const PanelCalificaciones = () => {
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
                                                     gap: '6px',
-                                                    minWidth: '105px',
-                                                    height: '32px',
+                                                    minWidth: '110px',
+                                                    height: '34px',
                                                     boxSizing: 'border-box',
-                                                    padding: '0 0.85rem',
+                                                    padding: '0 0.9rem',
                                                     borderRadius: '9px',
                                                     background: 'rgba(16, 185, 129, 0.15)',
                                                     color: '#10b981',
@@ -313,14 +264,14 @@ const PanelCalificaciones = () => {
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
                                                     gap: '6px',
-                                                    minWidth: '105px',
-                                                    height: '32px',
+                                                    minWidth: '110px',
+                                                    height: '34px',
                                                     boxSizing: 'border-box',
-                                                    padding: '0 0.85rem',
+                                                    padding: '0 0.9rem',
                                                     borderRadius: '9px',
-                                                    background: 'rgba(255, 255, 255, 0.05)',
-                                                    color: '#94a3b8',
-                                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                                    background: 'var(--glass-bg)',
+                                                    color: 'var(--text-secondary)',
+                                                    border: '1px solid var(--glass-border)',
                                                     fontSize: '0.82rem',
                                                     fontWeight: 600,
                                                     whiteSpace: 'nowrap'
@@ -336,34 +287,42 @@ const PanelCalificaciones = () => {
                                                     <span style={{
                                                         display: 'inline-flex',
                                                         alignItems: 'center',
-                                                        gap: '5px',
-                                                        padding: '4px 10px',
-                                                        borderRadius: '8px',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        minWidth: '115px',
+                                                        height: '34px',
+                                                        boxSizing: 'border-box',
+                                                        padding: '0 0.9rem',
+                                                        borderRadius: '9px',
                                                         background: ev.antiCheat.strikes >= 3 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
                                                         border: `1px solid ${ev.antiCheat.strikes >= 3 ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
-                                                        fontSize: '0.75rem',
+                                                        fontSize: '0.82rem',
                                                         fontWeight: 800,
                                                         color: ev.antiCheat.strikes >= 3 ? '#ef4444' : '#f59e0b',
                                                         whiteSpace: 'nowrap'
                                                     }}>
-                                                        <ShieldCheck size={14} />
+                                                        <ShieldCheck size={15} />
                                                         {ev.antiCheat.strikes >= 3 ? 'Infracción (3/3)' : `${ev.antiCheat.strikes} Advertencia(s)`}
                                                     </span>
                                                 ) : (
                                                     <span style={{
                                                         display: 'inline-flex',
                                                         alignItems: 'center',
-                                                        gap: '5px',
-                                                        padding: '4px 10px',
-                                                        borderRadius: '8px',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        minWidth: '115px',
+                                                        height: '34px',
+                                                        boxSizing: 'border-box',
+                                                        padding: '0 0.9rem',
+                                                        borderRadius: '9px',
                                                         background: 'rgba(16, 185, 129, 0.12)',
                                                         border: '1px solid rgba(16, 185, 129, 0.3)',
-                                                        fontSize: '0.75rem',
+                                                        fontSize: '0.82rem',
                                                         fontWeight: 800,
                                                         color: '#10b981',
                                                         whiteSpace: 'nowrap'
                                                     }}>
-                                                        <ShieldCheck size={14} />
+                                                        <ShieldCheck size={15} />
                                                         100% Íntegro
                                                     </span>
                                                 )
@@ -377,7 +336,7 @@ const PanelCalificaciones = () => {
                                                     onClick={() => navigate(`/dashboard/evaluations/${ev.id}/play?review=true`)}
                                                     style={{
                                                         minWidth: '125px',
-                                                        height: '36px',
+                                                        height: '34px',
                                                         boxSizing: 'border-box',
                                                         padding: '0 1rem',
                                                         borderRadius: '9px',

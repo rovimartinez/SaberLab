@@ -100,3 +100,26 @@ export async function onRequestGet({ env, data }) {
 
   return Response.json({ profile: { ...profile, access_status }, courses });
 }
+
+export async function onRequestPut({ env, data, request }) {
+  const userId = data.user?.id;
+  if (!userId) {
+    return Response.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const fullName = (body.full_name || '').trim();
+    if (!fullName) {
+      return Response.json({ error: 'El nombre no puede estar vacío' }, { status: 400 });
+    }
+
+    await env.DB.prepare(
+      'UPDATE perfiles SET full_name = ? WHERE id = ?'
+    ).bind(fullName, userId).run();
+
+    return Response.json({ success: true, full_name: fullName });
+  } catch (err) {
+    return Response.json({ error: err.message || 'Error al actualizar perfil' }, { status: 500 });
+  }
+}

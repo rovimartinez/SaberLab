@@ -493,3 +493,82 @@
     color: white;
 }
 
+/* ==========================================================================
+   LIGHT MODE SUPPORT — PanelMisCursos
+   ========================================================================== */
+:root[data-theme='light'] .page-header {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 246, 255, 0.9) 100%);
+    border-color: rgba(59, 130, 246, 0.25);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme='light'] .header-title h1 {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .header-title p {
+    color: #475569;
+}
+
+:root[data-theme='light'] .course-overview-card,
+:root[data-theme='light'] .course-card-classic {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(248, 250, 252, 0.95) 100%) !important;
+    border-color: rgba(148, 163, 184, 0.32);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+}
+
+:root[data-theme='light'] .course-overview-card:hover,
+:root[data-theme='light'] .course-card-classic:hover {
+    background: #ffffff !important;
+    border-color: #38bdf8;
+    box-shadow: 0 14px 35px rgba(56, 189, 248, 0.18);
+}
+
+:root[data-theme='light'] .course-overview-name,
+:root[data-theme='light'] .card-classic-title {
+    color: #0f172a !important;
+    text-shadow: none;
+}
+
+:root[data-theme='light'] .card-classic-meta {
+    color: #475569 !important;
+}
+
+:root[data-theme='light'] .card-classic-progress {
+    color: #0f172a !important;
+    font-weight: 800;
+}
+
+:root[data-theme='light'] .card-classic-desc {
+    color: #475569;
+}
+
+:root[data-theme='light'] .card-classic-footer {
+    background: rgba(241, 245, 249, 0.9) !important;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+:root[data-theme='light'] .card-classic-footer span {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .card-classic-footer svg {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .join-modal-content {
+    background: #ffffff !important;
+    border-color: rgba(148, 163, 184, 0.35);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.2);
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .join-modal-content h3 {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .join-modal-content p {
+    color: #475569;
+}
+
+

@@ -232,13 +232,15 @@ export default function PanelAnalitica() {
 
     return (
         <div className="analytics-page animate-fade-in">
-            {/* ENCABEZADO */}
-            <div className="analytics-header">
-                <div className="analytics-title-box">
-                    <Activity size={32} color="#38bdf8" />
+            {/* ENCABEZADO ESTÁNDAR SABERLAB */}
+            <div className="page-header blue" style={{ marginBottom: '0.75rem' }}>
+                <div className="header-title">
+                    <Activity size={28} className="text-gradient" />
                     <div>
-                        <h1>Analítica y Diagnóstico de Aprendizaje</h1>
-                        <p>Monitoreo neurocognitivo: retención en flashcards, perseverancia en simuladores y curvas de superación.</p>
+                        <h1 style={{ fontSize: '1.8rem', margin: 0 }}>Analítica y Diagnóstico de Aprendizaje</h1>
+                        <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                            Monitoreo neurocognitivo: retención en flashcards, perseverancia en simuladores y curvas de superación.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -395,41 +397,41 @@ export default function PanelAnalitica() {
                                     <Users size={20} color="#10b981" />
                                     <span>Rendimiento por Estudiante</span>
                                 </h3>
-                                <p style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+                                <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                                     Haz clic en "Ver Expediente" para abrir el diagnóstico cognitivo detallado de cada alumno.
                                 </p>
                             </div>
 
                             {/* Filtros */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.45rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                    <Search size={16} color="#94a3b8" />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.45rem 0.85rem', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
+                                    <Search size={16} color="var(--text-secondary)" />
                                     <input
                                         type="text"
                                         placeholder="Buscar estudiante..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.85rem' }}
+                                        style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', fontSize: '0.85rem' }}
                                     />
                                     {searchTerm && (
-                                        <X size={14} color="#94a3b8" style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />
+                                        <X size={14} color="var(--text-secondary)" style={{ cursor: 'pointer' }} onClick={() => setSearchTerm('')} />
                                     )}
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.45rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-primary)', padding: '0.45rem 0.85rem', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
                                     <Filter size={15} color="#38bdf8" />
                                     <select
                                         value={selectedGroup}
                                         onChange={(e) => setSelectedGroup(e.target.value)}
-                                        style={{ background: 'transparent', color: '#cbd5e1', border: 'none', outline: 'none', fontSize: '0.85rem', cursor: 'pointer' }}
+                                        style={{ background: 'transparent', color: 'var(--text-primary)', border: 'none', outline: 'none', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 600 }}
                                     >
-                                        <option value="all" style={{ background: '#1e293b' }}>
+                                        <option value="all">
                                             Todos los grupos ({overview.students.length} alumnos)
                                         </option>
                                         {availableGroups.map(grp => {
                                             const count = overview.students.filter(s => s.group_name === grp).length;
                                             return (
-                                                <option key={grp} value={grp} style={{ background: '#1e293b' }}>
+                                                <option key={grp} value={grp}>
                                                     Grupo: {grp} ({count} alumno{count !== 1 ? 's' : ''})
                                                 </option>
                                             );
@@ -454,48 +456,56 @@ export default function PanelAnalitica() {
                                 <tbody>
                                     {filteredStudents.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                                                 No se encontraron estudiantes con los filtros seleccionados.
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredStudents.map(st => (
+                                        filteredStudents.map(st => {
+                                            const studentInitial = (st.name || st.email || 'E')[0].toUpperCase();
+                                            const displayName = (st.name && st.name !== 'Estudiante') ? st.name : (st.email ? st.email.split('@')[0] : 'Estudiante');
+
+                                            return (
                                             <tr key={st.id}>
                                                 <td>
                                                     <div className="student-cell">
                                                         {st.avatar_url ? (
-                                                            <img src={st.avatar_url} alt={st.name} className="student-avatar" />
+                                                            <img src={st.avatar_url} alt={displayName} className="student-avatar" />
                                                         ) : (
                                                             <div className="student-avatar-placeholder">
-                                                                {st.name.charAt(0).toUpperCase()}
+                                                                {studentInitial}
                                                             </div>
                                                         )}
                                                         <div>
-                                                            <div style={{ fontWeight: 600, color: 'white' }}>{st.name}</div>
-                                                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{st.email}</div>
+                                                            <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.92rem' }}>
+                                                                {displayName}
+                                                            </div>
+                                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                                                {st.email}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', fontSize: '0.8rem', color: '#94a3b8' }}>
-                                                        {st.group_name}
+                                                    <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                                                        {st.group_name || 'Sin Grupo'}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span style={{ fontWeight: 700, color: st.lessonsCompletedCount > 0 ? '#10b981' : '#94a3b8' }}>
+                                                    <span style={{ fontWeight: 800, color: st.lessonsCompletedCount > 0 ? '#10b981' : 'var(--text-secondary)' }}>
                                                         {st.lessonsCompletedCount} lecciones
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <span style={{
-                                                        fontWeight: 700,
-                                                        color: st.averageScore >= 80 ? '#10b981' : st.averageScore > 0 ? '#f59e0b' : '#64748b'
+                                                        fontWeight: 800,
+                                                        color: st.averageScore >= 80 ? '#10b981' : st.averageScore > 0 ? '#f59e0b' : 'var(--text-secondary)'
                                                     }}>
                                                         {st.averageScore > 0 ? `${st.averageScore}%` : 'Sin nota'}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span style={{ color: '#cbd5e1' }}>{st.attemptsCount} intentos</span>
+                                                    <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{st.attemptsCount} intentos</span>
                                                 </td>
                                                 <td>
                                                     <button
@@ -506,7 +516,8 @@ export default function PanelAnalitica() {
                                                     </button>
                                                 </td>
                                             </tr>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
@@ -539,17 +550,17 @@ export default function PanelAnalitica() {
                                         <img src={studentDetail.student.avatar_url} alt={studentDetail.student.name} className="dossier-avatar" />
                                     ) : (
                                         <div className="student-avatar-placeholder" style={{ width: '56px', height: '56px', fontSize: '1.4rem' }}>
-                                            {studentDetail.student.name.charAt(0).toUpperCase()}
+                                            {(studentDetail.student.name || 'E').charAt(0).toUpperCase()}
                                         </div>
                                     )}
                                     <div>
-                                        <h2 style={{ margin: 0, color: 'white', fontSize: '1.4rem', fontWeight: 800 }}>
+                                        <h2 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem', fontWeight: 800 }}>
                                             {studentDetail.student.name}
                                         </h2>
-                                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.35rem', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.35rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                                             <span>Email: {studentDetail.student.email}</span>
                                             <span>•</span>
-                                            <span>Grupo: <strong style={{ color: 'white' }}>{studentDetail.student.group_name}</strong></span>
+                                            <span>Grupo: <strong style={{ color: 'var(--text-primary)' }}>{studentDetail.student.group_name}</strong></span>
                                         </div>
                                     </div>
                                 </div>
@@ -569,10 +580,10 @@ export default function PanelAnalitica() {
                                 <div className="dossier-ai-insight">
                                     <Sparkles size={24} color="#38bdf8" style={{ flexShrink: 0, marginTop: '2px' }} />
                                     <div>
-                                        <h4 style={{ margin: '0 0 0.25rem', color: '#38bdf8', fontSize: '0.95rem', fontWeight: 700 }}>
+                                        <h4 style={{ margin: '0 0 0.25rem', color: '#0284c7', fontSize: '0.95rem', fontWeight: 800 }}>
                                             Diagnóstico Neurocognitivo del Estudiante
                                         </h4>
-                                        <p style={{ margin: 0, color: '#e2e8f0', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                                        <p style={{ margin: 0, color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.5 }}>
                                             {studentDiagnosis.recommendation}
                                         </p>
                                     </div>
@@ -581,13 +592,13 @@ export default function PanelAnalitica() {
 
                             {/* CURVA DE INTENTOS Y EVALUACIONES */}
                             <div style={{ marginBottom: '2rem' }}>
-                                <h3 style={{ color: 'white', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <h3 style={{ color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <TrendingUp size={20} color="#10b981" />
                                     <span>Historial de Intentos por Prueba / Examen</span>
                                 </h3>
 
                                 {Object.keys(studentDetail.attemptsByEvaluation).length === 0 ? (
-                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>El estudiante aún no ha completado intentos de prueba registrados.</p>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>El estudiante aún no ha completado intentos de prueba registrados.</p>
                                 ) : (
                                     <div className="dossier-attempts-timeline">
                                         {Object.entries(studentDetail.attemptsByEvaluation).map(([evalKey, attempts]) => {
@@ -598,7 +609,7 @@ export default function PanelAnalitica() {
                                                 <div key={evalKey} className="attempt-eval-group">
                                                     <div className="eval-group-title">
                                                         <span>{evalKey.toUpperCase()}</span>
-                                                        <span style={{ fontSize: '0.8rem', color: isApproved ? '#34d399' : '#f87171' }}>
+                                                        <span style={{ fontSize: '0.8rem', color: isApproved ? '#10b981' : '#ef4444' }}>
                                                             {isApproved ? 'Aprobado (≥80%) ✓' : 'En progreso (Requiere reintento)'}
                                                         </span>
                                                     </div>
@@ -624,24 +635,22 @@ export default function PanelAnalitica() {
 
                             {/* CONCEPTOS CRÍTICOS EN FLASHCARDS */}
                             <div style={{ marginBottom: '2rem' }}>
-                                <h3 style={{ color: 'white', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <h3 style={{ color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Brain size={20} color="#f59e0b" />
                                     <span>Dificultades en Repaso de Flashcards</span>
                                 </h3>
 
                                 {studentDetail.flashcards.length === 0 ? (
-                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No hay registros de dificultad en tarjetas nemotécnicas.</p>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No hay registros de dificultad en tarjetas nemotécnicas.</p>
                                 ) : (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem' }}>
                                         {studentDetail.flashcards.map((fc, idx) => {
                                             const formatItemId = (lessonId, cardId) => {
                                                 if (!lessonId || !cardId) return cardId;
-                                                // lesson_id ej: "re-m1-l1" => partes ["re","m1","l1"]
                                                 const parts = lessonId.toLowerCase().split('-');
                                                 const course = (parts[0] || '').toUpperCase();
                                                 const mod = (parts[1] || '').toUpperCase();
                                                 const les = (parts[2] || '').toUpperCase();
-                                                // card_id ej: "f4" => F4, "p2" => P2, "pr1" => Pr1
                                                 const id = cardId.toLowerCase();
                                                 let suffix;
                                                 if (id.startsWith('pr')) suffix = 'Pr' + id.slice(2);
@@ -659,7 +668,7 @@ export default function PanelAnalitica() {
                                                 <div style={{ textAlign: 'right' }}>
                                                     <span className="concept-badge" style={{
                                                         background: fc.unknown_count > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                                                        color: fc.unknown_count > 0 ? '#f87171' : '#34d399',
+                                                        color: fc.unknown_count > 0 ? '#ef4444' : '#10b981',
                                                         borderColor: fc.unknown_count > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'
                                                     }}>
                                                         {fc.unknown_count > 0 ? `${fc.unknown_count} veces dudó` : 'Dominada ✓'}
@@ -674,13 +683,13 @@ export default function PanelAnalitica() {
 
                             {/* RETOS DE PRÁCTICA */}
                             <div>
-                                <h3 style={{ color: 'white', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <h3 style={{ color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Cpu size={20} color="#38bdf8" />
                                     <span>Perseverancia en Retos del Simulador</span>
                                 </h3>
 
                                 {studentDetail.challenges.length === 0 ? (
-                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>El estudiante no registra fallos previos en retos prácticos.</p>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>El estudiante no registra fallos previos en retos prácticos.</p>
                                 ) : (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem' }}>
                                         {studentDetail.challenges.map((ch, idx) => (
@@ -691,7 +700,7 @@ export default function PanelAnalitica() {
                                                 </div>
                                                 <span className="concept-badge" style={{
                                                     background: ch.failures_count > 0 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                                                    color: ch.failures_count > 0 ? '#fbbf24' : '#34d399',
+                                                    color: ch.failures_count > 0 ? '#f59e0b' : '#10b981',
                                                     borderColor: ch.failures_count > 0 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)'
                                                 }}>
                                                     {ch.failures_count > 0 ? `${ch.failures_count} fallos previos` : 'A la primera ✓'}

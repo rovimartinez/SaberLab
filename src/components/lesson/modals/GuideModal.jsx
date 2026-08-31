@@ -36,14 +36,14 @@ const GuideModal = ({ open, onClose }) => {
         >
             <div
                 style={{
-                    background: 'rgba(30, 41, 59, 0.98)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'var(--bg-secondary, #ffffff)',
+                    border: '1px solid var(--glass-border, #cbd5e1)',
                     borderRadius: '20px',
                     width: '90%',
                     maxWidth: '520px',
                     padding: '1.25rem',
                     position: 'relative',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                    boxShadow: '0 20px 50px rgba(15, 23, 42, 0.25)'
                 }}
                 onClick={(event) => event.stopPropagation()}
             >
@@ -53,12 +53,15 @@ const GuideModal = ({ open, onClose }) => {
                         position: 'absolute',
                         right: '1rem',
                         top: '1rem',
-                        background: 'rgba(255,255,255,0.05)',
-                        border: 'none',
-                        color: 'white',
+                        background: 'var(--bg-primary, #f1f5f9)',
+                        border: '1px solid var(--glass-border, #e2e8f0)',
+                        color: 'var(--text-primary, #0f172a)',
                         padding: '6px',
                         borderRadius: '50%',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                     }}
                 >
                     <X size={16} />
@@ -83,12 +86,12 @@ const GuideModal = ({ open, onClose }) => {
                         </thead>
                         <tbody>
                             {colors.map((colorItem) => (
-                                <tr key={colorItem.name} style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                <tr key={colorItem.name} style={{ background: 'var(--bg-primary, rgba(0,0,0,0.03))' }}>
                                     <td style={{ padding: '0.4rem 0.75rem', borderRadius: '8px 0 0 8px', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                        <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: colorItem.color, border: '1px solid rgba(255,255,255,0.1)' }} />
-                                        <span style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.8rem' }}>{colorItem.name}</span>
+                                        <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: colorItem.color, border: '1px solid rgba(0,0,0,0.15)' }} />
+                                        <span style={{ fontWeight: 700, color: 'var(--text-primary, #0f172a)', fontSize: '0.8rem' }}>{colorItem.name}</span>
                                     </td>
-                                    <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: '#cbd5e1', fontWeight: 600, fontSize: '0.8rem' }}>{colorItem.v12}</td>
+                                    <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: 'var(--text-secondary, #475569)', fontWeight: 600, fontSize: '0.8rem' }}>{colorItem.v12}</td>
                                     <td style={{ padding: '0.4rem 0.75rem', textAlign: 'center', color: '#f97316', fontWeight: 700, fontSize: '0.8rem' }}>{colorItem.mult}</td>
                                     <td style={{ padding: '0.4rem 0.75rem', borderRadius: '0 8px 8px 0', textAlign: 'right', color: colorItem.tol !== '-' ? '#10b981' : '#64748b', fontWeight: 800, fontSize: '0.8rem' }}>{colorItem.tol}</td>
                                 </tr>

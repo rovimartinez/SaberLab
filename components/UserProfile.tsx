@@ -3,7 +3,7 @@
 'use client';
 
 import Link from "next/link";
-import { LogOut, LifeBuoy, User, UserPlus, LogIn, Sun, Moon, Wrench, RefreshCw, GraduationCap, Award, Home, LayoutDashboard } from "lucide-react";
+import { LogOut, LifeBuoy, User, UserPlus, LogIn, Sun, Moon, Wrench, RefreshCw, GraduationCap, Award, Home, LayoutDashboard, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import {
@@ -58,6 +58,12 @@ function LoggedInAvatar({ user, showName, className, isMobile }: { user: Firebas
                       <Link href="/profile">
                         <User className="mr-2 h-4 w-4" />
                         <span>Perfil</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Configuración</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -133,6 +139,12 @@ function LoggedInAvatar({ user, showName, className, isMobile }: { user: Firebas
                   <Link href="/profile">
                     <User className="mr-2 h-4 w-4" />
                     <span>Perfil</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Configuración</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

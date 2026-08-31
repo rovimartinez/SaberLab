@@ -242,7 +242,7 @@ const EvaluationInstruction = () => {
                             Revisar Examen (Teoría y Práctica)
                         </button>
                         <button
-                            onClick={() => navigate('/dashboard/evaluations')}
+                            onClick={() => navigate('/dashboard/my-courses')}
                             style={{
                                 background: 'transparent',
                                 color: '#94a3b8',
@@ -257,7 +257,7 @@ const EvaluationInstruction = () => {
                             onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
                             onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
                         >
-                            Salir a Evaluaciones
+                            Volver a Mis Cursos
                         </button>
                     </div>
                 </div>

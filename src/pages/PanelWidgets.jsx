@@ -127,7 +127,7 @@ export const WidgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
     <>
         {isLauncherOpen && (
             <FloatingGadget
-                gadget={{ id: 'widgets', name: 'Widgets', icon: <Wrench size={18} />, color: '#24344d' }}
+                gadget={{ id: 'widgets', name: 'Widgets & Herramientas', icon: <Wrench size={18} />, color: '#0284c7' }}
                 onClose={() => closeLauncher('widgets')}
                 width={470}
                 height={390}
@@ -187,14 +187,9 @@ export const WidgetsOverlay = ({ isLauncherOpen, closeLauncher, openGadget, open
                 <ArduinoIDE />
             </FloatingGadget>
         )}
-
     </>
 );
-
-
 
 const PanelWidgets = () => <Navigate to="/dashboard" replace />;
 
 export default PanelWidgets;
-
-

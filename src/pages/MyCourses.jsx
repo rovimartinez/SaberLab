@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Zap, Code, FlaskConical, Box, Bot, Brain, Play, BookOpen, Plus, Hash, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
-import { COURSES_DEFINITION } from '../data/coursesData.jsx';
+import { COURSES_DEFINITION, getCourseColor } from '../data/coursesData.jsx';
 import '../styles/PanelMisCursos.css';
 
 const getCourseIcon = (abbr) => {
@@ -12,11 +12,6 @@ const getCourseIcon = (abbr) => {
     if (abbr === 'RE') return <Bot size={28} />;
     if (abbr === 'EE') return <Zap size={28} />;
     return <GraduationCap size={28} />;
-};
-
-const getCourseColor = (abbr) => {
-    const def = COURSES_DEFINITION.find(c => c.abbr === abbr);
-    return def?.color || '#6366f1';
 };
 
 const MyCourses = () => {
@@ -129,9 +124,8 @@ const MyCourses = () => {
                             key={course.id} 
                             className="course-card-classic"
                             style={{ 
-                                background: `linear-gradient(90deg, ${color}50 0%, #161d2b 100%)`,
-                                border: `1px solid ${color}40`,
-                                boxShadow: `0 4px 20px ${color}15`
+                                borderColor: `${color}60`,
+                                '--course-accent': color
                             }}
                             onClick={() => navigate(`/dashboard/learn/${course.slug}`)}
                         >
@@ -142,11 +136,11 @@ const MyCourses = () => {
                                         <BookOpen size={16} />
                                         <span>{lessons} lecciones</span>
                                     </div>
-                                    <div className="card-classic-progress" style={{ color: 'white', fontWeight: '800' }}>
+                                    <div className="card-classic-progress">
                                         {calculateCourseProgress(course)}% completado
                                     </div>
                                 </div>
-                                <div className="card-classic-bg-icon" style={{ opacity: 0.4, color: color }}>
+                                <div className="card-classic-bg-icon" style={{ color: color }}>
                                     {React.cloneElement(icon, { size: 110 })}
                                 </div>
                             </div>

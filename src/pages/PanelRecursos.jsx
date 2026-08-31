@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-    FolderOpen, FileText, Video, ExternalLink, Play, 
+    FolderOpen, Folder, FileText, Video, ExternalLink, Play, 
     Book, Link as LinkIcon, Zap, Bot, Search, 
     Layers, Sparkles, X, Globe, Cpu, Wrench, CheckCircle2,
     Plus, Edit2, Trash2, Save, AlertCircle, Eye, EyeOff
@@ -733,120 +733,101 @@ const PanelRecursos = () => {
                 </div>
             )}
 
-            <div className="page-header" style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            {/* ── ENCABEZADO ESTÁNDAR ── */}
+            <div className="page-header blue" style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div className="header-title">
-                    <Globe size={28} color="#38bdf8" />
+                    <Globe size={28} className="text-gradient" />
                     <div>
-                        <h1 style={{ margin: 0 }}>Centro de Recursos y Proyectos</h1>
-                        <p style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.9rem' }}>
+                        <h1 style={{ margin: 0, fontSize: '1.8rem' }}>Centro de Recursos y Proyectos</h1>
+                        <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                             Canales educativos verificados, proyectos de robótica, simuladores interactivos y hojas técnicas oficiales.
                         </p>
                     </div>
                 </div>
 
-                {/* DERECHA DEL ENCABEZADO: FILTRO DE CURSO + BOTÓN AGREGAR RECURSO */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                    {availableCourseFilters.length > 1 && (
-                        <div style={{
+                {/* BOTÓN AGREGAR RECURSO (DOCENTES / ADMIN) */}
+                {isStaff && (
+                    <button
+                        onClick={handleOpenCreateModal}
+                        style={{
+                            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                            color: '#fff',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            borderRadius: '12px',
+                            padding: '0.55rem 1.15rem',
+                            fontWeight: 700,
+                            fontSize: '0.86rem',
+                            cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.35rem',
-                            background: 'rgba(15, 23, 42, 0.65)',
-                            padding: '4px',
-                            borderRadius: '14px',
-                            border: '1px solid rgba(255, 255, 255, 0.08)'
-                        }}>
-                            {availableCourseFilters.map(cf => (
-                                <button
-                                    key={cf.id}
-                                    onClick={() => setSelectedCourseFilter(cf.id)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.45rem',
-                                        padding: '0.45rem 0.85rem',
-                                        borderRadius: '10px',
-                                        fontSize: '0.82rem',
-                                        fontWeight: 700,
-                                        border: selectedCourseFilter === cf.id ? '1px solid #38bdf8' : 'none',
-                                        background: selectedCourseFilter === cf.id ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-                                        color: selectedCourseFilter === cf.id ? '#38bdf8' : '#94a3b8',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    {cf.icon}
-                                    <span>{cf.label}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* BOTÓN DOCENTE / ADMIN: AGREGAR RECURSO */}
-                    {isStaff && (
-                        <button
-                            onClick={handleOpenCreateModal}
-                            style={{
-                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                                color: '#fff',
-                                border: '1px solid rgba(56, 189, 248, 0.4)',
-                                borderRadius: '12px',
-                                padding: '0.55rem 1.15rem',
-                                fontWeight: 700,
-                                fontSize: '0.86rem',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)',
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            <Plus size={15} />
-                            <span>Agregar Recurso</span>
-                        </button>
-                    )}
-                </div>
+                            gap: '0.5rem',
+                            boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        <Plus size={16} />
+                        <span>Agregar Recurso</span>
+                    </button>
+                )}
             </div>
 
-            {/* NAV HORIZONTAL DE CATEGORÍAS (TODOS, PROYECTOS, VIDEOS, SIMULADORES, DOCUMENTACIÓN) */}
-            <nav className="categories-nav-horizontal">
-                {categories.map(category => {
-                    const count = userAllowedResources.filter(r => 
-                        (category.id === 'all' || r.category === category.id) &&
-                        (selectedCourseFilter === 'all' || r.courseAbbr === selectedCourseFilter)
-                    ).length;
+            {/* ── BARRA DE CONTROL UNIFICADA (CURSO -> RECURSOS DESPLEGABLE -> BÚSQUEDA) ── */}
+            <div className="resources-unified-toolbar">
+                {/* 1. Selector de Curso */}
+                {availableCourseFilters.length > 1 && (
+                    <div className="course-filter-group">
+                        {availableCourseFilters.map(cf => (
+                            <button
+                                key={cf.id}
+                                onClick={() => setSelectedCourseFilter(cf.id)}
+                                className={`course-filter-btn ${selectedCourseFilter === cf.id ? 'active' : ''}`}
+                                title={cf.label}
+                            >
+                                {cf.icon}
+                                <span>{cf.id === 'all' ? 'Todos los cursos' : cf.id}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
 
-                    return (
-                        <button
-                            key={category.id}
-                            className={`category-nav-pill ${selectedCategory === category.id ? 'active' : ''}`}
-                            onClick={() => setSelectedCategory(category.id)}
-                        >
-                            {category.icon}
-                            <span>{category.name}</span>
-                            <span className="category-count">{count}</span>
-                        </button>
-                    );
-                })}
-            </nav>
+                {/* 2. Selector Desplegable de Recursos */}
+                <div className="resources-category-select-wrap">
+                    <Folder size={16} className="category-select-icon" />
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="resources-category-select"
+                    >
+                        {categories.map(category => {
+                            const count = userAllowedResources.filter(r => 
+                                (category.id === 'all' || r.category === category.id) &&
+                                (selectedCourseFilter === 'all' || r.courseAbbr === selectedCourseFilter)
+                            ).length;
 
-            {/* BARRA DE BÚSQUEDA */}
-            <div className="search-and-filter">
-                <div className="search-box glass-panel" style={{ borderRadius: '14px' }}>
-                    <Search className="search-icon" size={20} />
+                            return (
+                                <option key={category.id} value={category.id}>
+                                    {category.name} ({count})
+                                </option>
+                            );
+                        })}
+                    </select>
+                </div>
+
+                {/* 3. Buscador */}
+                <div className="search-box-unified">
+                    <Search className="search-icon-inside" size={17} />
                     <input 
                         type="text" 
-                        placeholder="Buscar por título, temática, sensor, canal o etiqueta (#Arduino, #Tinkercad...)"
+                        placeholder="Buscar recursos, #Arduino, etc..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     {searchTerm && (
                         <button 
                             onClick={() => setSearchTerm('')} 
-                            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                            className="search-clear-btn"
                         >
-                            <X size={16} />
+                            <X size={14} />
                         </button>
                     )}
                 </div>
@@ -913,26 +894,7 @@ const PanelRecursos = () => {
                                                     {resource.courseAbbr}
                                                 </span>
 
-                                                {/* Badge de Oculto para Docente / Admin */}
-                                                {!isVisible && (
-                                                    <span 
-                                                        style={{ 
-                                                            fontWeight: 800, 
-                                                            fontSize: '0.72rem', 
-                                                            color: '#f87171',
-                                                            background: 'rgba(239, 68, 68, 0.15)',
-                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                            padding: '2px 6px',
-                                                            borderRadius: '5px',
-                                                            display: 'inline-flex',
-                                                            alignItems: 'center',
-                                                            gap: '3px'
-                                                        }}
-                                                    >
-                                                        <EyeOff size={11} />
-                                                        <span>Oculto</span>
-                                                    </span>
-                                                )}
+
 
                                                 {/* Botones de gestión para Docente / Admin */}
                                                 {isStaff && (

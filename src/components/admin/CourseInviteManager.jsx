@@ -216,11 +216,11 @@ export default function CourseInviteManager({ courseId = null }) {
 
     return (
         <div style={{
-            background: 'var(--glass-bg, rgba(30, 41, 59, 0.5))',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--glass-border)',
             borderRadius: '20px',
             padding: '1.75rem',
-            color: '#fff',
+            color: 'var(--text-primary)',
             marginBottom: '2rem'
         }}>
             {/* Cabecera */}
@@ -231,7 +231,7 @@ export default function CourseInviteManager({ courseId = null }) {
                 flexWrap: 'wrap',
                 gap: '1rem',
                 marginBottom: '1.5rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                borderBottom: '1px solid var(--glass-border)',
                 paddingBottom: '1.25rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -249,10 +249,10 @@ export default function CourseInviteManager({ courseId = null }) {
                         <Link2 size={22} />
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                             Enlaces Directos de Inscripción
                         </h2>
-                        <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: 0 }}>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
                             Permite a los alumnos unirse a un curso con 1 solo clic y controla el tiempo de vigencia
                         </p>
                     </div>
@@ -286,15 +286,15 @@ export default function CourseInviteManager({ courseId = null }) {
                 <div style={{
                     padding: '2.5rem',
                     textAlign: 'center',
-                    background: 'rgba(15, 23, 42, 0.4)',
+                    background: 'var(--bg-primary)',
                     borderRadius: '14px',
-                    border: '1px dashed rgba(255, 255, 255, 0.1)'
+                    border: '1px dashed var(--glass-border)'
                 }}>
                     <Link2 size={36} color="#64748b" style={{ margin: '0 auto 0.75rem', opacity: 0.6 }} />
-                    <h4 style={{ margin: '0 0 0.3rem', color: '#cbd5e1', fontSize: '1rem' }}>
+                    <h4 style={{ margin: '0 0 0.3rem', color: 'var(--text-primary)', fontSize: '1rem' }}>
                         No hay enlaces de invitación creados
                     </h4>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: '0.82rem' }}>
+                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
                         Genera un enlace con tiempo configurado para que tus estudiantes se unan instantáneamente.
                     </p>
                 </div>
@@ -309,8 +309,8 @@ export default function CourseInviteManager({ courseId = null }) {
                             <div
                                 key={c.id}
                                 style={{
-                                    background: 'rgba(15, 23, 42, 0.6)',
-                                    border: `1px solid ${status.active ? 'rgba(255, 255, 255, 0.08)' : 'rgba(239, 68, 68, 0.25)'}`,
+                                    background: 'var(--bg-primary)',
+                                    border: `1px solid ${status.active ? 'var(--glass-border)' : 'rgba(239, 68, 68, 0.35)'}`,
                                     borderRadius: '16px',
                                     padding: '1.1rem 1.4rem',
                                     display: 'flex',
@@ -318,7 +318,8 @@ export default function CourseInviteManager({ courseId = null }) {
                                     justifyContent: 'space-between',
                                     flexWrap: 'wrap',
                                     gap: '1rem',
-                                    transition: 'all 0.2s ease'
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                                 }}
                             >
                                 <div style={{ minWidth: '220px' }}>
@@ -357,20 +358,20 @@ export default function CourseInviteManager({ courseId = null }) {
                                             fontFamily: 'monospace',
                                             fontSize: '1.15rem',
                                             fontWeight: 900,
-                                            color: '#f8fafc',
+                                            color: 'var(--text-primary)',
                                             letterSpacing: '1px'
                                         }}>
                                             {c.code}
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                                             {c.expires_at ? `Expira: ${new Date(c.expires_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}` : 'Sin fecha límite'}
                                         </span>
                                     </div>
                                     <div style={{
                                         fontSize: '0.75rem',
-                                        color: '#38bdf8',
+                                        color: '#0284c7',
                                         fontFamily: 'monospace',
-                                        background: 'rgba(56, 189, 248, 0.08)',
+                                        background: 'rgba(56, 189, 248, 0.1)',
                                         padding: '3px 8px',
                                         borderRadius: '6px',
                                         display: 'inline-block'

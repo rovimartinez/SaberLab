@@ -110,6 +110,66 @@ const PanelEvaluaciones = () => {
             date: '11 de noviembre de 2026',
             status: 'pending',
             grade: null
+        },
+        {
+            id: 're-m1-eval',
+            evaluation_key: 're-m1-eval',
+            course_id: 2,
+            title: 'Módulo 1 – Examen 1: Fundamentos y Lógica Digital',
+            description: 'Evaluación Teórico-Práctica de Lógica Digital y Arduino (150 pts)',
+            type: 'Examen',
+            points: 150,
+            time_limit: 60,
+            passing_score: 70,
+            due_date: '2026-09-04',
+            date: '4 de septiembre de 2026',
+            status: 'pending',
+            grade: null
+        },
+        {
+            id: 're-m2-eval',
+            evaluation_key: 're-m2-eval',
+            course_id: 2,
+            title: 'Módulo 2 – Examen 2: Sensores y Mundo Físico',
+            description: 'Lectura de sensores analógicos y digitales con Arduino (150 pts)',
+            type: 'Examen',
+            points: 150,
+            time_limit: 60,
+            passing_score: 70,
+            due_date: '2026-09-25',
+            date: '25 de septiembre de 2026',
+            status: 'pending',
+            grade: null
+        },
+        {
+            id: 're-m3-eval',
+            evaluation_key: 're-m3-eval',
+            course_id: 2,
+            title: 'Módulo 3 – Examen 3: Movimiento y Actuadores',
+            description: 'Control de servomotores, motores DC y puentes H (150 pts)',
+            type: 'Examen',
+            points: 150,
+            time_limit: 60,
+            passing_score: 70,
+            due_date: '2026-10-27',
+            date: '27 de octubre de 2026',
+            status: 'pending',
+            grade: null
+        },
+        {
+            id: 're-m4-eval',
+            evaluation_key: 're-m4-eval',
+            course_id: 2,
+            title: 'Módulo 4 – Proyecto Final Integrador',
+            description: 'Sustentación de prototipo robótico funcional STEAM / ABP (50 pts)',
+            type: 'Proyecto',
+            points: 50,
+            time_limit: 90,
+            passing_score: 70,
+            due_date: '2026-11-13',
+            date: '13 de noviembre de 2026',
+            status: 'pending',
+            grade: null
         }
     ];
 

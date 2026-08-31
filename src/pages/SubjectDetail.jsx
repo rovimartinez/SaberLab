@@ -134,16 +134,15 @@ const SubjectDetail = () => {
         <div className="subject-detail-container animate-fade-in" style={{ padding: '0 1rem' }}>
             {/* ── Hero Banner del Curso ── */}
             <div className="detail-header-classic subject-hero" style={{ 
-                background: `linear-gradient(90deg, ${subject.color}50 0%, #161d2b 100%)`, 
-                border: `1px solid ${subject.color}40`,
-                boxShadow: `0 4px 20px ${subject.color}15`
+                '--subject-color': subject.color,
+                borderColor: `${subject.color}50`
             }}>
                 <div className="subject-hero-content" style={{ position: 'relative', zIndex: 10 }}>
                     <div style={{ marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.85rem', fontWeight: 800, color: subject.color, letterSpacing: '0.5px' }}>PANEL DEL CURSO</span>
                     </div>
                     
-                    <h1 className="subject-hero-title" style={{ color: 'white', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.5px' }}>
+                    <h1 className="subject-hero-title">
                         {subject.name}
                     </h1>
                     
@@ -256,16 +255,11 @@ const SubjectDetail = () => {
                                                                     <h4 className="lesson-title-text" style={isHidden ? { opacity: 0.5 } : {}}>
                                                                         {lessonInfo.title || lesson.id}
                                                                     </h4>
-                                                                    {isCompleted && !isHidden && (
-                                                                        <span style={{ fontSize: '0.68rem', background: 'rgba(16, 185, 129, 0.12)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
-                                                                            Completada ✓
-                                                                        </span>
-                                                                    )}
                                                                 </div>
                                                             </div>
                                                             <div className="lesson-action-area">
                                                                 {isHidden ? (
-                                                                    <div className="locked-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                    <div className="locked-badge">
                                                                         <Lock size={14} />
                                                                         <span>Bloqueada</span>
                                                                     </div>
@@ -317,12 +311,12 @@ const SubjectDetail = () => {
                                                             className="lesson-item-improved" 
                                                             style={{
                                                                 background: isExamHidden 
-                                                                    ? 'rgba(15, 23, 42, 0.5)' 
+                                                                    ? 'var(--bg-secondary)' 
                                                                     : isExamCompleted 
                                                                         ? 'rgba(16, 185, 129, 0.06)' 
                                                                         : 'rgba(245, 158, 11, 0.08)',
                                                                 border: isExamHidden 
-                                                                    ? '1px dashed rgba(255, 255, 255, 0.1)' 
+                                                                    ? '1px dashed var(--glass-border)' 
                                                                     : isExamCompleted 
                                                                         ? '1px solid rgba(16, 185, 129, 0.35)' 
                                                                         : '1px solid rgba(245, 158, 11, 0.38)',
@@ -331,9 +325,9 @@ const SubjectDetail = () => {
                                                         >
                                                             <div className="lesson-indicator-line" style={isExamCompleted ? { background: '#10b981' } : isExamHidden ? { background: '#64748b' } : { background: '#f59e0b' }}></div>
                                                             <div className="lesson-icon-circle" style={{
-                                                                background: isExamCompleted ? 'rgba(16, 185, 129, 0.15)' : isExamHidden ? 'rgba(255, 255, 255, 0.05)' : 'rgba(245, 158, 11, 0.15)',
-                                                                color: isExamCompleted ? '#10b981' : isExamHidden ? '#64748b' : '#fbbf24',
-                                                                borderColor: isExamCompleted ? 'rgba(16, 185, 129, 0.3)' : isExamHidden ? 'rgba(255, 255, 255, 0.1)' : 'rgba(245, 158, 11, 0.35)'
+                                                                background: isExamCompleted ? 'rgba(16, 185, 129, 0.15)' : isExamHidden ? 'var(--glass-bg)' : 'rgba(245, 158, 11, 0.15)',
+                                                                color: isExamCompleted ? '#10b981' : isExamHidden ? 'var(--text-secondary)' : '#fbbf24',
+                                                                borderColor: isExamCompleted ? 'rgba(16, 185, 129, 0.3)' : isExamHidden ? 'var(--glass-border)' : 'rgba(245, 158, 11, 0.35)'
                                                             }}>
                                                                 {isExamHidden ? <Lock size={16} /> : isExamCompleted ? <CheckCircle size={18} color="#10b981" /> : <Award size={18} color="#fbbf24" />}
                                                             </div>
@@ -370,13 +364,13 @@ const SubjectDetail = () => {
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <span className="lesson-duration-text" style={{ color: '#94a3b8' }}>
+                                                                <span className="lesson-duration-text" style={{ color: 'var(--text-secondary)' }}>
                                                                     {module.evaluation.date ? `Fecha: ${module.evaluation.date}` : 'Evaluación del módulo'}
                                                                 </span>
                                                             </div>
                                                             <div className="lesson-action-area">
                                                                 {isExamHidden ? (
-                                                                    <div className="locked-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                    <div className="locked-badge">
                                                                         <Lock size={14} />
                                                                         <span>Bloqueado</span>
                                                                     </div>
@@ -422,126 +416,118 @@ const SubjectDetail = () => {
                                                         </div>
                                                     )}
                                                 </>
-                                            );
-                                        })()}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                                             );
+                                         })()}
+                                     </div>
+                                 )}
+                             </div>
+                         ))}
+                     </div>
+                 </div>
 
-                {/* ── Columna Derecha: Mis Recompensas + Información del Curso ── */}
-                <div className="course-sidebar-improved">
-                    {/* Opción de Entrada a Recompensas del Curso */}
-                    {courseRewards.length > 0 && (
-                        <div className="sidebar-card-premium" style={{ marginTop: 0, padding: '1.25rem' }}>
-                            <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
-                                <div className="sidebar-header-icon" style={{ background: 'rgba(250, 204, 21, 0.15)', color: '#facc15' }}>
-                                    <Gift size={20} />
-                                </div>
-                                <div>
-                                    <h2 className="section-title-premium" style={{ margin: 0 }}>Mis Recompensas</h2>
-                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                        Instrumentos y simuladores del curso
-                                    </span>
-                                </div>
-                            </div>
+                 {/* ── Columna Derecha: Mis Recompensas + Información del Curso ── */}
+                 <div className="course-sidebar-improved">
+                     {/* Opción de Entrada a Recompensas del Curso */}
+                     {courseRewards.length > 0 && (
+                         <div className="sidebar-card-premium glass-panel" style={{ marginTop: 0, padding: '1.25rem' }}>
+                             <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
+                                 <div className="sidebar-header-icon" style={{ background: 'rgba(250, 204, 21, 0.15)', color: '#facc15' }}>
+                                     <Gift size={20} />
+                                 </div>
+                                 <div>
+                                     <h2 className="section-title-premium" style={{ margin: 0 }}>Mis Recompensas</h2>
+                                     <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                         Instrumentos y simuladores del curso
+                                     </span>
+                                 </div>
+                             </div>
 
-                            {/* Banner de Estado de Colección */}
-                            <div style={{
-                                background: 'linear-gradient(135deg, rgba(250, 204, 21, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                                border: '1px solid rgba(250, 204, 21, 0.3)',
-                                borderRadius: '14px',
-                                padding: '0.9rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: '1rem'
-                            }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <div style={{
-                                        width: '40px',
-                                        height: '40px',
-                                        borderRadius: '50%',
-                                        background: 'rgba(250, 204, 21, 0.2)',
-                                        border: '1.5px solid #facc15',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: '#facc15'
-                                    }}>
-                                        <Trophy size={20} />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#f8fafc' }}>
-                                            {courseRewards.length} Insignias Ganadas
-                                        </div>
-                                        <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700 }}>
-                                            ✓ Colección Completa
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                             {/* Banner de Estado de Colección */}
+                             <div className="rewards-collection-banner">
+                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                     <div style={{
+                                         width: '40px',
+                                         height: '40px',
+                                         borderRadius: '50%',
+                                         background: 'rgba(250, 204, 21, 0.2)',
+                                         border: '1.5px solid #facc15',
+                                         display: 'flex',
+                                         alignItems: 'center',
+                                         justifyContent: 'center',
+                                         color: '#facc15',
+                                         flexShrink: 0
+                                     }}>
+                                         <Trophy size={20} />
+                                     </div>
+                                     <div>
+                                         <div className="rewards-collection-title">
+                                             {courseRewards.length} Insignias Ganadas
+                                         </div>
+                                         <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700 }}>
+                                             ✓ Colección Completa
+                                         </span>
+                                     </div>
+                                 </div>
+                             </div>
 
-                            {/* Botón de Entrada a la Bóveda de Recompensas */}
-                            <button
-                                onClick={() => navigate(`/dashboard/my-courses/${subject.slug}/rewards`)}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    padding: '0.75rem',
-                                    borderRadius: '12px',
-                                    background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
-                                    color: '#0f172a',
-                                    border: 'none',
-                                    fontWeight: 800,
-                                    fontSize: '0.9rem',
-                                    cursor: 'pointer',
-                                    boxShadow: '0 4px 14px rgba(234, 179, 8, 0.3)',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                            >
-                                <Sparkles size={16} fill="#0f172a" />
-                                <span>Ver Mis Recompensas</span>
-                                <ArrowRight size={16} />
-                            </button>
-                        </div>
-                    )}
+                             {/* Botón de Entrada a la Bóveda de Recompensas */}
+                             <button
+                                 onClick={() => navigate(`/dashboard/my-courses/${subject.slug}/rewards`)}
+                                 style={{
+                                     width: '100%',
+                                     display: 'flex',
+                                     alignItems: 'center',
+                                     justifyContent: 'center',
+                                     gap: '8px',
+                                     padding: '0.75rem',
+                                     borderRadius: '12px',
+                                     background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
+                                     color: '#0f172a',
+                                     border: 'none',
+                                     fontWeight: 800,
+                                     fontSize: '0.9rem',
+                                     cursor: 'pointer',
+                                     boxShadow: '0 4px 14px rgba(234, 179, 8, 0.3)',
+                                     transition: 'all 0.2s ease'
+                                 }}
+                                 onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                 onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                             >
+                                 <Sparkles size={16} fill="#0f172a" />
+                                 <span>Ver Mis Recompensas</span>
+                                 <ArrowRight size={16} />
+                             </button>
+                         </div>
+                     )}
 
-                    {/* Tarjeta de Información y Metodología */}
-                    <div className="sidebar-card-premium" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
-                        <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
-                            <div className="sidebar-header-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
-                                <BookOpen size={20} />
-                            </div>
-                            <div>
-                                <h2 className="section-title-premium" style={{ margin: 0 }}>Información del Curso</h2>
-                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                    Detalles y metodología activa
-                                </span>
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.8rem', color: '#cbd5e1' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '8px' }}>
-                                <span style={{ color: '#94a3b8' }}>Docente:</span>
-                                <span style={{ fontWeight: 700, color: '#f8fafc' }}>{subject.teacher}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '8px' }}>
-                                <span style={{ color: '#94a3b8' }}>Modalidad:</span>
-                                <span style={{ fontWeight: 700, color: '#38bdf8' }}>ABP STEAM + Simuladores</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0.75rem', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '8px' }}>
-                                <span style={{ color: '#94a3b8' }}>Evaluaciones:</span>
-                                <span style={{ fontWeight: 700, color: '#fbbf24' }}>Al final de cada módulo</span>
-                            </div>
-                        </div>
-                    </div>
+                     {/* Tarjeta de Información y Metodología */}
+                     <div className="sidebar-card-premium glass-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+                         <div className="sidebar-header-row" style={{ marginBottom: '0.75rem' }}>
+                             <div className="sidebar-header-icon" style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}>
+                                 <BookOpen size={20} />
+                             </div>
+                             <div>
+                                 <h2 className="section-title-premium" style={{ margin: 0 }}>Información del Curso</h2>
+                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                     Detalles y metodología activa
+                                 </span>
+                             </div>
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.82rem' }}>
+                             <div className="course-info-row">
+                                 <span className="info-row-label">Docente:</span>
+                                 <span className="info-row-val">{subject.teacher}</span>
+                             </div>
+                             <div className="course-info-row">
+                                 <span className="info-row-label">Modalidad:</span>
+                                 <span className="info-row-val highlight-blue">ABP STEAM + Simuladores</span>
+                             </div>
+                             <div className="course-info-row">
+                                 <span className="info-row-label">Evaluaciones:</span>
+                                 <span className="info-row-val highlight-gold">Al final de cada módulo</span>
+                             </div>
+                         </div>
+                     </div>
 
                 </div>
             </div>

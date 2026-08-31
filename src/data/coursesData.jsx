@@ -345,7 +345,7 @@ export const COURSES_DEFINITION = [
                 evaluation: {
                     id: 're-m1-eval',
                     title: 'Evaluación 1: Fundamentos y Lógica Digital',
-                    date: '2 Sep 2026',
+                    date: '4 Sep 2026',
                     points: 150
                 }
             },
@@ -361,8 +361,8 @@ export const COURSES_DEFINITION = [
                 evaluation: {
                     id: 're-m2-eval',
                     title: 'Evaluación 2: Sensores y Mundo Físico',
-                    date: '28 Sep 2026',
-                    points: 125
+                    date: '25 Sep 2026',
+                    points: 150
                 }
             },
             {
@@ -377,8 +377,8 @@ export const COURSES_DEFINITION = [
                 evaluation: {
                     id: 're-m3-eval',
                     title: 'Evaluación 3: Movimiento y Actuadores',
-                    date: '21 Oct 2026',
-                    points: 125
+                    date: '27 Oct 2026',
+                    points: 150
                 }
             },
             {
@@ -393,8 +393,8 @@ export const COURSES_DEFINITION = [
                 evaluation: {
                     id: 're-m4-eval',
                     title: 'Proyecto Final Integrador',
-                    date: '11 Nov 2026',
-                    points: 100
+                    date: '13 Nov 2026',
+                    points: 50
                 }
             }
         ],
@@ -541,4 +541,22 @@ export const getPreviousLesson = (currentFullId) => {
     }
     return null;
 };
+
+// Obtiene el color temático de un curso (con soporte para personalización del Admin)
+export const getCourseColor = (abbr, defaultFallback = '#38bdf8') => {
+    if (typeof window !== 'undefined') {
+        try {
+            const saved = localStorage.getItem('saberlab-course-colors');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && parsed[abbr]) return parsed[abbr];
+            }
+        } catch {
+            // fallback
+        }
+    }
+    const def = COURSES_DEFINITION.find(c => c.abbr === abbr);
+    return def?.color || defaultFallback;
+};
+
 

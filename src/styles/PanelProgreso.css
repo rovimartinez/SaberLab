@@ -509,3 +509,33 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — PanelProgreso
+   ========================================================================== */
+:root[data-theme='light'] .time-range-selector {
+    background: rgba(241, 245, 249, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+:root[data-theme='light'] .range-btn {
+    color: #475569;
+}
+
+:root[data-theme='light'] .range-btn:hover {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .range-btn.active {
+    background: rgba(139, 92, 246, 0.15);
+    color: #7c3aed;
+}
+
+:root[data-theme='light'] .grade-exam {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .grade-subject {
+    color: #475569;
+}
+

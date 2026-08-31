@@ -18,7 +18,6 @@ import PanelCalificaciones from './pages/PanelCalificaciones';
 import PanelProgreso from './pages/PanelProgreso';
 import PanelRecursos from './pages/PanelRecursos';
 import PanelWidgets from './pages/PanelWidgets';
-import SettingsPage from './pages/Settings';
 import AccessRequests from './pages/AccessRequests';
 import PanelGestion from './pages/PanelGestion';
 import PanelAnalitica from './pages/PanelAnalitica';
@@ -28,6 +27,7 @@ import Certificate from './pages/Certificate';
 import PanelGadgets from './pages/PanelGadgets';
 import PanelRecompensas from './pages/PanelRecompensas';
 import PanelPerfil from './pages/PanelPerfil';
+import SettingsPage from './pages/Settings';
 import Welcome from './pages/Welcome';
 import JoinCourse from './pages/JoinCourse';
 import './index.css';
@@ -125,7 +125,7 @@ function AppRoutes() {
                     <Route path="progress" element={<Navigate to="/dashboard" replace />} />
                     <Route path="resources" element={<PanelRecursos />} />
                     <Route path="myapps" element={<PanelWidgets />} />
-                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
                     {/* 🎉 Nuevas rutas */}
                     <Route path="certificate/:courseId" element={<Certificate />} />
                     <Route path="rewards" element={<PanelRecompensas />} />

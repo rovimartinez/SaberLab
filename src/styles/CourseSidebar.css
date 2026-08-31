@@ -277,3 +277,67 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — CourseSidebar
+   ========================================================================== */
+:root[data-theme='light'] .course-sidebar {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 249, 255, 0.96) 100%);
+    border-left-color: rgba(148, 163, 184, 0.28);
+    box-shadow: -15px 0 45px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme='light'] .course-sidebar-handle {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 249, 255, 0.96) 100%);
+    border-color: rgba(148, 163, 184, 0.28);
+    box-shadow: -10px 0 25px rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme='light'] .handle-arrow {
+    color: #475569;
+}
+
+:root[data-theme='light'] .cs-header {
+    border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+:root[data-theme='light'] .cs-header-info h3 {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .cs-header-info p {
+    color: #64748b;
+}
+
+:root[data-theme='light'] .cs-module-group {
+    background: rgba(241, 245, 249, 0.7);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
+:root[data-theme='light'] .cs-module-group.is-expanded {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(56, 189, 248, 0.35);
+}
+
+:root[data-theme='light'] .cs-module-title {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .cs-lesson-title {
+    color: #475569;
+}
+
+:root[data-theme='light'] .cs-lesson-item:hover:not(.locked) {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+:root[data-theme='light'] .cs-lesson-item.active {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+:root[data-theme='light'] .cs-lesson-item.active .cs-lesson-title {
+    color: #1d4ed8;
+    font-weight: 700;
+}
+

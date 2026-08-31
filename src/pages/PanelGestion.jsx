@@ -34,10 +34,10 @@ const PanelGestion = () => {
                         justifyContent: 'center',
                         gap: '1rem',
                         padding: '1.25rem',
-                        background: activeCard === 'en_linea' ? 'rgba(16, 185, 129, 0.15)' : 'var(--glass-bg)',
-                        border: `1px solid ${activeCard === 'en_linea' ? '#10b981' : 'rgba(255,255,255,0.1)'}`,
+                        background: activeCard === 'en_linea' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary)',
+                        border: `1.5px solid ${activeCard === 'en_linea' ? '#10b981' : 'var(--glass-border)'}`,
                         borderRadius: '16px',
-                        color: '#fff',
+                        color: 'var(--text-primary)',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         minHeight: '90px'
@@ -45,7 +45,7 @@ const PanelGestion = () => {
                 >
                     <Radio size={28} style={{ color: '#10b981' }} className={activeCard === 'en_linea' ? 'animate-pulse' : ''} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>En Vivo & Mensajes</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>En Vivo & Mensajes</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Alumnos en línea y alertas a pantalla</div>
                     </div>
                 </button>
@@ -59,10 +59,10 @@ const PanelGestion = () => {
                         justifyContent: 'center',
                         gap: '1rem',
                         padding: '1.25rem',
-                        background: activeCard === 'invitaciones' ? 'rgba(56, 189, 248, 0.15)' : 'var(--glass-bg)',
-                        border: `1px solid ${activeCard === 'invitaciones' ? '#38bdf8' : 'rgba(255,255,255,0.1)'}`,
+                        background: activeCard === 'invitaciones' ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-secondary)',
+                        border: `1.5px solid ${activeCard === 'invitaciones' ? '#38bdf8' : 'var(--glass-border)'}`,
                         borderRadius: '16px',
-                        color: '#fff',
+                        color: 'var(--text-primary)',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         minHeight: '90px'
@@ -70,7 +70,7 @@ const PanelGestion = () => {
                 >
                     <Link2 size={28} style={{ color: '#38bdf8' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Enlaces con Tiempo</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Enlaces con Tiempo</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Auto-unión y extensión de vigencia</div>
                     </div>
                 </button>
@@ -84,10 +84,10 @@ const PanelGestion = () => {
                         justifyContent: 'center',
                         gap: '1rem',
                         padding: '1.25rem',
-                        background: activeCard === 'cursos' ? 'rgba(96, 165, 250, 0.15)' : 'var(--glass-bg)',
-                        border: `1px solid ${activeCard === 'cursos' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.1)'}`,
+                        background: activeCard === 'cursos' ? 'rgba(96, 165, 250, 0.15)' : 'var(--bg-secondary)',
+                        border: `1.5px solid ${activeCard === 'cursos' ? 'var(--accent-blue, #38bdf8)' : 'var(--glass-border)'}`,
                         borderRadius: '16px',
-                        color: '#fff',
+                        color: 'var(--text-primary)',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         minHeight: '90px'
@@ -95,7 +95,7 @@ const PanelGestion = () => {
                 >
                     <BookOpen size={28} style={{ color: '#4ade80' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Gestión de Cursos</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Gestión de Cursos</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Módulos, lecciones y visibilidad</div>
                     </div>
                 </button>
@@ -109,10 +109,10 @@ const PanelGestion = () => {
                         justifyContent: 'center',
                         gap: '1rem',
                         padding: '1.25rem',
-                        background: activeCard === 'plataforma' ? 'rgba(96, 165, 250, 0.15)' : 'var(--glass-bg)',
-                        border: `1px solid ${activeCard === 'plataforma' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.1)'}`,
+                        background: activeCard === 'plataforma' ? 'rgba(168, 85, 247, 0.15)' : 'var(--bg-secondary)',
+                        border: `1.5px solid ${activeCard === 'plataforma' ? '#a855f7' : 'var(--glass-border)'}`,
                         borderRadius: '16px',
-                        color: '#fff',
+                        color: 'var(--text-primary)',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         minHeight: '90px'
@@ -120,7 +120,7 @@ const PanelGestion = () => {
                 >
                     <Shield size={28} style={{ color: '#a855f7' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Plataforma</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Plataforma</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Usuarios y configuración</div>
                     </div>
                 </button>
@@ -134,10 +134,10 @@ const PanelGestion = () => {
                         justifyContent: 'center',
                         gap: '1rem',
                         padding: '1.25rem',
-                        background: activeCard === 'examenes' ? 'rgba(96, 165, 250, 0.15)' : 'var(--glass-bg)',
-                        border: `1px solid ${activeCard === 'examenes' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.1)'}`,
+                        background: activeCard === 'examenes' ? 'rgba(244, 63, 94, 0.15)' : 'var(--bg-secondary)',
+                        border: `1.5px solid ${activeCard === 'examenes' ? '#f43f5e' : 'var(--glass-border)'}`,
                         borderRadius: '16px',
-                        color: '#fff',
+                        color: 'var(--text-primary)',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         minHeight: '90px'
@@ -145,7 +145,7 @@ const PanelGestion = () => {
                 >
                     <ClipboardList size={28} style={{ color: '#f43f5e' }} />
                     <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '0.25rem' }}>Exámenes</div>
+                        <div style={{ fontSize: '1rem', fontWeight: '800', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>Exámenes</div>
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Evaluaciones y resultados</div>
                     </div>
                 </button>

@@ -30,14 +30,15 @@
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+html[data-theme='light'],
 :root[data-theme='light'] {
-  --bg-primary: #f8fafc;
-  --bg-secondary: rgba(255, 255, 255, 0.86);
-  --glass-bg: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(148, 163, 184, 0.28);
-  --glass-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(203, 213, 225, 0.85);
+  --glass-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748b;
   --bg-elevated: #ffffff;
   --bg-muted: rgba(59, 130, 246, 0.08);
@@ -71,10 +72,13 @@ body {
   overflow-x: hidden;
 }
 
-:root[data-theme='light'] body {
+:root[data-theme='light'] body,
+html[data-theme='light'] body {
+  background-color: #f1f5f9;
   background-image:
-    radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.12), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.12), transparent 25%);
+    radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.08), transparent 30%),
+    radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08), transparent 30%);
+  color: #0f172a;
 }
 
 /* Unified Global Overflow */
@@ -115,10 +119,13 @@ body {
 
 /* Glass Panel Utility */
 .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: 16px;
+  color: var(--text-primary);
 }
 
 /* Typography Utilities */
@@ -131,6 +138,7 @@ h6 {
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: 0.5rem;
+  color: var(--text-primary);
 }
 
 .text-gradient {
@@ -149,21 +157,21 @@ h6 {
 
 .theory-section-main p {
   margin-bottom: 1.25rem;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 .theory-section-main h3 {
   font-size: 1.3rem;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .theory-section-main h4 {
   font-size: 1.1rem;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .theory-section-main ul, .theory-section-main ol {
@@ -173,7 +181,7 @@ h6 {
 
 .theory-section-main li {
   margin-bottom: 0.5rem;
-  color: #cbd5e1;
+  color: var(--text-secondary);
 }
 
 /* Lesson images */

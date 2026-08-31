@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Eraser, Trash2, PenLine, Palette, Download, X, Wand2, Type, Minus, Maximize2, Minimize2, Ghost, Square, Circle, Triangle, Shapes, ArrowRight, Diamond, AppWindow, RotateCcw, MousePointer2 } from 'lucide-react';
 import '../../styles/PizarraMagica.css';
 
-const colors = ['#ffffff', '#a855f7', '#3b82f6', '#ec4899', '#f59e0b', '#10b981'];
+const colors = ['#0f172a', '#2563eb', '#a855f7', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#ffffff'];
 
 const getPerpendicularDistance = (point, lineStart, lineEnd) => {
     const dx = lineEnd.x - lineStart.x;
@@ -81,7 +81,9 @@ const simplifyDP = (pts, epsilon) => {
 const PizarraMagica = ({ onClose }) => {
     const canvasRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [color, setColor] = useState('#ffffff');
+    const [color, setColor] = useState(() => {
+        return document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#ffffff';
+    });
     const [brushSize, setBrushSize] = useState(3);
     const [isEraser, setIsEraser] = useState(false);
     const [isTextMode, setIsTextMode] = useState(false);
@@ -447,18 +449,17 @@ const PizarraMagica = ({ onClose }) => {
 
             const width = maxX - minX;
             const height = maxY - minY;
-            const isClosed = Math.hypot(start.x - end.x, start.y - end.y) < 60;
+            const isClosed = Math.hypot(start.x - end.x, start.y - end.y) < 45;
 
             let recognized = false;
 
-            if (isClosed && width > 20 && height > 20) {
+            if (isClosed && width > 25 && height > 25) {
                 const centerX = minX + width / 2;
                 const centerY = minY + height / 2;
                 const radius = (width + height) / 4;
 
                 let circleError = 0;
                 let rectError = 0;
-                let simplified = [];
 
                 points.forEach(p => {
                     circleError += Math.abs(Math.hypot(p.x - centerX, p.y - centerY) - radius);
@@ -471,32 +472,7 @@ const PizarraMagica = ({ onClose }) => {
                 circleError /= points.length;
                 rectError /= points.length;
 
-                for (let factor = 0.06; factor <= 0.25; factor += 0.02) {
-                    const epsilon = Math.max(width, height) * factor;
-                    simplified = simplifyDP(points, epsilon);
-                    if (simplified.length >= 4 && simplified.length <= 6) {
-                        break;
-                    }
-                }
-
-                const rawPolygon = isClosed ? simplified.slice(0, -1) : simplified;
-                const polygonVertices = rawPolygon.filter((point, index, arr) => {
-                    if (index === 0) return true;
-                    const prev = arr[index - 1];
-                    return Math.hypot(point.x - prev.x, point.y - prev.y) > Math.max(width, height) * 0.12;
-                });
-                const polygonPoints = polygonVertices.length;
-                const topVertices = polygonVertices.filter(p => p.y <= minY + height * 0.38).length;
-                const bottomVertices = polygonVertices.filter(p => p.y >= minY + height * 0.55).length;
-                const looksLikeTriangle =
-                    polygonPoints >= 3 &&
-                    polygonPoints <= 5 &&
-                    topVertices >= 1 &&
-                    topVertices <= 2 &&
-                    bottomVertices >= 2 &&
-                    rectError >= Math.min(width, height) * 0.08;
-
-                if (circleError < radius * 0.25 && circleError < rectError) {
+                if (circleError < radius * 0.18 && circleError < rectError) {
                     commitRecognizedShape({
                         type: 'circle',
                         x: centerX - radius,
@@ -505,13 +481,7 @@ const PizarraMagica = ({ onClose }) => {
                         height: radius * 2
                     });
                     recognized = true;
-                } else if (looksLikeTriangle) {
-                    commitRecognizedShape({ type: 'triangle', x: minX, y: minY, width, height });
-                    recognized = true;
-                } else if (polygonPoints === 4 && rectError >= Math.min(width, height) * 0.18) {
-                    commitRecognizedShape({ type: 'diamond', x: minX, y: minY, width, height });
-                    recognized = true;
-                } else if (rectError < Math.min(width, height) * 0.18) {
+                } else if (rectError < Math.min(width, height) * 0.14) {
                     commitRecognizedShape({
                         type: 'rect',
                         x: minX,
@@ -520,46 +490,6 @@ const PizarraMagica = ({ onClose }) => {
                         height
                     });
                     recognized = true;
-                }
-
-                if (!recognized) {
-                    // Intento de polígono generico (Triángulo, rombo, etc)
-                    let simplified = [];
-                    // Incrementamos epsilon iterativamente para encontrar la forma más simple posible (3-6 lados)
-                    for (let factor = 0.06; factor <= 0.25; factor += 0.02) {
-                        const epsilon = Math.max(width, height) * factor;
-                        simplified = simplifyDP(points, epsilon);
-                        // Si se simplificó a un polígono básico (ej: triángulo = 4 ptos considerando inicio y fin)
-                        if (simplified.length >= 4 && simplified.length <= 6) {
-                            break;
-                        }
-                    }
-
-                    if (simplified.length >= 3 && simplified.length <= 8) {
-
-
-
-                        // Si es cerrado, ignoramos el último punto superpuesto para que el closePath haga un cierre perfecto
-                        const numPoints = isClosed ? simplified.length - 1 : simplified.length;
-
-                        if (numPoints === 3) {
-                            commitRecognizedShape({ type: 'triangle', x: minX, y: minY, width, height });
-                            recognized = true;
-                        } else if (numPoints === 4) {
-                            commitRecognizedShape({ type: 'diamond', x: minX, y: minY, width, height });
-                            recognized = true;
-                        } else {
-                            ctx.putImageData(savedCanvasState.current, 0, 0);
-                            ctx.beginPath();
-                            ctx.moveTo(simplified[0].x, simplified[0].y);
-                            for (let i = 1; i < numPoints; i++) {
-                                ctx.lineTo(simplified[i].x, simplified[i].y);
-                            }
-                            ctx.closePath();
-                            ctx.stroke();
-                            recognized = true;
-                        }
-                    }
                 }
             } else if (!isClosed && Math.max(width, height) > 40) {
                 // Probar línea recta
@@ -572,7 +502,7 @@ const PizarraMagica = ({ onClose }) => {
                     });
                     lineError /= points.length;
 
-                    if (lineError < lineLen * 0.1) {
+                    if (lineError < lineLen * 0.05) {
                         commitRecognizedShape({
                             type: 'line',
                             x: start.x,
@@ -584,49 +514,13 @@ const PizarraMagica = ({ onClose }) => {
                     }
                 }
             }
-            if (recognized) return;
+            if (recognized) {
+                currentStroke.current = [];
+                return;
+            }
         }
 
-        // Si no se reconoció como forma (o autoShape apagado), convertir trazo en objeto 'path'
-        if (!isEraser && currentStroke.current && currentStroke.current.length > 2) {
-            const points = currentStroke.current;
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            points.forEach(p => {
-                if (p.x < minX) minX = p.x;
-                if (p.x > maxX) maxX = p.x;
-                if (p.y < minY) minY = p.y;
-                if (p.y > maxY) maxY = p.y;
-            });
-
-            const width = maxX - minX;
-            const height = maxY - minY;
-
-            // Normalizar puntos relativos al bounding box
-            const normalizedPoints = points.map(p => ({
-                x: p.x - minX,
-                y: p.y - minY
-            }));
-
-            // Limpiamos el canvas temporal (solo se usó para feedback)
-            ctx.putImageData(savedCanvasState.current, 0, 0);
-
-            const newShape = {
-                id: Date.now(),
-                type: 'path',
-                x: minX,
-                y: minY,
-                width: width,
-                height: height,
-                originalWidth: width,
-                originalHeight: height,
-                points: normalizedPoints,
-                color,
-                brushSize,
-                rotation: 0
-            };
-
-            setShapes(prev => [...prev, newShape]);
-        }
+        // Para dibujo libre normal: el trazo ya quedó dibujado perfectamente en el canvas nativo
         currentStroke.current = [];
     };
 

@@ -16,27 +16,65 @@ export function useStudentPresence() {
     const isStudent = Boolean(user && (!isStaff || isImpersonating || viewMode === 'student' || userRole === 'student'));
 
     const getActivityFromPath = (pathname) => {
-        if (pathname.includes('/evaluations/') || pathname.includes('/re-m1-e2')) {
-            return 'Presentando Evaluación / Examen';
+        // ── Evaluaciones / Exámenes ──
+        if (pathname.includes('/evaluations/') || pathname.match(/e\d+$/)) {
+            return '📝 Presentando Examen';
         }
+        // ── Lecciones activas ──
         if (pathname.includes('/lesson/')) {
             const parts = pathname.split('/');
-            const lessonId = parts[parts.length - 1];
-            return `Estudiando Lección (${lessonId})`;
+            const lessonId = parts[parts.length - 1]; // ej. "ee-m1-l3"
+            // Mapeo legible de IDs conocidos
+            const lessonNames = {
+                'ee-m1-l1': 'Lección 1 · Carga Eléctrica',
+                'ee-m1-l2': 'Lección 2 · Ley de Ohm',
+                'ee-m1-l3': 'Lección 3 · Circuitos Serie',
+                'ee-m1-l4': 'Lección 4 · Circuitos Paralelo',
+                'ee-m1-l5': 'Lección 5 · Circuitos Mixtos',
+                'ee-m1-l6': 'Lección 6 · Examen M1',
+                'ee-m2-l7': 'Lección 7 · Capacitores',
+                'ee-m2-l8': 'Lección 8 · Bobinas y Diodos',
+                'ee-m2-l9': 'Lección 9 · Transistores BJT',
+                'ee-m2-l10': 'Lección 10 · Examen M2',
+                're-m1-l1': 'RE · L1 Introducción a Robótica',
+                're-m1-l2': 'RE · L2 Arduino y GPIO',
+                're-m1-l3': 'RE · L3 Sensores',
+                're-m1-l4': 'RE · L4 Actuadores',
+                're-m1-l5': 'RE · L5 Programación',
+                're-m1-l6': 'RE · L6 Examen M1',
+            };
+            const name = lessonNames[lessonId];
+            return name ? `📖 ${name}` : `📖 Lección ${lessonId}`;
+        }
+        // ── Secciones de curso ──
+        if (pathname.includes('/my-courses') && pathname.split('/').length > 3) {
+            return '📚 Viendo Contenido del Curso';
         }
         if (pathname.includes('/my-courses')) {
-            return 'Viendo Mis Cursos';
+            return '📚 Mis Cursos';
         }
         if (pathname.includes('/grades')) {
-            return 'Revisando Calificaciones';
+            return '📊 Revisando Calificaciones';
         }
         if (pathname.includes('/resources')) {
-            return 'Consultando Recursos / Videos';
+            return '🎬 Consultando Recursos / Videos';
         }
         if (pathname.includes('/rewards')) {
-            return 'En Laboratorio de Recompensas';
+            return '🏆 Laboratorio de Recompensas';
         }
-        return 'En Plataforma SaberLab';
+        if (pathname.includes('/profile')) {
+            return '👤 Editando Perfil';
+        }
+        if (pathname.includes('/certificate')) {
+            return '🎓 Viendo Certificado';
+        }
+        if (pathname.includes('/dashboard')) {
+            return '🖥️ Panel Administrativo';
+        }
+        if (pathname === '/' || pathname.includes('/home') || pathname.includes('/inicio')) {
+            return '🏠 Pantalla de Inicio';
+        }
+        return '🌐 En SaberLab';
     };
 
     const sendPing = useCallback(async () => {

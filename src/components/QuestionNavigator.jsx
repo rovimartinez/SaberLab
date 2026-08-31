@@ -27,7 +27,7 @@ const QuestionNavigator = ({
 
     return (
         <div className="glass-panel" style={{ padding: '1.5rem', height: '100%', minHeight: '300px' }}>
-            <h3 style={{ color: '#f8fafc', marginTop: 0, marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.1rem' }}>
+            <h3 style={{ color: 'var(--text-primary)', marginTop: 0, marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.1rem' }}>
                 Progreso ({answeredCount}/{totalQuestions})
             </h3>
             
@@ -44,10 +44,10 @@ const QuestionNavigator = ({
                     const isCorrect = isAnswered && correctAnswer !== undefined && correctAnswer !== null && String(userAnswer).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
                     const isCurrent = currentQuestion === qIndex;
                     
-                    let border = '1px solid rgba(255, 255, 255, 0.1)';
-                    let background = '#1e293b';
-                    let color = '#94a3b8';
-                    let boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
+                    let border = '1px solid var(--glass-border)';
+                    let background = 'var(--bg-secondary)';
+                    let color = 'var(--text-secondary)';
+                    let boxShadow = '0 2px 4px rgba(0, 0, 0, 0.08)';
                     let transform = 'scale(1)';
                     let fontWeight = '700';
                     let outline = 'none';

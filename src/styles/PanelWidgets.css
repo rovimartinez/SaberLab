@@ -3211,6 +3211,201 @@
         padding: 0.5rem !important;
     }
     
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.ohms-feedback-box.success {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #6ee7b7;
+}
+
+.ohms-feedback-box.error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+.ohms-practice-actions {
+    display: grid;
+    grid-template-columns: 1.6fr auto;
+    gap: 0.55rem;
+}
+
+.ohms-validate-btn {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+    color: #fff;
+}
+
+.ohms-info-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    background: rgba(10, 12, 20, 0.88);
+    backdrop-filter: blur(5px);
+}
+
+.ohms-info-modal {
+    width: 100%;
+    max-width: 360px;
+    overflow: hidden;
+}
+
+.ohms-info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.48rem 0.74rem;
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+.ohms-info-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.84rem;
+}
+
+.ohms-info-header .ohms-info-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+}
+
+.ohms-info-body {
+    padding: 1rem;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    font-size: 0.9rem;
+}
+
+.ohms-info-body h4,
+.ohms-info-body h5 {
+    margin: 0 0 0.3rem;
+    color: #fff;
+}
+
+.ohms-info-body h4 {
+    font-size: 0.95rem;
+}
+
+.ohms-info-body h5 {
+    font-size: 0.82rem;
+}
+
+.ohms-info-body p {
+    font-size: 0.78rem;
+}
+
+.ohms-info-grid {
+    display: grid;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.ohms-info-row {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+}
+
+.ohms-info-badge {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-weight: 900;
+}
+
+.ohms-info-badge.v {
+    background: rgba(250, 204, 21, 0.12);
+    color: #facc15;
+}
+
+.ohms-info-badge.i {
+    background: rgba(96, 165, 250, 0.12);
+    color: #60a5fa;
+}
+
+.ohms-info-badge.r {
+    background: rgba(52, 211, 153, 0.12);
+    color: #34d399;
+}
+
+.ohms-info-footer {
+    padding: 0.85rem 1rem;
+    background: rgba(0, 0, 0, 0.18);
+    color: #6ee7b7;
+    font-size: 0.66rem;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Whiteboard Widget Container */
+.whiteboard-widget-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gadgets-grid {
+        justify-content: center;
+    }
+
+    .floating-gadget {
+        width: calc(100vw - 2rem) !important;
+        left: 1rem !important;
+        min-width: auto;
+    }
+
+    .calculator-widget,
+    .converter-widget,
+    .timer-widget,
+    .ohms-widget {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .gadget-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .gadget-icon-btn {
+        min-width: 80px;
+        padding: 1rem;
+    }
+
+    .timer-time {
+        font-size: 2.5rem;
+    }
+}
+/* Mobile Optimization for Gadgets */
+@media (max-width: 768px) {
+    .gadgets-grid-launcher {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem 1rem !important;
+    }
+    
+    .gadgets-launcher {
+        padding: 0.5rem !important;
+    }
+    
     .gadget-icon-btn {
         max-width: none !important;
         padding: 0.75rem 0.5rem !important;
@@ -3226,3 +3421,389 @@
         border-radius: 0 !important;
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — PanelWidgets
+   ========================================================================== */
+:root[data-theme='light'] .floating-gadget {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2) !important;
+}
+
+:root[data-theme='light'] .floating-content {
+    background: #ffffff !important;
+}
+
+:root[data-theme='light'] .gadget-icon {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.95) !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme='light'] .gadget-icon::before {
+    display: none !important;
+}
+
+:root[data-theme='light'] .gadget-icon-name {
+    color: #0f172a !important;
+    font-weight: 700 !important;
+}
+
+:root[data-theme='light'] .gadget-icon-btn:hover .gadget-icon {
+    background: #ffffff !important;
+    border-color: var(--gadget-color, #38bdf8) !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+}
+
+:root[data-theme='light'] .gadget-icon-btn:hover .gadget-icon-name {
+    color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .gadgets-launcher-footer {
+    border-top-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+:root[data-theme='light'] .gadgets-launcher-footer-label {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .gadgets-launcher-footer-label strong {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .launcher-switch {
+    background: #cbd5e1 !important;
+    border: 1px solid #94a3b8 !important;
+}
+
+:root[data-theme='light'] .launcher-switch:hover {
+    background: #94a3b8 !important;
+}
+
+:root[data-theme='light'] .launcher-switch.active {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .launcher-switch-thumb {
+    background: #ffffff !important;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.25) !important;
+}
+
+
+/* ── 1. CALCULADORA (Light Mode) ── */
+:root[data-theme='light'] .calculator-widget {
+    background: #ffffff !important;
+}
+
+:root[data-theme='light'] .calc-display {
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .calc-expression {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .calc-mode-toggle {
+    background: rgba(59, 130, 246, 0.12) !important;
+    color: #0284c7 !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+:root[data-theme='light'] .calc-result {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .calc-btn {
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme='light'] .calc-btn:hover {
+    background: #e2e8f0 !important;
+}
+
+:root[data-theme='light'] .calc-btn.operator {
+    background: rgba(168, 85, 247, 0.15) !important;
+    color: #9333ea !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+:root[data-theme='light'] .calc-btn.function {
+    background: rgba(59, 130, 246, 0.12) !important;
+    color: #2563eb !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* ── 2. CONVERSOR (Light Mode) ── */
+:root[data-theme='light'] .converter-tabs {
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .converter-tab {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .converter-tab.active {
+    color: #0284c7 !important;
+    background: #ffffff !important;
+}
+
+:root[data-theme='light'] .converter-field {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .converter-main-input {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .converter-main-result {
+    color: #059669 !important;
+}
+
+:root[data-theme='light'] .converter-select-wrap {
+    background: #ffffff !important;
+    border-left: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .converter-main-select {
+    color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .converter-swap {
+    background: #ffffff !important;
+    border: 4px solid #f1f5f9 !important;
+    color: #0284c7 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08) !important;
+}
+
+:root[data-theme='light'] .converter-swap:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+}
+
+:root[data-theme='light'] .converter-block-meta label {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .converter-block-meta span {
+    color: #0284c7 !important;
+}
+
+/* ── 3. RELOJ & TEMPORIZADOR (Light Mode) ── */
+:root[data-theme='light'] .clock-pro-now-card,
+:root[data-theme='light'] .clock-pro-panel,
+:root[data-theme='light'] .clock-pro-display-card,
+:root[data-theme='light'] .clock-pro-study-card,
+:root[data-theme='light'] .clock-pro-empty,
+:root[data-theme='light'] .clock-pro-lap,
+:root[data-theme='light'] .clock-pro-input-card,
+:root[data-theme='light'] .clock-pro-study-toggle,
+:root[data-theme='light'] .clock-pro-settings-grid,
+:root[data-theme='light'] .clock-hero,
+:root[data-theme='light'] .clock-panel,
+:root[data-theme='light'] .clock-metric-card,
+:root[data-theme='light'] .clock-agenda-card,
+:root[data-theme='light'] .clock-tip {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .clock-pro-now-time,
+:root[data-theme='light'] .clock-pro-main-time,
+:root[data-theme='light'] .clock-pro-display-large,
+:root[data-theme='light'] .clock-pro-study-time,
+:root[data-theme='light'] .clock-time,
+:root[data-theme='light'] .clock-display-large,
+:root[data-theme='light'] .clock-hero h3 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .clock-pro-sound {
+    background: rgba(15, 23, 42, 0.08) !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .clock-pro-tab,
+:root[data-theme='light'] .clock-tab {
+    color: #64748b !important;
+    border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+:root[data-theme='light'] .clock-pro-tab.active,
+:root[data-theme='light'] .clock-tab.active {
+    background: rgba(249, 115, 22, 0.12) !important;
+    color: #ea580c !important;
+    border-color: #f97316 !important;
+}
+
+:root[data-theme='light'] .clock-pro-ring {
+    background: radial-gradient(circle closest-side, #ffffff 72%, transparent 73% 100%), conic-gradient(#f97316 var(--progress), rgba(203, 213, 225, 0.5) 0) !important;
+}
+
+:root[data-theme='light'] .clock-pro-ring-inner {
+    background: #f8fafc !important;
+}
+
+:root[data-theme='light'] .clock-pro-input-card input,
+:root[data-theme='light'] .clock-config-card input {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .clock-pro-btn:not(.primary),
+:root[data-theme='light'] .clock-pro-mini-btn,
+:root[data-theme='light'] .clock-action:not(.primary) {
+    background: #f1f5f9 !important;
+    border-color: rgba(203, 213, 225, 0.9) !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .clock-pro-lap strong {
+    color: #0f172a !important;
+}
+
+/* ── 4. RULETA PRO (Light Mode) ── */
+:root[data-theme='light'] .roulette-stage {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .roulette-title-block h3 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .roulette-settings-button,
+:root[data-theme='light'] .side-toggle {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .roulette-panel,
+:root[data-theme='light'] .roulette-history-panel {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .roulette-display,
+:root[data-theme='light'] .roulette-course-box {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .roulette-name {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .roulette-panel-header {
+    background: #f8fafc !important;
+    border-bottom-color: rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .roulette-panel-header h4 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .roulette-auto-remove {
+    background: #f1f5f9 !important;
+}
+
+:root[data-theme='light'] .roulette-list-item {
+    background: #f8fafc !important;
+    border-color: rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .roulette-list-item span {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .roulette-course-box select,
+:root[data-theme='light'] .roulette-course-box textarea {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .roulette-stage-footer strong {
+    color: #0f172a !important;
+}
+
+/* ── 5. SEMÁFORO (Light Mode) ── */
+:root[data-theme='light'] .traffic-status {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .traffic-status strong {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .traffic-status p {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .traffic-actions button {
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .traffic-actions button:hover {
+    background: #e2e8f0 !important;
+}
+
+/* ── 6. LEY DE OHM (Light Mode) ── */
+:root[data-theme='light'] .ohms-triangle-card,
+:root[data-theme='light'] .ohms-input-card,
+:root[data-theme='light'] .ohms-practice-card,
+:root[data-theme='light'] .ohms-hero,
+:root[data-theme='light'] .ohms-exercise-box,
+:root[data-theme='light'] .ohms-exercise-content,
+:root[data-theme='light'] .ohms-info-modal {
+    background: #f8fafc !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .ohms-triangle-heading h3,
+:root[data-theme='light'] .ohms-practice-question,
+:root[data-theme='light'] .ohms-hero h3,
+:root[data-theme='light'] .ohms-info-body h4,
+:root[data-theme='light'] .ohms-info-body h5 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .ohms-input-card input {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .ohms-answer-wrap {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .ohms-answer-wrap input {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .ohms-clear-btn {
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .ohms-practice-text,
+:root[data-theme='light'] .ohms-info-body p {
+    color: #475569 !important;
+}
+
+/* ── 7. PIZARRA MÁGICA (Light Mode) ── */
+:root[data-theme='light'] .whiteboard-widget-container {
+    background: #ffffff !important;
+}
+

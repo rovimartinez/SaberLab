@@ -145,7 +145,20 @@ const Lesson = () => {
     const courseInfo = (lessonPath && lessonPath.lesson) || { title: 'Leccion' };
     const resolvedMissions = lessonMissionsMap[internalId] || [];
     const lessonKey = internalId;
+    const prevLesson = useMemo(() => getPreviousLesson(internalId), [internalId]);
     const nextLesson = useMemo(() => getNextLesson(internalId), [internalId]);
+
+    const isStartOfModule = useMemo(() => {
+        if (!prevLesson) return true;
+        const currentModuleId = lessonPath?.module?.id || moduleInfo?.id || moduleId;
+        return prevLesson.moduleId !== currentModuleId;
+    }, [prevLesson, lessonPath, moduleInfo, moduleId]);
+
+    const isNextAnExam = useMemo(() => {
+        if (!nextLesson) return false;
+        const id = (nextLesson.fullId || nextLesson.shortId || '').toLowerCase();
+        return id.endsWith('-l6') || id.endsWith('-l10') || id.endsWith('-l14') || id.endsWith('-l16') || id === 'l6' || id === 'l10' || id === 'l14' || id === 'l16' || nextLesson.title?.toLowerCase().includes('examen');
+    }, [nextLesson]);
 
     const normalizedLesson = useMemo(() =>
         lesson
@@ -358,9 +371,7 @@ const Lesson = () => {
             <header
                 className="lesson-header-premium"
                 style={{
-                    background: `linear-gradient(90deg, ${subject.color}50 0%, #161d2b 100%)`,
-                    border: `1px solid ${subject.color}40`,
-                    boxShadow: `0 4px 20px ${subject.color}15`
+                    '--subject-color': subject.color || '#38bdf8'
                 }}
             >
                 <div
@@ -397,7 +408,7 @@ const Lesson = () => {
                 </div>
             </header>
 
-            <nav className="lesson-tabs-wrapper">
+            <nav className="lesson-tabs-wrapper" style={{ '--subject-color': subject.color || '#38bdf8' }}>
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
@@ -413,7 +424,7 @@ const Lesson = () => {
                 ))}
             </nav>
 
-            <main className="lesson-content-card glass-panel">
+            <main className="lesson-content-card">
                 <article className="content-body">
                     <LessonRenderer
                         blocks={tabBlocks}
@@ -433,53 +444,91 @@ const Lesson = () => {
                     />
 
                     <div className="lesson-nav-footer">
-                        <button
-                            className="nav-btn nav-btn-prev"
-                            onClick={() => navigate(`/dashboard/my-courses/${courseId}`)}
-                        >
-                            <ArrowLeft size={20} />
-                            <span>Módulos del curso</span>
-                        </button>
-
-                        {isCompleted ? (
-                            <div
-                                className="nav-btn nav-btn-complete"
-                                style={{
-                                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                                    border: 'none',
-                                    color: 'white',
-                                    cursor: 'default',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
-                                }}
+                        {!isStartOfModule && prevLesson ? (
+                            <button
+                                className="nav-btn nav-btn-prev"
+                                onClick={() => navigate(`/dashboard/my-courses/${prevLesson.courseSlug}/${prevLesson.moduleId}/${prevLesson.shortId}`)}
                             >
-                                <CheckCircle size={20} />
-                                <span>¡Lección Aprobada! (≥80%) ✓</span>
-                            </div>
+                                <ArrowLeft size={18} />
+                                <span>Lección anterior</span>
+                            </button>
                         ) : (
                             <button
-                                className="nav-btn nav-btn-complete"
-                                style={{
-                                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                                    border: 'none',
-                                    color: 'white',
-                                    cursor: 'pointer',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)'
-                                }}
-                                onClick={() => setActiveTab('prueba')}
+                                className="nav-btn nav-btn-prev"
+                                onClick={() => navigate(`/dashboard/my-courses/${courseId}`)}
                             >
-                                <ClipboardList size={20} />
-                                <span>Aprobar Prueba (Mínimo 80%)</span>
+                                <ArrowLeft size={18} />
+                                <span>Módulos del curso</span>
                             </button>
                         )}
 
                         {nextLesson && (
-                            (isCompleted || isStaff) ? (
+                            isCompleted ? (
+                                isNextAnExam ? (
+                                    isStaff ? (
+                                        <button
+                                            className="nav-btn nav-btn-next"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                                                color: 'white',
+                                                border: 'none',
+                                                fontWeight: '700',
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem',
+                                                boxShadow: '0 4px 14px rgba(168, 85, 247, 0.3)'
+                                            }}
+                                            onClick={handleNextLesson}
+                                            title="Ver Examen"
+                                        >
+                                            <span>Ir al Examen</span>
+                                            <ChevronRight size={18} />
+                                        </button>
+                                    ) : (
+                                        <div
+                                            className="nav-btn nav-btn-exam-locked"
+                                            title="El examen estará disponible según la fecha programada"
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem',
+                                                padding: '0.65rem 1.25rem',
+                                                borderRadius: '10px',
+                                                background: 'var(--bg-secondary, #f1f5f9)',
+                                                color: 'var(--text-secondary, #64748b)',
+                                                border: '1px solid var(--glass-border, #cbd5e1)',
+                                                cursor: 'not-allowed',
+                                                fontSize: '0.88rem',
+                                                fontWeight: '600',
+                                                userSelect: 'none'
+                                            }}
+                                        >
+                                            <Lock size={16} />
+                                            <span>Examen no disponible aún</span>
+                                        </div>
+                                    )
+                                ) : (
+                                    <button
+                                        className="nav-btn nav-btn-next"
+                                        style={{
+                                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                                            color: 'white',
+                                            border: 'none',
+                                            fontWeight: '700',
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)'
+                                        }}
+                                        onClick={handleNextLesson}
+                                    >
+                                        <span>Siguiente lección</span>
+                                        <ChevronRight size={18} />
+                                    </button>
+                                )
+                            ) : isStaff ? (
                                 <button
                                     className="nav-btn nav-btn-next"
                                     style={{
@@ -494,29 +543,31 @@ const Lesson = () => {
                                     }}
                                     onClick={handleNextLesson}
                                 >
-                                    <span>Siguiente lección</span>
-                                    <ChevronRight size={20} />
+                                    <span>{isNextAnExam ? 'Siguiente: Examen' : 'Siguiente lección'}</span>
+                                    <ChevronRight size={18} />
                                 </button>
                             ) : (
-                                <div
-                                    title="Debes aprobar el cuestionario con un mínimo de 80% para desbloquear la siguiente lección"
+                                <button
+                                    className="nav-btn nav-btn-locked"
+                                    onClick={() => setActiveTab('prueba')}
+                                    title="Aprueba la prueba con al menos 80% para desbloquear"
                                     style={{
+                                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '0.5rem',
+                                        boxShadow: '0 4px 14px rgba(245, 158, 11, 0.3)',
                                         padding: '0.65rem 1.25rem',
-                                        borderRadius: '8px',
-                                        background: 'rgba(51, 65, 85, 0.45)',
-                                        color: '#94a3b8',
-                                        border: '1px dashed rgba(148, 163, 184, 0.3)',
-                                        cursor: 'not-allowed',
-                                        fontSize: '0.9rem',
-                                        userSelect: 'none'
+                                        borderRadius: '10px'
                                     }}
                                 >
                                     <Lock size={16} />
-                                    <span>Siguiente lección (Bloqueada 80%)</span>
-                                </div>
+                                    <span>{isNextAnExam ? 'Siguiente: Examen (Requiere 80% en Prueba)' : 'Siguiente lección (Requiere 80% en Prueba)'}</span>
+                                </button>
                             )
                         )}
                     </div>

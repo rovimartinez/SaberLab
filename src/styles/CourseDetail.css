@@ -676,3 +676,62 @@
         align-items: flex-start;
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — CourseDetail
+   ========================================================================== */
+:root[data-theme='light'] .course-detail-header {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 246, 255, 0.9) 100%);
+    border-color: rgba(59, 130, 246, 0.25);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme='light'] .course-detail-info h1 {
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .course-detail-stats {
+    color: #475569;
+}
+
+:root[data-theme='light'] .back-btn {
+    background: rgba(241, 245, 249, 0.85);
+    color: #0f172a;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+:root[data-theme='light'] .back-btn:hover {
+    background: #ffffff;
+    border-color: #38bdf8;
+}
+
+:root[data-theme='light'] .course-detail-tabs {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+:root[data-theme='light'] .detail-tab {
+    color: #475569;
+}
+
+:root[data-theme='light'] .detail-tab:hover {
+    color: #0f172a;
+    background: rgba(59, 130, 246, 0.08);
+}
+
+:root[data-theme='light'] .detail-tab.active {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+}
+
+:root[data-theme='light'] .form-group input,
+:root[data-theme='light'] .form-group select {
+    background: #ffffff;
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .form-group input::placeholder {
+    color: #94a3b8;
+}
+

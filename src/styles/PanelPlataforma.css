@@ -387,9 +387,34 @@
     background: rgba(139, 92, 246, 0.2);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .courses-grid {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — PanelPlataforma
+   ========================================================================== */
+:root[data-theme='light'] .admin-controls {
+    background: rgba(241, 245, 249, 0.85);
+    border-color: rgba(148, 163, 184, 0.28);
+}
+
+:root[data-theme='light'] .search-wrapper input {
+    background-color: #ffffff;
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+}
+
+:root[data-theme='light'] .search-wrapper input:focus {
+    border-color: #0284c7;
+}
+
+:root[data-theme='light'] .user-row,
+:root[data-theme='light'] .course-admin-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: #0f172a;
+}
+

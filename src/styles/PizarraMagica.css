@@ -445,3 +445,71 @@
     from { opacity: 0; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODO CLARO (LIGHT THEME) PARA PIZARRA MÁGICA
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root[data-theme='light'] .whiteboard-container {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(203, 213, 225, 0.95) !important;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18), 0 0 25px rgba(56, 189, 248, 0.12) !important;
+}
+
+:root[data-theme='light'] .whiteboard-container.maximized {
+    background: #ffffff !important;
+}
+
+:root[data-theme='light'] .whiteboard-title {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .canvas-wrapper {
+    background: #ffffff !important;
+    border: 2px solid rgba(203, 213, 225, 0.9) !important;
+    box-shadow: inset 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+}
+
+:root[data-theme='light'] .toolbar {
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .tool-btn {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .tool-btn:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .tool-btn.active {
+    background: #e0f2fe !important;
+    border: 1px solid #38bdf8 !important;
+    color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .tool-separator {
+    background: rgba(203, 213, 225, 0.9) !important;
+}
+
+:root[data-theme='light'] .sub-menu {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15) !important;
+}
+
+:root[data-theme='light'] .color-btn.selected {
+    border-color: #0f172a !important;
+}
+
+:root[data-theme='light'] .whiteboard-modal {
+    background: #ffffff !important;
+    border: 1px solid rgba(203, 213, 225, 0.9) !important;
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.2) !important;
+}
+
+:root[data-theme='light'] .whiteboard-title-icon-layer.base {
+    color: #0f172a !important;
+}
+

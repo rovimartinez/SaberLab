@@ -399,8 +399,8 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                             width: '100%',
                             height: '100%',
                             backfaceVisibility: 'hidden',
-                            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 100%)',
-                            border: `2px solid ${status ? statusColor : 'rgba(255,255,255,0.12)'}`,
+                            background: 'var(--bg-secondary)',
+                            border: `2px solid ${status ? statusColor : 'var(--glass-border)'}`,
                             borderRadius: '22px',
                             display: 'flex',
                             flexDirection: 'column',
@@ -429,23 +429,23 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                                 {category.icon} {category.label}
                             </span>
 
-                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                                 #{index + 1} / {flashcards.length}
                             </span>
                         </div>
 
                         {/* Centro: Pregunta */}
                         <div style={{ margin: 'auto 0', textAlign: 'center', padding: '0.5rem 0' }}>
-                            <div style={{ color: '#94a3b8', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+                            <div style={{ color: 'var(--text-secondary)', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
                                 ¿PREGUNTA?
                             </div>
-                            <div style={{ color: '#ffffff', fontWeight: 700, fontSize: isSingleDeckView ? '1.15rem' : '1rem', lineHeight: 1.5 }}>
+                            <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: isSingleDeckView ? '1.15rem' : '1rem', lineHeight: 1.5 }}>
                                 {card.q}
                             </div>
                         </div>
 
                         {/* Pie */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.65rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderTop: '1px solid var(--glass-border)', paddingTop: '0.65rem' }}>
                             {status ? (
                                 <span style={{
                                     fontSize: '0.72rem',
@@ -459,7 +459,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                                     {status === 'known' ? 'Dominada' : 'Por Repasar'}
                                 </span>
                             ) : (
-                                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Pendiente</span>
+                                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>Pendiente</span>
                             )}
 
                             <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -476,7 +476,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                             width: '100%',
                             height: '100%',
                             backfaceVisibility: 'hidden',
-                            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.98) 0%, rgba(2, 6, 23, 0.96) 100%)',
+                            background: 'var(--bg-secondary)',
                             border: `2px solid ${status ? statusColor : category.color}`,
                             borderRadius: '22px',
                             display: 'flex',
@@ -484,7 +484,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                             justifyContent: 'space-between',
                             padding: '1.2rem',
                             transform: 'rotateY(180deg)',
-                            boxShadow: `0 15px 35px rgba(0,0,0,0.6), ${glow}`,
+                            boxShadow: `0 15px 35px rgba(0,0,0,0.2), ${glow}`,
                             transition: 'all 0.3s ease',
                             boxSizing: 'border-box'
                         }}
@@ -602,7 +602,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
         <div className="review-section-interactive" style={{ animation: 'fadeIn 0.5s ease-out' }}>
             {/* Barra Superior de Control y Progreso */}
             <div style={{
-                background: 'rgba(15, 23, 42, 0.7)',
+                background: 'var(--bg-secondary)',
                 border: '1px solid var(--glass-border)',
                 borderRadius: '16px',
                 padding: '0.85rem 1.25rem',
@@ -764,7 +764,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                             <ChevronLeft size={16} /> Anterior
                         </button>
 
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#e2e8f0', minWidth: '80px', textAlign: 'center' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-primary)', minWidth: '80px', textAlign: 'center' }}>
                             {currentIndex + 1} de {flashcards.length}
                         </span>
 

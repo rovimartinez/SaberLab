@@ -637,3 +637,13 @@
         transform: translate(-50%, 0) scale(1);
     }
 }
+
+@keyframes progress-drain {
+    from { width: 100%; }
+    to   { width: 0%; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
