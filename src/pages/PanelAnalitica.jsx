@@ -330,17 +330,30 @@ export default function PanelAnalitica() {
                                     No se registran tarjetas con dificultad persistente aún.
                                 </p>
                             ) : (
-                                overview.topDifficultFlashcards.map((card, idx) => (
+                                overview.topDifficultFlashcards.map((card, idx) => {
+                                    const parts = (card.lesson_id || '').toLowerCase().split('-');
+                                    const c = (parts[0] || '').toUpperCase();
+                                    const m = (parts[1] || '').toUpperCase();
+                                    const l = (parts[2] || '').toUpperCase();
+                                    const rawId = (card.card_id || '').toLowerCase();
+                                    let sfx;
+                                    if (rawId.startsWith('pr')) sfx = 'Pr' + rawId.slice(2);
+                                    else if (rawId.startsWith('p')) sfx = 'P' + rawId.slice(1);
+                                    else if (rawId.startsWith('f')) sfx = 'F' + rawId.slice(1);
+                                    else sfx = card.card_id;
+                                    const label = c && m && l ? `${c}-${m}-${l}-${sfx}` : card.card_id;
+                                    return (
                                     <div key={idx} className="difficult-concept-item">
                                         <div className="concept-info">
-                                            <span className="concept-title">{card.card_id}</span>
+                                            <span className="concept-title">{label}</span>
                                             <span className="concept-meta">Lección: {card.lesson_id} • {card.students_affected} estudiante(s) tuvieron dudas</span>
                                         </div>
                                         <span className="concept-badge">
                                             {card.total_unknowns} fallos
                                         </span>
                                     </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
 
@@ -620,10 +633,27 @@ export default function PanelAnalitica() {
                                     <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No hay registros de dificultad en tarjetas nemotécnicas.</p>
                                 ) : (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0.75rem' }}>
-                                        {studentDetail.flashcards.map((fc, idx) => (
+                                        {studentDetail.flashcards.map((fc, idx) => {
+                                            const formatItemId = (lessonId, cardId) => {
+                                                if (!lessonId || !cardId) return cardId;
+                                                // lesson_id ej: "re-m1-l1" => partes ["re","m1","l1"]
+                                                const parts = lessonId.toLowerCase().split('-');
+                                                const course = (parts[0] || '').toUpperCase();
+                                                const mod = (parts[1] || '').toUpperCase();
+                                                const les = (parts[2] || '').toUpperCase();
+                                                // card_id ej: "f4" => F4, "p2" => P2, "pr1" => Pr1
+                                                const id = cardId.toLowerCase();
+                                                let suffix;
+                                                if (id.startsWith('pr')) suffix = 'Pr' + id.slice(2);
+                                                else if (id.startsWith('p')) suffix = 'P' + id.slice(1);
+                                                else if (id.startsWith('f')) suffix = 'F' + id.slice(1);
+                                                else suffix = cardId.toUpperCase();
+                                                return `${course}-${mod}-${les}-${suffix}`;
+                                            };
+                                            return (
                                             <div key={idx} className="difficult-concept-item" style={{ margin: 0 }}>
                                                 <div className="concept-info">
-                                                    <span className="concept-title">{fc.card_id}</span>
+                                                    <span className="concept-title">{formatItemId(fc.lesson_id, fc.card_id)}</span>
                                                     <span className="concept-meta">Lección: {fc.lesson_id} • Total repasos: {fc.attempts_count}</span>
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
@@ -636,7 +666,8 @@ export default function PanelAnalitica() {
                                                     </span>
                                                 </div>
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>

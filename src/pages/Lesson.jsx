@@ -68,8 +68,7 @@ const Lesson = () => {
     const [isPreviousCompleted, setIsPreviousCompleted] = useState(true);
 
     const isLockedByVisibility = !isStaff && courseVisibility[internalId] === false;
-    const isLockedByPrerequisite = !isStaff && !isPreviousCompleted;
-    const isLocked = isLockedByVisibility || isLockedByPrerequisite;
+    const isLocked = isLockedByVisibility;
 
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -96,19 +95,10 @@ const Lesson = () => {
             } else {
                 setIsCompleted(false);
             }
-
-            // Verificar si la lección previa está completada
-            if (previousLesson) {
-                const prevProg = await fetchLessonProgress(user.id, previousLesson.fullId);
-                const prevDone = Boolean(prevProg && (prevProg.status === 'completed' || prevProg.progress >= 80 || (typeof prevProg.score === 'number' && prevProg.score >= 80)));
-                setIsPreviousCompleted(prevDone);
-            } else {
-                setIsPreviousCompleted(true);
-            }
         } catch (err) {
             console.error('Error cargando progreso de lección:', err);
         }
-    }, [user?.id, internalId, previousLesson]);
+    }, [user?.id, internalId]);
 
     useEffect(() => {
         checkProgress();
