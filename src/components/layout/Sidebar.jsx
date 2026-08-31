@@ -301,6 +301,10 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
                                 <User size={16} />
                                 Mi Perfil
                             </Link>
+                            <Link to="/dashboard/certificate/ee" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
+                                <Award size={16} />
+                                Certificados
+                            </Link>
                             {isAdmin && (
                                 <Link to="/dashboard/settings" className="dropdown-item" onClick={() => { setIsMenuOpen(false); closeSidebar(); }}>
                                     <Settings size={16} />

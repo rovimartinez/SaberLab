@@ -38,7 +38,74 @@ export async function onRequestGet({ request, env, data }) {
 
 // ── Resumen Global de la Cohorte ──
 async function getCohortOverviewAnalytics(env, courseFilter) {
-  // A. Obtener listado de estudiantes desde 'perfiles'
+  // A. Obtener listado de cursos y grupos
+  let cursosList = [];
+  let gruposList = [];
+  let groupMap = {}; // userId -> groupName
+  let userGroupIdsMap = {}; // userId -> groupId
+  let userCourseMap = {}; // userId -> Set of courseIds
+
+  try {
+    const { results: cursos } = await env.DB.prepare('SELECT id, title FROM cursos').all();
+    cursosList = cursos || [];
+  } catch (err) {
+    console.warn('Error consultando cursos:', err);
+  }
+
+  // Fallback si la tabla cursos está vacía o no inicializada
+  if (!cursosList || cursosList.length === 0) {
+    cursosList = [
+      { id: 'ee', title: 'Fundamentos de Electricidad y Electrónica' },
+      { id: 're', title: 'Robótica Educativa y Programación' }
+    ];
+  }
+
+  try {
+    const { results: grupos } = await env.DB.prepare('SELECT id, course_id, name, teacher FROM grupos ORDER BY name ASC').all();
+    gruposList = grupos || [];
+    const gNameMap = {};
+    const gCourseMap = {};
+    (grupos || []).forEach(g => { 
+      gNameMap[g.id] = g.name; 
+      gCourseMap[g.id] = g.course_id;
+    });
+
+    const { results: guList } = await env.DB.prepare('SELECT user_id, group_id FROM grupos_usuario').all();
+    (guList || []).forEach(gu => {
+      const uId = String(gu.user_id).trim();
+      const uIdLow = uId.toLowerCase();
+      if (gNameMap[gu.group_id]) {
+        groupMap[uId] = gNameMap[gu.group_id];
+        groupMap[uIdLow] = gNameMap[gu.group_id];
+        userGroupIdsMap[uId] = gu.group_id;
+        userGroupIdsMap[uIdLow] = gu.group_id;
+
+        if (!userCourseMap[uId]) userCourseMap[uId] = new Set();
+        if (!userCourseMap[uIdLow]) userCourseMap[uIdLow] = new Set();
+        if (gCourseMap[gu.group_id]) {
+          userCourseMap[uId].add(String(gCourseMap[gu.group_id]).toLowerCase());
+          userCourseMap[uIdLow].add(String(gCourseMap[gu.group_id]).toLowerCase());
+        }
+      }
+    });
+
+    // Mapear inscripciones directas a cursos
+    const { results: inscList } = await env.DB.prepare('SELECT user_id, course_id FROM inscripciones').all();
+    (inscList || []).forEach(ins => {
+      const uId = String(ins.user_id).trim();
+      const uIdLow = uId.toLowerCase();
+      if (!userCourseMap[uId]) userCourseMap[uId] = new Set();
+      if (!userCourseMap[uIdLow]) userCourseMap[uIdLow] = new Set();
+      if (ins.course_id) {
+        userCourseMap[uId].add(String(ins.course_id).toLowerCase());
+        userCourseMap[uIdLow].add(String(ins.course_id).toLowerCase());
+      }
+    });
+  } catch (err) {
+    console.warn('Error mapeando grupos e inscripciones:', err);
+  }
+
+  // B. Obtener listado de perfiles
   let perfiles = [];
   try {
     const { results } = await env.DB.prepare(`
@@ -51,29 +118,9 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
     console.error('Error consultando perfiles:', err);
   }
 
-  // Filtrar para excluir solo a los administradores si hay suficientes usuarios
-  const studentsOnly = perfiles.filter(p => !['admin'].includes(p.role?.toLowerCase()));
+  // Filtrar para excluir solo a los administradores
+  const studentsOnly = perfiles.filter(p => !['admin', 'docente', 'profesor'].includes(p.role?.toLowerCase()));
   const targetProfiles = studentsOnly.length > 0 ? studentsOnly : perfiles;
-
-  // B. Obtener grupos y mapeo de grupos_usuario
-  let groupMap = {};
-  let gruposList = [];
-  try {
-    const { results: grupos } = await env.DB.prepare('SELECT id, name FROM grupos').all();
-    gruposList = grupos || [];
-    const gNameMap = {};
-    (grupos || []).forEach(g => { gNameMap[g.id] = g.name; });
-
-    const { results: guList } = await env.DB.prepare('SELECT user_id, group_id FROM grupos_usuario').all();
-    (guList || []).forEach(gu => {
-      if (gNameMap[gu.group_id]) {
-        groupMap[gu.user_id] = gNameMap[gu.group_id];
-        groupMap[String(gu.user_id).toLowerCase()] = gNameMap[gu.group_id];
-      }
-    });
-  } catch (err) {
-    console.warn('Error mapeando grupos de estudiantes:', err);
-  }
 
   // C. Obtener progreso de lecciones
   let lessonProgress = [];
@@ -87,7 +134,7 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
     console.warn('Error progreso_lecciones:', err);
   }
 
-  // C2. Obtener resumen de progreso_usuario (usado por el perfil del alumno)
+  // C2. Obtener resumen de progreso_usuario
   let userProgressTable = [];
   try {
     const { results } = await env.DB.prepare(`
@@ -155,7 +202,7 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
     console.warn('Error intentos_evaluacion:', err);
   }
 
-  // G. Calcular métricas agregadas por estudiante
+  // G. Calcular métricas agregadas y mapa de lecciones por estudiante
   const studentMetrics = targetProfiles.map(st => {
     const sId = String(st.id || '').trim().toLowerCase();
     const sEmail = String(st.email || '').trim().toLowerCase();
@@ -176,21 +223,44 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
     const userLessons = lessonProgress.filter(p => matchesUser(p.user_id));
     const userAttempts = allAttempts.filter(a => matchesUser(a.user_id));
 
-    // Conjunto único de lecciones y evaluaciones superadas
+    // Mapa detallado de estado por lección (ej: 'ee-m1-l1': { completed: true, progress: 100 })
+    const lessonsStatus = {};
     const completedSet = new Set();
+
     userLessons.forEach(p => {
-      if (p.status === 'completed' || (typeof p.progress === 'number' && p.progress >= 80)) {
-        completedSet.add(p.lesson_id);
-      }
+      const rawId = String(p.lesson_id || '').trim();
+      const normKey = rawId.toLowerCase();
+      const isComp = p.status === 'completed' || (typeof p.progress === 'number' && p.progress >= 80);
+      if (isComp) completedSet.add(normKey);
+      
+      const payload = {
+        status: isComp ? 'completed' : 'in_progress',
+        progress: p.progress || (isComp ? 100 : 50),
+        completed_at: p.completed_at
+      };
+      lessonsStatus[normKey] = payload;
+      lessonsStatus[rawId] = payload;
     });
 
     userAttempts.forEach(a => {
-      if (a.evaluation_key && (a.completed_at || a.passed === 1 || (typeof a.score === 'number' && a.score >= 80))) {
-        completedSet.add(a.evaluation_key);
+      if (a.evaluation_key) {
+        const rawKey = String(a.evaluation_key || '').trim();
+        const normKey = rawKey.toLowerCase();
+        const isPassed = Boolean(a.passed === 1 || (typeof a.score === 'number' && a.score >= 80) || a.completed_at);
+        if (isPassed) completedSet.add(normKey);
+        
+        const payload = {
+          status: isPassed ? 'completed' : 'in_progress',
+          progress: isPassed ? 100 : (a.score || 60),
+          score: a.score,
+          completed_at: a.completed_at || a.created_at
+        };
+        lessonsStatus[normKey] = payload;
+        lessonsStatus[rawKey] = payload;
       }
     });
 
-    // Sincronizar también con progreso_usuario (la tabla agregada que usa el perfil del alumno)
+    // Sincronizar también con progreso_usuario
     let progUsuarioLessons = 0;
     const userProgRow = userProgressTable.find(p => matchesUser(p.user_id));
     if (userProgRow?.data) {
@@ -207,25 +277,46 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
       ? Math.round(scoredAttempts.reduce((acc, a) => acc + a.score, 0) / scoredAttempts.length)
       : (totalLessonsCompleted > 0 ? 85 : 0);
 
-    const groupName = groupMap[st.id] || groupMap[st.email] || groupMap[st.email?.toLowerCase()] || 'Sin Grupo';
+    const groupName = groupMap[st.id] || groupMap[sEmail] || groupMap[sId] || 'Sin Grupo';
+    const groupId = userGroupIdsMap[st.id] || userGroupIdsMap[sEmail] || userGroupIdsMap[sId] || null;
+
+    // Cursos a los que pertenece el usuario
+    const userCoursesSet = userCourseMap[st.id] || userCourseMap[sEmail] || userCourseMap[sId] || new Set();
+    // Si no tiene curso asignado, se infiere de sus lecciones o se le asocian todos por defecto
+    const userCourseIds = userCoursesSet.size > 0 
+      ? Array.from(userCoursesSet)
+      : ['ee', 're'];
+
+    // Detección automática de Alerta Temprana / Riesgo Académico
+    let riskLevel = 'safe'; // 'safe' | 'warning' | 'danger'
+    if (totalLessonsCompleted === 0 || (avgScore > 0 && avgScore < 60) || userAttempts.filter(a => a.score && a.score < 60).length >= 2) {
+      riskLevel = 'danger';
+    } else if (avgScore < 75 || totalLessonsCompleted < 2) {
+      riskLevel = 'warning';
+    }
 
     return {
       id: st.id,
       name: st.full_name || st.email?.split('@')[0] || 'Estudiante',
       email: st.email || '',
       avatar_url: st.avatar_url || '',
+      group_id: groupId,
       group_name: groupName,
+      courses: userCourseIds,
       lessonsCompletedCount: totalLessonsCompleted,
+      lessons_status: lessonsStatus,
       attemptsCount: userAttempts.length,
       averageScore: avgScore,
+      risk_level: riskLevel,
       lastActive: st.created_at
     };
   });
 
   return Response.json({
     success: true,
+    courses: cursosList,
+    groups: gruposList,
     students: studentMetrics,
-    groups: (gruposList || []).map(g => g.name),
     topDifficultFlashcards,
     topFailedChallenges,
     totalEvaluationsRecorded: allAttempts.length
@@ -235,13 +326,26 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
 // ── Ficha Diagnóstica y Telemetría Individual de un Estudiante ──
 async function getStudentDetailedAnalytics(env, userId) {
   let student = null;
+  const trimmedId = String(userId || '').trim();
+  const numId = parseInt(trimmedId, 10);
+
   try {
     student = await env.DB.prepare(`
       SELECT id, email, full_name, avatar_url, role, created_at
       FROM perfiles 
-      WHERE id = ? OR LOWER(email) = LOWER(?) OR CAST(id AS TEXT) = ?
+      WHERE id = ? 
+         OR id = ?
+         OR CAST(id AS TEXT) = ?
+         OR LOWER(email) = LOWER(?)
+         OR LOWER(email) LIKE ?
       LIMIT 1
-    `).bind(userId, userId, String(userId)).first();
+    `).bind(
+      isNaN(numId) ? trimmedId : numId,
+      trimmedId,
+      trimmedId,
+      trimmedId.toLowerCase(),
+      `%${trimmedId.toLowerCase()}%`
+    ).first();
   } catch (err) {
     console.error('Error buscando perfil:', err);
   }
@@ -253,11 +357,14 @@ async function getStudentDetailedAnalytics(env, userId) {
   // Obtener grupo
   let groupName = 'Sin Grupo';
   try {
-    const gu = await env.DB.prepare('SELECT group_id FROM grupos_usuario WHERE user_id = ? OR user_id = ?').bind(student.id, student.email).first();
-    if (gu?.group_id) {
-      const grp = await env.DB.prepare('SELECT name FROM grupos WHERE id = ?').bind(gu.group_id).first();
-      if (grp?.name) groupName = grp.name;
-    }
+    const gu = await env.DB.prepare(`
+      SELECT g.name 
+      FROM grupos_usuario gu
+      JOIN grupos g ON g.id = gu.group_id
+      WHERE gu.user_id = ? OR gu.user_id = ? OR LOWER(gu.user_id) = LOWER(?) OR CAST(gu.user_id AS TEXT) = ?
+      LIMIT 1
+    `).bind(student.id, student.email, student.email, String(student.id)).first();
+    if (gu?.name) groupName = gu.name;
   } catch (err) {
     console.warn('Error buscando grupo:', err);
   }

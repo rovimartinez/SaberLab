@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { api } from '../lib/api';
+import { api, getToken } from '../lib/api';
 
-const HEARTBEAT_INTERVAL_MS = 6000; // Cada 6 segundos para entrega rápida de alertas
+const HEARTBEAT_INTERVAL_MS = 45000; // Latido espaciado cada 45s para mínimo consumo en D1
 
 export function useStudentPresence() {
     const { user, profile, isStaff, isImpersonating, viewMode } = useAuth();
@@ -12,8 +12,8 @@ export function useStudentPresence() {
     const lastDismissedIdRef = useRef(null);
 
     const userRole = (profile?.role || user?.role || 'student').toLowerCase();
-    // Estudiante real o administrador en Modo Vista de Estudiante
-    const isStudent = Boolean(user && (!isStaff || isImpersonating || viewMode === 'student' || userRole === 'student'));
+    // Estudiante real o administrador explícitamente en modo vista estudiante
+    const isStudent = Boolean(user && (viewMode === 'student' || isImpersonating || (!isStaff && userRole === 'student')));
 
     const getActivityFromPath = (pathname) => {
         // ── Evaluaciones / Exámenes ──
@@ -107,21 +107,51 @@ export function useStudentPresence() {
             return;
         }
 
-        // Enviar ping inicial de inmediato
+        // Enviar ping inicial / al cambiar de ruta
         sendPing();
 
-        // Enviar periódicamente cada 6s
-        const interval = setInterval(sendPing, HEARTBEAT_INTERVAL_MS);
+        // Enviar periódicamente cada 45s solo si la pestaña está visible (activa)
+        const interval = setInterval(() => {
+            if (!document.hidden) {
+                sendPing();
+            }
+        }, HEARTBEAT_INTERVAL_MS);
 
-        // También chequear inmediatamente cuando la pestaña vuelve a enfocarse
-        const handleFocus = () => sendPing();
-        window.addEventListener('focus', handleFocus);
-        document.addEventListener('visibilitychange', handleFocus);
+        // Chequear inmediatamente cuando el alumno regresa o enfoca la pestaña
+        const handleFocusOrVisible = () => {
+            if (!document.hidden) {
+                sendPing();
+            }
+        };
+
+        // Al cerrar pestaña o salir de la ventana, enviar aviso inmediato de salida
+        const handleLeave = () => {
+            const token = getToken();
+            if (token) {
+                try {
+                    fetch('/api/presence', {
+                        method: 'DELETE',
+                        keepalive: true,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+                } catch {}
+            }
+        };
+
+        window.addEventListener('focus', handleFocusOrVisible);
+        document.addEventListener('visibilitychange', handleFocusOrVisible);
+        window.addEventListener('pagehide', handleLeave);
+        window.addEventListener('beforeunload', handleLeave);
 
         return () => {
             clearInterval(interval);
-            window.removeEventListener('focus', handleFocus);
-            document.removeEventListener('visibilitychange', handleFocus);
+            window.removeEventListener('focus', handleFocusOrVisible);
+            document.removeEventListener('visibilitychange', handleFocusOrVisible);
+            window.removeEventListener('pagehide', handleLeave);
+            window.removeEventListener('beforeunload', handleLeave);
         };
     }, [isStudent, sendPing]);
 

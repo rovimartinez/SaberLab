@@ -440,6 +440,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
+    try {
+      await api('/presence', { method: 'DELETE' });
+    } catch {
+      // Ignorar fallo de red al desconectar
+    }
     clearToken();
     setUser(null);
     setProfile(null);
