@@ -65,8 +65,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                ...(isStaff ? [{ name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }] : []),
-                ...(canAccessCertificate ? [{ name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }] : [])
+                ...(isStaff ? [{ name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }] : [])
             ]
         },
         ...(isStaff ? [{
@@ -74,8 +73,14 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar }) => {
             items: [
                 { name: 'Analítica', path: '/dashboard/analytics', icon: <Activity size={18} /> },
                 { name: 'Gestión', path: '/dashboard/admin-panel', icon: <Shield size={18} /> },
+                { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
             ]
-        }] : [])
+        }] : (canAccessCertificate ? [{
+            title: 'CERTIFICACIÓN',
+            items: [
+                { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
+            ]
+        }] : []))
     ];
 
     return (

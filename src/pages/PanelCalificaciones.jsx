@@ -44,18 +44,26 @@ const PanelCalificaciones = () => {
 
         // Extraer todas las evaluaciones de los módulos del curso
         const evaluations = modules.map((m, idx) => {
-            const evalKey = idx === 0 ? 'ee-m1-l6' : `ee-m${idx + 1}-l${idx === 1 ? 10 : (idx === 2 ? 14 : 16)}`;
+            const courseAbbr = (c.abbr || def.abbr || '').toLowerCase();
+            let evalKey = m.evaluation?.id;
+            if (!evalKey) {
+                if (courseAbbr === 'ee') {
+                    evalKey = idx === 0 ? 'ee-m1-l6' : `ee-m${idx + 1}-l${idx === 1 ? 10 : (idx === 2 ? 14 : 16)}`;
+                } else {
+                    evalKey = `${courseAbbr}-m${idx + 1}-eval`;
+                }
+            }
             const evalData = m.evaluation || {
                 title: `Examen ${idx + 1}`,
                 points: idx === 0 ? 150 : (idx === 3 ? 100 : 125),
                 date: 'Pendiente'
             };
 
-            // Buscar si el estudiante tiene un intento registrado en esta evaluación
+            // Buscar si el estudiante tiene un intento registrado en esta evaluación específica
             const attempt = attempts.find(a => 
                 (a.evaluation_key && a.evaluation_key.toLowerCase() === evalKey.toLowerCase()) && 
                 a.completed_at
-            ) || (idx === 0 && localStorage.getItem('exam_completed_ee-m1-l6') ? JSON.parse(localStorage.getItem('exam_completed_ee-m1-l6')) : null);
+            ) || (evalKey === 'ee-m1-l6' && localStorage.getItem('exam_completed_ee-m1-l6') ? JSON.parse(localStorage.getItem('exam_completed_ee-m1-l6')) : null);
 
             const isSubmitted = !!attempt;
             const pointsObtained = attempt ? (attempt.points_obtained ?? attempt.totalPts ?? attempt.score ?? 0) : null;
@@ -110,7 +118,21 @@ const PanelCalificaciones = () => {
     // Puntos acumulados en total
     const totalEarnedAll = coursesGrades.reduce((acc, c) => acc + c.totalPointsEarned, 0);
     const totalMaxAll = coursesGrades.reduce((acc, c) => acc + c.totalMaxCoursePoints, 0);
-    const overallGPA = totalMaxAll > 0 ? ((totalEarnedAll / totalMaxAll) * 5.0).toFixed(1) : '5.0';
+
+    // Escala de color oficial solicitada:
+    // < 300 pts: Rojo
+    // < 350 pts: Amarillo
+    // < 450 pts: Verde
+    // 450 a 500 pts: Azul
+    const getScoreColor = (score, max = 500) => {
+        const normalized = max > 0 ? (score / max) * 500 : score;
+        if (normalized < 300) return '#ef4444';
+        if (normalized < 350) return '#f59e0b';
+        if (normalized < 450) return '#10b981';
+        return '#38bdf8';
+    };
+
+    const totalHeaderColor = getScoreColor(totalEarnedAll, totalMaxAll || 500);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', paddingBottom: '3rem' }}>
@@ -145,24 +167,15 @@ const PanelCalificaciones = () => {
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     <div style={{
                         background: 'rgba(15, 23, 42, 0.7)',
-                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        border: `1px solid ${totalHeaderColor}40`,
                         borderRadius: '16px',
                         padding: '0.9rem 1.4rem',
                         textAlign: 'center'
                     }}>
-                        <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#38bdf8' }}>{totalEarnedAll} / {totalMaxAll}</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 900, color: totalHeaderColor }}>{totalEarnedAll} / {totalMaxAll}</div>
                         <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>Puntos Totales</div>
                     </div>
-                    <div style={{
-                        background: 'rgba(15, 23, 42, 0.7)',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        borderRadius: '16px',
-                        padding: '0.9rem 1.4rem',
-                        textAlign: 'center'
-                    }}>
-                        <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10b981' }}>{overallGPA}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>Nota Equivalente (0-5.0)</div>
-                    </div>
+
                     {totalEarnedAll >= 450 && (
                         <div 
                             onClick={() => navigate('/dashboard/certificate/ee')}
@@ -190,7 +203,9 @@ const PanelCalificaciones = () => {
             </div>
 
             {/* ── LISTADO DE CURSOS Y TABLA DE NOTAS ── */}
-            {coursesGrades.map(course => (
+            {coursesGrades.map(course => {
+                const courseScoreColor = getScoreColor(course.totalPointsEarned, course.totalMaxCoursePoints || 500);
+                return (
                 <div key={course.id || course.slug} className="glass-panel" style={{
                     padding: '2rem',
                     borderRadius: '24px',
@@ -210,17 +225,7 @@ const PanelCalificaciones = () => {
                         paddingBottom: '1.25rem'
                     }}>
                         <div>
-                            <span style={{
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '8px',
-                                background: `${course.color}20`,
-                                color: course.color,
-                                fontSize: '0.78rem',
-                                fontWeight: 800
-                            }}>
-                                {course.abbr || 'CURSO'}
-                            </span>
-                            <h2 style={{ color: '#fff', fontSize: '1.4rem', margin: '0.4rem 0 0.2rem 0', fontWeight: 800 }}>
+                            <h2 style={{ color: '#fff', fontSize: '1.4rem', margin: '0 0 0.3rem 0', fontWeight: 800 }}>
                                 {course.name}
                             </h2>
                             <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
@@ -229,7 +234,7 @@ const PanelCalificaciones = () => {
                         </div>
 
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: course.color }}>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: courseScoreColor }}>
                                 {course.totalPointsEarned} / {course.totalMaxCoursePoints} pts ({course.coursePercentage}%)
                             </div>
                             <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
@@ -248,6 +253,7 @@ const PanelCalificaciones = () => {
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>PESO</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>PUNTAJE</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>ESTADO</th>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>INTEGRIDAD</th>
                                     <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>ACCIÓN</th>
                                 </tr>
                             </thead>
@@ -281,56 +287,34 @@ const PanelCalificaciones = () => {
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                                             {ev.isSubmitted ? (
-                                                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-                                                    <span style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '6px',
-                                                        minWidth: '115px',
-                                                        height: '32px',
-                                                        boxSizing: 'border-box',
-                                                        padding: '0 0.85rem',
-                                                        borderRadius: '9px',
-                                                        background: 'rgba(16, 185, 129, 0.15)',
-                                                        color: '#10b981',
-                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                                                        fontSize: '0.82rem',
-                                                        fontWeight: 800,
-                                                        whiteSpace: 'nowrap'
-                                                    }}>
-                                                        <CheckCircle2 size={15} />
-                                                        Realizado
-                                                    </span>
-                                                    {ev.antiCheat?.strikes > 0 ? (
-                                                        <span style={{
-                                                            fontSize: '0.66rem',
-                                                            fontWeight: 800,
-                                                            color: ev.antiCheat.strikes >= 3 ? '#ef4444' : '#f59e0b',
-                                                            whiteSpace: 'nowrap'
-                                                        }}>
-                                                            {ev.antiCheat.strikes >= 3 ? '⚠️ Infracción (3/3)' : `⚠️ ${ev.antiCheat.strikes} Advertencia(s)`}
-                                                        </span>
-                                                    ) : (
-                                                        <span style={{
-                                                            fontSize: '0.66rem',
-                                                            fontWeight: 700,
-                                                            color: '#10b981',
-                                                            opacity: 0.8,
-                                                            whiteSpace: 'nowrap'
-                                                        }}>
-                                                            ✓ 100% Íntegro
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                <span style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '6px',
+                                                    minWidth: '105px',
+                                                    height: '32px',
+                                                    boxSizing: 'border-box',
+                                                    padding: '0 0.85rem',
+                                                    borderRadius: '9px',
+                                                    background: 'rgba(16, 185, 129, 0.15)',
+                                                    color: '#10b981',
+                                                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                    fontSize: '0.82rem',
+                                                    fontWeight: 800,
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    <CheckCircle2 size={15} />
+                                                    Realizado
+                                                </span>
                                             ) : (
                                                 <span style={{
                                                     display: 'inline-flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
                                                     gap: '6px',
-                                                    minWidth: '115px',
-                                                    height: '36px',
+                                                    minWidth: '105px',
+                                                    height: '32px',
                                                     boxSizing: 'border-box',
                                                     padding: '0 0.85rem',
                                                     borderRadius: '9px',
@@ -344,6 +328,47 @@ const PanelCalificaciones = () => {
                                                     <Clock size={15} />
                                                     Pendiente
                                                 </span>
+                                            )}
+                                        </td>
+                                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                            {ev.isSubmitted ? (
+                                                ev.antiCheat?.strikes > 0 ? (
+                                                    <span style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '5px',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '8px',
+                                                        background: ev.antiCheat.strikes >= 3 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                                                        border: `1px solid ${ev.antiCheat.strikes >= 3 ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 800,
+                                                        color: ev.antiCheat.strikes >= 3 ? '#ef4444' : '#f59e0b',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        <ShieldCheck size={14} />
+                                                        {ev.antiCheat.strikes >= 3 ? 'Infracción (3/3)' : `${ev.antiCheat.strikes} Advertencia(s)`}
+                                                    </span>
+                                                ) : (
+                                                    <span style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '5px',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '8px',
+                                                        background: 'rgba(16, 185, 129, 0.12)',
+                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 800,
+                                                        color: '#10b981',
+                                                        whiteSpace: 'nowrap'
+                                                    }}>
+                                                        <ShieldCheck size={14} />
+                                                        100% Íntegro
+                                                    </span>
+                                                )
+                                            ) : (
+                                                <span style={{ color: '#64748b', fontSize: '0.9rem' }}>—</span>
                                             )}
                                         </td>
                                         <td style={{ padding: '1rem', textAlign: 'center' }}>
@@ -383,7 +408,8 @@ const PanelCalificaciones = () => {
                         </table>
                     </div>
                 </div>
-            ))}
+            );
+        })}
         </div>
     );
 };

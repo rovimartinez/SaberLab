@@ -81,6 +81,17 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
     console.warn('Error progreso_lecciones:', err);
   }
 
+  // C2. Obtener resumen de progreso_usuario (usado por el perfil del alumno)
+  let userProgressTable = [];
+  try {
+    const { results } = await env.DB.prepare(`
+      SELECT user_id, data FROM progreso_usuario
+    `).all();
+    userProgressTable = results || [];
+  } catch (err) {
+    console.warn('Error progreso_usuario:', err);
+  }
+
   // D. Conceptos con mayor índice de dificultad en Flashcards
   let topDifficultFlashcards = [];
   try {
@@ -142,11 +153,18 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
   const studentMetrics = targetProfiles.map(st => {
     const sId = String(st.id || '').trim().toLowerCase();
     const sEmail = String(st.email || '').trim().toLowerCase();
+    const sEmailUser = sEmail.includes('@') ? sEmail.split('@')[0] : '';
 
     const matchesUser = (recordUserId) => {
       if (!recordUserId) return false;
       const rId = String(recordUserId).trim().toLowerCase();
-      return (sId && rId === sId) || (sEmail && rId === sEmail) || (sEmail && rId.includes(sEmail));
+      return (
+        rId === sId ||
+        rId === sEmail ||
+        (sId && (rId.includes(sId) || sId.includes(rId))) ||
+        (sEmail && (rId.includes(sEmail) || sEmail.includes(rId))) ||
+        (sEmailUser && sEmailUser.length > 3 && (rId.includes(sEmailUser) || sEmailUser.includes(rId)))
+      );
     };
 
     const userLessons = lessonProgress.filter(p => matchesUser(p.user_id));
@@ -166,10 +184,22 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
       }
     });
 
+    // Sincronizar también con progreso_usuario (la tabla agregada que usa el perfil del alumno)
+    let progUsuarioLessons = 0;
+    const userProgRow = userProgressTable.find(p => matchesUser(p.user_id));
+    if (userProgRow?.data) {
+      try {
+        const parsed = typeof userProgRow.data === 'string' ? JSON.parse(userProgRow.data) : userProgRow.data;
+        progUsuarioLessons = Number(parsed?.lessons_completed) || 0;
+      } catch {}
+    }
+
+    const totalLessonsCompleted = Math.max(completedSet.size, progUsuarioLessons);
+
     const scoredAttempts = userAttempts.filter(a => typeof a.score === 'number' && a.score > 0);
     const avgScore = scoredAttempts.length > 0 
       ? Math.round(scoredAttempts.reduce((acc, a) => acc + a.score, 0) / scoredAttempts.length)
-      : (completedSet.size > 0 ? 85 : 0);
+      : (totalLessonsCompleted > 0 ? 85 : 0);
 
     const groupName = groupMap[st.id] || groupMap[st.email] || groupMap[st.email?.toLowerCase()] || 'Sin Grupo';
 
@@ -179,7 +209,7 @@ async function getCohortOverviewAnalytics(env, courseFilter) {
       email: st.email || '',
       avatar_url: st.avatar_url || '',
       group_name: groupName,
-      lessonsCompletedCount: completedSet.size,
+      lessonsCompletedCount: totalLessonsCompleted,
       attemptsCount: userAttempts.length,
       averageScore: avgScore,
       lastActive: st.created_at
@@ -228,13 +258,19 @@ async function getStudentDetailedAnalytics(env, userId) {
 
   // 2. Progreso de Lecciones
   let lessons = [];
+  const sId = String(student.id || '');
+  const sEmail = String(student.email || '');
+  const sUsername = sEmail.includes('@') ? sEmail.split('@')[0] : '';
+  const sIdLike = `%${sId}%`;
+  const sUserLike = sUsername.length > 3 ? `%${sUsername}%` : sIdLike;
+
   try {
     const { results } = await env.DB.prepare(`
       SELECT lesson_id, status, progress, completed_at, updated_at
       FROM progreso_lecciones 
-      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?)
+      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?) OR user_id LIKE ? OR user_id LIKE ?
       ORDER BY updated_at DESC
-    `).bind(student.id, student.email, student.email).all();
+    `).bind(sId, sEmail, sEmail, sIdLike, sUserLike).all();
     lessons = results || [];
   } catch (err) {
     console.warn('Error lessons:', err);
@@ -246,9 +282,9 @@ async function getStudentDetailedAnalytics(env, userId) {
     const { results } = await env.DB.prepare(`
       SELECT lesson_id, card_id, status, attempts_count, known_count, unknown_count, updated_at
       FROM progreso_flashcards 
-      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?)
+      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?) OR user_id LIKE ? OR user_id LIKE ?
       ORDER BY unknown_count DESC, attempts_count DESC
-    `).bind(student.id, student.email, student.email).all();
+    `).bind(sId, sEmail, sEmail, sIdLike, sUserLike).all();
     flashcards = results || [];
   } catch (err) {
     console.warn('Error flashcards:', err);
@@ -260,9 +296,9 @@ async function getStudentDetailedAnalytics(env, userId) {
     const { results } = await env.DB.prepare(`
       SELECT lesson_id, exercise_id, exercise_title, concept, failures_count, attempts_count, first_try_success, updated_at
       FROM progreso_retos_practica 
-      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?)
+      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?) OR user_id LIKE ? OR user_id LIKE ?
       ORDER BY failures_count DESC
-    `).bind(student.id, student.email, student.email).all();
+    `).bind(sId, sEmail, sEmail, sIdLike, sUserLike).all();
     challenges = results || [];
   } catch (err) {
     console.warn('Error challenges:', err);
@@ -274,9 +310,9 @@ async function getStudentDetailedAnalytics(env, userId) {
     const { results } = await env.DB.prepare(`
       SELECT id, evaluation_key, score, passed, completed_at, created_at, answers
       FROM intentos_evaluacion 
-      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?)
+      WHERE user_id = ? OR user_id = ? OR LOWER(user_id) = LOWER(?) OR user_id LIKE ? OR user_id LIKE ?
       ORDER BY created_at ASC
-    `).bind(student.id, student.email, student.email).all();
+    `).bind(sId, sEmail, sEmail, sIdLike, sUserLike).all();
     attempts = results || [];
   } catch (err) {
     console.warn('Error attempts:', err);
@@ -381,5 +417,15 @@ async function ensureAllAnalyticsTables(env) {
       )
     `).run();
   } catch {}
+
+  try {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS progreso_usuario (
+        user_id TEXT PRIMARY KEY,
+        data TEXT
+      )
+    `).run();
+  } catch {}
 }
+
 
