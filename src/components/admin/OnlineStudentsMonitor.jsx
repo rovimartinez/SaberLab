@@ -27,6 +27,9 @@ export default function OnlineStudentsMonitor() {
     const [sending, setSending] = useState(false);
     const [feedback, setFeedback] = useState(null);
     const [nudgeSent, setNudgeSent] = useState({}); // { userId: nudgeType } para feedback visual
+    const [clearingNotifs, setClearingNotifs] = useState(false);
+    const [clearFeedback, setClearFeedback] = useState(null);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     const fetchOnline = useCallback(async () => {
         try {
@@ -124,6 +127,23 @@ export default function OnlineStudentsMonitor() {
             console.error('Error enviando señal:', err);
         }
         setTimeout(() => setNudgeSent(prev => { const n = { ...prev }; delete n[key]; return n; }), 1500);
+    };
+
+    // Limpiar TODAS las notificaciones de todos los estudiantes
+    const handleClearAllNotifications = async () => {
+        setClearingNotifs(true);
+        setClearFeedback(null);
+        try {
+            const { data: res, error } = await api('/admin/clear-notifications', { method: 'DELETE' });
+            if (error) throw new Error(error.message || 'Error al limpiar');
+            setClearFeedback({ type: 'success', text: `✅ ${res?.message || 'Notificaciones eliminadas'}` });
+        } catch (err) {
+            setClearFeedback({ type: 'error', text: err.message || 'No se pudo limpiar' });
+        } finally {
+            setClearingNotifs(false);
+            setShowClearConfirm(false);
+            setTimeout(() => setClearFeedback(null), 4000);
+        }
     };
 
     return (
@@ -228,8 +248,120 @@ export default function OnlineStudentsMonitor() {
                         <Send size={14} />
                         <span>Mensaje a Toda la Clase ({onlineStudents.length})</span>
                     </button>
+
+                    {/* Botón limpiar notificaciones */}
+                    <button
+                        onClick={() => setShowClearConfirm(true)}
+                        title="Eliminar TODAS las notificaciones de TODOS los estudiantes"
+                        style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            color: '#ef4444',
+                            borderRadius: '10px',
+                            padding: '0.5rem 0.85rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <UserX size={13} />
+                        <span>Limpiar Notificaciones</span>
+                    </button>
                 </div>
             </div>
+
+            {/* ── Feedback de limpieza de notificaciones ── */}
+            {clearFeedback && (
+                <div style={{
+                    padding: '0.75rem 1.2rem',
+                    borderRadius: '12px',
+                    marginBottom: '1rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    background: clearFeedback.type === 'success' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                    border: `1px solid ${clearFeedback.type === 'success' ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
+                    color: clearFeedback.type === 'success' ? '#10b981' : '#ef4444',
+                }}>
+                    {clearFeedback.text}
+                </div>
+            )}
+
+            {/* ── Modal de confirmación: Limpiar notificaciones ── */}
+            {showClearConfirm && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 999999,
+                    background: 'rgba(10, 15, 30, 0.85)',
+                    backdropFilter: 'blur(10px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '1.5rem'
+                }}>
+                    <div style={{
+                        background: 'linear-gradient(160deg, #1e293b 0%, #0f172a 100%)',
+                        border: '2px solid rgba(239, 68, 68, 0.5)',
+                        borderRadius: '24px',
+                        padding: '2.25rem 2rem',
+                        maxWidth: '440px',
+                        width: '100%',
+                        boxShadow: '0 25px 70px rgba(239, 68, 68, 0.25)',
+                        color: '#fff',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🗑️</div>
+                        <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.3rem', fontWeight: 800, color: '#ef4444' }}>
+                            ¿Limpiar todas las notificaciones?
+                        </h3>
+                        <p style={{ margin: '0 0 1.75rem', fontSize: '0.95rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                            Esta acción eliminará <strong style={{ color: '#f8fafc' }}>permanentemente</strong> todos los mensajes y recordatorios
+                            de examen del buzón de <strong style={{ color: '#f8fafc' }}>todos los estudiantes</strong>.
+                            No se puede deshacer.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button
+                                onClick={() => setShowClearConfirm(false)}
+                                style={{
+                                    flex: 1,
+                                    background: 'rgba(255,255,255,0.08)',
+                                    border: '1px solid rgba(255,255,255,0.15)',
+                                    color: '#cbd5e1',
+                                    borderRadius: '12px',
+                                    padding: '0.85rem',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleClearAllNotifications}
+                                disabled={clearingNotifs}
+                                style={{
+                                    flex: 1,
+                                    background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                                    border: 'none',
+                                    color: '#fff',
+                                    borderRadius: '12px',
+                                    padding: '0.85rem',
+                                    fontSize: '0.9rem',
+                                    fontWeight: 800,
+                                    cursor: clearingNotifs ? 'wait' : 'pointer',
+                                    boxShadow: '0 6px 20px rgba(220, 38, 38, 0.4)',
+                                    opacity: clearingNotifs ? 0.7 : 1
+                                }}
+                            >
+                                {clearingNotifs ? '⏳ Eliminando...' : '🗑️ Sí, limpiar todo'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Listado de Estudiantes */}
             {onlineStudents.length === 0 ? (

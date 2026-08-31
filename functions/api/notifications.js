@@ -34,6 +34,32 @@ export async function onRequestGet({ env, data }) {
     const todayStr = today.toISOString().split('T')[0];
     const todayMs = new Date(todayStr).getTime();
 
+    // 0. Obtener los course_ids en los que está inscrito este usuario
+    let userCourseIds = [];
+    try {
+      const { results: enrollRows } = await env.DB.prepare(
+        'SELECT course_id FROM inscripciones WHERE user_id = ? OR LOWER(user_id) = LOWER(?)'
+      ).bind(userId, userEmail).all();
+      userCourseIds = (enrollRows || []).map(r => String(r.course_id).toLowerCase());
+    } catch {}
+
+    // Helper: determinar si un exam pertenece a alguno de los cursos del usuario
+    // Los evaluation_key tienen prefijo: 'ee-' = Electricidad, 're-' = Robótica
+    const userEnrolledInExam = (evaluation_key) => {
+      const key = (evaluation_key || '').toLowerCase();
+      // Si no hay inscripciones registradas, mostrar todos (compatibilidad retroactiva)
+      if (userCourseIds.length === 0) return true;
+      // Mapeo prefijo → posibles course_id guardados en D1
+      if (key.startsWith('ee-')) {
+        return userCourseIds.some(c => c === 'ee' || c === '1' || c.includes('electric'));
+      }
+      if (key.startsWith('re-')) {
+        return userCourseIds.some(c => c === 're' || c === '2' || c.includes('robot'));
+      }
+      // Para otros prefijos desconocidos, mostrar solo si está en algún curso
+      return userCourseIds.length > 0;
+    };
+
     // 1. Obtener exámenes de la base de datos
     let examList = [];
     try {
@@ -62,6 +88,10 @@ export async function onRequestGet({ env, data }) {
 
     for (const exam of allExams) {
       if (!exam.due_date) continue;
+
+      // ── FILTRO CRÍTICO: solo generar recordatorio si el usuario está inscrito en ese curso ──
+      if (!userEnrolledInExam(exam.evaluation_key)) continue;
+
       const examDueDate = exam.due_date.includes('T') ? exam.due_date.split('T')[0] : exam.due_date;
       const examMs = new Date(examDueDate).getTime();
       const diffDays = Math.round((examMs - todayMs) / (1000 * 60 * 60 * 24));
@@ -99,6 +129,7 @@ export async function onRequestGet({ env, data }) {
   } catch (notifErr) {
     console.warn('Aviso generador de notificaciones automáticas:', notifErr);
   }
+
 
   // Devolver solo las notificaciones persistentes que NO sean temporales
   const { results } = await env.DB.prepare(`
