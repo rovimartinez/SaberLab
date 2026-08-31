@@ -19,16 +19,26 @@ function getBaseAppUrl(request, env) {
     return `${url.protocol}//${url.host}`;
   }
 
-  // 3. En producción (Cloudflare Pages), usar la URL del host actual
-  if (forwardedHost && !forwardedHost.includes('localhost') && !forwardedHost.includes('127.0.0.1')) {
-    return `${forwardedProto}://${forwardedHost}`;
+  // 3. Si APP_URL está definido (variable de entorno de Cloudflare), usarlo siempre en producción.
+  //    Esto evita el error redirect_uri_mismatch cuando Cloudflare sirve desde URLs hash
+  //    como https://6d66d517.saberlab.pages.dev en vez del dominio canónico registrado en Google.
+  if (env.APP_URL && !env.APP_URL.includes('localhost')) {
+    return env.APP_URL;
   }
 
-  if (url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')) {
-    return url.origin;
+  // 4. En producción (Cloudflare Pages), normalizar el host eliminando URLs de hash de deploy
+  const host = forwardedHost || url.hostname;
+  const proto = forwardedProto || 'https';
+  if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+    // Si es una URL hash de deploy (ej: 6d66d517.saberlab.pages.dev), usar el dominio canónico
+    const hashMatch = host.match(/^[0-9a-f]{8}\.(.+)$/);
+    if (hashMatch) {
+      return `${proto}://${hashMatch[1]}`;
+    }
+    return `${proto}://${host}`;
   }
 
-  return env.APP_URL || 'http://localhost:5173';
+  return 'https://saberlab.pages.dev';
 }
 
 export async function onRequestGet({ request, env }) {

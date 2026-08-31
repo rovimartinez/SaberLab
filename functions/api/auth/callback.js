@@ -19,15 +19,23 @@ function getBaseAppUrl(request, env) {
     return `${url.protocol}//${url.host}`;
   }
 
-  if (forwardedHost && !forwardedHost.includes('localhost') && !forwardedHost.includes('127.0.0.1')) {
-    return `${forwardedProto}://${forwardedHost}`;
+  // APP_URL tiene prioridad en producción para evitar redirect_uri_mismatch
+  if (env.APP_URL && !env.APP_URL.includes('localhost')) {
+    return env.APP_URL;
   }
 
-  if (url.origin && !url.origin.includes('localhost') && !url.origin.includes('127.0.0.1')) {
-    return url.origin;
+  // Normalizar hosts con prefijo hash de deploy de Cloudflare Pages
+  const host = forwardedHost || url.hostname;
+  const proto = forwardedProto || 'https';
+  if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+    const hashMatch = host.match(/^[0-9a-f]{8}\.(.+)$/);
+    if (hashMatch) {
+      return `${proto}://${hashMatch[1]}`;
+    }
+    return `${proto}://${host}`;
   }
 
-  return env.APP_URL || 'http://localhost:5173';
+  return 'https://saberlab.pages.dev';
 }
 
 export async function onRequestGet({ request, env }) {
