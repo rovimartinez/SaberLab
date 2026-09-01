@@ -15,8 +15,8 @@ const lessonDefinition = {
         </p>
 
         <!-- Ley de Coulomb Formal -->
-        <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(15, 23, 42, 0.85) 100%); border: 1.5px solid rgba(56, 189, 248, 0.3); border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem;">
-            <div style="display: flex; justify-content: space-between; alignItems: center; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem;">
+        <div class="coulomb-law-card dark-lab-box" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 100%); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem;">
                 <h4 style="color: #38bdf8; margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
                     ⚡ Ley de Coulomb (1785) — La Fuerza entre Cargas Eléctricas
                 </h4>
@@ -26,13 +26,13 @@ const lessonDefinition = {
             </div>
 
             <p style="color: #cbd5e1; font-size: 0.9rem; line-height: 1.7; margin-bottom: 1rem;">
-                El físico francés <strong>Charles-Augustin de Coulomb</strong> cuantificó por primera vez la magnitud exacta de la fuerza electrostática con la que dos cuerpos cargados se atraen o repelen:
+                El físico francés <strong style="color: #ffffff;">Charles-Augustin de Coulomb</strong> cuantificó por primera vez la magnitud exacta de la fuerza electrostática con la que dos cuerpos cargados se atraen o repelen:
             </p>
 
             <!-- Fórmula Destacada -->
-            <div style="background: rgba(0,0,0,0.4); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
+            <div class="formula-box-dark dark-lab-box" style="background: #020617; border: 1.5px solid #38bdf8; border-radius: 14px; padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
                 <div style="color: #94a3b8; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Ecuación de la Ley de Coulomb:</div>
-                <div style="color: white; font-size: 1.8rem; font-weight: 900; font-family: monospace; letter-spacing: 0.05em;">
+                <div style="color: #ffffff; font-size: 1.8rem; font-weight: 900; font-family: monospace; letter-spacing: 0.05em;">
                     F = k · <span style="color: #38bdf8;">(|q₁ · q₂|)</span> / <span style="color: #fbbf24;">r²</span>
                 </div>
             </div>

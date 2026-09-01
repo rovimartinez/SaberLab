@@ -385,7 +385,7 @@ export default function PracticalLabL1() {
     const SVG_WIDTH = 100;
 
     return (
-        <div className="sim-card" style={{ width: '100%', margin: '0', background: '#0b1120', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 15px 35px rgba(0,0,0,0.3)' }}>
+        <div className="sim-card practical-lab-root dark-lab-box" style={{ width: '100%', margin: '0', background: '#0b1120', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', overflow: 'hidden', boxShadow: '0 15px 35px rgba(0,0,0,0.3)', color: '#f8fafc' }}>
             {/* Header del Laboratorio */}
             <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(168,85,247,0.1) 100%)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '1.5rem 2.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '0.4rem' }}>

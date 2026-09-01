@@ -940,17 +940,125 @@
     color: #c2410c !important;
 }
 
-/* ── PRESERVAR SIMULADORES TÉCNICOS (Dejar intactos con su estilo de laboratorio) ── */
+/* ── PRESERVAR SIMULADORES Y LABORATORIOS PRÁCTICOS (Dejar intactos con su estilo de laboratorio) ── */
 #arduino-simulator-container,
 #led-simulator-container,
 .arduino-simulator-wrapper,
 .circuit-simulator,
 .circuit-simulator-container,
 .simulator-workspace,
-[id*="simulator-container"] {
+[id*="simulator"],
+[id*="practical-lab"],
+#charge-interaction-container,
+#atom-model-container,
+#conductor-animation-container,
+#material-sorter-container,
+#current-direction-container,
+#ac-dc-simulator-container,
+#circuit-states-container,
+.practical-lab-root,
+.sim-card,
+.dark-lab-box,
+.coulomb-law-card {
     background: #0f172a !important;
     border: 1px solid rgba(56, 189, 248, 0.3) !important;
     border-radius: 20px !important;
+    color: #f8fafc !important;
+}
+
+/* Forzar que todos los textos, párrafos y títulos dentro de simuladores y laboratorios conserven su contraste luminoso */
+:root[data-theme='light'] [id*="practical-lab"] p,
+:root[data-theme='light'] [id*="simulator"] p,
+:root[data-theme='light'] .practical-lab-root p,
+:root[data-theme='light'] .sim-card p,
+:root[data-theme='light'] .dark-lab-box p,
+:root[data-theme='light'] .coulomb-law-card p {
+    color: #cbd5e1 !important;
+}
+
+:root[data-theme='light'] [id*="practical-lab"] h1,
+:root[data-theme='light'] [id*="practical-lab"] h2,
+:root[data-theme='light'] [id*="practical-lab"] h3,
+:root[data-theme='light'] [id*="practical-lab"] h4,
+:root[data-theme='light'] [id*="simulator"] h1,
+:root[data-theme='light'] [id*="simulator"] h2,
+:root[data-theme='light'] [id*="simulator"] h3,
+:root[data-theme='light'] [id*="simulator"] h4,
+:root[data-theme='light'] .practical-lab-root h3,
+:root[data-theme='light'] .practical-lab-root h4,
+:root[data-theme='light'] .dark-lab-box h3,
+:root[data-theme='light'] .dark-lab-box h4,
+:root[data-theme='light'] .coulomb-law-card h4 {
+    color: #f8fafc !important;
+}
+
+:root[data-theme='light'] [id*="practical-lab"] span,
+:root[data-theme='light'] [id*="simulator"] span,
+:root[data-theme='light'] .practical-lab-root span,
+:root[data-theme='light'] .sim-card span,
+:root[data-theme='light'] .dark-lab-box span {
+    color: inherit;
+}
+
+:root[data-theme='light'] [id*="practical-lab"] [style*="color: #94a3b8"],
+:root[data-theme='light'] [id*="practical-lab"] [style*="color:#94a3b8"],
+:root[data-theme='light'] [id*="simulator"] [style*="color: #94a3b8"],
+:root[data-theme='light'] [id*="simulator"] [style*="color:#94a3b8"],
+:root[data-theme='light'] .dark-lab-box [style*="color: #94a3b8"],
+:root[data-theme='light'] .coulomb-law-card [style*="color: #94a3b8"] {
+    color: #94a3b8 !important;
+}
+
+:root[data-theme='light'] [id*="practical-lab"] [style*="color: #cbd5e1"],
+:root[data-theme='light'] [id*="practical-lab"] [style*="color:#cbd5e1"],
+:root[data-theme='light'] [id*="simulator"] [style*="color: #cbd5e1"],
+:root[data-theme='light'] [id*="simulator"] [style*="color:#cbd5e1"],
+:root[data-theme='light'] .dark-lab-box [style*="color: #cbd5e1"],
+:root[data-theme='light'] .coulomb-law-card [style*="color: #cbd5e1"] {
+    color: #cbd5e1 !important;
+}
+
+:root[data-theme='light'] [id*="practical-lab"] [style*="color: white"],
+:root[data-theme='light'] [id*="practical-lab"] [style*="color:white"],
+:root[data-theme='light'] [id*="practical-lab"] [style*="color: #fff"],
+:root[data-theme='light'] [id*="practical-lab"] [style*="color:#fff"],
+:root[data-theme='light'] [id*="simulator"] [style*="color: white"],
+:root[data-theme='light'] [id*="simulator"] [style*="color:white"],
+:root[data-theme='light'] [id*="simulator"] [style*="color: #fff"],
+:root[data-theme='light'] [id*="simulator"] [style*="color:#fff"],
+:root[data-theme='light'] .dark-lab-box [style*="color: white"],
+:root[data-theme='light'] .dark-lab-box [style*="color: #fff"],
+:root[data-theme='light'] .formula-box-dark [style*="color: white"],
+:root[data-theme='light'] .formula-box-dark [style*="color: #fff"] {
+    color: #ffffff !important;
+}
+
+/* Fórmulas y ecuaciones matemáticas */
+.formula-box-dark,
+:root[data-theme='light'] .formula-box-dark {
+    background: #020617 !important;
+    border: 1.5px solid #38bdf8 !important;
+    border-radius: 14px !important;
+    color: #ffffff !important;
+}
+
+.formula-box-dark *,
+:root[data-theme='light'] .formula-box-dark * {
+    color: inherit;
+}
+
+.formula-box-dark [style*="color: #38bdf8"],
+:root[data-theme='light'] .formula-box-dark [style*="color: #38bdf8"],
+.formula-box-dark [style*="color:#38bdf8"],
+:root[data-theme='light'] .formula-box-dark [style*="color:#38bdf8"] {
+    color: #38bdf8 !important;
+}
+
+.formula-box-dark [style*="color: #fbbf24"],
+:root[data-theme='light'] .formula-box-dark [style*="color: #fbbf24"],
+.formula-box-dark [style*="color:#fbbf24"],
+:root[data-theme='light'] .formula-box-dark [style*="color:#fbbf24"] {
+    color: #fbbf24 !important;
 }
 
 #arduino-simulator-container [style*="background: #1e1e1e"],
