@@ -501,3 +501,290 @@
     animation: scaleIn 0.3s ease;
     color: white;
 }
+
+.modal-label {
+    color: #94a3b8;
+}
+
+.modal-course-name {
+    color: white;
+}
+
+.join-code-input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-size: 1.2rem;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.join-code-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.success-modal-desc {
+    color: #cbd5e1;
+}
+
+.courses-page .header-title svg {
+    color: #a855f7;
+}
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT — Mis Cursos & PanelMisCursos (Crisp, High Contrast & Clean)
+   ========================================================================== */
+:root[data-theme='light'] .courses-page .page-header,
+html[data-theme='light'] .courses-page .page-header,
+:root[data-theme='light'] .page-header,
+html[data-theme='light'] .page-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border: 1px solid rgba(203, 213, 225, 0.85) !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme='light'] .page-header.purple,
+html[data-theme='light'] .page-header.purple {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(243, 232, 255, 0.6) 100%) !important;
+    border-color: rgba(216, 180, 254, 0.6) !important;
+}
+
+:root[data-theme='light'] .page-header.blue,
+html[data-theme='light'] .page-header.blue {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(239, 246, 255, 0.7) 100%) !important;
+    border-color: rgba(191, 219, 254, 0.7) !important;
+}
+
+:root[data-theme='light'] .page-header.green,
+html[data-theme='light'] .page-header.green {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(236, 253, 245, 0.7) 100%) !important;
+    border-color: rgba(167, 243, 208, 0.7) !important;
+}
+
+:root[data-theme='light'] .page-header.orange,
+html[data-theme='light'] .page-header.orange {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(255, 247, 237, 0.7) 100%) !important;
+    border-color: rgba(254, 215, 170, 0.7) !important;
+}
+
+:root[data-theme='light'] .page-header.pink,
+html[data-theme='light'] .page-header.pink {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(253, 242, 248, 0.7) 100%) !important;
+    border-color: rgba(251, 207, 232, 0.7) !important;
+}
+
+:root[data-theme='light'] .page-header.red,
+html[data-theme='light'] .page-header.red {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(254, 242, 242, 0.7) 100%) !important;
+    border-color: rgba(254, 202, 202, 0.7) !important;
+}
+
+:root[data-theme='light'] .page-header.yellow,
+html[data-theme='light'] .page-header.yellow {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(254, 252, 232, 0.7) 100%) !important;
+    border-color: rgba(254, 240, 138, 0.7) !important;
+}
+
+:root[data-theme='light'] .header-title h1,
+html[data-theme='light'] .header-title h1 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .courses-page .header-title svg,
+html[data-theme='light'] .courses-page .header-title svg {
+    color: #7c3aed !important;
+}
+
+/* Course Card Classic in Light Mode */
+:root[data-theme='light'] .course-card-classic,
+html[data-theme='light'] .course-card-classic {
+    background: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+}
+
+:root[data-theme='light'] .course-card-classic:hover,
+html[data-theme='light'] .course-card-classic:hover {
+    background: #ffffff !important;
+    border-color: var(--course-accent, #38bdf8) !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+    transform: translateY(-5px);
+}
+
+:root[data-theme='light'] .card-classic-title,
+html[data-theme='light'] .card-classic-title,
+:root[data-theme='light'] .my-courses-grid .course-card-classic h3,
+html[data-theme='light'] .my-courses-grid .course-card-classic h3 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .card-classic-meta,
+html[data-theme='light'] .card-classic-meta,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-meta,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-meta {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .card-classic-meta svg,
+html[data-theme='light'] .card-classic-meta svg,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-meta svg,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-meta svg {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .card-classic-progress,
+html[data-theme='light'] .card-classic-progress,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-progress,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-progress {
+    color: var(--course-accent, #2563eb) !important;
+    font-weight: 700 !important;
+    filter: saturate(1.25) brightness(0.8);
+}
+
+:root[data-theme='light'] .card-classic-bg-icon,
+html[data-theme='light'] .card-classic-bg-icon,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-bg-icon,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-bg-icon {
+    opacity: 0.10 !important;
+}
+
+:root[data-theme='light'] .course-card-classic:hover .card-classic-bg-icon,
+html[data-theme='light'] .course-card-classic:hover .card-classic-bg-icon {
+    opacity: 0.20 !important;
+}
+
+:root[data-theme='light'] .card-classic-footer,
+html[data-theme='light'] .card-classic-footer,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-footer,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-footer {
+    background: #f8fafc !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: none !important;
+}
+
+:root[data-theme='light'] .card-classic-footer span,
+html[data-theme='light'] .card-classic-footer span,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-footer span,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-footer span {
+    color: #1e293b !important;
+}
+
+:root[data-theme='light'] .card-classic-footer svg,
+html[data-theme='light'] .card-classic-footer svg,
+:root[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-footer svg,
+html[data-theme='light'] .my-courses-grid .course-card-classic .card-classic-footer svg {
+    color: #475569 !important;
+}
+
+:root[data-theme='light'] .course-card-classic:hover .card-classic-footer svg,
+html[data-theme='light'] .course-card-classic:hover .card-classic-footer svg {
+    color: var(--course-accent, #2563eb) !important;
+}
+
+:root[data-theme='light'] .card-classic-dot,
+html[data-theme='light'] .card-classic-dot {
+    box-shadow: 0 0 6px currentColor !important;
+}
+
+/* Course Overview Card (Admin/Teacher view) */
+:root[data-theme='light'] .course-overview-card,
+html[data-theme='light'] .course-overview-card {
+    background: #ffffff !important;
+    border-color: rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme='light'] .course-overview-card:hover,
+html[data-theme='light'] .course-overview-card:hover {
+    border-color: rgba(56, 189, 248, 0.6) !important;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08) !important;
+}
+
+:root[data-theme='light'] .course-overview-name,
+html[data-theme='light'] .course-overview-name {
+    color: #0f172a !important;
+    text-shadow: none !important;
+}
+
+:root[data-theme='light'] .course-overview-groups,
+html[data-theme='light'] .course-overview-groups {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .course-overview-action,
+html[data-theme='light'] .course-overview-action {
+    color: #1e293b !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+
+:root[data-theme='light'] .course-overview-card:hover .course-overview-action,
+html[data-theme='light'] .course-overview-card:hover .course-overview-action {
+    background: #f8fafc !important;
+}
+
+/* Empty State */
+:root[data-theme='light'] .empty-courses,
+html[data-theme='light'] .empty-courses {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border: 1px solid rgba(203, 213, 225, 0.8) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme='light'] .empty-courses h2,
+html[data-theme='light'] .empty-courses h2 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .empty-courses p,
+html[data-theme='light'] .empty-courses p {
+    color: #64748b !important;
+}
+
+/* Modal Join Course */
+:root[data-theme='light'] .join-modal-content,
+html[data-theme='light'] .join-modal-content {
+    background: #ffffff !important;
+    border-color: rgba(203, 213, 225, 0.9) !important;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.18), 0 0 30px rgba(99, 102, 241, 0.1) !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .modal-course-name,
+html[data-theme='light'] .modal-course-name {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .modal-label,
+html[data-theme='light'] .modal-label {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .join-code-input,
+html[data-theme='light'] .join-code-input {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .join-code-input:focus,
+html[data-theme='light'] .join-code-input:focus {
+    background: #ffffff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+}
+
+:root[data-theme='light'] .success-modal-desc,
+html[data-theme='light'] .success-modal-desc {
+    color: #475569 !important;
+}
+
+:root[data-theme='light'] .success-modal-desc strong,
+html[data-theme='light'] .success-modal-desc strong {
+    color: #0284c7 !important;
+}

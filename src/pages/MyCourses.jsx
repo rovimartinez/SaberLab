@@ -103,7 +103,7 @@ const MyCourses = () => {
         <div className="courses-page">
             <div className="page-header purple">
                 <div className="header-title">
-                    <GraduationCap size={28} className="text-gradient" />
+                    <GraduationCap size={28} />
                     <h1>Mis Cursos</h1>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowJoinModal(true)}>
@@ -172,10 +172,10 @@ const MyCourses = () => {
                 <div className="join-modal-overlay" onClick={() => setShowJoinModal(false)}>
                     <div className="join-modal-content" onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                            <span className="modal-label" style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '0.25rem' }}>
+                            <span className="modal-label" style={{ fontSize: '0.85rem', display: 'block', marginBottom: '0.25rem' }}>
                                 Unirse a un curso
                             </span>
-                            <h2 className="modal-course-name" style={{ color: 'white', fontSize: '1.4rem', margin: 0, fontWeight: 800 }}>
+                            <h2 className="modal-course-name" style={{ fontSize: '1.4rem', margin: 0, fontWeight: 800 }}>
                                 Ingresa el código
                             </h2>
                         </div>
@@ -183,23 +183,11 @@ const MyCourses = () => {
                         <div className="form-group" style={{ marginBottom: '1.25rem' }}>
                             <input
                                 type="text"
+                                className="join-code-input"
                                 placeholder="Código del curso"
                                 value={joinCode}
                                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                                 autoFocus
-                                style={{
-                                    width: '100%',
-                                    padding: '0.85rem 1rem',
-                                    borderRadius: '12px',
-                                    background: 'rgba(15, 23, 42, 0.8)',
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                                    color: 'white',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '4px',
-                                    fontSize: '1.2rem',
-                                    textAlign: 'center',
-                                    outline: 'none'
-                                }}
                             />
                         </div>
 
@@ -232,8 +220,8 @@ const MyCourses = () => {
                     <div className="join-modal-content" onClick={e => e.stopPropagation()} style={{ textAlign: 'center', padding: '2.5rem 2rem' }}>
                         <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>🎉</div>
                         <h2 style={{ color: '#10b981', marginBottom: '0.5rem', fontSize: '1.6rem', fontWeight: 800 }}>¡Te has unido!</h2>
-                        <p style={{ color: '#cbd5e1', marginBottom: '1.75rem', fontSize: '0.95rem' }}>
-                            Ahora eres parte de <strong style={{ color: '#38bdf8' }}>{joinedCourseName}</strong>
+                        <p className="success-modal-desc" style={{ marginBottom: '1.75rem', fontSize: '0.95rem' }}>
+                            Ahora eres parte de <strong>{joinedCourseName}</strong>
                         </p>
                         <button 
                             className="btn btn-primary" 

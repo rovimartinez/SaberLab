@@ -1,0 +1,513 @@
+/* ── SaberLab Planilla de Calificaciones Docente y Libreta de Estudiante ── */
+
+.grades-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    padding-bottom: 3.5rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Pestañas de Cambio de Modo (Docente / Estudiante) ── */
+.grades-view-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 0.35rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    width: fit-content;
+}
+
+.grades-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+}
+
+.grades-tab-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.grades-tab-btn.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.4) 100%);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2);
+}
+
+/* ── Tarjetas de Resumen Docente ── */
+.grades-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.grades-stat-card {
+    background: #131d2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.grades-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.grades-stat-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #f8fafc;
+    line-height: 1.2;
+}
+
+.grades-stat-lbl {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* ── Barra de Herramientas y Filtros ── */
+.grades-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: #131d2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 1rem 1.25rem;
+}
+
+.grades-search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 0.55rem 0.9rem;
+    min-width: 260px;
+    flex: 1;
+    max-width: 380px;
+}
+
+.grades-search-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    font-size: 0.88rem;
+    width: 100%;
+}
+
+.grades-search-box input::placeholder {
+    color: #64748b;
+}
+
+.grades-filter-select {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    border-radius: 10px;
+    padding: 0.55rem 1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.grades-filter-select option {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+.grades-export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.6rem 1.15rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+    transition: all 0.2s ease;
+}
+
+.grades-export-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+}
+
+/* ── Sábana de Notas (Tabla Docente) ── */
+.grades-table-card {
+    background: #131d2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.grades-table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.grades-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.grades-matrix-table th {
+    background: #0f172a;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 1.1rem 1.25rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.grades-matrix-table td {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.9rem;
+    color: #f8fafc;
+    vertical-align: middle;
+}
+
+.grades-matrix-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.grades-matrix-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.05);
+}
+
+/* ── Celdas de Desglose T y P ── */
+.module-grade-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.module-grade-main {
+    font-weight: 800;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.module-grade-breakdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.breakdown-t {
+    color: #38bdf8;
+}
+
+.breakdown-p {
+    color: #10b981;
+}
+
+.grade-pending-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: rgba(100, 116, 139, 0.12);
+    border: 1px dashed rgba(100, 116, 139, 0.3);
+    white-space: nowrap;
+}
+
+/* ── Modal de Auditoría de Examen ── */
+.audit-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(3, 7, 18, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1.5rem;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.audit-modal-card {
+    background: #0f172a;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 780px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(56, 189, 248, 0.15);
+    display: flex;
+    flex-direction: column;
+}
+
+.audit-modal-header {
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f172a;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.audit-modal-body {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.audit-score-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.audit-score-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+}
+
+/* ==========================================================================
+   LIGHT MODE SUPPORT COMPLETO — SÁBANA DE CALIFICACIONES SABERLAB
+   ========================================================================== */
+:root[data-theme='light'] .grades-view-tabs,
+html[data-theme='light'] .grades-view-tabs,
+body[data-theme='light'] .grades-view-tabs {
+    background: #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+:root[data-theme='light'] .grades-tab-btn,
+html[data-theme='light'] .grades-tab-btn,
+body[data-theme='light'] .grades-tab-btn {
+    color: #475569 !important;
+}
+
+:root[data-theme='light'] .grades-tab-btn:hover,
+html[data-theme='light'] .grades-tab-btn:hover,
+body[data-theme='light'] .grades-tab-btn:hover {
+    color: #0f172a !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+}
+
+:root[data-theme='light'] .grades-tab-btn.active,
+html[data-theme='light'] .grades-tab-btn.active,
+body[data-theme='light'] .grades-tab-btn.active {
+    background: #ffffff !important;
+    color: #0284c7 !important;
+    border: 1px solid #38bdf8 !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15) !important;
+}
+
+:root[data-theme='light'] .grades-stat-card,
+html[data-theme='light'] .grades-stat-card,
+body[data-theme='light'] .grades-stat-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme='light'] .grades-stat-val,
+html[data-theme='light'] .grades-stat-val,
+body[data-theme='light'] .grades-stat-val {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .grades-stat-lbl,
+html[data-theme='light'] .grades-stat-lbl,
+body[data-theme='light'] .grades-stat-lbl {
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .grades-toolbar,
+html[data-theme='light'] .grades-toolbar,
+body[data-theme='light'] .grades-toolbar {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
+}
+
+:root[data-theme='light'] .grades-search-box,
+html[data-theme='light'] .grades-search-box,
+body[data-theme='light'] .grades-search-box {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+:root[data-theme='light'] .grades-search-box input,
+html[data-theme='light'] .grades-search-box input,
+body[data-theme='light'] .grades-search-box input {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .grades-search-box input::placeholder,
+html[data-theme='light'] .grades-search-box input::placeholder,
+body[data-theme='light'] .grades-search-box input::placeholder {
+    color: #94a3b8 !important;
+}
+
+:root[data-theme='light'] .grades-filter-select,
+html[data-theme='light'] .grades-filter-select,
+body[data-theme='light'] .grades-filter-select {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .grades-filter-select option,
+html[data-theme='light'] .grades-filter-select option,
+body[data-theme='light'] .grades-filter-select option {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .grades-table-card,
+html[data-theme='light'] .grades-table-card,
+body[data-theme='light'] .grades-table-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme='light'] .grades-matrix-table th,
+html[data-theme='light'] .grades-matrix-table th,
+body[data-theme='light'] .grades-matrix-table th {
+    background: #f1f5f9 !important;
+    color: #334155 !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+}
+
+:root[data-theme='light'] .grades-matrix-table td,
+html[data-theme='light'] .grades-matrix-table td,
+body[data-theme='light'] .grades-matrix-table td {
+    color: #0f172a !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+:root[data-theme='light'] .grades-matrix-table tbody tr:hover,
+html[data-theme='light'] .grades-matrix-table tbody tr:hover,
+body[data-theme='light'] .grades-matrix-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.08) !important;
+}
+
+:root[data-theme='light'] .module-grade-breakdown,
+html[data-theme='light'] .module-grade-breakdown,
+body[data-theme='light'] .module-grade-breakdown {
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+
+:root[data-theme='light'] .breakdown-t,
+html[data-theme='light'] .breakdown-t,
+body[data-theme='light'] .breakdown-t {
+    color: #0284c7 !important;
+}
+
+:root[data-theme='light'] .breakdown-p,
+html[data-theme='light'] .breakdown-p,
+body[data-theme='light'] .breakdown-p {
+    color: #059669 !important;
+}
+
+:root[data-theme='light'] .grade-pending-pill,
+html[data-theme='light'] .grade-pending-pill,
+body[data-theme='light'] .grade-pending-pill {
+    background: #f1f5f9 !important;
+    border: 1px dashed #cbd5e1 !important;
+    color: #64748b !important;
+}
+
+:root[data-theme='light'] .audit-modal-card,
+html[data-theme='light'] .audit-modal-card,
+body[data-theme='light'] .audit-modal-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .audit-modal-header,
+html[data-theme='light'] .audit-modal-header,
+body[data-theme='light'] .audit-modal-header {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+:root[data-theme='light'] .audit-modal-header h3,
+html[data-theme='light'] .audit-modal-header h3,
+body[data-theme='light'] .audit-modal-header h3 {
+    color: #0f172a !important;
+}
+
+:root[data-theme='light'] .audit-score-box,
+html[data-theme='light'] .audit-score-box,
+body[data-theme='light'] .audit-score-box {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+}

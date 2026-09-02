@@ -535,7 +535,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                 {activeTab === 'groups' && (
                     <div className="tab-panel">
                         <div className="panel-header">
-                            <h3>Grupos del Curso</h3>
+                            <h3 style={{ color: 'var(--text-primary)' }}>Grupos del Curso</h3>
                             <button className="btn btn-primary" onClick={openNewGroupModal}>
                                 <Plus size={16} />
                                 Nuevo Grupo
@@ -543,9 +543,9 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                         </div>
                         <div className="groups-list">
                             {uniqueGroups.map((group) => (
-                                <div key={group.id} className="group-card" style={{ padding: '1.1rem 1rem', gap: '0.75rem', textAlign: 'center', position: 'relative' }}>
+                                <div key={group.id} className="group-card" style={{ padding: '1.2rem 1rem', gap: '0.75rem', textAlign: 'center', position: 'relative', background: 'var(--bg-secondary)', border: '1px solid var(--glass-border)' }}>
                                     <div style={{ position: 'absolute', top: '8px', right: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
+                                        <span style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.15)', color: '#0284c7', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '1px 6px', borderRadius: '4px', fontWeight: 800 }}>
                                             #DB-{group.id}
                                         </span>
                                     </div>
@@ -554,20 +554,20 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                             className="group-card-name" 
                                             onDoubleClick={() => openEditGroupModal(group)}
                                             title="Doble clic para editar"
-                                            style={{ cursor: 'pointer', fontSize: '1rem', fontWeight: 800 }}
+                                            style={{ cursor: 'pointer', fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}
                                         >
                                             {group.name}
                                         </span>
-                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 600 }}>
                                             ({group.studentCount || 0} estudiantes)
                                         </span>
                                         {group.teacher && (
-                                            <span style={{ fontSize: '0.72rem', color: '#64748b', display: 'block', marginTop: '2px' }}>
+                                            <span style={{ fontSize: '0.75rem', color: '#0284c7', display: 'block', marginTop: '2px', fontWeight: 700 }}>
                                                 {group.teacher.startsWith('Prof.') ? group.teacher : `Prof. ${group.teacher}`}
                                             </span>
                                         )}
                                     </div>
-                                    <div className="group-card-actions" style={{ justifyContent: 'center', gap: '0.5rem', marginTop: '4px' }}>
+                                    <div className="group-card-actions" style={{ justifyContent: 'center', gap: '0.5rem', marginTop: '6px' }}>
                                         <button className="btn btn-small" style={{ padding: '0.5rem 0.75rem' }} onClick={() => openStudentsModal(group)} title="Ver Estudiantes">
                                             <Users size={14} />
                                         </button>
