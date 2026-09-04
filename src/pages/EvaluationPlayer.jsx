@@ -325,21 +325,10 @@ const EvaluationPlayer = () => {
                                 setShowResults(false);
                             }
                             setResult(localCompleted);
-                        } else if (lastAttempt && !lastAttempt.completed_at && lastAttempt.answers) {
-                            let parsed = lastAttempt.answers;
-                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
-                            if (parsed) {
-                                if (parsed.theory) {
-                                    setAnswers(parsed.theory);
-                                    localStorage.setItem(`exam_answers_${evaluationKey}`, JSON.stringify(parsed.theory));
-                                } else if (typeof parsed === 'object') {
-                                    setAnswers(parsed);
-                                    localStorage.setItem(`exam_answers_${evaluationKey}`, JSON.stringify(parsed));
-                                }
-                                if (parsed.practical) {
-                                    localStorage.setItem(`practical_answers_${evaluationKey}`, JSON.stringify(parsed.practical));
-                                }
-                            }
+                        } else {
+                            // Si no hay intento completado, deshabilitar modo revisión para permitir rendir la prueba
+                            setReviewMode(false);
+                            setShowResults(false);
                         }
                     } catch (e) {
                         console.error('Error recuperando intento previo de D1:', e);
@@ -348,6 +337,9 @@ const EvaluationPlayer = () => {
                             setExamStarted(false);
                             setShowResults(true);
                             setResult(localCompleted);
+                        } else {
+                            setReviewMode(false);
+                            setShowResults(false);
                         }
                     }
                 }

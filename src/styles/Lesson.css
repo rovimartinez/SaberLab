@@ -779,10 +779,10 @@
 }
 
 :root[data-theme='light'] .lesson-tab-btn.active {
-    color: var(--subject-color, #0284c7) !important;
-    background: color-mix(in srgb, var(--subject-color, #0284c7) 12%, #ffffff) !important;
-    border: 1px solid color-mix(in srgb, var(--subject-color, #0284c7) 35%, transparent) !important;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--subject-color, #0284c7) 15%, transparent) !important;
+    color: #ffffff !important;
+    background: var(--subject-color, #0284c7) !important;
+    border: 1px solid var(--subject-color, #0284c7) !important;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--subject-color, #0284c7) 30%, transparent) !important;
 }
 
 :root[data-theme='light'] .lesson-navigation-bar {

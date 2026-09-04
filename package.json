@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n web,functions -c blue,green \"npx vite\" \"npm run dev:functions\"",
+    "dev": "concurrently -k -n web,api -c blue,green \"npx vite\" \"npm run dev:functions\"",
     "dev:frontend": "npx vite",
-    "dev:functions": "npx wrangler pages functions build functions --outdir .wrangler/dist && npx wrangler dev .wrangler/dist/index.js --port 8788 --remote",
+    "dev:functions": "npx wrangler pages dev --port 8788 --proxy 5173 --compatibility-date 2026-07-01 functions",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

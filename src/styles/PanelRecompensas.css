@@ -290,107 +290,87 @@
 /* ==========================================================================
    LIGHT MODE SUPPORT — PanelRecompensas
    ========================================================================== */
-:root[data-theme='light'] .recompensas-section-title {
+:root[data-theme='light'] .recompensas-section-title,
+html[data-theme='light'] .recompensas-section-title {
     color: #0f172a !important;
 }
 
-:root[data-theme='light'] .badge-reward-card {
+:root[data-theme='light'] .badge-reward-card,
+html[data-theme='light'] .badge-reward-card {
     background: linear-gradient(135deg, #ffffff 0%, rgba(248, 250, 252, 0.98) 100%) !important;
     border-color: rgba(203, 213, 225, 0.85) !important;
     box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05) !important;
 }
 
-:root[data-theme='light'] .badge-reward-card:hover {
+:root[data-theme='light'] .badge-reward-card:hover,
+html[data-theme='light'] .badge-reward-card:hover {
     background: #ffffff !important;
     border-color: #eab308 !important;
     box-shadow: 0 12px 30px rgba(234, 179, 8, 0.18) !important;
 }
 
-:root[data-theme='light'] .badge-emblem {
+:root[data-theme='light'] .badge-emblem,
+html[data-theme='light'] .badge-emblem {
     background: radial-gradient(circle at 35% 35%, rgba(254, 240, 138, 0.4) 0%, rgba(241, 245, 249, 0.95) 100%) !important;
 }
 
-:root[data-theme='light'] .badge-title {
+:root[data-theme='light'] .badge-title,
+html[data-theme='light'] .badge-title {
     color: #0f172a !important;
 }
 
-:root[data-theme='light'] .badge-desc {
+:root[data-theme='light'] .badge-desc,
+html[data-theme='light'] .badge-desc {
     color: #475569 !important;
 }
 
-:root[data-theme='light'] .badge-action-pill {
+:root[data-theme='light'] .badge-action-pill,
+html[data-theme='light'] .badge-action-pill {
     background: rgba(241, 245, 249, 0.95) !important;
     border-color: rgba(203, 213, 225, 0.9) !important;
     color: #0f172a !important;
 }
 
-:root[data-theme='light'] .recompensa-stat-pill {
+:root[data-theme='light'] .recompensa-stat-pill,
+html[data-theme='light'] .recompensa-stat-pill {
     background: #ffffff !important;
     border-color: rgba(203, 213, 225, 0.9) !important;
     color: #0f172a !important;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
-:root[data-theme='light'] .reward-modal-window {
+:root[data-theme='light'] .reward-modal-window,
+html[data-theme='light'] .reward-modal-window {
     background: #ffffff !important;
     border: 1.5px solid rgba(203, 213, 225, 0.95) !important;
     box-shadow: 0 25px 60px rgba(15, 23, 42, 0.25), 0 0 25px rgba(56, 189, 248, 0.15) !important;
 }
 
-:root[data-theme='light'] .reward-modal-header {
+:root[data-theme='light'] .reward-modal-header,
+html[data-theme='light'] .reward-modal-header {
     background: #f8fafc !important;
     border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
 }
 
-:root[data-theme='light'] .reward-modal-title h2 {
+:root[data-theme='light'] .reward-modal-title h2,
+html[data-theme='light'] .reward-modal-title h2 {
     color: #0f172a !important;
 }
 
-:root[data-theme='light'] .reward-modal-body {
+:root[data-theme='light'] .reward-modal-body,
+html[data-theme='light'] .reward-modal-body {
     background: #ffffff !important;
 }
 
-:root[data-theme='light'] .reward-modal-close-btn {
+:root[data-theme='light'] .reward-modal-close-btn,
+html[data-theme='light'] .reward-modal-close-btn {
     background: #f1f5f9 !important;
     border: 1px solid rgba(203, 213, 225, 0.9) !important;
     color: #64748b !important;
 }
 
-:root[data-theme='light'] .reward-modal-close-btn:hover {
+:root[data-theme='light'] .reward-modal-close-btn:hover,
+html[data-theme='light'] .reward-modal-close-btn:hover {
     background: #e2e8f0 !important;
     color: #0f172a !important;
 }
-
-.btn-back-nav {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0.45rem 1rem;
-    border-radius: 10px;
-    font-size: 0.82rem;
-    font-weight: 800;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
-    transition: all 0.18s ease;
-}
-
-.btn-back-nav:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateX(-2px);
-}
-
-:root[data-theme='light'] .btn-back-nav {
-    background: #ffffff !important;
-    border-color: rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
-}
-
-:root[data-theme='light'] .btn-back-nav:hover {
-    background: #f8fafc !important;
-    border-color: #38bdf8 !important;
-}
-
-

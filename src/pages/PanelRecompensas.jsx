@@ -16,6 +16,7 @@ const SIMULATOR_COMPONENTS = {
     'conductores': ConductorAnimation,
     'coulomb': ChargeInteraction,
     'simulador-circuitos': CircuitSimulator,
+    'simulador-mixto': CircuitSimulator,
     'ley-ohm': InteractiveOhmLaw,
     'calculadora-resistencias': ResistorCalculator,
     'multimetro': MultimeterExplorer,
@@ -164,19 +165,6 @@ export default function PanelRecompensas() {
 
     return (
         <div className="recompensas-container">
-            {/* ── Botón Volver al Curso (Si estamos dentro de un curso) ── */}
-            {activeCourse && (
-                <div style={{ marginBottom: '-0.5rem' }}>
-                    <button
-                        onClick={() => navigate(`/dashboard/my-courses/${activeCourse.slug}`)}
-                        className="btn-back-nav"
-                    >
-                        <ArrowLeft size={16} />
-                        <span>Volver a {activeCourse.name}</span>
-                    </button>
-                </div>
-            )}
-
             {/* ── Encabezado Estándar SaberLab ── */}
             <div className="page-header yellow" style={{ marginBottom: '0.5rem' }}>
                 <div className="header-title">

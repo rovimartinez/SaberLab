@@ -18,7 +18,73 @@ const SubjectDetail = () => {
 
     const [completedLessons, setCompletedLessons] = useState({});
 
-    // Cargar progreso de lecciones e intentos de exámenes desde Cloudflare D1 + LocalStorage
+    // ── Sistema de Desbloqueo Secreto: 5 clics en el candado ──
+    const [secretUnlocked, setSecretUnlocked] = useState(() => {
+        const map = {};
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('secret_unlocked_')) {
+                    map[k.replace('secret_unlocked_', '')] = true;
+                }
+            }
+        } catch {}
+        return map;
+    });
+    const [lockClickCounters, setLockClickCounters] = useState({});
+    const [unlockToast, setUnlockToast] = useState(null);
+
+    const handleLockClick = (itemId, itemTitle = 'Examen') => {
+        const now = Date.now();
+        const cleanId = String(itemId).trim();
+        const prev = lockClickCounters[cleanId] || { count: 0, lastTime: 0 };
+        
+        // Ventana de 3.5 segundos entre clics
+        const count = (now - prev.lastTime < 3500) ? prev.count + 1 : 1;
+        setLockClickCounters(prevMap => ({ ...prevMap, [cleanId]: { count, lastTime: now } }));
+
+        if (count >= 5) {
+            // ¡Desbloqueo inmediato!
+            setSecretUnlocked(prevMap => ({
+                ...prevMap,
+                [cleanId]: true,
+                [cleanId.toLowerCase()]: true
+            }));
+            try {
+                localStorage.setItem(`secret_unlocked_${cleanId}`, 'true');
+                localStorage.setItem(`secret_unlocked_${cleanId.toLowerCase()}`, 'true');
+                // Limpiar cualquier residuo de intentos locales previos para que inicie limpio
+                localStorage.removeItem(`exam_completed_${cleanId}`);
+                localStorage.removeItem(`exam_completed_${cleanId.toLowerCase()}`);
+                localStorage.removeItem(`exam_started_${cleanId}`);
+                localStorage.removeItem(`exam_end_time_${cleanId}`);
+            } catch {}
+            
+            setCompletedLessons(prev => {
+                const copy = { ...prev };
+                delete copy[cleanId];
+                delete copy[cleanId.toLowerCase()];
+                return copy;
+            });
+
+            setUnlockToast({
+                type: 'success',
+                title: '🔓 ¡Examen Desbloqueado!',
+                message: `Has desbloqueado "${itemTitle}". Pulsa "Presentar" para comenzar tu evaluación.`
+            });
+            setTimeout(() => setUnlockToast(null), 5000);
+        } else {
+            const remaining = 5 - count;
+            setUnlockToast({
+                type: 'info',
+                title: `🔒 Candado (${count}/5)`,
+                message: `Presiona ${remaining} ${remaining === 1 ? 'vez' : 'veces'} más para desbloquear.`
+            });
+            setTimeout(() => setUnlockToast(null), 1800);
+        }
+    };
+
+    // Cargar progreso de lecciones e intentos de exámenes reales desde Cloudflare D1
     useEffect(() => {
         const loadProgress = async () => {
             if (!user?.id) return;
@@ -43,12 +109,6 @@ const SubjectDetail = () => {
                         }
                     });
                 }
-                // Fallback por si el examen se rindió en la sesión local
-                ['ee-m1-l6', 'ee-m2-l10', 'ee-m3-l14', 'ee-m4-l16'].forEach(key => {
-                    if (localStorage.getItem(`exam_completed_${key}`)) {
-                        map[key] = true;
-                    }
-                });
                 setCompletedLessons(map);
             } catch (err) {
                 console.error('Error cargando progreso de lecciones y exámenes:', err);
@@ -196,7 +256,7 @@ const SubjectDetail = () => {
                                             const regularLessons = (module.lessons || []).filter(l => !isExamLesson(l.id));
                                             const hasExam = !!module.evaluation;
                                             const evalId = module.evaluation ? (module.evaluation.id || `${abbr.toLowerCase()}-${module.id}-eval`) : null;
-                                            const isExamDone = hasExam && !!(completedLessons[evalId] || localStorage.getItem(`exam_completed_${evalId}`));
+                                            const isExamDone = hasExam && !!(completedLessons[evalId] || completedLessons[evalId?.toLowerCase()]);
                                             const doneCount = regularLessons.filter(l => {
                                                 const norm = normalizeLessonId(l.id, module.id);
                                                 return completedLessons[norm] || completedLessons[l.id];
@@ -227,8 +287,14 @@ const SubjectDetail = () => {
                                             const regularLessons = (module.lessons || []).filter(l => !isExamLesson(l.id));
                                             const hasExam = !!module.evaluation;
                                             const evalId = module.evaluation ? (module.evaluation.id || `${abbr.toLowerCase()}-${module.id}-eval`) : null;
-                                            const isExamHidden = hasExam ? (courseVisibility[evalId] === false) : false;
-                                            const isExamCompleted = hasExam && !!(completedLessons[evalId] || localStorage.getItem(`exam_completed_${evalId}`));
+                                            
+                                            const isSecretlyExamUnlocked = evalId && (
+                                                secretUnlocked[evalId] || 
+                                                secretUnlocked[evalId.toLowerCase()] || 
+                                                (module.evaluation?.id && (secretUnlocked[module.evaluation.id] || secretUnlocked[module.evaluation.id.toLowerCase()]))
+                                            );
+                                            const isExamHidden = hasExam ? (courseVisibility[evalId] === false && !isSecretlyExamUnlocked) : false;
+                                            const isExamCompleted = hasExam && !!(completedLessons[evalId] || completedLessons[evalId?.toLowerCase()]);
 
                                             return (
                                                 <>
@@ -239,7 +305,8 @@ const SubjectDetail = () => {
                                                     }).map((lesson, lIdx) => {
                                                         const normalizedId = normalizeLessonId(lesson.id, module.id);
                                                         const visibility = courseVisibility[normalizedId];
-                                                        const isHidden = visibility === false;
+                                                        const isSecretlyLessonUnlocked = secretUnlocked[normalizedId] || secretUnlocked[lesson.id] || secretUnlocked[lesson.id?.toLowerCase()];
+                                                        const isHidden = (visibility === false) && !isSecretlyLessonUnlocked;
                                                         const isCompleted = !!(completedLessons[normalizedId] || completedLessons[lesson.id]);
                                                         const lessonInfo = getLessonInfo(lesson.id);
                                                         const lessonIndexStr = String(lIdx + 1).padStart(2, '0');
@@ -247,7 +314,17 @@ const SubjectDetail = () => {
                                                         return (
                                                         <div key={lesson.id} className="lesson-item-improved">
                                                             <div className="lesson-indicator-line" style={isCompleted ? { background: '#10b981' } : {}}></div>
-                                                            <div className="lesson-icon-circle" style={isCompleted ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', fontWeight: 800, fontSize: '0.8rem' } : {}}>
+                                                            <div 
+                                                                className="lesson-icon-circle" 
+                                                                style={isCompleted ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)', fontWeight: 800, fontSize: '0.8rem' } : (isHidden ? { cursor: 'pointer' } : {})}
+                                                                onClick={(e) => {
+                                                                    if (isHidden) {
+                                                                        e.stopPropagation();
+                                                                        handleLockClick(lesson.id, lessonInfo.title || lesson.id);
+                                                                    }
+                                                                }}
+                                                                title={isHidden ? "Presiona 5 veces para desbloquear" : ""}
+                                                            >
                                                                 {isHidden ? <Lock size={16} /> : isCompleted ? <CheckCircle size={18} color="#10b981" /> : <span>{lessonIndexStr}</span>}
                                                             </div>
                                                             <div className="lesson-main-info">
@@ -259,7 +336,15 @@ const SubjectDetail = () => {
                                                             </div>
                                                             <div className="lesson-action-area">
                                                                 {isHidden ? (
-                                                                    <div className="locked-badge">
+                                                                    <div 
+                                                                        className="locked-badge"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleLockClick(lesson.id, lessonInfo.title || lesson.id);
+                                                                        }}
+                                                                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                                                                        title="Presiona 5 veces para desbloquear"
+                                                                    >
                                                                         <Lock size={14} />
                                                                         <span>Bloqueada</span>
                                                                     </div>
@@ -302,33 +387,28 @@ const SubjectDetail = () => {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                    )})}
+                                                        );
+                                                    })}
 
-                                                    {/* Examen / Evaluación Oficial al final del Módulo */}
+                                                    {/* EXAMEN / EVALUACIÓN DEL MÓDULO */}
                                                     {hasExam && (
-                                                        <div 
-                                                            key={evalId} 
-                                                            className="lesson-item-improved" 
-                                                            style={{
-                                                                background: isExamHidden 
-                                                                    ? 'var(--bg-secondary)' 
-                                                                    : isExamCompleted 
-                                                                        ? 'rgba(16, 185, 129, 0.06)' 
-                                                                        : 'rgba(245, 158, 11, 0.08)',
-                                                                border: isExamHidden 
-                                                                    ? '1px dashed var(--glass-border)' 
-                                                                    : isExamCompleted 
-                                                                        ? '1px solid rgba(16, 185, 129, 0.35)' 
-                                                                        : '1px solid rgba(245, 158, 11, 0.38)',
-                                                                marginTop: '0.65rem'
-                                                            }}
-                                                        >
-                                                            <div className="lesson-indicator-line" style={isExamCompleted ? { background: '#10b981' } : isExamHidden ? { background: '#64748b' } : { background: '#f59e0b' }}></div>
-                                                            <div className="lesson-icon-circle" style={{
-                                                                background: isExamCompleted ? 'rgba(16, 185, 129, 0.15)' : isExamHidden ? 'var(--glass-bg)' : 'rgba(245, 158, 11, 0.15)',
-                                                                color: isExamCompleted ? '#10b981' : isExamHidden ? 'var(--text-secondary)' : '#fbbf24',
-                                                                borderColor: isExamCompleted ? 'rgba(16, 185, 129, 0.3)' : isExamHidden ? 'var(--glass-border)' : 'rgba(245, 158, 11, 0.35)'
-                                                            }}>
+                                                        <div key={evalId} className="lesson-item-improved" style={{
+                                                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.03) 100%)',
+                                                            border: '1px solid rgba(245, 158, 11, 0.25)',
+                                                            borderRadius: '12px'
+                                                        }}>
+                                                            <div className="lesson-indicator-line" style={{ background: isExamCompleted ? '#10b981' : '#f59e0b' }}></div>
+                                                            <div 
+                                                                className="lesson-icon-circle" 
+                                                                style={isExamCompleted ? { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' } : (isExamHidden ? { cursor: 'pointer' } : {})}
+                                                                onClick={(e) => {
+                                                                    if (isExamHidden) {
+                                                                        e.stopPropagation();
+                                                                        handleLockClick(evalId, module.evaluation.title || 'Examen');
+                                                                    }
+                                                                }}
+                                                                title={isExamHidden ? "Presiona 5 veces para desbloquear" : ""}
+                                                            >
                                                                 {isExamHidden ? <Lock size={16} /> : isExamCompleted ? <CheckCircle size={18} color="#10b981" /> : <Award size={18} color="#fbbf24" />}
                                                             </div>
                                                             <div className="lesson-main-info">
@@ -370,7 +450,15 @@ const SubjectDetail = () => {
                                                             </div>
                                                             <div className="lesson-action-area">
                                                                 {isExamHidden ? (
-                                                                    <div className="locked-badge">
+                                                                    <div 
+                                                                        className="locked-badge"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleLockClick(evalId, module.evaluation.title || 'Examen');
+                                                                        }}
+                                                                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                                                                        title="Presiona 5 veces para desbloquear"
+                                                                    >
                                                                         <Lock size={14} />
                                                                         <span>Bloqueado</span>
                                                                     </div>
@@ -531,6 +619,40 @@ const SubjectDetail = () => {
 
                 </div>
             </div>
+
+            {/* Toast Flotante de Desbloqueo de Candados (5 clics) */}
+            {unlockToast && (
+                <div style={{
+                    position: 'fixed',
+                    bottom: '24px',
+                    right: '24px',
+                    zIndex: 999999,
+                    background: unlockToast.type === 'success' ? 'rgba(6, 78, 59, 0.95)' : 'rgba(15, 23, 42, 0.95)',
+                    border: `1px solid ${unlockToast.type === 'success' ? '#10b981' : '#38bdf8'}`,
+                    borderRadius: '14px',
+                    padding: '0.9rem 1.25rem',
+                    boxShadow: '0 12px 35px rgba(0, 0, 0, 0.45)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    color: '#f8fafc',
+                    maxWidth: '400px',
+                    backdropFilter: 'blur(12px)',
+                    animation: 'fadeIn 0.2s ease',
+                    pointerEvents: 'none'
+                }}>
+                    <div style={{ fontSize: '1.5rem' }}>{unlockToast.type === 'success' ? '🔓' : '🔒'}</div>
+                    <div>
+                        <div style={{ fontWeight: 800, color: unlockToast.type === 'success' ? '#34d399' : '#38bdf8', fontSize: '0.92rem' }}>
+                            {unlockToast.title}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#cbd5e1', marginTop: '2px', lineHeight: 1.3 }}>
+                            {unlockToast.message}
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

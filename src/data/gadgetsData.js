@@ -82,6 +82,20 @@ export const gadgets = [
         color: '#3b82f6',
         route: '/dashboard/rewards?tool=simulador-circuitos',
     },
+
+    // ── LECCIÓN 5: Circuitos Mixtos Serie-Paralelo ──
+    {
+        id: 'simulador-mixto',
+        name: 'Simulador Circuitos Mixtos',
+        description: 'Análisis avanzado de topologías mixtas serie-paralelo con interruptores, potencia y telemetría en vivo.',
+        courseAbbr: 'EE',
+        courseName: 'Electricidad y Electrónica Básica',
+        lessonSource: 'Lección 5',
+        unlocksWithLesson: 'l5',
+        iconName: 'Network',
+        color: '#10b981',
+        route: '/dashboard/rewards?tool=simulador-mixto',
+    },
 ];
 
 export function getUnlockedGadgets(completedLessons = new Set()) {

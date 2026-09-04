@@ -17,19 +17,6 @@ const EvaluationInstruction = () => {
     const [attemptData, setAttemptData] = useState(null);
 
     useEffect(() => {
-        const normKey = (evaluationKey || '').toLowerCase();
-        const savedCompleted = localStorage.getItem(`exam_completed_${normKey}`) || 
-                               localStorage.getItem(`exam_completed_${evaluationKey}`);
-        if (savedCompleted) {
-            try {
-                const parsed = JSON.parse(savedCompleted);
-                setIsCompleted(true);
-                setAttemptData(parsed);
-                setIsResuming(false);
-                return;
-            } catch {}
-        }
-
         const started = localStorage.getItem(`exam_started_${evaluationKey}`);
         const endTime = localStorage.getItem(`exam_end_time_${evaluationKey}`);
         

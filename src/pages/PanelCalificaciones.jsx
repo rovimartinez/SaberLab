@@ -13,20 +13,14 @@ import '../styles/PanelEvaluaciones.css';
 import '../styles/PanelCalificaciones.css';
 
 const PanelCalificaciones = () => {
-    const { user, profile, enrolledCourses } = useAuth();
+    const { user, profile, enrolledCourses, isStaff } = useAuth();
     const navigate = useNavigate();
     
-    // Roles y permisos
-    const userRole = (profile?.role || '').toLowerCase().trim();
-    const userEmail = (user?.email || '').toLowerCase().trim();
-    const isStaff = ['admin', 'docente', 'profesor', 'teacher', 'instructor'].includes(userRole)
-        || userEmail.includes('ronny')
-        || userEmail.includes('admin')
-        || userRole.includes('prof')
-        || userRole.includes('doc');
-
     // Modo de vista: 'cohort' (Sábana de notas docente) | 'personal' (Libreta personal)
+    // Los estudiantes SIEMPRE ven solo su vista personal
     const [viewMode, setViewMode] = useState(isStaff ? 'cohort' : 'personal');
+    // Guardia de seguridad: si no es staff, forzar vista personal
+    const effectiveViewMode = isStaff ? viewMode : 'personal';
 
     // Estados para vista estudiante
     const [myAttempts, setMyAttempts] = useState([]);
@@ -381,7 +375,7 @@ const PanelCalificaciones = () => {
             const attempt = myAttempts.find(a => 
                 (a.evaluation_key && a.evaluation_key.toLowerCase() === evalKey.toLowerCase()) && 
                 a.completed_at
-            ) || (evalKey === 'ee-m1-l6' && localStorage.getItem('exam_completed_ee-m1-l6') ? JSON.parse(localStorage.getItem('exam_completed_ee-m1-l6')) : null);
+            ) || null;
 
             const isSubmitted = !!attempt;
             const pointsObtained = attempt ? (attempt.points_obtained ?? attempt.totalPts ?? attempt.score ?? 0) : null;
@@ -452,10 +446,10 @@ const PanelCalificaciones = () => {
                         <GraduationCap size={32} className="text-gradient" />
                         <div>
                             <h1 style={{ fontSize: '1.8rem', margin: 0 }}>
-                                {viewMode === 'cohort' ? 'Sábana de Calificaciones de la Cohorte' : 'Libreta de Calificaciones'}
+                                {effectiveViewMode === 'cohort' ? 'Sábana de Calificaciones de la Cohorte' : 'Libreta de Calificaciones'}
                             </h1>
                             <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                                Periodo Académico: <strong style={{ color: '#0284c7' }}>2026-II</strong> • {selectedGroup === 'all' ? (
+                                Periodo Académico: <strong style={{ color: '#0284c7' }}>2026-II</strong>{isStaff && (<> • {selectedGroup === 'all' ? (
                                     <span>Vista General: <strong style={{ color: 'var(--text-primary)' }}>Todos los Grupos de la Cohorte</strong></span>
                                 ) : selectedGroup.includes('EE') || selectedGroup.toLowerCase().includes('electricidad') ? (
                                     <span>Curso: <strong style={{ color: 'var(--text-primary)' }}>Fundamentos de Electricidad y Electrónica (EE)</strong> · Grupo: <strong style={{ color: '#0284c7' }}>{selectedGroup}</strong></span>
@@ -463,7 +457,7 @@ const PanelCalificaciones = () => {
                                     <span>Curso: <strong style={{ color: 'var(--text-primary)' }}>Robótica Educativa (RE)</strong> · Grupo: <strong style={{ color: '#0284c7' }}>{selectedGroup}</strong></span>
                                 ) : (
                                     <span>Grupo Seleccionado: <strong style={{ color: 'var(--text-primary)' }}>{selectedGroup}</strong></span>
-                                )}
+                                )}</>)}
                             </p>
                         </div>
                     </div>
@@ -476,7 +470,7 @@ const PanelCalificaciones = () => {
                                 onClick={() => setViewMode('cohort')}
                             >
                                 <Users size={16} />
-                                Planilla de Cohorte (Docente)
+                                Planilla de Cohorte
                             </button>
                             <button 
                                 className={`grades-tab-btn ${viewMode === 'personal' ? 'active' : ''}`}
@@ -493,7 +487,7 @@ const PanelCalificaciones = () => {
             {/* ══════════════════════════════════════════════════════════════════ */}
             {/* ── VISTA 1: PLANILLA / SÁBANA DE CALIFICACIONES (DOCENTE/ADMIN) ── */}
             {/* ══════════════════════════════════════════════════════════════════ */}
-            {viewMode === 'cohort' && (
+            {effectiveViewMode === 'cohort' && isStaff && (
                 <>
                     {/* Tarjetas de Métricas de la Cohorte */}
                     <div className="grades-stats-grid">
@@ -881,7 +875,7 @@ const PanelCalificaciones = () => {
             {/* ══════════════════════════════════════════════════════════════════ */}
             {/* ── VISTA 2: LIBRETA PERSONAL DEL ESTUDIANTE ── */}
             {/* ══════════════════════════════════════════════════════════════════ */}
-            {viewMode === 'personal' && (
+            {effectiveViewMode === 'personal' && (
                 coursesGrades.map(course => {
                     const courseScoreColor = getScoreColor(course.totalPointsEarned, course.totalMaxCoursePoints || 500);
                     return (
@@ -962,9 +956,9 @@ const PanelCalificaciones = () => {
                                                         }}>
                                                             {ev.pointsObtained} pts
                                                         </span>
-                                                        {ev.id === 'ee-m1-l6' && (
+                                                        {ev.id === 'ee-m1-l6' && ev.isSubmitted && (ev.theoryPts != null || ev.practicalPts != null) && (
                                                             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                                                                (T: <strong style={{ color: '#0284c7' }}>{ev.theoryPts ?? 60}</strong> · P: <strong style={{ color: '#10b981' }}>{ev.practicalPts ?? 85}</strong>)
+                                                                (T: <strong style={{ color: '#0284c7' }}>{ev.theoryPts ?? 0}</strong> · P: <strong style={{ color: '#10b981' }}>{ev.practicalPts ?? 0}</strong>)
                                                             </span>
                                                         )}
                                                     </div>
