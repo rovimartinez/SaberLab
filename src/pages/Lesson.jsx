@@ -9,7 +9,8 @@ import {
     ChevronRight,
     ClipboardList,
     Rocket,
-    Lock
+    Lock,
+    Home
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import '../styles/Lesson.css';
@@ -78,12 +79,12 @@ const Lesson = () => {
     const [showArduinoParts, setShowArduinoParts] = useState(false);
     const [activeChallenge, setActiveChallenge] = useState(0);
     const [showSimulator, setShowSimulator] = useState(false);
-    const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     const [showCelebration, setShowCelebration] = useState(false);
     const [showBanner, setShowBanner] = useState(false);
     const [rewardGadget, setRewardGadget] = useState(null);
     const [isCompleted, setIsCompleted] = useState(false);
     const [isSavingProgress, setIsSavingProgress] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const hasTrackedInitialTabRef = useRef(false);
 
     const checkProgress = useCallback(async () => {
@@ -203,7 +204,7 @@ const Lesson = () => {
 
     const handleCelebrationClose = () => {
         setShowCelebration(false);
-        navigate(`/dashboard/my-courses/${courseId}`);
+        navigate('/dashboard');
     };
 
     const handleNextLesson = () => {
@@ -289,7 +290,7 @@ const Lesson = () => {
                         <button
                             className="btn"
                             style={{ padding: '0.75rem 1.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.08)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                            onClick={() => navigate(`/dashboard/my-courses/${courseData?.slug || courseId}`)}
+                            onClick={() => navigate('/dashboard')}
                         >
                             <ArrowLeft size={16} />
                             <span>Volver al curso</span>
@@ -346,14 +347,6 @@ const Lesson = () => {
             <GuideModal open={showGuide} onClose={() => setShowGuide(false)} />
             <ArduinoPartsModal open={showArduinoParts} onClose={() => setShowArduinoParts(false)} />
 
-            <CourseSidebar
-                subject={subject}
-                currentLessonId={internalId}
-                isOpen={isRightSidebarOpen}
-                toggleSidebar={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-                lessonVisibility={courseVisibility}
-            />
-
             <div
                 style={{
                     position: 'fixed',
@@ -400,11 +393,6 @@ const Lesson = () => {
                         </div>
                         <h1>{lesson?.title || 'Cargando...'}</h1>
                     </div>
-
-                    <Link to={`/dashboard/my-courses/${subject.slug}`} className="btn-back-course">
-                        <ArrowLeft size={18} />
-                        <span>Volver al curso</span>
-                    </Link>
                 </div>
             </header>
 
@@ -573,6 +561,28 @@ const Lesson = () => {
                     </div>
                 </article>
             </main>
+
+            {/* Panel Lateral de Navegación de Lecciones del Curso */}
+            {subject && subject.modules && (
+                <CourseSidebar
+                    subject={subject}
+                    currentLessonId={internalId}
+                    isOpen={isSidebarOpen}
+                    toggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+                    lessonVisibility={courseVisibility}
+                />
+            )}
+
+            {/* Botón flotante (FAB) a la izquierda inferior para volver al inicio */}
+            <Link 
+                to="/dashboard" 
+                className="lesson-fab-home"
+                title="Volver al Inicio"
+                aria-label="Volver al Inicio"
+            >
+                <Home size={18} />
+                <span>Volver al Inicio</span>
+            </Link>
         </div>
     );
 };

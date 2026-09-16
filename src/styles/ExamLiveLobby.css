@@ -1,0 +1,690 @@
+/* ==========================================================================
+   SABERLAB - EXAM LIVE LOBBY (SALA DE ESPERA Y MONITOREO EN VIVO ESTILO WAYGROUND)
+   ========================================================================== */
+
+.exam-live-lobby {
+    width: 100%;
+    min-height: 100vh;
+    background: var(--surface-app);
+    color: var(--text-heading);
+    padding: 1.5rem 2rem;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* ── BARRA SUPERIOR Y VOLVER ── */
+.lobby-header-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.lobby-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.lobby-back-btn:hover {
+    background: var(--surface-card-hover);
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+    transform: translateX(-2px);
+}
+
+.lobby-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #10b981;
+    text-transform: uppercase;
+}
+
+.lobby-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981;
+    box-shadow: 0 0 10px #10b981;
+    animation: lobbyPulse 1.5s infinite;
+}
+
+@keyframes lobbyPulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #10b981; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* ── HERO BANNER DEL EXAMEN ── */
+.lobby-hero-card {
+    background: var(--surface-panel);
+    border: 1px solid var(--border-default);
+    border-radius: 20px;
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.75rem;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.lobby-hero-info h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-heading);
+    letter-spacing: -0.02em;
+}
+
+.lobby-hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.lobby-hero-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+}
+
+.lobby-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.lobby-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.15rem;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.lobby-action-btn.broadcast {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.35);
+}
+
+.lobby-action-btn.broadcast:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+    filter: brightness(1.08);
+}
+
+.lobby-action-btn.refresh {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    color: var(--text-heading);
+    padding: 0.65rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.lobby-action-btn.refresh:hover {
+    background: var(--surface-card-hover);
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+}
+
+/* ── MÉTRICAS Y CONTADORES ESTILO SALA WAYGROUND ── */
+.lobby-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.lobby-metric-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.lobby-metric-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-card);
+}
+
+.lobby-metric-card.active {
+    background: var(--surface-card-hover);
+    border-width: 1.5px;
+}
+
+.lobby-metric-card.waiting.active {
+    border-color: #10b981;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+}
+
+.lobby-metric-card.playing.active {
+    border-color: #38bdf8;
+    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.2);
+}
+
+.lobby-metric-card.warning.active {
+    border-color: #f59e0b;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2);
+}
+
+.lobby-metric-card.finished.active {
+    border-color: #a855f7;
+    box-shadow: 0 8px 25px rgba(168, 85, 247, 0.2);
+}
+
+.metric-icon-bubble {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.metric-data .metric-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+}
+
+.metric-data .metric-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── LISTA / GRID DE ESTUDIANTES ── */
+.lobby-students-section {
+    background: var(--surface-panel);
+    border: 1px solid var(--border-default);
+    border-radius: 20px;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-card);
+}
+
+.lobby-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.lobby-section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0;
+    color: var(--text-heading);
+}
+
+.lobby-filter-tabs {
+    display: flex;
+    gap: 0.35rem;
+    background: var(--surface-card-subtle);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+}
+
+.lobby-filter-btn {
+    padding: 0.4rem 0.85rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lobby-filter-btn:hover {
+    color: var(--text-heading);
+    background: var(--surface-hover);
+}
+
+.lobby-filter-btn.active {
+    background: var(--surface-card);
+    color: var(--brand-primary);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-subtle);
+}
+
+.lobby-students-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── TARJETA INDIVIDUAL DE ESTUDIANTE EN SALA ── */
+.lobby-student-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.lobby-student-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-card);
+}
+
+.lobby-student-card.has-strikes {
+    border-color: rgba(245, 158, 11, 0.6);
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.05) 0%, var(--surface-card) 100%);
+}
+
+.lobby-student-card.finished {
+    border-color: rgba(168, 85, 247, 0.4);
+}
+
+.student-card-top {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+}
+
+.student-card-avatar {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.student-card-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    object-fit: cover;
+}
+
+.student-online-status-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 2.5px solid var(--surface-card);
+}
+
+.student-card-names {
+    overflow: hidden;
+    flex: 1;
+}
+
+.student-name-text {
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.2rem;
+}
+
+.student-email-text {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── STATUS BADGES EN LA TARJETA ── */
+.student-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.student-status-badge.waiting {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+}
+
+.student-status-badge.playing {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #0284c7;
+}
+
+[data-theme='dark'] .student-status-badge.playing {
+    color: #38bdf8;
+}
+
+.student-status-badge.finished {
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #9333ea;
+}
+
+[data-theme='dark'] .student-status-badge.finished {
+    color: #c084fc;
+}
+
+/* ── DETALLES DE AUDITORÍA Y TELEMETRÍA ── */
+.student-telemetry-row {
+    background: var(--surface-card-subtle);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.78rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-secondary);
+}
+
+.strike-alert-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+/* ── BOTONES DE ACCIÓN POR ESTUDIANTE ── */
+.student-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.75rem;
+}
+
+.student-msg-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--surface-card-subtle);
+    border: 1px solid var(--border-default);
+    color: var(--text-heading);
+    border-radius: 8px;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.student-msg-btn:hover {
+    background: var(--surface-card-hover);
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+}
+
+.student-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+    border-radius: 8px;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.student-reset-btn:hover {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* ── ESTADO VACÍO EN SALA ── */
+.lobby-empty-state {
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    color: var(--text-secondary);
+}
+
+.lobby-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.85;
+}
+
+.lobby-empty-state h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+
+.lobby-empty-state p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+}
+
+/* ── MODAL DE MENSAJE ── */
+.lobby-msg-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1.5rem;
+    animation: fadeIn 0.2s ease;
+}
+
+.lobby-msg-modal {
+    background: var(--surface-panel);
+    border: 1px solid var(--border-default);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: var(--shadow-elevated);
+    overflow: hidden;
+}
+
+.lobby-msg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.lobby-msg-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lobby-msg-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+}
+
+.lobby-msg-close-btn:hover {
+    color: var(--text-heading);
+}
+
+.lobby-msg-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.lobby-msg-target-tag {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.lobby-msg-textarea {
+    width: 100%;
+    min-height: 110px;
+    padding: 0.85rem;
+    background: var(--surface-input);
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    color: var(--text-heading);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.lobby-msg-textarea:focus {
+    border-color: var(--brand-primary);
+}
+
+.lobby-msg-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: var(--surface-card-subtle);
+}
+
+.lobby-msg-cancel-btn {
+    padding: 0.55rem 1rem;
+    background: transparent;
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.lobby-msg-cancel-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-heading);
+}
+
+.lobby-msg-submit-btn {
+    padding: 0.55rem 1.25rem;
+    background: var(--brand-primary);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.lobby-msg-submit-btn:hover {
+    filter: brightness(1.1);
+}
+
+.lobby-msg-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .exam-live-lobby {
+        padding: 1rem;
+    }
+    .lobby-hero-card {
+        padding: 1.25rem;
+    }
+    .lobby-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

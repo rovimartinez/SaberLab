@@ -78,15 +78,9 @@
     justify-content: center;
     position: relative;
     transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015)),
-        radial-gradient(circle at 30% 25%, var(--gadget-tint, rgba(255, 255, 255, 0.08)), transparent 58%),
-        rgba(18, 24, 38, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.05),
-        0 12px 28px rgba(0, 0, 0, 0.28),
-        0 0 0 1px rgba(255, 255, 255, 0.015);
+    background: var(--surface-card-muted);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
 
@@ -109,18 +103,15 @@
 
 .gadget-icon-btn:hover .gadget-icon {
     transform: translateY(-2px) scale(1.04);
-    border-color: rgba(255, 255, 255, 0.13);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.06),
-        0 16px 34px rgba(0, 0, 0, 0.34),
-        0 0 26px color-mix(in srgb, var(--gadget-color, #fff) 18%, transparent);
+    border-color: var(--gadget-color, var(--brand-primary));
+    box-shadow: var(--shadow-md);
 }
 
 .gadget-icon-name {
     font-size: 0.84rem;
     font-weight: 600;
     letter-spacing: 0.01em;
-    color: #c9d4e5;
+    color: var(--text-main);
     transition: color 0.2s ease, transform 0.2s ease;
     text-align: center;
 }
@@ -159,16 +150,16 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.7rem 0.4rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--border-subtle);
 }
 
 .gadgets-launcher-footer-label {
-    color: #b9c7dc;
+    color: var(--text-muted);
     font-size: 0.78rem;
 }
 
 .gadgets-launcher-footer-label strong {
-    color: #fff;
+    color: var(--text-heading);
     font-weight: 700;
 }
 
@@ -176,15 +167,16 @@
     width: 46px;
     height: 26px;
     padding: 3px;
-    border: none;
+    border: 1px solid var(--border-subtle);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--surface-card-muted);
     cursor: pointer;
     transition: background 0.2s ease;
 }
 
 .launcher-switch.active {
-    background: rgba(59, 130, 246, 0.75);
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
 }
 
 .launcher-switch-thumb {
@@ -192,9 +184,9 @@
     width: 20px;
     height: 20px;
     border-radius: 999px;
-    background: #fff;
+    background: var(--surface-card);
     transition: transform 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-sm);
 }
 
 .launcher-switch.active .launcher-switch-thumb {
@@ -202,7 +194,7 @@
 }
 
 .gadget-icon-btn:hover .gadget-icon-name {
-    color: white;
+    color: var(--brand-primary);
     transform: translateY(-1px);
 }
 
@@ -211,9 +203,10 @@
     position: fixed;
     display: flex;
     flex-direction: column;
-    background: var(--bg-primary);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
     border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-xl);
     z-index: 999998;
     min-width: 320px;
     max-width: calc(100vw - 2rem);
@@ -308,7 +301,7 @@
     min-height: 0;
     padding: 1rem;
     overflow-y: auto;
-    background: #1e293b;
+    background: var(--surface-card);
 }
 
 .floating-content-roulette {
@@ -696,8 +689,8 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.35rem;
-    background: linear-gradient(180deg, #0b0f1a 0%, #0c1220 100%);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: var(--surface-card-muted);
+    border: 1px solid var(--border-default);
     border-radius: 24px;
     overflow: hidden;
 }
@@ -710,10 +703,10 @@
     align-items: center;
     gap: 0.45rem;
     padding: 0.8rem 0.95rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-default);
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    color: #cbd5e1;
+    background: var(--surface-card);
+    color: var(--text-main);
     font-weight: 800;
     cursor: pointer;
 }
@@ -727,7 +720,7 @@
 
 .roulette-title-block h3 {
     margin: 0;
-    color: #e2e8f0;
+    color: var(--text-heading);
     font-size: 1.4rem;
     font-weight: 900;
     letter-spacing: 0.06em;
@@ -1408,7 +1401,8 @@
 }
 
 .calc-display {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-default);
     border-radius: 12px;
     padding: 0.9rem;
     margin-bottom: 0.85rem;
@@ -1421,15 +1415,15 @@
     justify-content: space-between;
     gap: 0.75rem;
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     min-height: 1.2em;
     margin-bottom: 0.25rem;
 }
 
 .calc-mode-toggle {
-    border: 1px solid rgba(96, 165, 250, 0.35);
-    background: rgba(59, 130, 246, 0.18);
-    color: #dbeafe;
+    border: 1px solid var(--border-accent);
+    background: var(--brand-glow);
+    color: var(--brand-primary);
     font-size: 0.68rem;
     padding: 0.28rem 0.5rem;
     border-radius: 999px;
@@ -1440,7 +1434,7 @@
 .calc-result {
     font-size: 1.9rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-heading);
     line-height: 1.1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1463,28 +1457,32 @@
 
 .calc-btn {
     min-height: 58px;
-    border: none;
+    border: 1px solid var(--border-default);
     border-radius: 10px;
     font-size: 0.96rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s;
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
+    background: var(--surface-card-muted);
+    color: var(--text-main);
+    box-shadow: var(--shadow-sm);
 }
 
 .calc-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--surface-hover);
+    color: var(--text-heading);
 }
 
 .calc-btn.operator {
-    background: rgba(139, 92, 246, 0.3);
-    color: #a78bfa;
+    background: rgba(168, 85, 247, 0.18);
+    color: #a855f7;
+    border-color: rgba(168, 85, 247, 0.35);
 }
 
 .calc-btn.function {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
+    background: var(--brand-glow);
+    color: var(--brand-primary);
+    border-color: var(--border-accent);
     font-size: 0.75rem;
 }
 
@@ -1498,7 +1496,7 @@
     flex-direction: column;
     gap: 1rem;
     min-height: 100%;
-    color: white;
+    color: var(--text-heading);
 }
 
 .clock-hero,
@@ -1506,8 +1504,8 @@
 .ohms-hero,
 .ohms-exercise-box,
 .clock-tip {
-    background: rgba(15, 23, 42, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card-muted);
+    border: 1px solid var(--border-default);
     border-radius: 16px;
 }
 
@@ -1782,8 +1780,8 @@
 .clock-pro-input-card,
 .clock-pro-study-toggle,
 .clock-pro-settings-grid {
-    background: #1a2235;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card-muted);
+    border: 1px solid var(--border-default);
     border-radius: 16px;
 }
 
@@ -1801,11 +1799,11 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .clock-pro-now-time {
-    color: #fff;
+    color: var(--text-heading);
     font-size: 2rem;
     font-weight: 900;
     line-height: 1;
@@ -2118,8 +2116,8 @@
     display: flex;
     overflow-x: auto;
     scrollbar-width: none;
-    background: #0d1117;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: var(--surface-card-muted);
+    border-bottom: 1px solid var(--border-default);
     border-radius: 12px;
     overflow: hidden;
     align-items: stretch;
@@ -2135,7 +2133,7 @@
     padding: 0.85rem 0.7rem 0.75rem;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: var(--text-muted);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2158,8 +2156,8 @@
 }
 
 .converter-tab.active {
-    color: #60a5fa;
-    background: rgba(37, 99, 235, 0.06);
+    color: var(--brand-primary);
+    background: var(--brand-glow);
 }
 
 .converter-tab.active::after {
@@ -2169,7 +2167,7 @@
     right: 0;
     bottom: 0;
     height: 2px;
-    background: #3b82f6;
+    background: var(--brand-primary);
 }
 
 .converter-panel {
@@ -2205,18 +2203,18 @@
 }
 
 .converter-block-meta label {
-    color: #64748b;
+    color: var(--text-muted);
 }
 
 .converter-block-meta span {
-    color: rgba(96, 165, 250, 0.65);
+    color: var(--brand-primary);
 }
 
 .converter-field {
     display: flex;
     align-items: stretch;
-    background: #0d1117;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border-default);
     border-radius: 14px;
     overflow: hidden;
 }
@@ -2230,12 +2228,12 @@
     font-weight: 800;
     background: transparent;
     border: none;
-    color: white;
+    color: var(--text-heading);
     outline: none;
 }
 
 .converter-main-result {
-    color: #34d399;
+    color: #10b981;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2244,8 +2242,8 @@
 .converter-select-wrap {
     position: relative;
     min-width: 160px;
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(17, 22, 29, 0.75);
+    border-left: 1px solid var(--border-default);
+    background: var(--surface-card);
     display: flex;
     align-items: center;
 }
@@ -2256,7 +2254,7 @@
     padding: 0 2.5rem 0 1rem;
     background: transparent;
     border: none;
-    color: #60a5fa;
+    color: var(--brand-primary);
     font-weight: 700;
     font-size: 0.9rem;
     appearance: none;
@@ -2266,7 +2264,7 @@
 .converter-chevron {
     position: absolute;
     right: 0.9rem;
-    color: #64748b;
+    color: var(--text-muted);
     pointer-events: none;
 }
 
@@ -2283,17 +2281,17 @@
     width: 52px;
     height: 52px;
     border-radius: 16px;
-    border: 4px solid #161b22;
-    background: #1f2937;
-    color: #60a5fa;
+    border: 4px solid var(--surface-card);
+    background: var(--surface-card-muted);
+    color: var(--brand-primary);
     display: grid;
     place-items: center;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-sm);
 }
 
 .converter-swap:hover {
-    background: #2563eb;
+    background: var(--brand-primary);
     color: white;
 }
 
@@ -2790,8 +2788,8 @@
 .ohms-input-card,
 .ohms-practice-card,
 .ohms-info-modal {
-    background: #1a2235;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card-muted);
+    border: 1px solid var(--border-default);
     border-radius: 18px;
 }
 
@@ -2811,12 +2809,12 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .ohms-triangle-heading h3 {
     margin: 0.35rem 0 0;
-    color: #fff;
+    color: var(--text-heading);
     font-size: 1.25rem;
     font-weight: 900;
 }
@@ -3163,6 +3161,7 @@
     width: 100%;
     height: 100%;
     min-height: 400px;
+    background: var(--surface-card);
 }
 
 /* Responsive */
@@ -3422,388 +3421,5 @@
     }
 }
 
-/* ==========================================================================
-   LIGHT MODE SUPPORT — PanelWidgets
-   ========================================================================== */
-:root[data-theme='light'] .floating-gadget {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2) !important;
-}
 
-:root[data-theme='light'] .floating-content {
-    background: #ffffff !important;
-}
-
-:root[data-theme='light'] .gadget-icon {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.95) !important;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06) !important;
-}
-
-:root[data-theme='light'] .gadget-icon::before {
-    display: none !important;
-}
-
-:root[data-theme='light'] .gadget-icon-name {
-    color: #0f172a !important;
-    font-weight: 700 !important;
-}
-
-:root[data-theme='light'] .gadget-icon-btn:hover .gadget-icon {
-    background: #ffffff !important;
-    border-color: var(--gadget-color, #38bdf8) !important;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
-}
-
-:root[data-theme='light'] .gadget-icon-btn:hover .gadget-icon-name {
-    color: #0284c7 !important;
-}
-
-:root[data-theme='light'] .gadgets-launcher-footer {
-    border-top-color: rgba(226, 232, 240, 0.9) !important;
-}
-
-:root[data-theme='light'] .gadgets-launcher-footer-label {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .gadgets-launcher-footer-label strong {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .launcher-switch {
-    background: #cbd5e1 !important;
-    border: 1px solid #94a3b8 !important;
-}
-
-:root[data-theme='light'] .launcher-switch:hover {
-    background: #94a3b8 !important;
-}
-
-:root[data-theme='light'] .launcher-switch.active {
-    background: #0284c7 !important;
-    border-color: #0284c7 !important;
-}
-
-:root[data-theme='light'] .launcher-switch-thumb {
-    background: #ffffff !important;
-    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.25) !important;
-}
-
-
-/* ── 1. CALCULADORA (Light Mode) ── */
-:root[data-theme='light'] .calculator-widget {
-    background: #ffffff !important;
-}
-
-:root[data-theme='light'] .calc-display {
-    background: #f1f5f9 !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .calc-expression {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .calc-mode-toggle {
-    background: rgba(59, 130, 246, 0.12) !important;
-    color: #0284c7 !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-}
-
-:root[data-theme='light'] .calc-result {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .calc-btn {
-    background: #f8fafc !important;
-    color: #0f172a !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
-}
-
-:root[data-theme='light'] .calc-btn:hover {
-    background: #e2e8f0 !important;
-}
-
-:root[data-theme='light'] .calc-btn.operator {
-    background: rgba(168, 85, 247, 0.15) !important;
-    color: #9333ea !important;
-    border-color: rgba(168, 85, 247, 0.3) !important;
-}
-
-:root[data-theme='light'] .calc-btn.function {
-    background: rgba(59, 130, 246, 0.12) !important;
-    color: #2563eb !important;
-    border-color: rgba(59, 130, 246, 0.3) !important;
-}
-
-/* ── 2. CONVERSOR (Light Mode) ── */
-:root[data-theme='light'] .converter-tabs {
-    background: #f1f5f9 !important;
-    border-bottom: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .converter-tab {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .converter-tab.active {
-    color: #0284c7 !important;
-    background: #ffffff !important;
-}
-
-:root[data-theme='light'] .converter-field {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .converter-main-input {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .converter-main-result {
-    color: #059669 !important;
-}
-
-:root[data-theme='light'] .converter-select-wrap {
-    background: #ffffff !important;
-    border-left: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .converter-main-select {
-    color: #0284c7 !important;
-}
-
-:root[data-theme='light'] .converter-swap {
-    background: #ffffff !important;
-    border: 4px solid #f1f5f9 !important;
-    color: #0284c7 !important;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08) !important;
-}
-
-:root[data-theme='light'] .converter-swap:hover {
-    background: #0284c7 !important;
-    color: #ffffff !important;
-}
-
-:root[data-theme='light'] .converter-block-meta label {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .converter-block-meta span {
-    color: #0284c7 !important;
-}
-
-/* ── 3. RELOJ & TEMPORIZADOR (Light Mode) ── */
-:root[data-theme='light'] .clock-pro-now-card,
-:root[data-theme='light'] .clock-pro-panel,
-:root[data-theme='light'] .clock-pro-display-card,
-:root[data-theme='light'] .clock-pro-study-card,
-:root[data-theme='light'] .clock-pro-empty,
-:root[data-theme='light'] .clock-pro-lap,
-:root[data-theme='light'] .clock-pro-input-card,
-:root[data-theme='light'] .clock-pro-study-toggle,
-:root[data-theme='light'] .clock-pro-settings-grid,
-:root[data-theme='light'] .clock-hero,
-:root[data-theme='light'] .clock-panel,
-:root[data-theme='light'] .clock-metric-card,
-:root[data-theme='light'] .clock-agenda-card,
-:root[data-theme='light'] .clock-tip {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .clock-pro-now-time,
-:root[data-theme='light'] .clock-pro-main-time,
-:root[data-theme='light'] .clock-pro-display-large,
-:root[data-theme='light'] .clock-pro-study-time,
-:root[data-theme='light'] .clock-time,
-:root[data-theme='light'] .clock-display-large,
-:root[data-theme='light'] .clock-hero h3 {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .clock-pro-sound {
-    background: rgba(15, 23, 42, 0.08) !important;
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .clock-pro-tab,
-:root[data-theme='light'] .clock-tab {
-    color: #64748b !important;
-    border-color: rgba(203, 213, 225, 0.8) !important;
-}
-
-:root[data-theme='light'] .clock-pro-tab.active,
-:root[data-theme='light'] .clock-tab.active {
-    background: rgba(249, 115, 22, 0.12) !important;
-    color: #ea580c !important;
-    border-color: #f97316 !important;
-}
-
-:root[data-theme='light'] .clock-pro-ring {
-    background: radial-gradient(circle closest-side, #ffffff 72%, transparent 73% 100%), conic-gradient(#f97316 var(--progress), rgba(203, 213, 225, 0.5) 0) !important;
-}
-
-:root[data-theme='light'] .clock-pro-ring-inner {
-    background: #f8fafc !important;
-}
-
-:root[data-theme='light'] .clock-pro-input-card input,
-:root[data-theme='light'] .clock-config-card input {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .clock-pro-btn:not(.primary),
-:root[data-theme='light'] .clock-pro-mini-btn,
-:root[data-theme='light'] .clock-action:not(.primary) {
-    background: #f1f5f9 !important;
-    border-color: rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .clock-pro-lap strong {
-    color: #0f172a !important;
-}
-
-/* ── 4. RULETA PRO (Light Mode) ── */
-:root[data-theme='light'] .roulette-stage {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .roulette-title-block h3 {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .roulette-settings-button,
-:root[data-theme='light'] .side-toggle {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .roulette-panel,
-:root[data-theme='light'] .roulette-history-panel {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .roulette-display,
-:root[data-theme='light'] .roulette-course-box {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .roulette-name {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .roulette-panel-header {
-    background: #f8fafc !important;
-    border-bottom-color: rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .roulette-panel-header h4 {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .roulette-auto-remove {
-    background: #f1f5f9 !important;
-}
-
-:root[data-theme='light'] .roulette-list-item {
-    background: #f8fafc !important;
-    border-color: rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .roulette-list-item span {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .roulette-course-box select,
-:root[data-theme='light'] .roulette-course-box textarea {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .roulette-stage-footer strong {
-    color: #0f172a !important;
-}
-
-/* ── 5. SEMÁFORO (Light Mode) ── */
-:root[data-theme='light'] .traffic-status {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .traffic-status strong {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .traffic-status p {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .traffic-actions button {
-    background: #f1f5f9 !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .traffic-actions button:hover {
-    background: #e2e8f0 !important;
-}
-
-/* ── 6. LEY DE OHM (Light Mode) ── */
-:root[data-theme='light'] .ohms-triangle-card,
-:root[data-theme='light'] .ohms-input-card,
-:root[data-theme='light'] .ohms-practice-card,
-:root[data-theme='light'] .ohms-hero,
-:root[data-theme='light'] .ohms-exercise-box,
-:root[data-theme='light'] .ohms-exercise-content,
-:root[data-theme='light'] .ohms-info-modal {
-    background: #f8fafc !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .ohms-triangle-heading h3,
-:root[data-theme='light'] .ohms-practice-question,
-:root[data-theme='light'] .ohms-hero h3,
-:root[data-theme='light'] .ohms-info-body h4,
-:root[data-theme='light'] .ohms-info-body h5 {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .ohms-input-card input {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .ohms-answer-wrap {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .ohms-answer-wrap input {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .ohms-clear-btn {
-    background: #f1f5f9 !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .ohms-practice-text,
-:root[data-theme='light'] .ohms-info-body p {
-    color: #475569 !important;
-}
-
-/* ── 7. PIZARRA MÁGICA (Light Mode) ── */
-:root[data-theme='light'] .whiteboard-widget-container {
-    background: #ffffff !important;
-}
 

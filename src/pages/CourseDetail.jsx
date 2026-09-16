@@ -75,13 +75,16 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     }, [course]);
 
     // Helper para obtener visibilidad de una lección
-    const getLessonVisibility = (lessonId) => {
-        // Normalizar ID igual que al guardar
+    const getLessonVisibility = (lessonId, moduleId = 'm1') => {
+        if (!lessonId) return true;
         const abbr = course?.abbr?.toLowerCase() || 're';
-        const normalizedId = lessonId.includes('-') ? lessonId : `${abbr}-m1-${lessonId}`;
+        const normalizedId = lessonId.includes('-') ? lessonId : `${abbr}-${moduleId}-${lessonId}`;
         
         if (lessonVisibility.hasOwnProperty(normalizedId)) {
             return lessonVisibility[normalizedId];
+        }
+        if (lessonVisibility.hasOwnProperty(lessonId)) {
+            return lessonVisibility[lessonId];
         }
         return true; // Por defecto todas visibles
     };
@@ -390,7 +393,7 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     };
 
     const toggleLessonVisibility = async (moduleId, lessonId) => {
-        const newVisibility = !getLessonVisibility(lessonId);
+        const newVisibility = !getLessonVisibility(lessonId, moduleId);
         
         // Normalizar ID: 'l1' -> 're-m1-l1'
         const abbr = course.abbr?.toLowerCase() || 're';
@@ -428,7 +431,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
     };
 
     const isExamLesson = (lessonId) => {
-        return lessonId === 'ee-m1-l6' || lessonId === 'ee-m2-l10' || lessonId === 'ee-m3-l14' || lessonId === 'ee-m4-l16' || lessonId.endsWith('-eval');
+        const lower = (lessonId || '').toLowerCase();
+        return lower.endsWith('-l6') || lower.endsWith('-l6e') || lower.endsWith('-l10') || lower.endsWith('-l14') || lower.endsWith('-l16') || lower.endsWith('-l5') || lower.endsWith('-l9') || lower.endsWith('-l13') || lower.endsWith('-l18') || lower.includes('eval') || lower.includes('examen');
     };
 
     const toggleModuleVisibility = async (moduleId) => {
@@ -437,8 +441,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         const hasExam = !!module?.evaluation;
         const examId = module?.evaluation ? (module.evaluation.id || `${course.abbr?.toLowerCase() || 're'}-${module.id}-eval`) : null;
 
-        const allRegularVisible = regularLessons.every(l => getLessonVisibility(l.id));
-        const examVisible = hasExam ? getLessonVisibility(examId) : true;
+        const allRegularVisible = regularLessons.every(l => getLessonVisibility(l.id, moduleId));
+        const examVisible = hasExam ? getLessonVisibility(examId, moduleId) : true;
         const allVisible = allRegularVisible && examVisible;
         const newVisibility = !allVisible;
         
@@ -454,7 +458,8 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
         });
 
         if (examId) {
-            newLecciones[examId] = newVisibility;
+            const normExamId = examId.includes('-') ? examId : `${abbr}-${moduleId}-${examId}`;
+            newLecciones[normExamId] = newVisibility;
         }
         
         try {
@@ -603,10 +608,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                 const regularLessons = module.lessons.filter(l => !isExamLesson(l.id));
                                 const hasExam = !!module.evaluation;
                                 const examId = module.evaluation ? (module.evaluation.id || `${course.abbr?.toLowerCase() || 're'}-${module.id}-eval`) : null;
-                                const isExamVisible = hasExam ? getLessonVisibility(examId) : true;
+                                const isExamVisible = hasExam ? getLessonVisibility(examId, module.id) : true;
                                 
                                 const totalItems = regularLessons.length + (hasExam ? 1 : 0);
-                                const visibleItems = regularLessons.filter(l => getLessonVisibility(l.id)).length + (hasExam && isExamVisible ? 1 : 0);
+                                const visibleItems = regularLessons.filter(l => getLessonVisibility(l.id, module.id)).length + (hasExam && isExamVisible ? 1 : 0);
                                 const allVisible = visibleItems === totalItems;
                                 const someVisible = visibleItems > 0;
 
@@ -634,10 +639,10 @@ const CourseDetail = ({ courses, setCourses, embeddedCourse, showHeader = true }
                                     {expandedModules[module.id] && (
                                         <div className="module-card-lessons">
                                             {regularLessons.map((lesson) => {
-                                                const isVisible = getLessonVisibility(lesson.id);
+                                                const isVisible = getLessonVisibility(lesson.id, module.id);
                                                 return (
                                                 <div key={lesson.id} className={`lesson-item ${isVisible ? 'visible' : 'hidden'}`}>
-                                                    <span className="lesson-name">{getLessonInfo(lesson.id).title}</span>
+                                                    <span className="lesson-name">{getLessonInfo(lesson.id)?.title || lesson.title || `Lección`}</span>
                                                     <button 
                                                         className={`visibility-btn ${isVisible ? 'is-visible' : ''}`}
                                                         onClick={() => toggleLessonVisibility(module.id, lesson.id)}

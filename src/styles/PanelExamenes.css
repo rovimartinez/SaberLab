@@ -1,0 +1,427 @@
+/* ==========================================================================
+   PanelExamenes.css - Diseño Premium y Tokens Semánticos Puros
+   Soporte perfecto y consistente para Tema Oscuro y Tema Claro
+   ========================================================================== */
+
+.admin-evaluations {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+/* Header */
+.admin-eval-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.admin-eval-title-group h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: var(--text-heading);
+    margin: 0;
+}
+
+.admin-eval-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0 0;
+}
+
+.admin-eval-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.btn-admin-lobby-quick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.15rem;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 10px;
+    color: #10b981;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
+}
+
+.btn-admin-lobby-quick:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.6);
+    color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+html[data-theme='dark'] .btn-admin-lobby-quick {
+    color: #34d399;
+}
+
+html[data-theme='dark'] .btn-admin-lobby-quick:hover {
+    color: #6ee7b7;
+}
+
+.btn-admin-template {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 10px;
+    color: #a855f7;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-admin-template:hover {
+    background: rgba(168, 85, 247, 0.22);
+    border-color: rgba(168, 85, 247, 0.45);
+    color: #9333ea;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+}
+
+html[data-theme='dark'] .btn-admin-template {
+    color: #c084fc;
+}
+
+html[data-theme='dark'] .btn-admin-template:hover {
+    color: #e9d5ff;
+}
+
+.btn-admin-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-admin-new:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
+}
+
+/* Lista de Tarjetas de Examen */
+.admin-eval-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.eval-admin-card {
+    padding: 1.15rem 1.4rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-card);
+}
+
+/* Hover y Selección Limpia (Adaptativo a Tema Claro y Oscuro) */
+.eval-admin-card:hover,
+.eval-admin-card:focus-within {
+    background: var(--surface-card-hover);
+    border-color: var(--brand-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme='dark'] .eval-admin-card:hover,
+html[data-theme='dark'] .eval-admin-card:focus-within {
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.35);
+}
+
+/* Info del Examen */
+.eval-admin-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.eval-admin-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 0;
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+}
+
+.eval-admin-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Badges */
+.eval-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Colores institucionales de cursos */
+.eval-badge-course-ee {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #d97706;
+}
+
+html[data-theme='dark'] .eval-badge-course-ee {
+    color: #fbbf24;
+}
+
+.eval-badge-course-re {
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #9333ea;
+}
+
+html[data-theme='dark'] .eval-badge-course-re {
+    color: #c084fc;
+}
+
+.eval-badge-course-ma {
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    color: #0284c7;
+}
+
+html[data-theme='dark'] .eval-badge-course-ma {
+    color: #38bdf8;
+}
+
+.eval-badge-course-default {
+    background: var(--surface-hover);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+}
+
+.eval-badge-module {
+    background: var(--surface-card-subtle);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+}
+
+.eval-badge-published {
+    background: var(--status-success-bg);
+    border: 1px solid var(--status-success-border);
+    color: var(--status-success-text);
+}
+
+.eval-badge-draft {
+    background: var(--status-warning-bg);
+    border: 1px solid var(--status-warning-border);
+    color: var(--status-warning-text);
+}
+
+/* Botones de Acción en la Tarjeta */
+.eval-admin-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.btn-action-lobby {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.48rem 0.85rem;
+    background: var(--status-success-bg);
+    border: 1px solid var(--status-success-border);
+    border-radius: 8px;
+    color: var(--status-success-text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action-lobby:hover {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: rgba(16, 185, 129, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-action-questions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.48rem 0.85rem;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.32);
+    border-radius: 8px;
+    color: #2563eb;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+html[data-theme='dark'] .btn-action-questions {
+    color: #60a5fa;
+}
+
+.btn-action-questions:hover {
+    background: rgba(59, 130, 246, 0.22);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+html[data-theme='dark'] .btn-action-questions:hover {
+    color: #93c5fd;
+}
+
+.btn-action-publish {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.48rem 0.8rem;
+    background: var(--surface-hover);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action-publish:hover {
+    background: var(--surface-active);
+    border-color: var(--border-strong);
+    color: var(--text-heading);
+    transform: translateY(-1px);
+}
+
+.btn-action-publish.is-draft {
+    background: var(--status-warning-bg);
+    border-color: var(--status-warning-border);
+    color: var(--status-warning-text);
+}
+
+.btn-action-publish.is-draft:hover {
+    background: rgba(245, 158, 11, 0.22);
+}
+
+.btn-action-results {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.48rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action-results.released {
+    background: var(--status-success-bg);
+    border: 1px solid var(--status-success-border);
+    color: var(--status-success-text);
+}
+
+.btn-action-results.released:hover {
+    background: rgba(16, 185, 129, 0.22);
+    transform: translateY(-1px);
+}
+
+.btn-action-results.hidden {
+    background: var(--status-danger-bg);
+    border: 1px solid var(--status-danger-border);
+    color: var(--status-danger-text);
+}
+
+.btn-action-results.hidden:hover {
+    background: rgba(239, 68, 68, 0.22);
+    transform: translateY(-1px);
+}
+
+.btn-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--surface-hover);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-action-icon:hover {
+    background: var(--surface-active);
+    border-color: var(--border-default);
+    color: var(--text-heading);
+    transform: translateY(-1px);
+}
+
+.btn-action-icon.danger {
+    background: var(--status-danger-bg);
+    border-color: var(--status-danger-border);
+    color: var(--status-danger-text);
+}
+
+.btn-action-icon.danger:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+}
+
+/* Estado Vacío */
+.eval-admin-empty {
+    padding: 3.5rem 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--surface-card);
+    border: 1px dashed var(--border-default);
+    border-radius: 16px;
+    font-size: 0.95rem;
+}

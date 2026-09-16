@@ -4,35 +4,34 @@ function getBaseAppUrl(request, env) {
   const url = new URL(request.url);
   const referer = request.headers.get('referer');
   const forwardedHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
-  const forwardedProto = request.headers.get('x-forwarded-proto') || (url.protocol.replace(':', ''));
 
-  if (referer) {
-    try {
-      const refUrl = new URL(referer);
-      if (refUrl.hostname === 'localhost' || refUrl.hostname === '127.0.0.1') {
-        return `${refUrl.protocol}//${refUrl.host}`;
-      }
-    } catch {}
+  // 1. Detectar si estamos en entorno local (Vite + Wrangler)
+  const isLocal =
+    url.hostname === 'localhost' ||
+    url.hostname === '127.0.0.1' ||
+    (referer && (referer.includes('localhost') || referer.includes('127.0.0.1'))) ||
+    (forwardedHost && (forwardedHost.includes('localhost') || forwardedHost.includes('127.0.0.1'))) ||
+    (env.APP_URL && env.APP_URL.includes('localhost'));
+
+  if (isLocal) {
+    // En local, Google OAuth SIEMPRE requiere la URL canónica registrada:
+    // http://localhost:5173 (NUNCA la IP 127.0.0.1 ni el puerto 8788 interno de Wrangler)
+    return 'http://localhost:5173';
   }
 
-  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
-    return `${url.protocol}//${url.host}`;
-  }
-
-  // APP_URL tiene prioridad en producción para evitar redirect_uri_mismatch
+  // 2. Si APP_URL está definido en producción (Cloudflare Pages)
   if (env.APP_URL && !env.APP_URL.includes('localhost')) {
     return env.APP_URL;
   }
 
-  // Normalizar hosts con prefijo hash de deploy de Cloudflare Pages
+  // 3. En producción, normalizar si viene de una URL con hash de preview (ej: 6d66d517.saberlab.pages.dev)
   const host = forwardedHost || url.hostname;
-  const proto = forwardedProto || 'https';
   if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
     const hashMatch = host.match(/^[0-9a-f]{8}\.(.+)$/);
     if (hashMatch) {
-      return `${proto}://${hashMatch[1]}`;
+      return `https://${hashMatch[1]}`;
     }
-    return `${proto}://${host}`;
+    return `https://${host}`;
   }
 
   return 'https://saberlab.pages.dev';

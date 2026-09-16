@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
-    Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight, Play, 
+    Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight,
     Zap, Bot, GraduationCap, Gamepad2, Award, User, Activity, TrendingUp, 
-    Flame, CheckCircle2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, CheckCircle, X, Lock, Gift, Wrench, Hash
+    Flame, CheckCircle2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, CheckCircle, Check, X, Lock, Gift, Wrench, Hash, FileCheck,
+    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
@@ -10,7 +12,27 @@ import { useApps } from '../context/useApps';
 import { api } from '../lib/api';
 import { COURSES_DEFINITION, getLessonInfo, getCourseColor } from '../data/coursesData.jsx';
 import { ranks, getRankByLessons, getNextRank, getRankProgress } from '../data/ranksData';
+import { gadgets } from '../data/gadgetsData';
+import { applyTheme, getInitialTheme } from '../lib/themeManager';
+import RanksModal from '../components/dashboard/modals/RanksModal';
+import DashboardAppModal from '../components/dashboard/modals/DashboardAppModal';
+import PanelSimiHub from './PanelSimiHub';
 import '../styles/PanelInicio.css';
+
+// Caché en memoria para carga instantánea al volver a Inicio (0 ms)
+let memoryLessonsMap = null;
+let memoryAttemptsMap = null;
+
+const WIDGETS_CATALOG = [
+    { id: 'calculadora', name: 'Calculadora Científica', desc: 'Cálculos de circuitos, voltajes y potencias.', icon: '🧮', color: '#0ea5e9' },
+    { id: 'ruleta', name: 'Ruleta de Aula', desc: 'Sorteador aleatorio de alumnos y preguntas en vivo.', icon: '🎡', color: '#ec4899' },
+    { id: 'pizarra', name: 'Pizarra Mágica', desc: 'Lienzo interactivo para trazar diagramas y esquemas.', icon: '🎨', color: '#a855f7' },
+    { id: 'semaforo', name: 'Semáforo de Tiempo', desc: 'Control visual de tiempos para actividades y retos.', icon: '🚦', color: '#f59e0b' },
+    { id: 'ley-ohm', name: 'Ley de Ohm y Watt', desc: 'Despeje interactivo V = I · R y cálculo de Watts.', icon: '⚡', color: '#10b981' },
+    { id: 'conversor', name: 'Conversor de Unidades', desc: 'Conversión inmediata entre prefijos métricos.', icon: '🔄', color: '#6366f1' },
+    { id: 'reloj', name: 'Cronómetro & Reloj', desc: 'Temporizador preciso para pruebas prácticas.', icon: '⏱️', color: '#3b82f6' },
+    { id: 'arduino', name: 'Arduino IDE Virtual', desc: 'Editor de código y lógica para robótica.', icon: '🤖', color: '#14b8a6' },
+];
 
 const getCourseIcon = (abbr) => {
     const def = COURSES_DEFINITION.find(c => c.abbr === abbr || c.id === abbr);
@@ -21,18 +43,129 @@ const getCourseIcon = (abbr) => {
 };
 
 const PanelInicio = () => {
-    const { user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress, lessonVisibility } = useAuth();
+    const { 
+        user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress, 
+        lessonVisibility, signOut, isImpersonating, setViewMode, toggleViewMode,
+        pendingAccessRequestsCount, unreadNotificationsCount, refreshEnrolledCourses 
+    } = useAuth();
     const { openLauncher } = useApps();
     const navigate = useNavigate();
     
+    const getCachedStorage = (key, fallback = {}) => {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : fallback;
+        } catch {
+            return fallback;
+        }
+    };
+
     const [userProgress, setUserProgress] = useState(cachedProgress);
-    const [completedLessonsMap, setCompletedLessonsMap] = useState({});
-    const [completedAttemptsMap, setCompletedAttemptsMap] = useState({});
+    const [completedLessonsMap, setCompletedLessonsMap] = useState(() => memoryLessonsMap || getCachedStorage('saberlab_cached_lmap', {}));
+    const [completedAttemptsMap, setCompletedAttemptsMap] = useState(() => memoryAttemptsMap || getCachedStorage('saberlab_cached_amap', {}));
     const [showRanksModal, setShowRanksModal] = useState(false);
+    const [activeAppModal, setActiveAppModal] = useState(null);
+    const [selectedModalCourse, setSelectedModalCourse] = useState(null);
+    const [modalCourseFilter, setModalCourseFilter] = useState('all');
+    const [selectedCourseId, setSelectedCourseId] = useState(() => {
+        return localStorage.getItem('saberlab_active_course') || 'all';
+    });
+    const [expandedModules, setExpandedModules] = useState({});
+    const toggleModuleExpand = (modId) => {
+        setExpandedModules(prev => (prev[modId] ? {} : { [modId]: true }));
+    };
+    const [activeTheme, setActiveTheme] = useState(() => getInitialTheme());
     const [loading, setLoading] = useState(!cachedProgress);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
+    const userMenuRef = useRef(null);
+    const dropdownRef = useRef(null);
+
+    // Estados para unirse a grupo de curso
+    const [joinGroupCode, setJoinGroupCode] = useState('');
+    const [isJoiningGroup, setIsJoiningGroup] = useState(false);
+    const [joinGroupSuccess, setJoinGroupSuccess] = useState(null);
+    const [joinGroupError, setJoinGroupError] = useState(null);
+
+    const handleJoinGroupSubmit = async (e) => {
+        e.preventDefault();
+        if (!joinGroupCode.trim() || isJoiningGroup) return;
+
+        setIsJoiningGroup(true);
+        setJoinGroupError(null);
+        setJoinGroupSuccess(null);
+
+        try {
+            const { data, error } = await api('/enrollments/code', {
+                method: 'POST',
+                body: { code: joinGroupCode.trim().toUpperCase() }
+            });
+
+            if (error || !data?.curso) {
+                throw new Error(error?.message || 'Código de grupo inválido o no encontrado.');
+            }
+
+            const cursoName = data.curso.name || data.curso.title || 'Curso';
+            const grupoName = data.grupo?.name ? ` (Grupo: ${data.grupo.name})` : '';
+
+            setJoinGroupSuccess(`¡Te has inscrito exitosamente en ${cursoName}${grupoName}!`);
+            setJoinGroupCode('');
+
+            if (refreshEnrolledCourses) {
+                await refreshEnrolledCourses();
+            }
+        } catch (err) {
+            console.error('Error al unirse al grupo:', err);
+            setJoinGroupError(err.message || 'Código inválido o error al inscribirse.');
+        } finally {
+            setIsJoiningGroup(false);
+        }
+    };
+
+    const handleThemeSelect = (t) => {
+        setActiveTheme(t);
+        applyTheme(t);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (
+                userMenuRef.current && 
+                !userMenuRef.current.contains(e.target) &&
+                (!dropdownRef.current || !dropdownRef.current.contains(e.target))
+            ) {
+                setIsUserMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setActiveAppModal(null);
+                setShowRanksModal(false);
+                setIsUserMenuOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const userMetadata = user?.user_metadata || {};
     const fullName = profile?.full_name?.split(' ')[0] || userMetadata.full_name?.split(' ')[0] || userMetadata.name?.split(' ')[0] || 'Estudiante';
+    const displayName = profile?.full_name || userMetadata.full_name || userMetadata.name || fullName;
+    const avatarUrl = userMetadata.avatar_url || userMetadata.picture || profile?.avatar_url || user?.photoURL || '';
+    const roleText = isImpersonating 
+        ? 'Vista Estudiante' 
+        : (profile?.role === 'admin' 
+            ? 'Admin' 
+            : (['leader', 'lider', 'semillero_leader'].includes(profile?.role)
+                ? 'Líder Semillero'
+                : (profile?.role === 'teacher' || profile?.role === 'profesor' || profile?.role === 'docente' 
+                    ? 'Docente' 
+                    : 'Estudiante')));
 
     useEffect(() => {
         if (cachedProgress) {
@@ -92,6 +225,10 @@ const PanelInicio = () => {
 
                 setCompletedLessonsMap(lMap);
                 setCompletedAttemptsMap(aMap);
+                memoryLessonsMap = lMap;
+                memoryAttemptsMap = aMap;
+                localStorage.setItem('saberlab_cached_lmap', JSON.stringify(lMap));
+                localStorage.setItem('saberlab_cached_amap', JSON.stringify(aMap));
             } catch (err) {
                 console.error('Error fetching dashboard data:', err);
             }
@@ -100,7 +237,7 @@ const PanelInicio = () => {
         };
 
         fetchDashboardData();
-    }, [user, cachedProgress, refreshUserProgress]);
+    }, [user?.id]);
 
     const completedLessonsCount = Object.keys(completedLessonsMap).length;
     const lessonsCompleted = Math.max(userProgress?.lessons_completed || 0, completedLessonsCount);
@@ -111,11 +248,17 @@ const PanelInicio = () => {
     const nextRank = getNextRank(lessonsCompleted);
     const rankProgress = getRankProgress(lessonsCompleted);
 
-    // Mapeo del curso activo
+    // Mapeo del curso activo y cursos disponibles
     const hasEnrolledCourses = (enrolledCourses && enrolledCourses.length > 0) || profile?.role === 'admin';
-    const mainCourseDef = hasEnrolledCourses
-        ? (COURSES_DEFINITION.find(d => d.id === enrolledCourses[0]?.id || d.abbr === enrolledCourses[0]?.abbr || d.id === enrolledCourses[0]?.slug) || enrolledCourses[0] || COURSES_DEFINITION[0])
-        : COURSES_DEFINITION[0];
+    const availableCourses = (enrolledCourses && enrolledCourses.length > 0)
+        ? enrolledCourses.map(c => COURSES_DEFINITION.find(d => d.id === c.id || d.abbr === c.abbr || d.id === c.slug) || c)
+        : (profile?.role === 'admin' ? COURSES_DEFINITION : [COURSES_DEFINITION[0]]);
+
+    const activeCourseDef = (selectedCourseId !== 'all'
+        ? availableCourses.find(c => String(c.id) === String(selectedCourseId) || c.abbr === selectedCourseId || c.slug === selectedCourseId)
+        : null) || availableCourses[0] || COURSES_DEFINITION[0];
+
+    const mainCourseDef = activeCourseDef;
 
     const courseColor = mainCourseDef?.color || '#38bdf8';
     const courseIcon = mainCourseDef?.icon || <Zap size={22} />;
@@ -180,9 +323,13 @@ const PanelInicio = () => {
         return `${h}h ${m < 10 ? '0' : ''}${m}m`;
     };
 
-    // Próximas actividades dinámicas
+    // Próximas actividades dinámicas (filtradas según el curso activo de navegación)
     const upcomingActivities = [];
-    enrolledCourses.forEach(c => {
+    const coursesToScan = (selectedCourseId !== 'all' && mainCourseDef) 
+        ? [mainCourseDef] 
+        : availableCourses;
+
+    coursesToScan.forEach(c => {
         const def = COURSES_DEFINITION.find(d => d.id === c.id || d.abbr === c.abbr || d.id === c.slug) || c;
         const courseIdKey = def.id || c.id;
         const courseVis = (lessonVisibility && (lessonVisibility[courseIdKey] || lessonVisibility[String(courseIdKey)] || lessonVisibility[def.abbr])) || {};
@@ -205,7 +352,10 @@ const PanelInicio = () => {
                         id: `${def.id || def.slug}-${m.id}`,
                         evalKey,
                         title: m.evaluation.title,
+                        courseId: def.id || c.id,
+                        courseAbbr: def.abbr || 'STEAM',
                         course: def.name,
+                        courseColor: def.color || getCourseColor(def.id) || '#38bdf8',
                         date: m.evaluation.date,
                         points: m.evaluation.points,
                         pointsEarned,
@@ -218,15 +368,465 @@ const PanelInicio = () => {
         }
     });
 
-    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
+    // Agrupación de actividades por curso para los modales
+    const courseGroups = [];
+    coursesToScan.forEach(c => {
+        const def = COURSES_DEFINITION.find(d => d.id === c.id || d.abbr === c.abbr || d.id === c.slug) || c;
+        const cId = def.id || c.id;
+        const items = upcomingActivities.filter(a => String(a.courseId) === String(cId) || a.course === def.name || a.courseAbbr === def.abbr);
+        if (items.length > 0) {
+            const doneCount = items.filter(a => a.isDone).length;
+            const totalPoints = items.reduce((acc, a) => acc + (a.isDone ? a.pointsEarned : 0), 0);
+            const maxPoints = items.reduce((acc, a) => acc + a.points, 0);
+            courseGroups.push({
+                courseId: cId,
+                courseName: def.name,
+                courseAbbr: def.abbr || 'STEAM',
+                courseColor: def.color || getCourseColor(cId) || '#38bdf8',
+                activities: items,
+                doneCount,
+                totalCount: items.length,
+                totalPoints,
+                maxPoints
+            });
+        }
+    });
 
-    const quickActions = [
-        { label: 'Mi Perfil', icon: <User size={14} />, to: '/dashboard/profile' },
-        ...(isStaff ? [{ label: 'Analítica', icon: <Activity size={14} />, to: '/dashboard/analytics' }] : []),
-        ...(isStaff ? [{ label: 'Widgets', icon: <Wrench size={14} />, onClick: openLauncher }] : []),
-        { label: 'Recompensas', icon: <Gift size={14} />, to: '/dashboard/gadgets' },
-        { label: 'Calificaciones', icon: <Award size={14} />, to: '/dashboard/grades' },
+    const filteredCourseGroups = (modalCourseFilter === 'all' || (selectedCourseId !== 'all'))
+        ? courseGroups
+        : courseGroups.filter(g => String(g.courseId) === String(modalCourseFilter) || g.courseAbbr === modalCourseFilter);
+
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
+    const isAdmin = profile?.role === 'admin';
+
+    // ── CATEGORÍA 2: MI PROGRESO & GAMIFICACIÓN ──
+    const progresoApps = [
+        { 
+            id: 'profile', 
+            name: 'Mi Perfil', 
+            badge: 'Ajustes y Tema', 
+            icon: <User size={26} />, 
+            gradient: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', 
+            shadow: 'rgba(99, 102, 241, 0.35)',
+            desc: 'Ajustes de cuenta, apariencia y preferencias'
+        },
+        { 
+            id: 'ranks', 
+            name: 'Nivel STEAM', 
+            badge: `Nivel: ${rank.name}`, 
+            icon: <Trophy size={26} />, 
+            gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', 
+            shadow: 'rgba(245, 158, 11, 0.35)',
+            desc: 'Sistema oficial de niveles y rangos STEAM',
+            onClick: () => setShowRanksModal(true)
+        },
+        { 
+            id: 'rewards', 
+            name: 'Recompensas', 
+            badge: isStaff ? `${gadgets.length} gadgets` : 'Bloqueado', 
+            icon: <Gift size={26} />, 
+            gradient: isStaff
+                ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
+                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)', 
+            shadow: isStaff ? 'rgba(139, 92, 246, 0.35)' : 'rgba(100, 116, 139, 0.25)',
+            desc: isStaff ? 'Instrumentos y simuladores desbloqueados' : 'Módulo de recompensas bloqueado para estudiantes',
+            isLocked: !isStaff
+        },
     ];
+
+    // ── CATEGORÍA 3: HERRAMIENTAS DEL AULA ──
+    const herramientasApps = [
+        { 
+            id: 'widgets', 
+            name: 'Widgets', 
+            badge: isStaff ? '8 Herramientas' : 'Bloqueado', 
+            icon: <Wrench size={26} />, 
+            gradient: isStaff
+                ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)', 
+            shadow: isStaff ? 'rgba(6, 182, 212, 0.35)' : 'rgba(100, 116, 139, 0.25)',
+            desc: isStaff ? 'Herramientas interactivas de apoyo en el aula' : 'Herramientas docentes bloqueadas para estudiantes',
+            isLocked: !isStaff
+        },
+        { 
+            id: 'analytics', 
+            name: 'Analítica', 
+            badge: isStaff ? 'Docente' : 'Bloqueado', 
+            icon: <TrendingUp size={26} />, 
+            gradient: isStaff
+                ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)'
+                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)', 
+            shadow: isStaff ? 'rgba(16, 185, 129, 0.35)' : 'rgba(100, 116, 139, 0.25)',
+            desc: isStaff ? 'Cohorte docente, estadísticas y rendimiento' : 'Módulo de analítica docente bloqueado para estudiantes',
+            route: isStaff ? '/dashboard/analytics' : null,
+            onClick: isStaff ? () => navigate('/dashboard/analytics') : undefined,
+            isLocked: !isStaff
+        },
+    ];
+
+    // ── CATEGORÍA 1: ÁREA ACADÉMICA Y EVALUACIONES (ABAJO) ──
+    const canAccessCertificate = isStaff || (userProgress?.total_points || 0) >= 450;
+    const academicoApps = [
+        {
+            id: 'courses',
+            name: 'Mi Curso',
+            badge: mainCourseDef?.abbr || 'Activo',
+            icon: <GraduationCap size={26} />,
+            gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+            shadow: 'rgba(2, 132, 199, 0.35)',
+            desc: `Plan de estudios y módulos de ${mainCourseDef?.name || 'mi curso'}`,
+            onClick: () => {
+                setExpandedModules({});
+                setSelectedModalCourse(mainCourseDef);
+                setActiveAppModal('courses');
+            }
+        },
+        { 
+            id: 'activities', 
+            name: 'Exámenes', 
+            badge: `${upcomingActivities.length} oficiales`, 
+            icon: <AlarmClock size={26} />, 
+            gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', 
+            shadow: 'rgba(244, 63, 94, 0.35)',
+            desc: 'Agenda oficial de exámenes y evaluaciones del curso'
+        },
+        { 
+            id: 'grades', 
+            name: 'Calificaciones', 
+            badge: 'Libreta oficial', 
+            icon: <Award size={26} />, 
+            gradient: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', 
+            shadow: 'rgba(236, 72, 153, 0.35)',
+            desc: 'Libreta de notas y registro de evaluaciones'
+        },
+
+        {
+            id: 'notifications',
+            name: 'Notificaciones',
+            badge: (isStaff && (pendingAccessRequestsCount || 0) > 0) 
+                ? `${pendingAccessRequestsCount} pendientes` 
+                : ((unreadNotificationsCount || 0) > 0 ? `${unreadNotificationsCount} nuevas` : 'Avisos'),
+            icon: <Bell size={26} />,
+            gradient: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+            shadow: 'rgba(6, 182, 212, 0.35)',
+            desc: 'Centro de avisos, alertas y novedades de clase'
+        },
+        {
+            id: 'resources',
+            name: 'Recursos',
+            badge: 'Biblioteca STEAM',
+            icon: <Folder size={26} />,
+            gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            shadow: 'rgba(245, 158, 11, 0.35)',
+            desc: 'Guías de laboratorio, videos, datasheets y código',
+            onClick: () => navigate('/dashboard/resources')
+        },
+        {
+            id: 'certificates',
+            name: 'Certificados',
+            badge: canAccessCertificate ? 'Oficial STEAM' : `Requiere 450 pts`,
+            icon: <FileCheck size={26} />,
+            gradient: canAccessCertificate
+                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                : 'linear-gradient(135deg, #475569 0%, #334155 100%)',
+            shadow: canAccessCertificate ? 'rgba(16, 185, 129, 0.35)' : 'rgba(71, 85, 105, 0.25)',
+            desc: canAccessCertificate
+                ? 'Diplomas y constancias de aprobación por curso'
+                : 'Disponible al alcanzar 450 puntos STEAM',
+            onClick: canAccessCertificate ? () => navigate('/dashboard/certificate/ee') : undefined,
+            isLocked: !canAccessCertificate
+        },
+    ];
+
+    // ── CATEGORÍA 4: GESTIÓN & SISTEMA (solo staff/admin) ──
+    const sistemaApps = [
+        ...(isStaff ? [
+            {
+                id: 'liveMonitor',
+                name: 'En Vivo & Mensajes',
+                badge: 'En Tiempo Real',
+                icon: <Radio size={26} />,
+                gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                shadow: 'rgba(16, 185, 129, 0.35)',
+                desc: 'Alumnos en línea y alertas a pantalla'
+            },
+            {
+                id: 'inviteLinks',
+                name: 'Grupos y Enlaces',
+                badge: 'Auto-unión',
+                icon: <Link2 size={26} />,
+                gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                shadow: 'rgba(2, 132, 199, 0.35)',
+                desc: 'Grupos activos/inactivos y enlaces con tiempo'
+            },
+            {
+                id: 'platformAdmin',
+                name: 'Plataforma',
+                badge: isAdmin ? 'Control Admin' : 'Docente',
+                icon: <Shield size={26} />,
+                gradient: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)',
+                shadow: 'rgba(168, 85, 247, 0.35)',
+                desc: 'Usuarios y configuración'
+            },
+            {
+                id: 'examsManagement',
+                name: 'Exámenes',
+                badge: 'Evaluaciones',
+                icon: <ClipboardList size={26} />,
+                gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+                shadow: 'rgba(244, 63, 94, 0.35)',
+                desc: 'Evaluaciones y resultados'
+            },
+            {
+                id: 'viewMode',
+                name: isImpersonating ? 'Volver a Admin' : 'Ver como Alumno',
+                badge: isImpersonating ? 'Vista Alumno 👁️' : 'Modo Docente',
+                icon: isImpersonating ? <Shield size={26} /> : <Eye size={26} />,
+                gradient: isImpersonating ? 'linear-gradient(135deg, #c084fc 0%, #9333ea 100%)' : 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                shadow: isImpersonating ? 'rgba(192, 132, 252, 0.35)' : 'rgba(56, 189, 248, 0.35)',
+                desc: 'Alternar entre la perspectiva de estudiante y el rol docente',
+                onClick: () => {
+                    if (toggleViewMode) {
+                        toggleViewMode();
+                    } else if (setViewMode) {
+                        setViewMode(isImpersonating ? 'admin' : 'student');
+                    }
+                }
+            }
+        ] : []),
+        ...(isAdmin ? [{
+            id: 'settings',
+            name: 'Configuración',
+            badge: 'Plataforma',
+            icon: <Settings size={26} />,
+            gradient: 'linear-gradient(135deg, #64748b 0%, #334155 100%)',
+            shadow: 'rgba(100, 116, 139, 0.35)',
+            desc: 'Ajustes de plataforma, variables y parámetros globales',
+            onClick: () => navigate('/dashboard/settings')
+        }] : [])
+    ];
+
+    const allApps = [...progresoApps, ...herramientasApps, ...academicoApps, ...sistemaApps];
+
+    const renderAppTile = (app) => (
+        <button
+            key={app.id}
+            type="button"
+            className={`app-hub-tile ${app.isPrimary ? 'app-hub-tile-primary' : ''} ${app.isLocked ? 'app-hub-tile-locked' : ''}`}
+            onClick={() => {
+                if (app.isLocked) return;
+                if (app.onClick) {
+                    app.onClick();
+                } else {
+                    setActiveAppModal(app.id);
+                }
+            }}
+            title={app.desc}
+            disabled={app.isLocked}
+            style={app.isLocked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        >
+            <div 
+                className="app-hub-icon-box"
+                style={{
+                    background: app.gradient,
+                    boxShadow: `0 8px 20px ${app.shadow}`,
+                    position: 'relative'
+                }}
+            >
+                {app.icon}
+                {app.isLocked && (
+                    <Lock size={14} style={{ 
+                        position: 'absolute', bottom: 2, right: 2, 
+                        color: '#fff', opacity: 0.9,
+                        background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '1px'
+                    }} />
+                )}
+            </div>
+            <span className="app-hub-name">{app.name}</span>
+            {app.badge && <span className="app-hub-badge">{app.badge}</span>}
+        </button>
+    );
+
+    const renderHeaderUserPill = () => (
+        <div className="hero-user-container" ref={userMenuRef}>
+            <button
+                type="button"
+                className={`hero-user-pill ${isUserMenuOpen ? 'open' : ''}`}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isUserMenuOpen) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const opensUpward = spaceBelow < 280;
+
+                        // Si el botón está en el panel lateral izquierdo (rect.left pequeño), alineamos a la izquierda del botón
+                        const isLeftAligned = rect.left < 350;
+
+                        setDropdownPos({
+                            top: opensUpward ? undefined : rect.bottom + 8,
+                            bottom: opensUpward ? window.innerHeight - rect.top + 8 : undefined,
+                            left: isLeftAligned ? Math.max(16, rect.left) : undefined,
+                            right: isLeftAligned ? undefined : Math.max(16, window.innerWidth - rect.right),
+                            width: isLeftAligned ? rect.width : undefined
+                        });
+                    }
+                    setIsUserMenuOpen(prev => !prev);
+                }}
+                title={`Cuenta de ${displayName}`}
+            >
+                <div className="hero-user-meta">
+                    <span className="hero-user-name">{displayName}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span className="hero-user-role-badge">
+                            {roleText}
+                        </span>
+                        {availableCourses.length > 1 && (
+                            <span 
+                                className="hero-user-course-badge"
+                                style={{ 
+                                    background: selectedCourseId === 'all' ? 'rgba(56, 189, 248, 0.12)' : `${courseColor}18`,
+                                    color: selectedCourseId === 'all' ? '#0284c7' : courseColor,
+                                    borderColor: selectedCourseId === 'all' ? 'rgba(56, 189, 248, 0.3)' : `${courseColor}35`,
+                                    cursor: selectedCourseId === 'all' ? 'pointer' : 'default'
+                                }}
+                                onClick={(e) => {
+                                    if (selectedCourseId === 'all') {
+                                        e.stopPropagation();
+                                        setSelectedModalCourse(null);
+                                        setActiveAppModal('courses');
+                                    }
+                                }}
+                                title={selectedCourseId === 'all' ? 'Ver todos mis cursos' : undefined}
+                            >
+                                {selectedCourseId === 'all' ? 'Todos' : (mainCourseDef?.abbr || 'Curso')}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <div className="hero-user-avatar-box">
+                    {avatarUrl ? (
+                        <img 
+                            src={avatarUrl} 
+                            alt={displayName} 
+                            referrerPolicy="no-referrer"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            className="hero-user-avatar-img"
+                        />
+                    ) : (
+                        <User size={18} color="var(--text-heading)" />
+                    )}
+                </div>
+            </button>
+
+            {/* Dropdown via Portal — selector de curso activo y logout */}
+            {isUserMenuOpen && createPortal(
+                <div 
+                    ref={dropdownRef}
+                    className="hero-user-dropdown glass-panel animate-fade-in"
+                    style={{ 
+                        top: dropdownPos.top, 
+                        bottom: dropdownPos.bottom, 
+                        left: dropdownPos.left,
+                        right: dropdownPos.right,
+                        width: dropdownPos.width ? `${dropdownPos.width}px` : undefined,
+                        maxWidth: dropdownPos.width ? `${dropdownPos.width}px` : '310px'
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <div className="hero-dropdown-course-header">
+                        <span className="hero-dropdown-label">Curso Activo</span>
+                        <span className="hero-dropdown-count">{availableCourses.length} {availableCourses.length === 1 ? 'curso' : 'cursos'}</span>
+                    </div>
+
+                    <div className="hero-dropdown-courses-list">
+                        {availableCourses.length > 1 && (
+                            <button
+                                type="button"
+                                className={`hero-dropdown-course-btn ${selectedCourseId === 'all' ? 'active' : ''}`}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedCourseId('all');
+                                    localStorage.setItem('saberlab_active_course', 'all');
+                                    window.dispatchEvent(new Event('saberlab_course_changed'));
+                                    setIsUserMenuOpen(false);
+                                    setSelectedModalCourse(null);
+                                    setActiveAppModal('courses');
+                                }}
+                            >
+                                <div className="dropdown-course-dot" style={{ background: 'var(--brand-primary)' }} />
+                                <div className="dropdown-course-info">
+                                    <span className="dropdown-course-title">Todos los Cursos</span>
+                                </div>
+                                {selectedCourseId === 'all' && <Check size={14} className="dropdown-course-check" />}
+                            </button>
+                        )}
+
+                        {availableCourses.map(course => {
+                            const isSelected = String(selectedCourseId) === String(course.id) || selectedCourseId === course.abbr;
+                            const cColor = course.color || getCourseColor(course.id) || '#38bdf8';
+                            return (
+                                <button
+                                    key={course.id || course.abbr}
+                                    type="button"
+                                    className={`hero-dropdown-course-btn ${isSelected ? 'active' : ''}`}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newCourseVal = String(course.id || course.abbr);
+                                        setSelectedCourseId(newCourseVal);
+                                        localStorage.setItem('saberlab_active_course', newCourseVal);
+                                        window.dispatchEvent(new Event('saberlab_course_changed'));
+                                        setIsUserMenuOpen(false);
+                                    }}
+                                >
+                                    <div className="dropdown-course-dot" style={{ background: cColor }} />
+                                    <div className="dropdown-course-info">
+                                        <span className="dropdown-course-title">{course.name}</span>
+                                    </div>
+                                    <span className="dropdown-course-abbr" style={{ color: cColor }}>
+                                        {course.abbr}
+                                    </span>
+                                    {isSelected && <Check size={14} className="dropdown-course-check" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="hero-dropdown-divider" />
+
+                    <div style={{ padding: '0.45rem' }}>
+                        <button 
+                            type="button"
+                            className="hero-dropdown-logout-btn" 
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsUserMenuOpen(false);
+                                if (signOut) signOut();
+                            }}
+                        >
+                            <LogOut size={15} />
+                            <span>Cerrar sesión</span>
+                        </button>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+
+    // ── VISTA EXCLUSIVA PARA EL SEMILLERO SIMI3D ──
+    if (mainCourseDef?.abbr === 'SIMI') {
+        return (
+            <PanelSimiHub 
+                headerCourseSelector={renderHeaderUserPill()} 
+                isEmbedded={true} 
+            />
+        );
+    }
 
     return (
         <div className="dashboard-symmetric-root">
@@ -238,405 +838,149 @@ const PanelInicio = () => {
                         ¡Hola, <span className="text-gradient">{fullName}</span>! 👋
                     </h1>
                     <p className="hero-subtitle">
-                        Panel de Aprendizaje y Práctica en <strong>SaberLab</strong>
+                        {selectedCourseId === 'all' && availableCourses.length > 1 ? (
+                            <>Panel de aprendizaje multidisciplinar en <strong>SaberLab</strong></>
+                        ) : (
+                            <>Te encuentras en el curso de <strong style={{ color: courseColor }}>{mainCourseDef?.name || 'SaberLab'}</strong></>
+                        )}
                     </p>
-                    <div className="hero-quick-actions">
-                        {quickActions.map(qa => (
-                            qa.to ? (
-                                <Link key={qa.label} to={qa.to} className="hero-action-pill">
-                                    {qa.icon}
-                                    <span>{qa.label}</span>
-                                </Link>
-                            ) : (
-                                <button key={qa.label} type="button" onClick={qa.onClick} className="hero-action-pill" style={{ cursor: 'pointer' }}>
-                                    {qa.icon}
-                                    <span>{qa.label}</span>
-                                </button>
-                            )
-                        ))}
-                    </div>
                 </div>
 
                 <div className="hero-right">
-                    {/* Tarjeta de Racha Activa */}
-                    <div className="hero-kpi-card racha-glow">
-                        <Flame size={24} color="#f97316" className="flame-pulse-anim" />
+                    {renderHeaderUserPill()}
+                </div>
+            </div>
+
+
+            {/* ── FILA SUPERIOR: CATEGORÍAS 2 Y 3 JUNTAS EN ESE ORDEN ── */}
+            <div className="apps-categories-top-row">
+                {/* CATEGORÍA 1: PROGRESO Y GAMIFICACIÓN */}
+                <div className="glass-panel apps-category-panel">
+                    <div className="apps-category-header">
+                        <div className="apps-category-title-group">
+                            <span className="apps-category-num-badge badge-cat-1">1</span>
+                            <div>
+                                <h2 className="apps-category-title">Progreso & Gamificación</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="apps-hub-grid top-row-grid">
+                        {progresoApps.map(renderAppTile)}
+                    </div>
+                </div>
+
+                {/* CATEGORÍA 2: HERRAMIENTAS DEL AULA */}
+                <div className="glass-panel apps-category-panel">
+                    <div className="apps-category-header">
+                        <div className="apps-category-title-group">
+                            <span className="apps-category-num-badge badge-cat-2">2</span>
+                            <div>
+                                <h2 className="apps-category-title">Herramientas del Aula</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="apps-hub-grid top-row-grid">
+                        {herramientasApps.map(renderAppTile)}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── FILA INFERIOR: CATEGORÍA 1 (ÁREA ACADÉMICA Y EVALUACIONES) ── */}
+            <div className="glass-panel apps-category-panel category-academico-panel">
+                <div className="apps-category-header">
+                    <div className="apps-category-title-group">
+                        <span className="apps-category-num-badge badge-cat-3">3</span>
                         <div>
-                            <div className="kpi-value" style={{ color: '#fed7aa' }}>{streakDays} días</div>
-                            <div className="kpi-label">Racha Activa</div>
+                            <h2 className="apps-category-title">Área Académica & Evaluaciones</h2>
                         </div>
                     </div>
 
-                    {/* Tarjeta de Lecciones */}
-                    <div className="hero-kpi-card">
-                        <BookOpen size={24} color="#38bdf8" />
+                </div>
+                <div className="apps-hub-grid bottom-row-grid">
+                    {academicoApps.map(renderAppTile)}
+                </div>
+            </div>
+
+            {/* ── FILA INFERIOR: CATEGORÍA 4 (GESTIÓN & SISTEMA — solo staff/admin) ── */}
+            {sistemaApps.length > 0 && (
+            <div className="glass-panel apps-category-panel category-sistema-panel">
+                <div className="apps-category-header">
+                    <div className="apps-category-title-group">
+                        <span className="apps-category-num-badge badge-cat-4">4</span>
                         <div>
-                            <div className="kpi-value" style={{ color: '#bae6fd' }}>
-                                {hasEnrolledCourses ? `${lessonsCompleted} / ${totalLessons}` : '0 / 0'}
-                            </div>
-                            <div className="kpi-label">Lecciones Listas</div>
+                            <h2 className="apps-category-title">Gestión & Sistema</h2>
                         </div>
                     </div>
+                </div>
+                <div className="apps-hub-grid bottom-row-grid">
+                    {sistemaApps.map(renderAppTile)}
                 </div>
             </div>
-
-            {/* ── 2. FILA 1: ACCIÓN PRINCIPAL (IZQ) vs NIVEL STEAM (DER) [100% SIMÉTRICA] ── */}
-            <div className="symmetric-grid-row">
-                
-                {/* IZQUIERDA: Lanzador del Curso Activo o Estado Sin Cursos */}
-                {hasEnrolledCourses ? (
-                    <div className="glass-panel symmetric-card course-launcher-card" style={{ '--accent-color': courseColor }}>
-                        <div className="card-top-bar">
-                            <div className="card-title-group">
-                                <div className="course-icon-badge" style={{ background: `${courseColor}20`, color: courseColor }}>
-                                    {courseIcon}
-                                </div>
-                                <div>
-                                    <span className="course-tag-badge" style={{ background: `${courseColor}20`, color: courseColor }}>
-                                        {mainCourseDef.abbr || 'CURSO ACTIVO'}
-                                    </span>
-                                    <h2 className="card-main-title">{mainCourseDef.name}</h2>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="next-mission-box">
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                                <span style={{ fontSize: '0.86rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <Sparkles size={15} color={courseColor} />
-                                    {courseProgressPercent === 0 ? 'Primer reto:' : 'Siguiente reto:'} <strong style={{ color: courseColor }}>{nextLessonTarget?.title}</strong>
-                                </span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 800 }}>
-                                    {courseProgressPercent}%
-                                </span>
-                            </div>
-                            <div className="progress-bar-bg" style={{ height: '7px' }}>
-                                <div className="progress-bar-fill" style={{ width: `${courseProgressPercent}%`, background: courseColor }} />
-                            </div>
-                        </div>
-
-                        <Link to={nextLessonLink} className="btn-launch-primary" style={{ background: courseColor }}>
-                            <Play size={16} fill="#0f172a" />
-                            <span>{courseProgressPercent === 0 ? 'Comenzar Primera Lección' : 'Continuar Lección'}</span>
-                            <ArrowRight size={16} />
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="glass-panel symmetric-card course-launcher-card" style={{ '--accent-color': '#38bdf8' }}>
-                        <div className="card-top-bar">
-                            <div className="card-title-group">
-                                <div className="course-icon-badge" style={{ background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}>
-                                    <GraduationCap size={24} />
-                                </div>
-                                <div>
-                                    <span className="course-tag-badge" style={{ background: 'rgba(56,189,248,0.15)', color: '#38bdf8' }}>
-                                        CURSOS
-                                    </span>
-                                    <h2 className="card-main-title">Aún no tienes cursos inscritos</h2>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="next-mission-box">
-                            <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                                Tu docente te asignará a tu clase o puedes unirte con tu código en la sección de Mis Cursos.
-                            </p>
-                        </div>
-
-                        <Link to="/dashboard/my-courses" className="btn-launch-primary" style={{ background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)' }}>
-                            <Hash size={16} />
-                            <span>Ir a Mis Cursos / Unirse con Código</span>
-                            <ArrowRight size={16} />
-                        </Link>
-                    </div>
-                )}
-
-                {/* DERECHA: Nivel STEAM y Progresión de Rango (Abre Ventanita) */}
-                <div className="glass-panel symmetric-card rank-card">
-                    <div className="card-top-bar">
-                        <div className="card-title-group">
-                            <div className="rank-emoji-box" style={{ background: `${rank.color}20`, border: `1.5px solid ${rank.color}` }}>
-                                {rank.emoji}
-                            </div>
-                            <div>
-                                <span className="course-tag-badge" style={{ background: `${rank.color}20`, color: rank.color }}>
-                                    RANGO OFICIAL
-                                </span>
-                                <h2 className="card-main-title" style={{ color: rank.color }}>Nivel: {rank.name}</h2>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => setShowRanksModal(true)} 
-                            className="header-link-pill btn-ranks-modal-trigger"
-                            title="Ver Sistema Completo de Rangos"
-                        >
-                            Sistema de Rangos ➔
-                        </button>
-                    </div>
-
-                    <div className="next-mission-box" onClick={() => setShowRanksModal(true)} style={{ cursor: 'pointer' }} title="Haz clic para ver todos los rangos">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                            <span style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>
-                                Próximo rango: <strong style={{ color: 'var(--text-primary)' }}>{nextRank?.name || 'Maestro'}</strong>
-                            </span>
-                            <span style={{ fontSize: '0.8rem', color: rank.color, fontWeight: 800 }}>
-                                {rankProgress}%
-                            </span>
-                        </div>
-                        <div className="progress-bar-bg" style={{ height: '7px' }}>
-                            <div className="progress-bar-fill" style={{ width: `${rankProgress}%`, background: rank.color }} />
-                        </div>
-                    </div>
-
-                    <div className="rank-footer-desc" onClick={() => setShowRanksModal(true)} style={{ cursor: 'pointer' }}>
-                        <span>🏆 {rank.description} ({lessonsCompleted} lecciones aprobadas) • <strong>Ver todos los niveles ℹ️</strong></span>
-                    </div>
-                </div>
-
-            </div>
-
-            {/* ── 3. FILA 2: ACTIVIDAD DE ESTUDIO (IZQ) vs AGENDA DE EXÁMENES (DER) [100% SIMÉTRICA] ── */}
-            <div className="symmetric-grid-row">
-                
-                {/* IZQUIERDA: Actividad y Constancia */}
-                <div className="glass-panel symmetric-card analytics-card">
-                    <div className="card-top-bar">
-                        <div className="card-title-group">
-                            <Activity size={20} color="#38bdf8" />
-                            <h2 className="card-main-title">Constancia de Estudio</h2>
-                        </div>
-                        <span className="goal-status-badge">
-                            🎯 Meta: {totalWeeklyHours}h / {weeklyGoalHours}h ({weeklyGoalPercent}%)
-                        </span>
-                    </div>
-
-                    {/* Gráfico Semanal Claro */}
-                    <div className="weekly-bars-grid">
-                        {weeklyActivity.map((d, i) => (
-                            <div key={i} className="bar-column">
-                                <div className="bar-track">
-                                    <div 
-                                        className={`bar-solid-fill ${d.hours === 0 ? 'empty' : ''} ${d.isToday ? 'today' : ''}`}
-                                        style={{ height: d.hours === 0 ? '6px' : `${Math.round((d.hours / maxHours) * 100)}%` }}
-                                        title={`${d.day}: ${d.hours}h`}
-                                    >
-                                        {d.hours > 0 && <span className="bar-tag-hours">{d.hours}h</span>}
-                                    </div>
-                                </div>
-                                <span className={`bar-day-name ${d.isToday ? 'today' : ''}`}>
-                                    {d.isToday ? `${d.day} (Hoy)` : d.day}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Desglose Claro de Práctica vs Teoría */}
-                    <div className="study-telemetry-row">
-                        <div className="telemetry-box">
-                            <span className="telemetry-icon">🧪</span>
-                            <div>
-                                <div className="telemetry-num" style={{ color: '#38bdf8' }}>
-                                    {formatMins(practiceMins)} ({practicePercent}%)
-                                </div>
-                                <div className="telemetry-label">Laboratorios y Simulador</div>
-                            </div>
-                        </div>
-                        <div className="telemetry-box">
-                            <span className="telemetry-icon">📖</span>
-                            <div>
-                                <div className="telemetry-num" style={{ color: '#a855f7' }}>
-                                    {formatMins(theoryMins)} ({theoryPercent}%)
-                                </div>
-                                <div className="telemetry-label">Teoría y Retos Prácticos</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* DERECHA: Agenda Oficial de Evaluaciones */}
-                <div className="glass-panel symmetric-card schedule-card-v2">
-                    <div className="card-top-bar">
-                        <div className="card-title-group">
-                            <AlarmClock size={20} color="#f43f5e" />
-                            <h2 className="card-main-title">Próximas Actividades Oficiales</h2>
-                        </div>
-                        <Link to="/dashboard/grades" className="header-link-pill">
-                            Libreta ➔
-                        </Link>
-                    </div>
-
-                    <div className="agenda-items-container">
-                        {upcomingActivities.length === 0 ? (
-                            <div style={{ padding: '1.8rem 1rem', textAlign: 'center', color: '#94a3b8', fontSize: '0.88rem' }}>
-                                <Clock size={28} color="#64748b" style={{ margin: '0 auto 0.5rem', display: 'block' }} />
-                                No tienes actividades oficiales programadas.
-                            </div>
-                        ) : (
-                            upcomingActivities.slice(0, 3).map((act) => (
-                                <div 
-                                    key={act.id} 
-                                    className="agenda-item-row"
-                                    style={act.isDone ? { borderColor: 'rgba(16, 185, 129, 0.25)', background: 'rgba(16, 185, 129, 0.04)' } : (act.isLocked ? { opacity: 0.85 } : {})}
-                                >
-                                    <div className="agenda-item-left">
-                                        <div className="agenda-badge-row">
-                                            {act.isDone ? (
-                                                <span className="badge-pill done">✓ Rendido</span>
-                                            ) : act.isLocked ? (
-                                                <span className="badge-pill" style={{ background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
-                                                    🔒 Bloqueado
-                                                </span>
-                                            ) : (
-                                                <span className="badge-pill upcoming">📅 {act.type}</span>
-                                            )}
-                                            <span className="badge-date">{act.date}</span>
-                                        </div>
-                                        <div className="agenda-item-title">{act.title}</div>
-                                    </div>
-
-                                    <div className="agenda-item-right">
-                                        <div className={`score-badge ${act.isDone ? 'done' : ''}`}>
-                                            <span className="score-num">{act.isDone ? act.pointsEarned : act.points}</span>
-                                            <span className="score-txt">pts</span>
-                                        </div>
-                                        {act.isDone ? (
-                                            <Link 
-                                                to={`/dashboard/evaluations/${act.evalKey}/play?review=true`} 
-                                                className="action-btn-mini review"
-                                                title="Ver Revisión del Examen"
-                                            >
-                                                <Eye size={13} />
-                                            </Link>
-                                        ) : act.isLocked ? (
-                                            <div 
-                                                className="action-btn-mini locked"
-                                                title="Examen bloqueado por el docente"
-                                                style={{
-                                                    background: 'rgba(100, 116, 139, 0.12)',
-                                                    border: '1px solid rgba(100, 116, 139, 0.25)',
-                                                    color: '#64748b',
-                                                    cursor: 'not-allowed',
-                                                    display: 'inline-flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    width: '32px',
-                                                    height: '32px',
-                                                    borderRadius: '8px'
-                                                }}
-                                            >
-                                                <Lock size={13} />
-                                            </div>
-                                        ) : (
-                                            <Link 
-                                                to={`/dashboard/evaluations/${act.evalKey}`} 
-                                                className="action-btn-mini present"
-                                                title="Presentar Examen"
-                                            >
-                                                <Play size={13} fill="currentColor" />
-                                            </Link>
-                                        )}
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
-            </div>
-
-            {/* ── 4. MODAL / VENTANITA: SISTEMA DE RANGOS STEAM ── */}
-            {showRanksModal && (
-                <div className="ranks-modal-backdrop animate-fade-in" onClick={() => setShowRanksModal(false)}>
-                    <div className="ranks-modal-container glass-panel" onClick={(e) => e.stopPropagation()}>
-                        
-                        {/* Cabecera del Modal */}
-                        <div className="ranks-modal-header">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div className="ranks-modal-icon-glow">
-                                    <Trophy size={22} color="#fbbf24" />
-                                </div>
-                                <div>
-                                    <h2 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: 800 }}>
-                                        Sistema de Rangos por lecciones
-                                    </h2>
-                                    <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.82rem' }}>
-                                        Asciende de nivel aprobando lecciones y retos en tus cursos.
-                                    </p>
-                                </div>
-                            </div>
-                            <button className="ranks-modal-close-btn" onClick={() => setShowRanksModal(false)}>
-                                <X size={18} />
-                            </button>
-                        </div>
-
-                        {/* Lista Vertical Compacta: 6 Rangos Sin Scroll */}
-                        <div className="ranks-vertical-list">
-                            {ranks.map((r) => {
-                                const isUnlocked = lessonsCompleted >= r.minLessons;
-                                const isCurrent = rank.name === r.name;
-
-                                return (
-                                    <div 
-                                        key={r.name} 
-                                        className={`rank-vertical-row ${isCurrent ? 'current' : isUnlocked ? 'unlocked' : 'locked'}`}
-                                        style={isCurrent ? { 
-                                            borderColor: r.color, 
-                                            background: `linear-gradient(135deg, ${r.color}22 0%, rgba(15, 23, 42, 0.95) 100%)`,
-                                            boxShadow: `0 0 14px ${r.color}35`,
-                                            borderWidth: '1.5px'
-                                        } : {}}
-                                    >
-                                        <div className="rank-row-left">
-                                            <div 
-                                                className="rank-row-emoji" 
-                                                style={{ 
-                                                    background: `${r.color}25`, 
-                                                    border: `1px solid ${r.color}`,
-                                                }}
-                                            >
-                                                {r.emoji}
-                                            </div>
-                                            <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                                                    <span className="rank-row-name" style={{ color: isCurrent ? r.color : isUnlocked ? '#fff' : '#64748b' }}>
-                                                        {r.name}
-                                                    </span>
-                                                    {isCurrent && (
-                                                        <span className="badge-current-pill" style={{ background: r.color }}>
-                                                            ✓ Nivel Actual
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <span className="rank-row-desc" style={{ color: isCurrent ? '#cbd5e1' : '#64748b' }}>
-                                                    {r.description}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="rank-row-right">
-                                            <span className="rank-row-req" style={{ color: isCurrent ? r.color : '#94a3b8' }}>
-                                                {r.minLessons === 0 ? 'Inicial' : `${r.minLessons} lecc.`}
-                                            </span>
-                                            {isCurrent ? (
-                                                <span style={{ color: '#10b981', fontWeight: 900, fontSize: '0.74rem' }}>
-                                                    {lessonsCompleted} lecc.
-                                                </span>
-                                            ) : isUnlocked ? (
-                                                <span style={{ color: '#10b981', fontWeight: 800, fontSize: '0.74rem' }}>✓ Superado</span>
-                                            ) : (
-                                                <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                                    <Lock size={11} /> Bloqueado
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                    </div>
-                </div>
             )}
+
+            {/* ── 4. MODAL / VENTANITA: SISTEMA DE RANGOS STEAM (MODULAR) ── */}
+            <RanksModal
+                isOpen={showRanksModal}
+                onClose={() => setShowRanksModal(false)}
+                rank={rank}
+                lessonsCompleted={lessonsCompleted}
+            />
+
+            {/* ── 5. MODAL UNIVERSAL DE APLICACIONES (MODULAR & LAZY-LOADED) ── */}
+            <DashboardAppModal
+                activeAppModal={activeAppModal}
+                onClose={() => setActiveAppModal(null)}
+                allApps={allApps}
+                selectedModalCourse={selectedModalCourse}
+                setSelectedModalCourse={setSelectedModalCourse}
+                selectedCourseId={selectedCourseId}
+                setSelectedCourseId={setSelectedCourseId}
+                availableCourses={availableCourses}
+                mainCourseDef={mainCourseDef}
+                lessonsCompleted={lessonsCompleted}
+                completedLessonsMap={completedLessonsMap}
+                lessonVisibility={lessonVisibility}
+                expandedModules={expandedModules}
+                toggleModuleExpand={toggleModuleExpand}
+                profile={profile}
+                fullName={fullName}
+                user={user}
+                userMetadata={userMetadata}
+                isStaff={isStaff}
+                streakDays={streakDays}
+                rank={rank}
+                activeTheme={activeTheme}
+                handleThemeSelect={handleThemeSelect}
+                joinGroupCode={joinGroupCode}
+                setJoinGroupCode={setJoinGroupCode}
+                joinGroupError={joinGroupError}
+                setJoinGroupError={setJoinGroupError}
+                joinGroupSuccess={joinGroupSuccess}
+                setJoinGroupSuccess={setJoinGroupSuccess}
+                isJoiningGroup={isJoiningGroup}
+                handleJoinGroupSubmit={handleJoinGroupSubmit}
+                enrolledCourses={enrolledCourses}
+                totalWeeklyHours={totalWeeklyHours}
+                weeklyGoalHours={weeklyGoalHours}
+                weeklyGoalPercent={weeklyGoalPercent}
+                weeklyActivity={weeklyActivity}
+                maxHours={maxHours}
+                practiceMins={practiceMins}
+                practicePercent={practicePercent}
+                theoryMins={theoryMins}
+                theoryPercent={theoryPercent}
+                formatMins={formatMins}
+                courseGroups={courseGroups}
+                filteredCourseGroups={filteredCourseGroups}
+                modalCourseFilter={modalCourseFilter}
+                setModalCourseFilter={setModalCourseFilter}
+                upcomingActivities={upcomingActivities}
+                getCourseIcon={getCourseIcon}
+                widgetsCatalog={WIDGETS_CATALOG}
+                openLauncher={openLauncher}
+                gadgets={gadgets}
+                navigate={navigate}
+            />
 
         </div>
     );

@@ -65,8 +65,20 @@ export default function PanelPerfil({ variant = 'page' }) {
     const currentFullName = (firstName && lastName) ? `${firstName} ${lastName}` : profile?.full_name || googleName || user?.email?.split('@')[0] || 'Estudiante';
     const displayEmail = profile?.email || user?.email || '';
     const role = profile?.role || 'student';
-    const roleLabel = role === 'admin' ? 'Administrador' : role === 'teacher' || role === 'docente' || role === 'profesor' ? 'Docente' : 'Estudiante';
-    const roleClass = role === 'admin' ? 'admin' : role === 'teacher' || role === 'docente' || role === 'profesor' ? 'teacher' : 'student';
+    const roleLabel = role === 'admin' 
+        ? 'Administrador' 
+        : ['leader', 'lider', 'semillero_leader'].includes(role)
+        ? 'Líder de Semillero'
+        : role === 'teacher' || role === 'docente' || role === 'profesor' 
+        ? 'Docente' 
+        : 'Estudiante';
+    const roleClass = role === 'admin' 
+        ? 'admin' 
+        : ['leader', 'lider', 'semillero_leader'].includes(role)
+        ? 'leader'
+        : role === 'teacher' || role === 'docente' || role === 'profesor' 
+        ? 'teacher' 
+        : 'student';
 
     const handleSaveName = async () => {
         if (!fullNameInput.trim()) return;

@@ -4,12 +4,14 @@ const QuestionNavigator = ({
     questions = [], 
     currentQuestion, 
     answers = {}, 
+    flaggedQuestions = {},
     onQuestionClick,
     showFeedback = false 
 }) => {
     const totalQuestions = questions.length;
 
     const answeredCount = Object.values(answers).filter(v => v !== undefined && v !== null && v !== '').length;
+    const flaggedCount = Object.values(flaggedQuestions).filter(Boolean).length;
 
     const correctCount = questions.filter((q, idx) => {
         const userAns = answers[idx];
@@ -27,8 +29,13 @@ const QuestionNavigator = ({
 
     return (
         <div className="glass-panel" style={{ padding: '1.5rem', height: '100%', minHeight: '300px' }}>
-            <h3 style={{ color: 'var(--text-primary)', marginTop: 0, marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.1rem' }}>
-                Progreso ({answeredCount}/{totalQuestions})
+            <h3 style={{ color: 'var(--text-primary)', marginTop: 0, marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.05rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                <span>Progreso ({answeredCount}/{totalQuestions})</span>
+                {flaggedCount > 0 && !showFeedback && (
+                    <span style={{ fontSize: '0.78rem', color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                        {flaggedCount} 🚩
+                    </span>
+                )}
             </h3>
             
             <div style={{ 
@@ -43,6 +50,7 @@ const QuestionNavigator = ({
                     const isAnswered = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
                     const isCorrect = isAnswered && correctAnswer !== undefined && correctAnswer !== null && String(userAnswer).trim().toLowerCase() === String(correctAnswer).trim().toLowerCase();
                     const isCurrent = currentQuestion === qIndex;
+                    const isFlagged = !showFeedback && Boolean(flaggedQuestions[qIndex]);
                     
                     let border = '1px solid var(--glass-border)';
                     let background = 'var(--bg-secondary)';
@@ -69,12 +77,18 @@ const QuestionNavigator = ({
                             fontWeight = '900';
                         }
                     } else if (isCurrent) {
-                        border = 'none';
+                        border = isFlagged ? '2px solid #f59e0b' : 'none';
                         background = 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)';
                         color = '#0f172a';
-                        boxShadow = '0 4px 14px rgba(56, 189, 248, 0.5)';
+                        boxShadow = isFlagged ? '0 0 16px rgba(245, 158, 11, 0.6)' : '0 4px 14px rgba(56, 189, 248, 0.5)';
                         transform = 'scale(1.08)';
                         fontWeight = '900';
+                    } else if (isFlagged) {
+                        border = '1.5px solid #f59e0b';
+                        background = isAnswered ? '#1d4ed8' : 'rgba(245, 158, 11, 0.2)';
+                        color = isAnswered ? '#ffffff' : '#fbbf24';
+                        boxShadow = '0 0 12px rgba(245, 158, 11, 0.35)';
+                        fontWeight = '800';
                     } else if (isAnswered) {
                         border = 'none';
                         background = '#2563eb';
@@ -101,10 +115,30 @@ const QuestionNavigator = ({
                                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                position: 'relative'
                             }}
+                            title={isFlagged ? `Pregunta ${qIndex + 1} (Marcada para revisión)` : `Pregunta ${qIndex + 1}`}
                         >
                             {qIndex + 1}
+                            {isFlagged && (
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '-4px',
+                                    right: '-4px',
+                                    width: '12px',
+                                    height: '12px',
+                                    background: '#f59e0b',
+                                    borderRadius: '50%',
+                                    border: '2px solid #0f172a',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '7px'
+                                }}>
+                                    🚩
+                                </span>
+                            )}
                         </button>
                     );
                 })}
@@ -140,6 +174,10 @@ const QuestionNavigator = ({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                             <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#2563eb', display: 'inline-block' }} />
                             <span>Respondida</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#f59e0b', display: 'inline-block' }} />
+                            <span style={{ color: '#fbbf24', fontWeight: 600 }}>Marcada 🚩 ({flaggedCount})</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                             <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.2)', display: 'inline-block' }} />

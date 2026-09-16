@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Trash2, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Trash2, Filter, Users } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
 import AdminAccessRequestsBubble from '../components/layout/AdminAccessRequestsBubble';
 import '../styles/PanelNotificaciones.css';
 
-const PanelNotificaciones = () => {
-    const { user, profile, notifications: cachedNotifications, refreshNotifications } = useAuth();
+const PanelNotificaciones = ({ isModal = false }) => {
+    const navigate = useNavigate();
+    const { user, profile, notifications: cachedNotifications, refreshNotifications, pendingAccessRequestsCount, isStaff } = useAuth();
     const [notifications, setNotifications] = useState(cachedNotifications || []);
     const [loading, setLoading] = useState(!cachedNotifications || (cachedNotifications.length === 0 && !user));
     const [filter, setFilter] = useState('all');
@@ -83,36 +85,115 @@ const PanelNotificaciones = () => {
     };
 
     return (
-        <div className="notifications-page">
-            <div className="page-header">
-                <div className="header-title">
-                    <Bell size={28} color="#facc15" />
-                    <h1>
-                        Notificaciones
-                        {unreadCount > 0 && (
-                            <span className="notification-badge">{unreadCount}</span>
-                        )}
-                    </h1>
+        <div className={`notifications-page ${isModal ? 'is-modal-view' : ''}`}>
+            {!isModal ? (
+                <div className="page-header">
+                    <div className="header-title">
+                        <Bell size={28} color="#facc15" />
+                        <h1>
+                            Notificaciones
+                            {unreadCount > 0 && (
+                                <span className="notification-badge">{unreadCount}</span>
+                            )}
+                        </h1>
+                    </div>
+                    <div className="header-actions">
+                        <button className="btn btn-secondary" onClick={markAllAsRead} disabled={unreadCount === 0}>
+                            <Check size={16} />
+                            Marcar todas como leídas
+                        </button>
+                        <button className="btn btn-danger" onClick={clearAll} disabled={notifications.length === 0}>
+                            <Trash2 size={16} />
+                            Limpiar todo
+                        </button>
+                    </div>
                 </div>
-                <div className="header-actions">
-                    <button className="btn btn-secondary" onClick={markAllAsRead} disabled={unreadCount === 0}>
-                        <Check size={16} />
-                        Marcar todas como leídas
-                    </button>
-                    <button className="btn btn-danger" onClick={clearAll} disabled={notifications.length === 0}>
-                        <Trash2 size={16} />
-                        Limpiar todo
+            ) : (
+                <div className="modal-notifications-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        {unreadCount > 0 ? `${unreadCount} nuevas sin leer` : 'Bandeja de avisos al día'}
+                    </span>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-secondary" style={{ padding: '0.35rem 0.65rem', fontSize: '0.76rem' }} onClick={markAllAsRead} disabled={unreadCount === 0}>
+                            <Check size={14} />
+                            Marcar leídas
+                        </button>
+                        <button className="btn btn-danger" style={{ padding: '0.35rem 0.65rem', fontSize: '0.76rem' }} onClick={clearAll} disabled={notifications.length === 0}>
+                            <Trash2 size={14} />
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Banner destacado para docentes si hay solicitudes de acceso pendientes */}
+            {isStaff && (pendingAccessRequestsCount || 0) > 0 && (
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(2, 132, 199, 0.2) 100%)',
+                    border: '1.5px solid rgba(6, 182, 212, 0.4)',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem',
+                    gap: '12px',
+                    flexWrap: 'wrap'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: '8px',
+                            background: 'rgba(6, 182, 212, 0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#22d3ee',
+                            flexShrink: 0
+                        }}>
+                            <Users size={18} />
+                        </div>
+                        <div>
+                            <strong style={{ color: 'var(--text-heading)', fontSize: '0.88rem', display: 'block' }}>
+                                {pendingAccessRequestsCount} {pendingAccessRequestsCount === 1 ? 'Solicitud de acceso pendiente' : 'Solicitudes de acceso pendientes'}
+                            </strong>
+                            <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                                Hay estudiantes esperando tu aprobación para ingresar a la plataforma.
+                            </span>
+                        </div>
+                    </div>
+                    <button 
+                        type="button"
+                        style={{ 
+                            padding: '6px 14px', 
+                            fontSize: '0.78rem', 
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
+                        }}
+                        onClick={() => navigate('/dashboard/requests')}
+                    >
+                        Revisar y Aprobar ➔
                     </button>
                 </div>
-            </div>
+            )}
 
             {loading ? (
                 <div className="empty-state glass-panel"><p>Cargando...</p></div>
             ) : notifications.length === 0 ? (
                 <div className="empty-state glass-panel">
                     <Bell size={48} color="#64748b" />
-                    <h3>No hay notificaciones</h3>
-                    <p>Estás al día.</p>
+                    <h3>No hay avisos académicos</h3>
+                    <p>
+                        {isStaff && (pendingAccessRequestsCount || 0) > 0 
+                            ? 'No tienes alertas generales, pero tienes solicitudes de alumnos arriba pendientes de revisión.' 
+                            : 'Estás al día.'}
+                    </p>
                 </div>
             ) : (
             <>
@@ -200,7 +281,7 @@ const PanelNotificaciones = () => {
             </div>
             </>
             )}
-            {profile?.role === 'admin' && <AdminAccessRequestsBubble />}
+            {profile?.role === 'admin' && !isModal && <AdminAccessRequestsBubble />}
         </div>
     );
 };

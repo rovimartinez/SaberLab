@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight, Filter } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FileText, CheckCircle, Clock, AlertCircle, Trophy, Calendar, ArrowRight, Filter, Users, Radio, BookOpen, Layers, Search, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
-import { getCourseById } from '../data/coursesData.jsx';
+import { getCourseById, getCourseByIdentifier, COURSES_DEFINITION } from '../data/coursesData.jsx';
 import '../styles/PanelEvaluaciones.css';
 
 const PanelEvaluaciones = () => {
@@ -11,9 +11,17 @@ const PanelEvaluaciones = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+    const [courseFilter, setCourseFilter] = useState(() => {
+        const saved = localStorage.getItem('saberlab_active_course');
+        return saved || 'all';
+    });
+    const [groupFilter, setGroupFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [groupsList, setGroupsList] = useState([]);
     const [userAttempts, setUserAttempts] = useState({});
 
     const isAdmin = profile?.role === 'admin';
+    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
 
     useEffect(() => {
         const checkData = async () => {
@@ -41,14 +49,37 @@ const PanelEvaluaciones = () => {
                 console.error('Error cargando intentos:', err);
             }
 
+            try {
+                const { data: groupsData } = await api('/groups');
+                if (Array.isArray(groupsData)) {
+                    setGroupsList(groupsData);
+                }
+            } catch (err) {
+                console.error('Error cargando grupos:', err);
+            }
+
             if (!evaluations || evaluations.length === 0) {
-                await refreshEvaluations();
+                try {
+                    await refreshEvaluations();
+                } catch {}
             }
             setLoading(false);
         };
 
         checkData();
     }, [user, evaluations?.length, refreshEvaluations]);
+
+    const handleToggleRelease = async (e, evalItem) => {
+        e.stopPropagation();
+        if (!evalItem.id) return;
+        const currentVal = evalItem.results_released === 1 || evalItem.results_released === true || evalItem.results_released === undefined;
+        const nextVal = !currentVal;
+        await api('/evaluations', {
+            method: 'POST',
+            body: { id: evalItem.id, results_released: nextVal ? 1 : 0 }
+        });
+        if (refreshEvaluations) await refreshEvaluations();
+    };
 
     const defaultOfficialEvaluations = [
         {
@@ -114,7 +145,7 @@ const PanelEvaluaciones = () => {
         {
             id: 're-m1-eval',
             evaluation_key: 're-m1-eval',
-            course_id: 2,
+            course_id: 5,
             title: 'Módulo 1 – Examen 1: Fundamentos y Lógica Digital',
             description: 'Evaluación Teórico-Práctica de Lógica Digital y Arduino (150 pts)',
             type: 'Examen',
@@ -129,7 +160,7 @@ const PanelEvaluaciones = () => {
         {
             id: 're-m2-eval',
             evaluation_key: 're-m2-eval',
-            course_id: 2,
+            course_id: 5,
             title: 'Módulo 2 – Examen 2: Sensores y Mundo Físico',
             description: 'Lectura de sensores analógicos y digitales con Arduino (150 pts)',
             type: 'Examen',
@@ -144,7 +175,7 @@ const PanelEvaluaciones = () => {
         {
             id: 're-m3-eval',
             evaluation_key: 're-m3-eval',
-            course_id: 2,
+            course_id: 5,
             title: 'Módulo 3 – Examen 3: Movimiento y Actuadores',
             description: 'Control de servomotores, motores DC y puentes H (150 pts)',
             type: 'Examen',
@@ -159,7 +190,7 @@ const PanelEvaluaciones = () => {
         {
             id: 're-m4-eval',
             evaluation_key: 're-m4-eval',
-            course_id: 2,
+            course_id: 5,
             title: 'Módulo 4 – Proyecto Final Integrador',
             description: 'Sustentación de prototipo robótico funcional STEAM / ABP (50 pts)',
             type: 'Proyecto',
@@ -172,8 +203,6 @@ const PanelEvaluaciones = () => {
             grade: null
         }
     ];
-
-    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
 
     // Mapear cursos en los que el estudiante está realmente inscrito
     const enrolledCourseIds = (enrolledCourses || []).map(c => Number(c.id || c.course_id)).filter(Boolean);
@@ -225,32 +254,110 @@ const PanelEvaluaciones = () => {
             }
         }
 
+        const evalKey = (evalItem.evaluation_key || evalItem.id || '').toLowerCase();
+        const prefix = evalKey.split('-')[0]; // 'ee', 're', 'ma', etc.
+        const resolvedCourse = evalItem.course || 
+                               getCourseById(evalItem.course_id) || 
+                               getCourseByIdentifier(evalItem.course_id) || 
+                               getCourseByIdentifier(prefix) || 
+                               COURSES_DEFINITION.find(c => c.abbr.toLowerCase() === prefix);
+
         return {
             ...evalItem,
             status,
             grade,
             points_obtained: pointsObtained,
             type: evalItem.type || 'Examen',
-            course: evalItem.course || getCourseById(evalItem.course_id)
+            course: resolvedCourse
         };
     });
 
-    const filteredEvaluations = processedEvaluations.filter(e => {
-        if (filter === 'all') return true;
-        return e.status === filter;
-    });
+    // Extraer lista única de cursos disponibles en las evaluaciones
+    const availableCourses = useMemo(() => {
+        const map = new Map();
+        processedEvaluations.forEach(ev => {
+            if (ev.course && ev.course.id) {
+                map.set(String(ev.course.id), ev.course);
+            }
+        });
+        return Array.from(map.values());
+    }, [processedEvaluations]);
+
+    // Conteo de evaluaciones por curso
+    const countsByCourse = useMemo(() => {
+        const counts = { all: processedEvaluations.length };
+        processedEvaluations.forEach(ev => {
+            const cId = String(ev.course?.id || ev.course_id);
+            counts[cId] = (counts[cId] || 0) + 1;
+        });
+        return counts;
+    }, [processedEvaluations]);
+
+    // Filtrar grupos relevantes según el curso seleccionado
+    const relevantGroups = useMemo(() => {
+        if (courseFilter === 'all') return groupsList;
+        return groupsList.filter(g => String(g.course_id) === String(courseFilter));
+    }, [groupsList, courseFilter]);
+
+    // Evaluaciones filtradas por curso, grupo y búsqueda (base para filtros de estado)
+    const courseFilteredEvaluations = useMemo(() => {
+        return processedEvaluations.filter(e => {
+            // 1. Filtro de Curso
+            if (courseFilter !== 'all') {
+                const cId = String(e.course?.id || e.course_id || '');
+                const cAbbr = (e.course?.abbr || '').toLowerCase();
+                const cSlug = (e.course?.slug || '').toLowerCase();
+                const target = String(courseFilter).toLowerCase();
+
+                const matchesCourse = cId === target || cAbbr === target || cSlug === target;
+                if (!matchesCourse) return false;
+            }
+
+            // 2. Filtro de Grupo Activo (si la evaluación tiene asignado grupo específico)
+            if (groupFilter !== 'all' && e.group_id) {
+                if (String(e.group_id) !== String(groupFilter)) return false;
+            }
+
+            // 3. Búsqueda por texto (título, curso, descripción)
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                const matchTitle = (e.title || '').toLowerCase().includes(q);
+                const matchCourse = (e.course?.name || '').toLowerCase().includes(q);
+                const matchDesc = (e.description || '').toLowerCase().includes(q);
+                if (!matchTitle && !matchCourse && !matchDesc) return false;
+            }
+
+            return true;
+        });
+    }, [processedEvaluations, courseFilter, groupFilter, searchQuery]);
+
+    // Conteo por estado dentro del curso / grupo activo actual
+    const statusCounts = useMemo(() => {
+        return {
+            all: courseFilteredEvaluations.length,
+            pending: courseFilteredEvaluations.filter(e => e.status === 'pending').length,
+            completed: courseFilteredEvaluations.filter(e => e.status === 'completed').length,
+            inProgress: courseFilteredEvaluations.filter(e => e.status === 'in_progress').length,
+        };
+    }, [courseFilteredEvaluations]);
+
+    // Evaluaciones finalmente mostradas según el tab de estado
+    const filteredEvaluations = useMemo(() => {
+        if (filter === 'all') return courseFilteredEvaluations;
+        return courseFilteredEvaluations.filter(e => e.status === filter);
+    }, [courseFilteredEvaluations, filter]);
 
     const stats = {
-        total: processedEvaluations.length,
-        completed: processedEvaluations.filter(e => e.status === 'completed').length,
-        pending: processedEvaluations.filter(e => e.status === 'pending').length,
-        inProgress: processedEvaluations.filter(e => e.status === 'in_progress').length,
-        averageGrade: processedEvaluations.filter(e => e.grade !== null).length > 0 
+        total: courseFilteredEvaluations.length,
+        completed: courseFilteredEvaluations.filter(e => e.status === 'completed').length,
+        pending: courseFilteredEvaluations.filter(e => e.status === 'pending').length,
+        inProgress: courseFilteredEvaluations.filter(e => e.status === 'in_progress').length,
+        averageGrade: courseFilteredEvaluations.filter(e => e.grade !== null).length > 0 
             ? Math.round(
-                processedEvaluations
+                courseFilteredEvaluations
                     .filter(e => e.grade !== null)
                     .reduce((sum, e) => sum + e.grade, 0) / 
-                processedEvaluations.filter(e => e.grade !== null).length
+                courseFilteredEvaluations.filter(e => e.grade !== null).length
             )
             : 0
     };
@@ -277,12 +384,17 @@ const PanelEvaluaciones = () => {
             <div className="page-header">
                 <div className="header-title">
                     <FileText size={28} color="#60a5fa" />
-                    <h1>Evaluaciones</h1>
+                    <div>
+                        <h1>Evaluaciones y Exámenes</h1>
+                        <p className="header-subtitle">
+                            {isStaff ? 'Panel docente para proyección y gestión de evaluaciones' : 'Tus exámenes oficiales y pruebas integradoras'}
+                        </p>
+                    </div>
                 </div>
             </div>
 
             {loading ? (
-                <div className="empty-state glass-panel"><p>Cargando...</p></div>
+                <div className="empty-state glass-panel"><p>Cargando evaluaciones...</p></div>
             ) : processedEvaluations.length === 0 ? (
                 <div className="empty-state glass-panel">
                     <FileText size={48} color="#64748b" />
@@ -330,12 +442,144 @@ const PanelEvaluaciones = () => {
                 </div>
             </div>
 
+            {/* BARRA DE CONTROLES Y FILTRO PARA PROYECCIÓN DOCENTE */}
+            <div className="evaluations-controls-container glass-panel">
+                <div className="evaluations-top-controls">
+                    {/* Selector de Cursos en Píldoras Rápidas (1 Clic) */}
+                    <div className="course-pill-filters">
+                        <button
+                            type="button"
+                            className={`course-pill-btn ${courseFilter === 'all' ? 'active' : ''}`}
+                            onClick={() => {
+                                setCourseFilter('all');
+                                setGroupFilter('all');
+                            }}
+                        >
+                            <Layers size={15} />
+                            <span>Todos los Cursos</span>
+                            <span className="pill-count">{processedEvaluations.length}</span>
+                        </button>
+                        {availableCourses.map(c => {
+                            const cTarget = String(courseFilter).toLowerCase();
+                            const isActive = String(c.id).toLowerCase() === cTarget || (c.abbr || '').toLowerCase() === cTarget || (c.slug || '').toLowerCase() === cTarget;
+                            const count = countsByCourse[String(c.id)] || 0;
+                            const cColor = c.color || '#3b82f6';
+                            return (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    className={`course-pill-btn ${isActive ? 'active' : ''}`}
+                                    style={{
+                                        '--course-accent': cColor,
+                                        borderColor: isActive ? cColor : undefined,
+                                        boxShadow: isActive ? `0 0 12px ${cColor}33` : undefined
+                                    }}
+                                    onClick={() => {
+                                        setCourseFilter(String(c.id));
+                                        setGroupFilter('all');
+                                    }}
+                                >
+                                    <span className="course-dot" style={{ backgroundColor: cColor }} />
+                                    <span>{c.abbr ? `${c.abbr} • ` : ''}{c.name}</span>
+                                    <span className="pill-count">{count}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Selector de Grupo Activo (para proyección en salón) */}
+                    {isStaff && (
+                        <div className="active-group-filter">
+                            <label className="group-filter-label" htmlFor="group-select">
+                                <Users size={15} />
+                                <span>Grupo Activo:</span>
+                            </label>
+                            <select
+                                id="group-select"
+                                className="group-filter-select"
+                                value={groupFilter}
+                                onChange={(e) => setGroupFilter(e.target.value)}
+                            >
+                                <option value="all">👥 Todos los Grupos</option>
+                                {relevantGroups.map(g => (
+                                    <option key={g.id} value={g.id}>
+                                        {g.name} {g.code ? `(${g.code})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </div>
+
+                {/* Fila Secundaria: Tabs de Estado + Buscador */}
+                <div className="evaluations-secondary-controls">
+                    <div className="filter-tabs">
+                        <button
+                            type="button"
+                            className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+                            onClick={() => setFilter('all')}
+                        >
+                            Todas ({statusCounts.all})
+                        </button>
+                        <button
+                            type="button"
+                            className={`filter-tab ${filter === 'pending' ? 'active' : ''}`}
+                            onClick={() => setFilter('pending')}
+                        >
+                            Pendientes ({statusCounts.pending})
+                        </button>
+                        <button
+                            type="button"
+                            className={`filter-tab ${filter === 'completed' ? 'active' : ''}`}
+                            onClick={() => setFilter('completed')}
+                        >
+                            Completadas ({statusCounts.completed})
+                        </button>
+                    </div>
+
+                    <div className="search-filter-box">
+                        <Search size={15} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Buscar evaluación o tema..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="search-filter-input"
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                className="clear-search-btn"
+                                onClick={() => setSearchQuery('')}
+                                title="Limpiar búsqueda"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             <div className="evaluations-list">
                 {filteredEvaluations.length === 0 ? (
                     <div className="empty-state glass-panel">
                         <FileText size={48} color="#64748b" />
-                        <h3>No hay evaluaciones</h3>
-                        <p>No tienes evaluaciones {filter === 'pending' ? 'pendientes' : filter === 'completed' ? 'completadas' : ''}.</p>
+                        <h3>No se encontraron evaluaciones</h3>
+                        <p>No hay evaluaciones que coincidan con los filtros seleccionados.</p>
+                        {(courseFilter !== 'all' || groupFilter !== 'all' || filter !== 'all' || searchQuery) && (
+                            <button
+                                type="button"
+                                className="btn-reset-filters"
+                                onClick={() => {
+                                    setCourseFilter('all');
+                                    setGroupFilter('all');
+                                    setFilter('all');
+                                    setSearchQuery('');
+                                }}
+                            >
+                                Restablecer todos los filtros
+                            </button>
+                        )}
                     </div>
                 ) : (
                     filteredEvaluations.map(evaluation => {
@@ -347,21 +591,93 @@ const PanelEvaluaciones = () => {
                                 className="evaluation-card glass-panel"
                                 onClick={() => {
                                     if (evaluation.evaluation_key) {
-                                        navigate(`/dashboard/evaluations/${evaluation.evaluation_key}`);
+                                        if (isStaff) {
+                                            navigate(`/dashboard/exam-lobby/${evaluation.evaluation_key}`);
+                                        } else {
+                                            navigate(`/dashboard/evaluations/${evaluation.evaluation_key}`);
+                                        }
                                     }
                                 }}
                             >
                                 <div className="evaluation-header">
-                                    <div className="evaluation-type-badge" style={{ backgroundColor: `${color}20`, color: color }}>
-                                        {evaluation.type}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                                        {/* Chip del Curso con Color Distintivo */}
+                                        <div 
+                                            className="course-badge-chip"
+                                            style={{
+                                                backgroundColor: `${color}18`,
+                                                color: color,
+                                                borderColor: `${color}40`
+                                            }}
+                                            title={evaluation.course?.name}
+                                        >
+                                            <span className="course-dot-mini" style={{ backgroundColor: color }} />
+                                            <span>{evaluation.course?.abbr || 'CURSO'}</span>
+                                        </div>
+
+                                        <div className="evaluation-type-badge" style={{ backgroundColor: `${color}20`, color: color }}>
+                                            {evaluation.type}
+                                        </div>
+
+                                        {(evaluation.results_released === 0 || evaluation.results_released === false) && (
+                                            <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                                                🔒 Notas Ocultas
+                                            </span>
+                                        )}
                                     </div>
-                                    <span className={`status-badge ${badge.class}`}>
-                                        {badge.icon}
-                                        {badge.text}
-                                    </span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                                        {/* Acceso Rápido al Lobby Wayground para el Docente */}
+                                        {isStaff && evaluation.evaluation_key && (
+                                            <button
+                                                type="button"
+                                                className="card-quick-lobby-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/dashboard/exam-lobby/${evaluation.evaluation_key}`);
+                                                }}
+                                                title="Abrir Sala de Espera en Vivo (Wayground)"
+                                            >
+                                                <Radio size={13} className="live-pulse-dot" />
+                                                <span>Sala en Vivo</span>
+                                            </button>
+                                        )}
+
+                                        {isAdmin && evaluation.id && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => handleToggleRelease(e, evaluation)}
+                                                title={(evaluation.results_released === 0 || evaluation.results_released === false) ? "Clic para liberar notas a los estudiantes" : "Clic para ocultar notas a los estudiantes"}
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: '1px solid rgba(255,255,255,0.15)',
+                                                    borderRadius: '6px',
+                                                    color: (evaluation.results_released === 0 || evaluation.results_released === false) ? '#f87171' : '#34d399',
+                                                    fontSize: '0.72rem',
+                                                    fontWeight: 700,
+                                                    padding: '2px 8px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {(evaluation.results_released === 0 || evaluation.results_released === false) ? 'Liberar' : 'Ocultar'}
+                                            </button>
+                                        )}
+                                        <span className={`status-badge ${badge.class}`}>
+                                            {badge.icon}
+                                            {badge.text}
+                                        </span>
+                                    </div>
                                 </div>
+
                                 <h3 className="evaluation-title">{evaluation.title}</h3>
-                                <p className="evaluation-subject">{evaluation.course?.name}</p>
+                                <p className="evaluation-subject" style={{ color: color }}>
+                                    {evaluation.course?.name || 'Curso Asignado'}
+                                </p>
+                                {evaluation.description && (
+                                    <p className="evaluation-desc-text">
+                                        {evaluation.description}
+                                    </p>
+                                )}
+
                                 <div className="evaluation-footer">
                                     <div className="evaluation-meta">
                                         <Calendar size={14} />

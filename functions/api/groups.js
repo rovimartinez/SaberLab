@@ -20,7 +20,7 @@ export async function onRequestGet({ request, env, data }) {
   if (courseId) {
     const numId = parseInt(courseId, 10);
     const { results } = await env.DB.prepare(
-      `SELECT g.id, g.course_id, g.name, g.teacher, COUNT(gu.user_id) AS studentCount
+      `SELECT g.id, g.course_id, g.name, g.teacher, COALESCE(g.is_active, 1) AS is_active, COUNT(gu.user_id) AS studentCount
        FROM grupos g
        LEFT JOIN grupos_usuario gu ON gu.group_id = g.id
        WHERE g.course_id = ? OR g.course_id = ? OR CAST(g.course_id AS TEXT) = ?
@@ -31,7 +31,7 @@ export async function onRequestGet({ request, env, data }) {
   }
 
   const { results } = await env.DB.prepare(
-    `SELECT g.id, g.course_id, g.name, g.teacher, COUNT(gu.user_id) AS total
+    `SELECT g.id, g.course_id, g.name, g.teacher, COALESCE(g.is_active, 1) AS is_active, COUNT(gu.user_id) AS studentCount, COUNT(gu.user_id) AS total
      FROM grupos g
      LEFT JOIN grupos_usuario gu ON gu.group_id = g.id
      GROUP BY g.id`
@@ -55,8 +55,8 @@ export async function onRequestPost({ request, env, data }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { id, course_id, name, teacher } = body;
-  if (!name) {
+  const { id, course_id, name, teacher, is_active } = body;
+  if (!name && id === undefined) {
     return Response.json({ error: 'Falta el nombre del grupo' }, { status: 400 });
   }
 
@@ -64,15 +64,18 @@ export async function onRequestPost({ request, env, data }) {
     // Obtener datos del grupo previo para sincronizar cambios de nombre
     const oldGroup = await env.DB.prepare('SELECT * FROM grupos WHERE id = ?').bind(id).first();
 
+    const activeVal = is_active !== undefined ? (is_active ? 1 : 0) : undefined;
+
     await env.DB.prepare(
       `UPDATE grupos SET
          name = COALESCE(?, name),
-         teacher = COALESCE(?, teacher)
+         teacher = COALESCE(?, teacher),
+         is_active = COALESCE(?, is_active, 1)
        WHERE id = ?`
-    ).bind(name, teacher ?? null, id).run();
+    ).bind(name ?? null, teacher ?? null, activeVal !== undefined ? activeVal : null, id).run();
 
     // Si el nombre del grupo cambió, actualizar en cascada la tabla usuarios y perfiles
-    if (oldGroup && oldGroup.name && oldGroup.name !== name) {
+    if (oldGroup && oldGroup.name && name && oldGroup.name !== name) {
       try {
         await env.DB.prepare('UPDATE usuarios SET group_name = ? WHERE group_name = ?').bind(name, oldGroup.name).run();
       } catch (e) {
@@ -85,7 +88,7 @@ export async function onRequestPost({ request, env, data }) {
       }
     }
 
-    const row = await env.DB.prepare('SELECT * FROM grupos WHERE id = ?').bind(id).first();
+    const row = await env.DB.prepare('SELECT id, course_id, name, teacher, COALESCE(is_active, 1) AS is_active FROM grupos WHERE id = ?').bind(id).first();
     return Response.json(row);
   }
 
@@ -93,12 +96,14 @@ export async function onRequestPost({ request, env, data }) {
     return Response.json({ error: 'Falta el course_id' }, { status: 400 });
   }
 
-  const { meta } = await env.DB.prepare(
-    `INSERT INTO grupos (course_id, name, teacher)
-     VALUES (?, ?, ?)`
-  ).bind(course_id, name, teacher ?? null).run();
+  const activeVal = is_active !== undefined ? (is_active ? 1 : 0) : 1;
 
-  const row = await env.DB.prepare('SELECT * FROM grupos WHERE id = ?').bind(meta.last_row_id).first();
+  const { meta } = await env.DB.prepare(
+    `INSERT INTO grupos (course_id, name, teacher, is_active)
+     VALUES (?, ?, ?, ?)`
+  ).bind(course_id, name, teacher ?? null, activeVal).run();
+
+  const row = await env.DB.prepare('SELECT id, course_id, name, teacher, COALESCE(is_active, 1) AS is_active FROM grupos WHERE id = ?').bind(meta.last_row_id).first();
   return Response.json(row);
 }
 
@@ -198,9 +203,16 @@ async function ensureGroupsSchema(env) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       course_id INTEGER,
       name TEXT NOT NULL,
-      teacher TEXT
+      teacher TEXT,
+      is_active INTEGER DEFAULT 1
     )
   `).run();
+
+  try {
+    await env.DB.prepare('ALTER TABLE grupos ADD COLUMN is_active INTEGER DEFAULT 1').run();
+  } catch {
+    // Columna ya existe
+  }
 
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS grupos_usuario (

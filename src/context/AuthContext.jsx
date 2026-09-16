@@ -1,23 +1,37 @@
-import { createContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { api, setToken, clearToken } from '../lib/api';
 
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
 
+const getCachedJson = (key, fallback = null) => {
+  try {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(() => getCachedJson('saberlab_cached_user'));
+  const [profile, setProfile] = useState(() => getCachedJson('saberlab_cached_profile'));
   const [viewMode, setViewModeState] = useState(() => localStorage.getItem('saberlab_view_mode') || 'admin');
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [lessonVisibility, setLessonVisibility] = useState({});
+  const [enrolledCourses, setEnrolledCourses] = useState(() => getCachedJson('saberlab_cached_courses', []));
+  const [lessonVisibility, setLessonVisibility] = useState(() => getCachedJson('saberlab_cached_visibility', {}));
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [pendingAccessRequestsCount, setPendingAccessRequestsCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    const token = localStorage.getItem('saberlab-token');
+    const cachedUser = getCachedJson('saberlab_cached_user');
+    const cachedProfile = getCachedJson('saberlab_cached_profile');
+    return !(token && cachedUser && cachedProfile);
+  });
   const [sessionRejected, setSessionRejected] = useState(false);
   const [evaluations, setEvaluations] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [userProgress, setUserProgress] = useState(null);
+  const [userProgress, setUserProgress] = useState(() => getCachedJson('saberlab_cached_progress'));
   const [totalPoints, setTotalPoints] = useState(() => {
     const localKeys = ['ee-m1-l6', 'ee-m2-l10', 'ee-m3-l14', 'ee-m4-l16'];
     let localSum = 0;
@@ -92,6 +106,11 @@ export const AuthProvider = ({ children }) => {
     setUserProgress(null);
     setTotalPoints(0);
     setInitialDataLoaded(false);
+    localStorage.removeItem('saberlab_cached_user');
+    localStorage.removeItem('saberlab_cached_profile');
+    localStorage.removeItem('saberlab_cached_courses');
+    localStorage.removeItem('saberlab_cached_visibility');
+    localStorage.removeItem('saberlab_cached_progress');
   };
 
   const activateResolvedProfile = async (loggedInUser, resolvedProfile) => {
@@ -187,6 +206,7 @@ export const AuthProvider = ({ children }) => {
         });
 
         setEnrolledCourses(coursesWithProgress);
+        localStorage.setItem('saberlab_cached_courses', JSON.stringify(coursesWithProgress));
         
         // Cargar visibilidad de lecciones para estos cursos
         await loadLessonVisibility(courseIds);
@@ -234,6 +254,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api('/visibility');
       const visibility = data && typeof data === 'object' ? data : {};
       setLessonVisibility(visibility);
+      localStorage.setItem('saberlab_cached_visibility', JSON.stringify(visibility));
     } catch (err) {
       console.error('Error cargando visibilidad de lecciones:', err);
       setLessonVisibility({});
@@ -296,6 +317,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api('/progress');
       if (data) {
         setUserProgress(data);
+        localStorage.setItem('saberlab_cached_progress', JSON.stringify(data));
         setTotalPoints(calculateTotalPoints(data));
         if (data.courses_progress) {
           setEnrolledCourses(prevCourses => (prevCourses || []).map(course => {
@@ -370,6 +392,14 @@ export const AuthProvider = ({ children }) => {
       };
 
       setUser(loggedInUser);
+      setProfile({ ...p, real_role: p.role });
+      localStorage.setItem('saberlab_cached_user', JSON.stringify(loggedInUser));
+      localStorage.setItem('saberlab_cached_profile', JSON.stringify(p));
+
+      // Desbloquear pantalla de inmediato: los iconos y el dashboard se muestran ya mismo
+      setLoading(false);
+
+      // Cargar cursos y el resto de la telemetría en segundo plano sin congelar la app
       await activateResolvedProfile(loggedInUser, p);
     } catch (err) {
       console.error('Session validation error:', err);
@@ -457,7 +487,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const realRole = profile?.real_role || profile?.role || 'student';
-  const isStaffUser = ['admin', 'teacher', 'docente', 'profesor'].includes(realRole);
+  const isLeaderUser = ['leader', 'lider', 'semillero_leader'].includes(realRole);
+  const isStaffUser = ['admin', 'teacher', 'docente', 'profesor', 'leader', 'lider', 'semillero_leader'].includes(realRole);
   const isImpersonating = isStaffUser && viewMode === 'student';
   const effectiveRole = isImpersonating ? 'student' : realRole;
 
@@ -469,7 +500,14 @@ export const AuthProvider = ({ children }) => {
   } : null;
 
   const isStaff = isStaffUser && !isImpersonating;
+  const isLeader = isLeaderUser && !isImpersonating;
   const canAccessCertificate = isStaff || totalPoints >= 450;
+
+  const refreshSession = useCallback(() => validateSession(localStorage.getItem('saberlab-token')), []);
+  const refreshEvaluations = useCallback(() => loadEvaluations(userRef.current?.id, profileRef.current?.role), []);
+  const refreshNotifications = useCallback(() => loadNotifications(userRef.current?.id), []);
+  const refreshUserProgress = useCallback(() => loadUserProgress(userRef.current?.id), []);
+  const refreshLessonVisibility = useCallback(() => loadLessonVisibility(), []);
 
   return (
     <AuthContext.Provider value={{ 
@@ -479,8 +517,10 @@ export const AuthProvider = ({ children }) => {
         realRole,
         viewMode,
         isStaffUser,
+        isLeaderUser,
         isImpersonating,
         isStaff,
+        isLeader,
         totalPoints,
         canAccessCertificate,
         setViewMode,
@@ -501,13 +541,16 @@ export const AuthProvider = ({ children }) => {
         notifications,
         userProgress,
         initialDataLoaded,
-        refreshSession: () => validateSession(localStorage.getItem('saberlab-token')),
-        refreshEvaluations: () => loadEvaluations(user?.id, effectiveRole),
-        refreshNotifications: () => loadNotifications(user?.id),
-        refreshUserProgress: () => loadUserProgress(user?.id),
-        refreshLessonVisibility: loadLessonVisibility
+        refreshSession,
+        refreshEvaluations,
+        refreshNotifications,
+        refreshUserProgress,
+        refreshLessonVisibility
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => React.useContext(AuthContext);
+

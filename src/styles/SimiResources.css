@@ -1,0 +1,593 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   SimiResources.css — Inventario Físico, Impresoras & Insumos SIMI3D
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Cabecera de Inventario & Recursos (Card Contenedor) ── */
+.simi-resources-header-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.25rem 1.4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 16px -2px rgba(25, 37, 132, 0.05);
+}
+
+.simi-resources-header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.simi-resources-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(6, 182, 212, 0.12);
+    color: #06b6d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.simi-resources-header-title {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.18rem;
+    font-weight: 850;
+    color: #192584;
+    letter-spacing: -0.3px;
+}
+
+.simi-resources-header-desc {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.simi-resources-add-btn {
+    white-space: nowrap;
+}
+
+/* ── 4 Tarjetas de Métricas con Icono en Marca de Agua de Fondo ── */
+.simi-resources-metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.simi-resource-metric-watermark {
+    position: absolute;
+    right: -4px;
+    bottom: -8px;
+    opacity: 0.16;
+    pointer-events: none;
+    transform: rotate(-10deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.simi-resources-metrics-grid > button:hover .simi-resource-metric-watermark {
+    opacity: 0.28;
+    transform: rotate(0deg) scale(1.1);
+}
+
+@media (max-width: 960px) {
+    .simi-resources-metrics-grid {
+        gap: 0.35rem !important;
+    }
+
+    .simi-resource-metric-watermark {
+        right: -6px;
+        bottom: -10px;
+        opacity: 0.14;
+        transform: rotate(-8deg) scale(0.85);
+    }
+}
+
+/* ── Tarjeta de Recurso Individual ── */
+.simi-resource-card {
+    background: var(--surface-card, #ffffff);
+    border: 1.5px solid var(--border-default, #e2e8f0);
+    border-radius: 16px;
+    padding: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.simi-resource-card-clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.simi-resource-card:hover {
+    transform: translateY(-2px);
+    border-color: #4FD2E9;
+    box-shadow: 0 12px 28px -4px rgba(25, 37, 132, 0.14);
+}
+
+.simi-resource-category-tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 850;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1.5px solid;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.simi-resource-status-pill {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+
+.simi-resource-status-pill.good {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1.5px solid #10b981;
+}
+
+.simi-resource-status-pill.alert {
+    background: #fefce8;
+    color: #d97706;
+    border: 1.5px solid #f59e0b;
+}
+
+.simi-resource-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0;
+    border-top: 1.5px solid var(--border-default, #e2e8f0);
+}
+
+.simi-res-mini-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    padding: 6px 12px;
+    border-radius: 9px;
+    font-size: 0.78rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.simi-res-mini-btn:hover {
+    color: #0f172a;
+    background: #f8fafc;
+    border-color: #4FD2E9;
+    transform: translateY(-1px);
+}
+
+.simi-res-mini-btn.edit {
+    color: #0284c7;
+    border-color: #bae6fd;
+    background: #f0f9ff;
+}
+
+.simi-res-mini-btn.edit:hover {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #4FD2E9;
+    box-shadow: 0 3px 12px -2px rgba(79, 210, 233, 0.35);
+}
+
+.simi-res-mini-btn.delete {
+    color: #e11d48;
+    border-color: #fecdd3;
+    background: #fff1f2;
+    padding: 6px 9px;
+}
+
+.simi-res-mini-btn.delete:hover {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: #f43f5e;
+    box-shadow: 0 3px 10px -2px rgba(244, 63, 94, 0.2);
+}
+
+@media (max-width: 960px) {
+    .simi-resources-header-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.1rem 1.2rem;
+        gap: 0.85rem;
+    }
+
+    .simi-resources-header-title {
+        font-size: 1.05rem;
+    }
+
+    .simi-resources-header-desc {
+        font-size: 0.82rem;
+    }
+}
+
+/* ── Selector Superior de Sub-Pestañas (Inventario vs Fuentes Web) ── */
+.simi-resources-nav-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-card, #ffffff);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border-default, #e2e8f0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.simi-resources-nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #64748b);
+    font-size: 0.86rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.simi-resources-nav-tab:hover {
+    color: var(--text-heading, #0f172a);
+    background: var(--surface-hover, #f8fafc);
+}
+
+.simi-resources-nav-tab.active {
+    background: #192584;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(25, 37, 132, 0.28);
+}
+
+.simi-resources-nav-badge {
+    font-size: 0.68rem;
+    font-weight: 850;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba(6, 182, 212, 0.16);
+    color: #06b6d4;
+}
+
+.simi-resources-nav-tab.active .simi-resources-nav-badge {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+/* ── Vista de Fuentes & Herramientas Web ── */
+.simi-web-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-card, #ffffff);
+    border: 1.5px solid var(--border-default, #e2e8f0);
+    border-radius: 12px;
+    padding: 9px 14px;
+    flex: 1;
+    min-width: 250px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.simi-web-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.86rem;
+    color: var(--text-heading, #0f172a);
+    width: 100%;
+    font-family: inherit;
+}
+
+.simi-web-search-input::placeholder {
+    color: var(--text-secondary, #94a3b8);
+}
+
+.simi-web-category-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.simi-web-category-pill {
+    padding: 7px 15px;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    font-weight: 750;
+    cursor: pointer;
+    border: 1.5px solid var(--border-default, #e2e8f0);
+    background: var(--surface-card, #ffffff);
+    color: var(--text-secondary, #64748b);
+    transition: all 0.2s ease;
+}
+
+.simi-web-category-pill:hover {
+    border-color: #06b6d4;
+    color: #06b6d4;
+    transform: translateY(-1px);
+}
+
+.simi-web-category-pill.active {
+    background: #06b6d4;
+    color: #ffffff;
+    border-color: #06b6d4;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35);
+}
+
+.simi-web-resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1.2rem;
+}
+
+.simi-web-resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.15rem;
+}
+
+.simi-web-resource-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface-card, #ffffff);
+    border: 1.5px solid var(--border-default, #e2e8f0);
+    border-radius: 18px;
+    padding: 1.15rem 1.35rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* Barra lateral izquierda de acento de marca (centrada y simétrica) */
+.simi-web-card-accent-pill {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 40px;
+    width: 4.5px;
+    border-radius: 0 4px 4px 0;
+    opacity: 0.9;
+    transition: all 0.25s ease;
+}
+
+.simi-web-resource-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--card-color, #06b6d4) 45%, var(--border-default, #e2e8f0));
+    box-shadow: 0 12px 28px -6px color-mix(in srgb, var(--card-color, #06b6d4) 22%, rgba(0, 0, 0, 0.08)), 0 3px 10px rgba(0, 0, 0, 0.03);
+}
+
+.simi-web-resource-card:hover .simi-web-card-accent-pill {
+    height: 52px;
+    width: 5.5px;
+    opacity: 1;
+    box-shadow: 0 0 10px var(--card-color, #06b6d4);
+}
+
+/* Avatar / Logo Oficial del Recurso - Totalmente Centrado y Simétrico */
+.simi-web-card-brand-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 15px;
+    background: #ffffff;
+    border: 1.5px solid color-mix(in srgb, var(--brand-color, #06b6d4) 25%, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+    align-self: center;
+    box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.06);
+    padding: 8px;
+    box-sizing: border-box;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+[data-theme='dark'] .simi-web-card-brand-avatar {
+    background: #1e293b;
+    border-color: color-mix(in srgb, var(--brand-color, #06b6d4) 35%, #334155);
+}
+
+.simi-web-resource-card:hover .simi-web-card-brand-avatar {
+    transform: scale(1.06);
+    box-shadow: 0 6px 16px -3px color-mix(in srgb, var(--brand-color, #06b6d4) 35%, rgba(0, 0, 0, 0.12));
+    border-color: var(--brand-color, #06b6d4);
+}
+
+.simi-web-brand-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
+}
+
+.simi-web-brand-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.simi-web-brand-badge-dot {
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='dark'] .simi-web-brand-badge-dot {
+    border-color: #1e293b;
+}
+
+/* Cuerpo de la Tarjeta */
+.simi-web-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.simi-web-card-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 0.35rem;
+}
+
+.simi-web-card-title {
+    font-size: 0.98rem;
+    font-weight: 850;
+    color: var(--text-heading, #0f172a);
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+    transition: color 0.2s ease;
+}
+
+.simi-web-resource-card:hover .simi-web-card-title {
+    color: var(--card-color, #06b6d4);
+}
+
+.simi-web-card-hover-indicator {
+    color: var(--text-secondary, #94a3b8);
+    opacity: 0.4;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.simi-web-resource-card:hover .simi-web-card-hover-indicator {
+    opacity: 1;
+    color: var(--card-color, #06b6d4);
+    transform: translate(2px, -2px);
+}
+
+.simi-web-card-desc {
+    font-size: 0.81rem;
+    color: var(--text-secondary, #64748b);
+    line-height: 1.45;
+    margin: 0 0 0.55rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.simi-web-card-footer-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--text-secondary, #94a3b8);
+}
+
+.simi-web-card-host-text {
+    font-weight: 650;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.simi-web-card-micro-tag {
+    font-weight: 800;
+}
+
+.simi-web-card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.85;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+
+.simi-web-resource-card:hover .simi-web-card-actions {
+    opacity: 1;
+}
+
+.simi-web-card-action-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    border: 1px solid var(--border-default, #e2e8f0);
+    background: var(--surface-card, #ffffff);
+    color: var(--text-secondary, #64748b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .simi-web-card-action-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+.simi-web-card-action-btn.edit:hover {
+    color: #06b6d4;
+    border-color: #06b6d4;
+    background: rgba(6, 182, 212, 0.12);
+    transform: scale(1.1);
+}
+
+.simi-web-card-action-btn.delete:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    transform: scale(1.1);
+}
+
+@media (max-width: 640px) {
+    .simi-resources-nav-tabs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .simi-resources-nav-tab {
+        justify-content: center;
+    }
+
+    .simi-web-resources-grid {
+        grid-template-columns: 1fr;
+    }
+}

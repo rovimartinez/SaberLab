@@ -164,33 +164,39 @@ const PanelCalificaciones = () => {
                 }
 
                 // Si no, buscar directamente en intentos de evaluación
-                if (!evals['ee-m1-l6']) {
-                    const studentAttempts = rawAttempts.filter(a => matchesUser(st, a.user_id));
-                    const l6Attempt = studentAttempts.find(a => String(a.evaluation_key).toLowerCase().includes('ee-m1-l6') || String(a.evaluation_key).toLowerCase().endsWith('-l6'));
-                    
-                    if (l6Attempt) {
-                        let parsed = {};
-                        try {
-                            parsed = typeof l6Attempt.answers === 'string' ? JSON.parse(l6Attempt.answers) : (l6Attempt.answers || {});
-                        } catch {}
+                const studentAttempts = rawAttempts.filter(a => matchesUser(st, a.user_id));
+                const m1Attempt = studentAttempts.find(a => {
+                    const k = String(a.evaluation_key || '').toLowerCase();
+                    return k.includes('ee-m1-l6') || k.endsWith('-l6') || k.includes('re-m1') || k.includes('m1');
+                });
+                
+                if (m1Attempt) {
+                    let parsed = {};
+                    try {
+                        parsed = typeof m1Attempt.answers === 'string' ? JSON.parse(m1Attempt.answers) : (m1Attempt.answers || {});
+                    } catch {}
 
-                        const totalPts = l6Attempt.score || 0;
-                        evals['ee-m1-l6'] = {
-                            submitted: true,
-                            totalPoints: totalPts,
-                            maxPoints: 150,
-                            theoryScore: Math.round(totalPts * 0.4),
-                            maxTheory: 60,
-                            practicalScore: Math.round(totalPts * 0.6),
-                            maxPractical: 90,
-                            percentage: Math.round((totalPts / 150) * 100),
-                            passed: totalPts >= 90,
-                            completedAt: l6Attempt.completed_at || l6Attempt.created_at,
-                            antiCheat: parsed.anti_cheat || null
-                        };
-                    } else {
-                        evals['ee-m1-l6'] = { submitted: false, maxPoints: 150, maxTheory: 60, maxPractical: 90 };
-                    }
+                    const totalPts = m1Attempt.points_obtained ?? m1Attempt.score ?? 0;
+                    const maxPts = m1Attempt.max_points || 150;
+                    const m1Obj = {
+                        submitted: true,
+                        totalPoints: totalPts,
+                        maxPoints: maxPts,
+                        theoryScore: Math.round(totalPts * 0.4),
+                        maxTheory: 60,
+                        practicalScore: Math.round(totalPts * 0.6),
+                        maxPractical: 90,
+                        percentage: Math.round((totalPts / (maxPts || 1)) * 100),
+                        passed: totalPts >= (maxPts * 0.6),
+                        completedAt: m1Attempt.completed_at || m1Attempt.created_at,
+                        antiCheat: parsed.anti_cheat || null,
+                        evaluationKey: m1Attempt.evaluation_key
+                    };
+                    evals['ee-m1-l6'] = m1Obj;
+                    evals['re-m1-eval'] = m1Obj;
+                    evals['m1'] = m1Obj;
+                } else if (!evals['ee-m1-l6']) {
+                    evals['ee-m1-l6'] = { submitted: false, maxPoints: 150, maxTheory: 60, maxPractical: 90 };
                 }
 
                 const totalEarned = (evals['ee-m1-l6']?.totalPoints || 0) + (evals['ee-m2-l10']?.totalPoints || 0) + (evals['ee-m3-l14']?.totalPoints || 0) + (evals['ee-m4-l16']?.totalPoints || 0);
@@ -341,7 +347,7 @@ const PanelCalificaciones = () => {
 
     // ── Abrir Auditoría de Examen ──
     const handleOpenAudit = (student, moduleKey) => {
-        const evalData = student.evaluations?.[moduleKey];
+        const evalData = student.evaluations?.[moduleKey] || student.evaluations?.['re-m1-eval'] || student.evaluations?.['ee-m1-l6'] || student.evaluations?.['m1'];
         if (!evalData || !evalData.submitted) return;
         setAuditModal({
             open: true,
@@ -684,7 +690,7 @@ const PanelCalificaciones = () => {
                                         </tr>
                                     ) : (
                                         filteredStudents.map(st => {
-                                            const m1 = st.evaluations?.['ee-m1-l6'];
+                                            const m1 = st.evaluations?.['re-m1-eval'] || st.evaluations?.['ee-m1-l6'] || st.evaluations?.['m1'];
                                             const m2 = st.evaluations?.['ee-m2-l10'];
                                             const m3 = st.evaluations?.['ee-m3-l14'];
                                             const m4 = st.evaluations?.['ee-m4-l16'];

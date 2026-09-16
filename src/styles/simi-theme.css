@@ -1,0 +1,99 @@
+/* ============================================================
+   simi-theme.css — Paleta y Variables de Alta Definición SIMI3D
+   Inspiración: #B541FA (Violeta Neón), #4FD2E9 (Cian Cristal),
+   #192584 (Azul Marino Índigo), #EDF2F9 (Fondo Claro Estructurado)
+   ============================================================ */
+
+:root,
+html[data-theme='light'] {
+    /* ── 1. Colores Principales Solicitados ── */
+    --simi-purple: #B541FA;
+    --simi-purple-hover: #9c25e8;
+    --simi-purple-light: #f5e8ff;
+    --simi-purple-glow: rgba(181, 65, 250, 0.25);
+    --simi-purple-subtle: rgba(181, 65, 250, 0.1);
+
+    --simi-cyan: #4FD2E9;
+    --simi-cyan-hover: #22d3ee;
+    --simi-cyan-light: #e6faff;
+    --simi-cyan-glow: rgba(79, 210, 233, 0.3);
+    --simi-cyan-subtle: rgba(79, 210, 233, 0.12);
+
+    --simi-navy: #192584;
+    --simi-navy-light: #eef1ff;
+
+    /* ── 2. Fondo Base y Superficies con Separación de Capas (#EDF2F9) ── */
+    --simi-bg-root: #EDF2F9;
+    --simi-surface-hero: #ffffff;
+    --simi-surface-sidebar: #ffffff;
+    --simi-surface-card: #ffffff;
+    --simi-surface-card-hover: #ffffff;
+    --simi-surface-input: #ffffff;
+
+    /* ── 3. Tipografía y Textos de Alto Contraste ── */
+    --simi-text-white: #0f172a;
+    --simi-text-primary: #0f172a;
+    --simi-text-secondary: #475569;
+    --simi-text-muted: #64748b;
+
+    /* ── 4. Bordes y Delimitadores ── */
+    --simi-glass-border: #cbd5e1;
+    --simi-glass-border-purple: #B541FA;
+    --simi-glass-border-subtle: #e2e8f0;
+    --simi-border-card: #e2e8f0;
+
+    /* ── 5. Degradados de Botones e Interacciones ── */
+    --simi-active-gradient: linear-gradient(135deg, rgba(181, 65, 250, 0.12) 0%, rgba(79, 210, 233, 0.12) 100%);
+    --simi-btn-primary: linear-gradient(135deg, #B541FA 0%, #192584 100%);
+    --simi-btn-cyan: linear-gradient(135deg, #4FD2E9 0%, #0284c7 100%);
+    --simi-instagram-gradient: linear-gradient(135deg, #B541FA, #ec4899, #4FD2E9);
+
+    /* ── 6. Sombras Profundas y Definidas ── */
+    --simi-shadow-card: 0 10px 25px -5px rgba(25, 37, 132, 0.08), 0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.8);
+    --simi-shadow-glow: 0 0 20px -2px var(--simi-cyan-glow);
+    --simi-shadow-hover: 0 18px 38px -6px rgba(25, 37, 132, 0.16), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+}
+
+/* ── MODO OSCURO (Dark Theme) ── */
+html[data-theme='dark'] {
+    --simi-purple: #B541FA;
+    --simi-purple-hover: #9c25e8;
+    --simi-purple-light: #f5e8ff;
+    --simi-purple-glow: rgba(181, 65, 250, 0.45);
+    --simi-purple-subtle: rgba(181, 65, 250, 0.15);
+
+    --simi-cyan: #4FD2E9;
+    --simi-cyan-hover: #22d3ee;
+    --simi-cyan-light: #e6faff;
+    --simi-cyan-glow: rgba(79, 210, 233, 0.45);
+    --simi-cyan-subtle: rgba(79, 210, 233, 0.14);
+
+    --simi-navy: #192584;
+    --simi-navy-light: #131c55;
+
+    --simi-bg-root: #040817;
+    --simi-surface-hero: linear-gradient(135deg, #09122e 0%, #0d1a45 50%, #15163e 100%);
+    --simi-surface-sidebar: #080f26;
+    --simi-surface-card: #0a1330;
+    --simi-surface-card-hover: #101c44;
+    --simi-surface-input: #0e1638;
+
+    --simi-text-white: #ffffff;
+    --simi-text-primary: #f8fafc;
+    --simi-text-secondary: #94a3b8;
+    --simi-text-muted: #64748b;
+
+    --simi-glass-border: rgba(79, 210, 233, 0.35);
+    --simi-glass-border-purple: rgba(181, 65, 250, 0.4);
+    --simi-glass-border-subtle: rgba(255, 255, 255, 0.12);
+    --simi-border-card: rgba(255, 255, 255, 0.12);
+
+    --simi-active-gradient: linear-gradient(135deg, rgba(181, 65, 250, 0.28) 0%, rgba(79, 210, 233, 0.18) 100%);
+    --simi-btn-primary: linear-gradient(135deg, #B541FA 0%, #192584 100%);
+    --simi-btn-cyan: linear-gradient(135deg, #4FD2E9 0%, #0284c7 100%);
+    --simi-instagram-gradient: linear-gradient(135deg, #B541FA, #ec4899, #4FD2E9);
+
+    --simi-shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--simi-glass-border-subtle);
+    --simi-shadow-glow: 0 0 25px -4px var(--simi-cyan-glow);
+    --simi-shadow-hover: 0 16px 36px -6px rgba(0, 0, 0, 0.75), 0 0 22px -2px var(--simi-cyan-glow);
+}

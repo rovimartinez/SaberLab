@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, BookOpen, Layers, CheckCircle2, FileText, X, Lock, PlayCircle, Circle } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, Layers, CheckCircle2, FileText, X, Lock, PlayCircle, Circle, Award } from 'lucide-react';
 import { LESSONS_REGISTRY } from '../../data/coursesData';
 import { useAuth } from '../../context/useAuth';
 import { api } from '../../lib/api';
@@ -41,9 +41,16 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lesson
 
     // Automatically expand the current module when the sidebar opens or the lesson changes
     useEffect(() => {
-        if (subject && subject.modules) {
+        if (subject && subject.modules && currentLessonId) {
+            const cleanCurId = currentLessonId.toLowerCase();
+            const curShort = cleanCurId.split('-').pop();
+
             const currentModule = subject.modules.find(mod => 
-                mod.lessons.some(l => l.id === currentLessonId)
+                mod.lessons.some(l => {
+                    const lClean = l.id.toLowerCase();
+                    const lShort = lClean.split('-').pop();
+                    return lClean === cleanCurId || lShort === cleanCurId || lClean === curShort || lShort === curShort;
+                })
             );
             if (currentModule) {
                 setExpandedModules(prev => ({
@@ -69,52 +76,48 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lesson
         const targetModule = subject.modules.find(mod => mod.lessons.some(l => l.id === lessonId));
         if (!targetModule) return;
 
-        const lessonShortId = lessonId.split('-').pop(); // 're-m1-l1' -> 'l1'
-        navigate(`/dashboard/my-courses/${subject.slug}/${targetModule.id}/${lessonShortId}`);
+        const normId = (lessonId.includes('-') ? lessonId : `${subject.abbr.toLowerCase()}-${targetModule.id}-${lessonId}`).toLowerCase();
+        const isOfficialExam = normId.endsWith('e') || normId.includes('exam') || normId.includes('eval');
+
+        if (isOfficialExam) {
+            navigate(`/dashboard/evaluations/${normId}`);
+        } else {
+            const lessonShortId = lessonId.split('-').pop(); // 're-m1-l1' -> 'l1'
+            navigate(`/dashboard/my-courses/${subject.slug}/${targetModule.id}/${lessonShortId}`);
+        }
         
         if (window.innerWidth < 1024) {
             toggleSidebar();
         }
     };
 
-    // Lógica estricta de Candado Secuencial (Regla del 80%)
-    const getLessonStatus = (lessonId) => {
-        const normalizedId = (lessonId.includes('-') 
-            ? lessonId 
-            : `${subject.abbr.toLowerCase()}-m1-${lessonId}`).toLowerCase();
-        
-        // Prioridad 1: Visibilidad explícita del docente en BD
-        const visibility = lessonVisibility[normalizedId];
+    // Lógica de Visibilidad y Estado de Lección en el Sidebar
+    const getLessonStatus = (lessonId, moduleId = 'm1') => {
+        const rawId = (lessonId || '').toLowerCase();
+        const shortId = rawId.split('-').pop(); // 'l1'
+        const normalizedId = rawId.includes('-') 
+            ? rawId 
+            : `${subject?.abbr?.toLowerCase() || 're'}-${moduleId.toLowerCase()}-${rawId}`;
+
+        // 1. Visibilidad explícita del docente en BD (Copia exacta de lo que ve el Admin)
+        const visibility = lessonVisibility[normalizedId] ?? lessonVisibility[rawId] ?? lessonVisibility[shortId];
         if (visibility === false && !isStaff) return 'locked';
 
-        // Prioridad 2: Lección actual
-        if (lessonId === currentLessonId) return 'active';
+        // 2. Lección actual que se está cursando
+        const cleanCur = (currentLessonId || '').toLowerCase();
+        const curShort = cleanCur.split('-').pop();
+        if (rawId === cleanCur || normalizedId === cleanCur || shortId === curShort) return 'active';
 
-        // Prioridad 3: Si ya está completada (aprobada con >= 80%)
-        if (completedLessons[normalizedId]) return 'completed';
+        // 3. Verificación de Lección Completada (aprobada con >= 80% o marcada como completada)
+        const isDone = !!(
+            completedLessons[normalizedId] || 
+            completedLessons[rawId] || 
+            completedLessons[shortId] || 
+            completedLessons[`${subject?.abbr?.toLowerCase() || 're'}-${moduleId}-${shortId}`]
+        );
+        if (isDone) return 'completed';
 
-        // Si es profesor/admin, todo lo no oculto está disponible
-        if (isStaff) return 'available';
-
-        // Prioridad 4: Candado Secuencial (la lección anterior debe estar completada)
-        const allLessons = subject.modules.flatMap(m => m.lessons.map(l => {
-            const raw = l.id;
-            return (raw.includes('-') ? raw : `${subject.abbr.toLowerCase()}-${m.id}-${raw}`).toLowerCase();
-        }));
-
-        const thisIdx = allLessons.indexOf(normalizedId);
-        if (thisIdx <= 0) {
-            // Primera lección siempre disponible
-            return 'available';
-        }
-
-        const previousId = allLessons[thisIdx - 1];
-        const isPrevDone = completedLessons[previousId];
-
-        if (!isPrevDone) {
-            return 'locked';
-        }
-
+        // 4. Si el docente la tiene visible (o es staff), la lección está disponible
         return 'available';
     };
 
@@ -127,6 +130,8 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lesson
                         e.stopPropagation();
                         toggleSidebar();
                     }}
+                    title={isOpen ? "Cerrar mapa del curso" : "Abrir mapa de lecciones del curso"}
+                    aria-label="Mapa de lecciones del curso"
                 >
                     <div className="handle-arrow">
                         {isOpen ? <X size={20} /> : <FileText size={20} />}
@@ -162,34 +167,52 @@ const CourseSidebar = ({ subject, currentLessonId, isOpen, toggleSidebar, lesson
                                     </button>
 
                                     <div className="cs-lessons-list">
-                                        {module.lessons.map((lessonRef) => {
+                                        {module.lessons
+                                            .filter((lessonRef) => {
+                                                const normId = (lessonRef.id.includes('-') ? lessonRef.id : `${subject.abbr.toLowerCase()}-${module.id}-${lessonRef.id}`).toLowerCase();
+                                                const isOfficialExam = normId.endsWith('e') || normId.includes('exam') || normId.includes('eval');
+                                                // Las evaluaciones no deben aparecer en el mapa de lecciones para los estudiantes, ya que se gestionan en el módulo central de Evaluaciones
+                                                if (isOfficialExam && !isStaff) return false;
+                                                return true;
+                                            })
+                                            .map((lessonRef) => {
                                             const lessonInfo = LESSONS_REGISTRY[lessonRef.id];
-                                            const status = getLessonStatus(lessonRef.id);
+                                            const status = getLessonStatus(lessonRef.id, module.id);
                                             const isActive = status === 'active';
                                             const isLocked = status === 'locked';
                                             const isCompleted = status === 'completed';
                                             
+                                            const normId = (lessonRef.id.includes('-') ? lessonRef.id : `${subject.abbr.toLowerCase()}-${module.id}-${lessonRef.id}`).toLowerCase();
+                                            const isOfficialExam = normId.endsWith('e') || normId.includes('exam') || normId.includes('eval');
+                                            
                                             return (
                                                 <button 
                                                     key={lessonRef.id}
-                                                    className={`cs-lesson-item ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
+                                                    className={`cs-lesson-item ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''} ${isOfficialExam ? 'is-exam-item' : ''}`}
                                                     onClick={() => handleLessonClick(lessonRef.id, isLocked)}
-                                                    style={{ '--accent': subject.color }}
+                                                    style={{ 
+                                                        '--accent': isOfficialExam ? '#f59e0b' : subject.color,
+                                                        background: isOfficialExam ? 'rgba(245, 158, 11, 0.08)' : undefined,
+                                                        border: isOfficialExam ? '1px dashed rgba(245, 158, 11, 0.4)' : undefined
+                                                    }}
                                                     disabled={isLocked}
+                                                    title={isOfficialExam ? 'Examen Oficial del Módulo' : undefined}
                                                 >
                                                     <div className="cs-lesson-status">
                                                         {isLocked ? (
                                                             <Lock size={14} className="status-icon-locked" />
+                                                        ) : isOfficialExam ? (
+                                                            <Award size={16} color="#f59e0b" />
                                                         ) : (
                                                             <div className={`status-dot ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`} />
                                                         )}
                                                     </div>
                                                     <div className="cs-lesson-text">
-                                                        <span className="cs-lesson-title">
-                                                            {lessonInfo?.title || 'Lección'}
+                                                        <span className="cs-lesson-title" style={{ color: isOfficialExam ? '#fbbf24' : undefined, fontWeight: isOfficialExam ? 700 : undefined }}>
+                                                            {isOfficialExam ? `🏆 ${lessonInfo?.title || 'Examen Oficial'}` : (lessonInfo?.title || 'Lección')}
                                                         </span>
                                                     </div>
-                                                    {isActive && <div className="cs-lesson-indicator" style={{ background: subject.color }} />}
+                                                    {isActive && <div className="cs-lesson-indicator" style={{ background: isOfficialExam ? '#f59e0b' : subject.color }} />}
                                                 </button>
                                             );
                                         })}

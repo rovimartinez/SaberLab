@@ -108,6 +108,21 @@ const OFFICIAL_EXTERNAL_RESOURCES = [
         tags: ['Tinkercad', 'Autodesk', 'Protoboard 3D']
     },
     {
+        id: 'ee-sim-circuitlab',
+        courseId: 1,
+        courseAbbr: 'EE',
+        courseName: 'Electricidad y Electrónica Básica',
+        courseColor: '#f59e0b',
+        title: 'CircuitLab: Simulador Esquemático y Análisis de Circuitos en Línea',
+        source: 'CircuitLab',
+        sourceType: 'Simulador Web / CAD',
+        description: 'Herramienta profesional en línea para diseño y captura de esquemáticos electrónicos, simulación analógica y digital precisa (DC, AC, transitorios) y análisis de señales directamente en el navegador.',
+        category: 'simulators',
+        type: 'Simulador',
+        url: 'https://www.circuitlab.com/',
+        tags: ['CircuitLab', 'Esquemáticos', 'Simulación Analógica', 'SPICE Online', 'Circuitos']
+    },
+    {
         id: 'ee-sim-tinkered',
         courseId: 1,
         courseAbbr: 'GENERAL',

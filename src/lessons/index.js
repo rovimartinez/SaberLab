@@ -39,7 +39,15 @@ export const LESSONS_MAP = {
         color: '#ec4899',
         icon: 'Box',
         courseId: 4,
-        modules: {}
+        modules: {
+            'm1': {
+                name: 'Introducción al Modelado 3D y Modelado Básico',
+                lessons: {
+                    'l1': () => import('./MA/m1/l1').then(m => m.lessonData),
+                    'l2': () => import('./MA/m1/l2').then(m => m.lessonData),
+                }
+            }
+        }
     }
 };
 

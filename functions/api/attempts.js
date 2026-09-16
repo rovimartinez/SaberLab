@@ -11,6 +11,12 @@ async function ensureAttemptsSchema(env) {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
+
+  try {
+    await env.DB.prepare(`ALTER TABLE intentos_evaluacion ADD COLUMN created_at TEXT DEFAULT (datetime('now'))`).run();
+  } catch {
+    // Si la columna ya existe, se ignora
+  }
 }
 
 export async function onRequestGet({ request, env, data }) {
@@ -18,15 +24,60 @@ export async function onRequestGet({ request, env, data }) {
   const url = new URL(request.url);
   const evaluationKey = url.searchParams.get('evaluation_key');
 
+  const isAdmin = ['admin', 'teacher', 'docente', 'profesor'].includes(data?.user?.role) ||
+                  (env.ADMIN_EMAIL && data?.user?.email?.toLowerCase() === data?.user?.email?.toLowerCase() && env.ADMIN_EMAIL);
+
   if (evaluationKey) {
+    const fetchAll = url.searchParams.get('all') === 'true';
+
+    // Si es docente/admin y solicita all=true, traer los intentos de todos los estudiantes para esta evaluación
+    if (isAdmin && fetchAll) {
+      const { results } = await env.DB.prepare(`
+        SELECT 
+          ie.*,
+          COALESCE(p.full_name, ie.user_id) AS student_name,
+          p.avatar_url,
+          p.email
+        FROM intentos_evaluacion ie
+        LEFT JOIN perfiles p ON (p.id = ie.user_id OR LOWER(p.email) = LOWER(ie.user_id))
+        WHERE ie.evaluation_key = ?
+        ORDER BY ie.id DESC
+      `).bind(evaluationKey).all();
+
+      return Response.json(results || []);
+    }
+
     const { results } = await env.DB.prepare(
-      'SELECT * FROM intentos_evaluacion WHERE user_id = ? AND evaluation_key = ? ORDER BY created_at DESC'
+      'SELECT * FROM intentos_evaluacion WHERE user_id = ? AND evaluation_key = ? ORDER BY id DESC'
     ).bind(data.user.id, evaluationKey).all();
+
+    // Consultar estado de liberación de calificaciones en la evaluación
+    let isReleased = true;
+    try {
+      const evalRow = await env.DB.prepare('SELECT results_released FROM evaluaciones WHERE evaluation_key = ? LIMIT 1').bind(evaluationKey).first();
+      if (evalRow && evalRow.results_released !== null && evalRow.results_released !== undefined) {
+        isReleased = evalRow.results_released === 1 || evalRow.results_released === true;
+      }
+    } catch {
+      isReleased = true;
+    }
+
+    if (!isAdmin && !isReleased) {
+      const masked = (results || []).map(r => ({
+        ...r,
+        score: null,
+        passed: null,
+        answers: null,
+        results_released: false
+      }));
+      return Response.json(masked);
+    }
+
     return Response.json(results);
   }
 
   const { results } = await env.DB.prepare(
-    'SELECT * FROM intentos_evaluacion WHERE user_id = ? ORDER BY created_at DESC'
+    'SELECT * FROM intentos_evaluacion WHERE user_id = ? ORDER BY id DESC'
   ).bind(data.user.id).all();
   return Response.json(results);
 }
@@ -95,5 +146,54 @@ export async function onRequestPost({ request, env, data }) {
     row = await env.DB.prepare('SELECT * FROM intentos_evaluacion WHERE id = ?').bind(meta.last_row_id).first();
   }
 
+  const isAdmin = ['admin', 'teacher', 'docente', 'profesor'].includes(data?.user?.role) ||
+                  (env.ADMIN_EMAIL && data?.user?.email?.toLowerCase() === env.ADMIN_EMAIL.toLowerCase());
+
+  if (isFinal && !isAdmin) {
+    let isReleased = true;
+    try {
+      const evalRow = await env.DB.prepare('SELECT results_released FROM evaluaciones WHERE evaluation_key = ? LIMIT 1').bind(evaluation_key).first();
+      if (evalRow && evalRow.results_released !== null && evalRow.results_released !== undefined) {
+        isReleased = evalRow.results_released === 1 || evalRow.results_released === true;
+      }
+    } catch {
+      isReleased = true;
+    }
+
+    if (!isReleased) {
+      return Response.json({
+        ...row,
+        score: null,
+        passed: null,
+        answers: null,
+        results_released: false
+      });
+    }
+  }
+
   return Response.json(row);
+}
+
+export async function onRequestDelete({ request, env, data }) {
+  await ensureAttemptsSchema(env);
+  const url = new URL(request.url);
+  const evaluationKey = url.searchParams.get('evaluation_key');
+  const targetUserId = url.searchParams.get('user_id') || data?.user?.id;
+
+  if (!evaluationKey) {
+    return Response.json({ error: 'Falta evaluation_key' }, { status: 400 });
+  }
+
+  const isAdmin = ['admin', 'teacher', 'docente', 'profesor'].includes(data?.user?.role) ||
+                  (env.ADMIN_EMAIL && data?.user?.email?.toLowerCase() === env.ADMIN_EMAIL.toLowerCase());
+
+  if (!isAdmin && targetUserId !== data?.user?.id) {
+    return Response.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  await env.DB.prepare(
+    'DELETE FROM intentos_evaluacion WHERE user_id = ? AND evaluation_key = ?'
+  ).bind(targetUserId, evaluationKey).run();
+
+  return Response.json({ success: true });
 }

@@ -19,6 +19,14 @@
    - **Rieles al Ras:** Los rieles superior e inferior no deben sobresalir más allá del centro de la última rama derecha.
    - **Batería fija:** Mantener las coordenadas de la batería idénticas en todas las etapas para evitar saltos visuales al cambiar de paso.
    - **Badges y Medidores:** Mantener separación mínima de $6\text{px}$ a $8\text{px}$ respecto a los componentes para evitar solapamientos.
+5. 📝 **CONVENCIÓN DE NOMENCLATURA PARA EVALUACIONES:** Los archivos de evaluaciones integradoras por módulo deben nombrarse con el sufijo `e` (ejemplo: `l6e.jsx` en vez de `l6.jsx`), diferenciando inequívocamente los exámenes de las lecciones temáticas estándar.
+6. 🗺️ **MAPAS TÁCTICOS DE ARQUITECTURA (Ahorro de Tokens):** Antes de buscar o leer múltiples archivos, consultar la skill correspondiente para ubicar rutas, esquemas D1, estados y componentes al instante:
+   - 🏛️ **General SaberLab:** [`saberlab-architecture-map`](.agents/skills/saberlab-architecture-map/SKILL.md)
+   - 🗄️ **Base de Datos Cloudflare D1:** [`database-architecture-map`](.agents/skills/database-architecture-map/SKILL.md)
+   - ⚡ **Electricidad (EE):** [`ee-course-architecture-map`](.agents/skills/ee-course-architecture-map/SKILL.md)
+   - 🤖 **Robótica (RE):** [`re-course-architecture-map`](.agents/skills/re-course-architecture-map/SKILL.md)
+   - 🎨 **Modelado 3D (MA):** [`ma-course-architecture-map`](.agents/skills/ma-course-architecture-map/SKILL.md)
+   - 🖨️ **Semillero SIMI3D (SIMI):** [`simi-architecture-map`](.agents/skills/simi-architecture-map/SKILL.md)
 
 ---
 
@@ -55,26 +63,204 @@
 
 ---
 
+### 4. Módulo 1 de Modelado y Animación 3D (`MA-M1` - Fundamentos e Introducción 3D)
+- **Definición Curricular Oficial UNIMAG 2026-2:** Docente Ronny Martinez Reyes, 3 créditos, 17 semanas, horario Lunes 6-9 PM, 4 módulos con 4 evaluaciones de 125 pts (Total: 500 pts).
+  - M1 (31 Ago, 125 pts): Examen Teórico-Práctico en plataforma.
+  - M2 (28 Sep, 125 pts): Entrega de Proyecto Terminado (Modelado de Objetos 3D).
+  - M3 (19 Oct, 125 pts): Entrega de Proyecto Terminado (Creación de Personaje 3D).
+  - M4 (9 Nov, 125 pts): Entrega de Proyecto Final Terminado (Animación 3D Integral).
+- **Motor WebGL 3D Integrado:** Dependencia `three` instalada y optimizada para React 19.
+- **Componentes 3D Construidos:**
+  - [`BlenderViewport.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/BlenderViewport.jsx): Viewport WebGL interactivo emulando Blender 4.x con soporte de atajos (`G`, `R`, `S`, `X/Y/Z`), navegación orbital, selección de primitivas, vistas ortográficas y modos Wireframe/Solid/Rendered. Ajustado estrictamente a la convención industrial **Z-Up** (Z Azul hacia arriba con cono y badge, Y Verde en profundidad sobre el piso, X Rojo en ancho horizontal) y zoom por rueda de ratón con listener nativo `{ passive: false }` que evita el desplazamiento involuntario de la página web.
+  - [`CoordinateSpaceDemo.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/CoordinateSpaceDemo.jsx): Demostrador interactivo del espacio cartesiano euclidiano, regla RGB de los ejes y comparativa Perspectiva vs Ortográfica.
+  - [`PracticalLabMA1.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/PracticalLabMA1.jsx): Laboratorio interactivo con 5 retos guiados de navegación 3D y modo Sandbox libre.
+  - [`PrimitivesTransformLab.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/PrimitivesTransformLab.jsx): Laboratorio interactivo para la Lección 2 con 5 retos de selección de primitivas (Cubo, Cilindro, Toroide) y transformaciones de precisión (G, R, S).
+- **Lección 1 (`ma-m1-l1`):** Espacio 3D, Interfaz de Blender y Navegación Cartesiana (teoría, 10 flashcards, simulador y quiz).
+- **Lección 2 (`ma-m1-l2`):** Primitivas 3D y Transformaciones Fundamentales (teoría V-E-F, G/R/S, atajos de precisión con ejes y planos Shift+Z, origen del objeto y tecla Alt, 10 flashcards, laboratorio interactivo y quiz de 10 preguntas).
+- **Modo Enfoque de Estudio (Layout UX):** Al ingresar a un curso o lección, el sidebar izquierdo se compacta automáticamente a modo solo iconos (`78px`) con tooltips y botón de alternancia, mientras que el panel derecho (`CourseSidebar`) se despliega automáticamente en pantallas de escritorio con la navegación de módulos y lecciones sin bloquear el contenido central.
+
+---
+
 ## 📍 ¿Por dónde quedamos? (Punto de Parada Actual)
-* **Estado:** **Módulo 1 de Electricidad (`EE-M1` - Fundamentos Eléctricos) COMPLETADO AL 100% (Lecciones 1 a 6)** con **0 errores** de compilación (`npm run build`).
-  - **Lección 6 / Examen 1 (`ee-m1-l6` - 150 pts):**
-    - **Teoría (60 pts):** 30 preguntas de opción múltiple conceptuales y contextuales sin cálculos matemáticos (2 pts c/u).
-    - **Práctica (90 pts):** Laboratorio interactivo [`PracticalLabL6.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/electricity/PracticalLabL6.jsx) con esquema SVG de la red mixta de 8 resistores ($24\text{V}$, $R_1$-$R_8$), validación de $R_T, I_T, P_T$, 8 voltajes, 6 corrientes de rama, paso reductor intermedio y guía de reducción paso a paso con persistencia en Cloudflare D1.
-* **Siguiente Paso Inmediato:**
-  - **Iniciar Módulo 2 (`EE-M2` - Componentes Electrónicos y Aplicaciones - Examen 2: 28 de sep 2026, 125 pts):**
-    - `ee-m2-l7`: Capacitores y Almacenamiento de Energía ($100\,\text{nF}, 10\,\mu\text{F}, 100\,\mu\text{F}$).
-    - `ee-m2-l8`: Bobinas, Diodos 1N4007, Relé 5V, Motores DC y Buzzer.
-    - `ee-m2-l9`: Transistores BJT NPN (2N2222/BC547) y PNP (BC557) en corte y saturación.
-    - `ee-m2-l10`: Evaluación de Componentes y Circuitos de Control.
+### 5. Plataforma de Evaluaciones Segura y Supervisada (Anti-Cheat & Proctoring)
+- **Bloqueo y Seguridad Anti-Copia:** Texto no seleccionable (`user-select: none`), inhabilitación de inspección y atajos de teclado, pantalla completa con detección estricta de salida y cambio de pestañas con sistema de strikes progresivos y auto-bloqueo.
+- **Aleatorización Completa:** Barajado aleatorio de preguntas y opciones por sesión de estudiante manteniendo consistencia de respuesta mediante valor de opción y persistencia en `localStorage`.
+- **Sistema de Marcado de Preguntas (🚩 Flagging):** Botón para marcar reactivos dudosos con resaltado ámbar en el navegador de preguntas (`QuestionNavigator`) y contador en tiempo real.
+- **Modal de Confirmación Previo a la Entrega Definitiva:** Sustitución de `window.confirm` por un modal con desglose completo de preguntas respondidas, pendientes, marcadas para revisión y tiempo restante, advirtiendo sobre reactivos en blanco.
+- **Control Docente de Liberación de Calificaciones (`results_released`):** Las notas y el solucionario detallado quedan protegidos contra inspección de red hasta que el docente libere las calificaciones desde el panel (`PanelExamenes` o `PanelEvaluaciones`).
+- **Detección de Conexión en Vivo:** Indicador en cabecera de estado en línea / fuera de línea (`navigator.onLine`) con protección de respuestas en almacenamiento local y reintento de sincronización al restablecerse la red.
+
+### 6. Sala de Espera y Monitoreo en Vivo de Exámenes (Lobby estilo Wayground / Kahoot)
+- **Componente Dedicado [`ExamLiveLobby.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/admin/ExamLiveLobby.jsx):**
+  - Panel exclusivo para supervisión y seguimiento de exámenes oficiales (`/dashboard/exam-lobby/:evaluationKey`).
+  - Tarjetas de estudiantes en tiempo real con foto de Google, nombre, estado dinámico y avatar con pulso de conexión.
+  - Píldoras de telemetría: *En Sala de Espera*, *Rindiendo Examen*, *Alertas (Strikes)* y *Entregados*.
+  - Acciones rápidas: *Aviso flash a toda la sala*, *Mensaje directo al alumno* y *Restablecer intento*.
+- **Acceso Directo Docente:** Botón `🟢 Sala en Vivo (Lobby)` en cada tarjeta de examen en [`PanelExamenes.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelExamenes.jsx).
+- **Navegación Simplificada en 1 Clic para Estudiantes:**
+  - **Sidebar Principal:** Opción `Evaluaciones` en `PRINCIPAL` con badge numérico de exámenes publicados.
+  - **Panel de Inicio (`/dashboard`):** Banner destacado de *Examen Oficial Pendiente* con botón directo `Presentar Examen ➔`.
+  - **Árbol de Lecciones (`CourseSidebar.jsx`):** Exámenes resaltados con estilo dorado, icono de trofeo 🏆 y redirección directa en 1 clic.
+
+### 7. Barra de Filtros Pro-Proyección Docente y Resolución de Cursos ([`PanelEvaluaciones.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelEvaluaciones.jsx))
+- **Barra de Píldoras Rápidas (1 Clic):** Filtro interactivo por cursos (`Todos`, `Electricidad`, `Robótica`, `Modelado 3D`) con paletas de color institucionales y contadores sincronizados.
+- **Selector de Grupo Activo (`Grupo Activo: [ 👥 Todos los Grupos ▾ ]`):** Conectado con `/api/groups`, permitiendo proyectar en pantalla en salón de clase únicamente los datos y evaluaciones del grupo presente.
+- **Buscador y Tabs de Estado:** Pestañas de estado (`Todas`, `Pendientes`, `Completadas`) y caja de búsqueda en tiempo real.
+- **Resolución Completa de Cursos:** Corregido el mapeo de `course_id` de Robótica (`5` vs `2`) y añadido fallback inteligente multi-criterio contra `COURSES_DEFINITION`. Ya ninguna tarjeta presenta subtítulos o cursos vacíos.
+- **Acceso Directo al Lobby:** Botón `🟢 Sala en Vivo` en cada tarjeta para iniciar o supervisar la sesión en tiempo real.
+
+### 8. Arquitectura 100% Pura de Tokens Semánticos y Desacople de Temas
+- **Sistema Central de Tokens (`design-system.css`):** Definición canónica de tokens semánticos en `:root` (tema oscuro por defecto) y `[data-theme='light']` (tema claro institucional).
+- **Controlador Reactivo de Tema (`src/lib/themeManager.js`):** Sincronización en tiempo real entre estado, `localStorage` y atributos de documento en `src/main.jsx`.
+- **Eliminación Total de Sobrescrituras Manuales (`:root[data-theme='light'] ... !important`):** Refactorizados más de 25 archivos CSS (`PanelMisCursos.css`, `PanelInicio.css`, `PanelEvaluaciones.css`, `ExamLiveLobby.css`, `PanelPerfil.css`, `PanelProgreso.css`, `PanelCalificaciones.css`, `PanelAnalitica.css`, `PanelRecursos.css`, `PanelRecompensas.css`, `PanelGadgets.css`, `CourseDetail.css`, `Certificate.css`, `EvaluationInstruction.css`, `ElectricitySimulators.css`, `PizarraMagica.css`, `PanelWidgets.css`, `SubjectDetail.css`, `Welcome.css`, etc.). Todos los componentes consumen variables semánticas puras (`var(--surface-card)`, `var(--text-heading)`, `var(--border-default)`, `var(--brand-primary)`, etc.).
+- **Aislamiento Técnico para Simuladores:** Preservación estricta del entorno oscuro técnico (`.simulator-dark-context`, WebGL 3D y circuitos electrónicos) para mantener la física visual intacta en cualquier tema del sistema.
+- **Compilación Limpia:** 0 errores y 0 advertencias de sintaxis con `npm run build`.
+
+### 9. Modal "Mi Curso / Plan de Estudios" (Dashboard)
+- **Modal Integrado para "Mi Curso":** Al hacer clic en la tarjeta "Mi Curso" en `PanelInicio`, se abre el modal interactivo de **Plan de Estudios** (`📖 Plan de Estudios`), siguiendo la lógica unificada de las apps del dashboard.
+- **Estructura por Módulos (Acordeón):** Módulos desplegables con su número identificador, conteo dinámico de lecciones (`X/Y lecciones`), estado interactivo (`✓ Superada`, `Disponible`, `🔒 Bloqueada`) y acceso directo a cada lección.
+- **Enfoque Pedagógico Puro:** Barra superior de pestañas eliminada para mantener el foco en el curso activo, y evaluaciones removidas del modal de lecciones ya que se administran y presentan de forma centralizada en el módulo de **Exámenes** (`/dashboard/evaluations`).
+- **Paleta y Badges:** Estilos semánticos con badges limpios (`.badge-pill.ready` en azul institucional, `.badge-pill.done` en verde esmeralda).
+- **Dock Flotante Inferior de Vista Estudiante:** Se reemplazó el banner superior naranja invasivo por un dock flotante inferior (`.impersonate-floating-dock`) con bordes redondeados (`16px`), efecto glassmorphism, resplandor ámbar sutil y botón de acción directa "Volver a Modo Admin".
+- **Botón Flotante (FAB) en Lecciones:** Se removió el botón "Volver al curso" de la cabecera de la lección y se reemplazó por un Floating Action Button (`.lesson-fab-home`) en la esquina inferior izquierda con icono de inicio (`Home`) para regresar directamente a `/dashboard`.
+
+### 10. Bloqueo de Módulos para Estudiantes (Recompensas, Widgets y Analítica)
+- **Bloqueo en Dashboard ([`PanelInicio.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelInicio.jsx)):**
+  - **Recompensas:** Bloqueado (`isLocked: !isStaff`), badge `Bloqueado` para alumnos / `${gadgets.length} gadgets` para docentes, icono con candado, paleta neutral deshabilitada y desactivación de clic.
+  - **Widgets:** Bloqueado (`isLocked: !isStaff`), badge `Bloqueado` para alumnos / `8 Herramientas` para docentes.
+  - **Analítica:** Bloqueado (`isLocked: !isStaff`), badge `Bloqueado` para alumnos / `Docente` para profesores, redirección protegida a `/dashboard/analytics`.
+  - **Estilos Semánticos ([`PanelInicio.css`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/styles/PanelInicio.css)):** Clase `.app-hub-tile-locked` con cursor `not-allowed`, `opacity: 0.52`, filtro en escala de grises y anulación de efectos hover/transformaciones.
+  - **Protección de Rutas ([`App.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/App.jsx)):** Rutas directas (`/dashboard/rewards`, `/dashboard/gadgets`, `/dashboard/my-courses/:courseId/rewards`) blindadas con `<AdminRoute>`, redirigiendo a los estudiantes automáticamente a `/dashboard`.
+
+### 11. Corrección de Alcance en Reproductor de Exámenes ([`EvaluationPlayer.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/EvaluationPlayer.jsx))
+- **Diagnóstico:** Al abrir exámenes como `re-m1-eval/play` habiendo un intento previo o al mostrar resultados, la pantalla quedaba en blanco por un `ReferenceError: Cannot access 'isExamenL6' before initialization` (TDZ), ya que la constante estaba declarada más abajo en la función (línea 1209) tras los bloques de retorno anticipado (`if (showResults)`).
+- **Solución:** Se movió la definición canónica de `normKey` e `isExamenL6` al encabezado del componente (`EvaluationPlayer`), permitiendo que el estado de resultados, la pantalla de revisión y el protocolo de seguridad se rendericen sin fallos en cualquier examen del sistema.
+- **Verificación en Vivo:** Probado con el subagente de navegador verificando montaje exitoso, navegador de 20 preguntas de Robótica, feedback de opciones y consola limpia (0 errores).
+
+---
+
+## 📍 ¿Por dónde quedamos? (Punto de Parada Actual)
+* **Estado:** **Página obsoleta de evaluaciones desacoplada, rutas redirigidas y compilación limpia con `npm run build` (0 errores)**.
+* **Siguiente Paso Inmediato (Pendientes Prioritarios):**
+  - 🔍 **Auditoría de páginas obsoletas:** Buscar y depurar páginas/rutas que ya no deberían existir por haber sido reemplazadas por modales en el Dashboard (ej. `PanelMisCursos`, `PanelEvaluaciones`, vistas legacy, etc.).
+  - 🧭 **Revisión y actualización de rutas de navegación:** Revisar integralmente las rutas de navegación de cada curso (`EE`, `RE`, `MA`, `SIMI`), asegurando consistencia entre sidebar, mapa de temas, botones de retorno y modales.
+  - Continuar con la **Lección 3 (`ma-m1-l3`: Modo Edición y Topología Poligonal - Vértices, Aristas y Caras)** de Modelado 3D o siguientes requerimientos del usuario.
   - **Subir cambios a GitHub (`git push`):** Solo cuando el usuario lo autorice explícitamente.
 
 ---
 
 ## 📁 Arquitectura y Rutas de Referencia Rápida
-- **Lección 5 Mixtos:** [`src/lessons/EE/m1/l5.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/EE/m1/l5.jsx)
-- **Simulador Mixto:** [`src/components/simulators/electricity/MixedCircuitDemo.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/electricity/MixedCircuitDemo.jsx)
-- **Reductor Mixto:** [`src/components/simulators/electricity/MixedCalculationVisualizer.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/electricity/MixedCalculationVisualizer.jsx)
-- **Retos Prácticos Mixtos:** [`src/components/simulators/electricity/PracticalLabL5.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/electricity/PracticalLabL5.jsx)
-- **Simulador Recompensas:** [`src/components/simulators/electricity/CircuitSimulator.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/electricity/CircuitSimulator.jsx)
+- **Lección 1 3D:** [`src/lessons/MA/m1/l1.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/MA/m1/l1.jsx)
+- **Viewport 3D Blender:** [`src/components/simulators/3d/BlenderViewport.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/BlenderViewport.jsx)
+- **Demostrador Coordenadas:** [`src/components/simulators/3d/CoordinateSpaceDemo.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/CoordinateSpaceDemo.jsx)
+- **Laboratorio Práctico 3D:** [`src/components/simulators/3d/PracticalLabMA1.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/PracticalLabMA1.jsx)
+- **Lección 5 Mixtos EE:** [`src/lessons/EE/m1/l5.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/EE/m1/l5.jsx)
 - **Puente de Montaje Legacy:** [`src/components/lesson/legacy/LessonLegacyBridge.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/lesson/legacy/LessonLegacyBridge.jsx)
 - **Estilos de Simuladores:** [`src/styles/ElectricitySimulators.css`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/styles/ElectricitySimulators.css)
+
+### 12. Creación del Curso SIMI3D y Rol "Líder de Semillero"
+- **Espacio Semillero SIMI3D (`SIMI` - Semillero de Investigación en Modelado e Impresión 3D):**
+  - **ID:** `6`, **Abreviatura:** `SIMI`, **Color:** `#06b6d4` (Cian Manufactura Aditiva), **Director:** *Ing. Ronny Martinez Reyes*.
+  - **Hub Independiente Exclusivo (`/dashboard/simi` - `PanelSimiHub.jsx`):** Entorno temático desacoplado tipo suite con **Panel Lateral Izquierdo (Sidebar Nav)** (`.simi-workspace-layout`) en lugar de barra de pestañas superior:
+    - **Panel Lateral Izquierdo Dedicado:** 4 secciones de acceso directo con iconos vectoriales en cajetines cian neón, títulos y subtítulos (Rutas de Modelado, Visitas a Colegios, Banco de Proyectos, Nuestros Recursos) y tarjeta resumen táctica al fondo.
+    - **8 Rutas No Lineales & Visor Interactivo de Lecciones:** Tinkercad, Blender 3D, Fusion 360, Cura, OrcaSlicer, PrusaSlicer, Impresión FDM y Resina SLA. Al pulsar **`Ingresar ➔`**, se despliega el visor interactivo con módulos formativos, tablas técnicas de termoplásticos, callouts y autoevaluación (quizzes con feedback inmediato y EXP).
+    - **Insignias Tácticas (Grados I al V - 100 a 500 EXP):** Accesibles desde el botón superior derecho de cada card con modal flotante de ascensos automáticos.
+    - **Banco de Proyectos & Calendario:** Módulos interactivos para registrar, editar y eliminar proyectos CAD e itinerarios STEAM con diseño estilizado de inputs y botones `Edit3` / `Trash2`.
+    - **Nuestros Recursos & Inventario:** Gestión de impresoras 3D, filamentos, resinas y herramientas con persistencia local y control por roles (`leader` / `admin`).
+    - **FAB Flotante de Red Social:** Acceso directo a `@semillero_simi3d` en esquina inferior derecha.
+- **Rol de Plataforma "Líder de Semillero" (`leader` / `lider`):**
+  - Permisos intermedios entre Docente y Estudiante: acceso completo a herramientas, widgets y analítica del grupo sin privilegios destructivos de administración ni gestión global de la base de datos.
+  - Badges dedicados en Sidebar, Perfil y Panel de Plataforma con estilo cian neón.
+
+### 13. Persistencia Cloudflare D1 en SIMI3D y Regla de Permanencia (80/80)
+- **Endpoint Backend Centralizado ([`functions/api/simi.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/simi.js)):**
+  - Auto-aprovisionamiento de 5 tablas D1: `simi_eventos`, `simi_asistencias`, `simi_proyectos`, `simi_recursos`, `simi_insignias`.
+  - Soporte completo para CRUD multi-usuario con fallback a datos semilla locales.
+- **Separación de Asistencias (Regla del 80 / 80):**
+  - Medición diferenciada de **Capacitaciones Técnicas** vs. **Visitas Pedagógicas Escolares**.
+  - Validación y convalidación individual de presencia de estudiantes por parte del Líder/Docente con badge de *Presente Convalidado*.
+- **Directorio de Miembros Activos ([`SimiMembersTab.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simi/SimiMembersTab.jsx)):**
+  - Listado de semilleristas y líderes con foto de Google, rol institucional, barras dobles de progreso y condecoración de *Requisito 80/80 Cumplido*.
+  - Sincronización canónica en Cloudflare D1: curso `id = 6` (`abbr = 'SIMI'`) y grupo oficial `id = 6` vinculados en base de datos.
+
+### 14. Asistentes Inteligentes SaberLab (TridiBot & ImpriBot)
+- **Componente de Chat Global ([`SaberLabAiChat.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/ai/SaberLabAiChat.jsx)):**
+  - Dos asistentes especializados con selector dinámico: **TridiBot** (Especialista en Modelado 3D, Blender, CAD, geometría euclidiana, mallas manifold y WebGL) e **ImpriBot** (Especialista en Impresión 3D, manufactura aditiva FDM/SLA, parámetros de filamentos y Slicers).
+  - Historial independiente por bot en `localStorage`, con auto-scroll suave, renderizado de Markdown con bloques de código, tablas técnicas y botón de copiado en 1 clic.
+
+### 15. Estabilización de IAs y Continuidad Conversacional Fluida
+- **Diagnóstico:** Los bots presentaban inestabilidad y respuestas enlatadas/repetitivas debido a agotamiento de cuota de tokens (HTTP 429 Rate Limit) en Groq (`openai/gpt-oss-120b`), saldo agotado en DeepSeek (HTTP 402) y caída forzada a un script offline de respuestas fijas por regex.
+- **Arquitectura de Resiliencia en Cascada ([`functions/api/ai/chat.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/ai/chat.js)):**
+  - **Pool Multi-Modelo Dinámico en Groq:** `qwen/qwen3.8-27b` (<1s latencia y alta fluidez en español) ➔ `openai/gpt-oss-20b` (bajo consumo) ➔ `openai/gpt-oss-120b` ➔ `qwen/qwen3.6-27b`. Si un modelo recibe un 429 por ráfagas, el backend salta instantáneamente al siguiente modelo en milisegundos sin interrumpir la charla.
+  - **Compactación de Contexto (Context Window Optimization):** Respuestas extensas previas se resumen a 300 caracteres en el payload de entrada, reduciendo el peso del prompt a <600 tokens y evitando sobrepasar la cuota móvil de 8,000 TPM.
+  - **Vías de Respaldo:** Cloudflare Workers AI nativo (`@cf/meta/llama-3.1-8b-instruct`) y motor heurístico offline local. (DeepSeek retirado por completo del stack tecnológico).
+  - **System Prompts de Continuidad:** Instrucciones estrictas para no presentarse de nuevo ni reiniciar la conversación ante preguntas de seguimiento breves (*"¿seguro?"*, *"¿y si lo apago?"*, *"¿por qué?"*).
+- **Experiencia de Usuario en Frontend ([`SaberLabAiChat.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/ai/SaberLabAiChat.jsx)):**
+  - **Renderizador de Tablas Markdown:** Detección de tablas Markdown convirtiéndolas en elementos `<table>` HTML estilizados con cabeceras en degradé, filas alternas y scroll horizontal responsivo.
+  - **Gestor de Sesiones e Historial con Títulos Decididos por la IA:** Botón `+` para iniciar conversaciones limpias desde cero sin ver mensajes viejos acumulados, y panel dedicado `Historial` para consultar, retomar o borrar conversaciones pasadas. La IA dicta y fija canónicamente el título temático técnico de cada charla en la PRIMERA LÍNEA de su respuesta (`[TITULO: ...]`), analizando la pregunta y la respuesta técnica brindada (ej: *"Significado del Código 67 en 3D"*, *"Composición del Filamento PLA"*, *"Atajos Esenciales de Blender"*). Se eliminaron las stopwords y el fallback literal de palabras crudas ("Que Es El 67"), y se implementó saneamiento retroactivo automático de títulos en `localStorage`.
+  - **Modo Ancho Doble (880px):** Botón `Maximize2` / `Minimize2` en la cabecera para duplicar el ancho del chat al instante, permitiendo leer tablas anchas de múltiples columnas y código de manera panorámica.
+  - **Modo Respuestas Rápidas y Breves (`⚡ Modo Breve`):** Botón en cabecera y chip interactivo sobre la barra de entrada para alternar entre modo detallado y respuestas ultra cortas (máximo 2 a 3 oraciones o viñetas al grano, sin saludos ni rodeos), reduciendo el tiempo de respuesta y consumo de tokens (`max_tokens: 350`).
+
+### 16. Asignación Contextual de Tutores por Curso y Retiro Definitivo de DeepSeek
+- **Desconexión Total de DeepSeek:** Retirado 100% de la arquitectura backend (`functions/api/ai/chat.js`), frontend (`Layout.jsx`, `SaberLabAiChat.css`) y configuraciones. Toda la inferencia corre sobre el pool balanceado de **Groq API** como primario, **Cloudflare Workers AI** como secundario y el motor heurístico local de contingencia.
+- **Un Solo Bot por Curso (Sin Selector de 4 Pestañas):**
+  - Se eliminó por completo el renderizado global de los 4 bots simultáneos.
+  - **Curso EE (Electricidad y Electrónica):** Muestra **únicamente a ElectroBot ⚡** en la cabecera y cuerpo de mensajes, sin pestañas distractoras.
+  - **Curso RE (Robótica Educativa):** Muestra **únicamente a RoboBot 🤖**.
+  - **Curso MA (Modelado y Animación 3D):** Muestra **únicamente a TridiBot 🧊**.
+  - **Semillero SIMI3D:** Despliega el **selector dual exclusivo de especialidades de SIMI**: *TridiBot (Modelado 3D)* e *ImpriBot (Impresión 3D)*.
+- **Sincronización Reactiva:** Detección unificada por ruta activa (`location.pathname`), curso seleccionado en la plataforma (`saberlab_active_course`) y curso matriculado. Emisión y escucha reactiva del evento `saberlab_course_changed` para que al cambiar de curso en el dashboard, el chat se sincronice de inmediato al tutor correspondiente.
+
+### 17. Erradicación Integral de Signos LaTeX y Notación Matemática Limpia en Todos los Bots
+- **Diagnóstico:** Los modelos de lenguaje emitían fórmulas cuantitativas con sintaxis LaTeX cruda (`$...$`, `$$...$$`, `\frac{...}{...}`, `\cdot`, `\Omega`, `\text{}`), produciendo signos distractores y fórmulas fragmentadas sin formato visual legible en el chat. Asimismo, las skills en `.agents/skills/` contenían expresiones matemáticas con delimitadores `$`, induciendo al modelo a imitar esa sintaxis.
+- **Saneamiento Total de Skills (`.agents/skills/`):** Se eliminaron al 100% todos los signos `$` y comandos LaTeX de `electrobot-tutor/SKILL.md`, `robobot-tutor/SKILL.md`, `impribot-tutor/SKILL.md` y `simibot-conversational-memory/SKILL.md`, reemplazándolos por notación técnica directa UTF-8 (`V = I · R`, `f = 1.44 / ((R1 + 2·R2) · C1)`, `Req`, `40 mA`, `Tg`).
+- **Instrucción Estricta en Prompts de Sistema (4 Bots):** Prohibición taxativa de sintaxis LaTeX y signos de dólar en los 4 prompts (`SYSTEM_ELECTROBOT_PROMPT`, `SYSTEM_ROBOBOT_PROMPT`, `SYSTEM_TRIDIBOT_PROMPT`, `SYSTEM_IMPRIBOT_PROMPT`). Obligación de usar caracteres UTF-8 nativos: `Ω`, `kΩ`, `·`, `/`, `10⁻⁶`, `°C`, `mm/s`.
+- **Motor Sanitizador y Conversor Automático de Alta Resiliencia (`cleanLatexMathString`):** Implementado y sincronizado de forma idéntica en backend (`functions/api/ai/chat.js`) y frontend (`SaberLabAiChat.jsx`):
+  - **Algoritmo de balanceo de llaves:** Parsea fracciones complejas anidadas `\frac{V_{cc} - V_{led}}{I_{led}}` o `\frac{\frac{A}{B}}{C}` sin truncamientos (`(A) / (B)`).
+  - Soporta bloques `\[ ... \]` y `$$ ... $$` convirtiéndolos en tarjetas callout destacadas (`> 📐 **Fórmula:** ...`).
+  - Soporta delimitadores elásticos `\left(`, `\right)`, raíces `\sqrt{x}` (`√(x)`), exponentes `10^{-6}` (`10⁻⁶`) y subíndices `R_{eq}` (`Req`).
+  - Comandos `\text{...}`, `\mathrm{...}` y símbolos `\Omega`, `\cdot`, `\times`, `\approx`, `\mu` se convierten a símbolos directos (`Ω`, `·`, `×`, `≈`, `µ`).
+  - **Barrido de seguridad infalible:** Se eliminan forzosamente todos los signos de dólar (`$`) y barras residuales (`\`), garantizando que **ningún signo extraño** se filtre al usuario.
+  - Sanitización retroactiva de mensajes previamente guardados en `localStorage` o base de datos D1.
+- **Verificación en Vivo Multi-Asistente:** Probado en tiempo real con preguntas cuantitativas complejas en los 4 bots (NE555 astable en EE, resistencia LED en RE, aspecto 16:9 en MA y caudal de PETG en SIMI), confirmando **0 signos $** y **0 comandos LaTeX**.
+- **Compilación:** Verificado con `npm run build` (0 errores en 6.34s). Cumplida regla de no ejecutar `git push` sin orden explícita.
+
+### 18. Protocolo Empático ante Límite de Cuota o Saturación de APIs (Anti-Error 429)
+- **Diagnóstico y Requerimiento:** Si las APIs de inferencia (Groq o Workers AI) se saturan o alcanzan su límite temporal de tokens (HTTP 429 Rate Limit / Quota Exceeded), mostrar mensajes técnicos de error rompía la experiencia pedagógica del estudiante.
+- **Detección Activa de Límite:** El backend (`functions/api/ai/chat.js`) rastrea los errores HTTP 429 y tokens por minuto en todo el pool de modelos.
+- **Mensaje Empático del Asistente:** En caso de saturación, el bot responde con un tono empático y humano:
+  > *"Me siento al límite de mi capacidad en este momento ⚡🤖. He atendido muchísimas consultas de estudiantes y mis circuitos necesitan un breve momento para recargar energía. Lamento no poder ayudarte ahora mismo con esta respuesta..."*
+- **Tarjeta Adaptativa con Botones Directos (`.saberlab-out-of-scope-card.rate-limited`):**
+  - Cabecera ámbar con icono `Zap`: `⚡ LÍMITE DE CAPACIDAD ALCANZADO`.
+  - Explicación amable para el estudiante: *"El asistente se encuentra temporalmente al tope de su cuota de uso. Para no detener tu aprendizaje, puedes resolver tu duda ahora mismo en:"*.
+  - Botones estilizados con acceso directo:
+    - **Consultar en Gemini:** Enlace directo a Google Gemini.
+    - **Consultar en ChatGPT:** Enlace directo con la pregunta original del usuario pre-cargada en la barra de consulta (`?q=...`).
+- **Resiliencia en Frontend (`SaberLabAiChat.jsx`):** Si una petición falla por red o retorna 429, el frontend atrapa el estado y despliega inmediatamente la tarjeta empática sin mostrar alertas crudas ni mensajes rotos.
+- **Compilación:** Verificado con `npm run build` (0 errores en 10.10s).
+
+### 19. Modo Flash (Respuestas Rápidas) con Estética Visual Amarillo-Rojo Eléctrico
+- **Optimización de Espacio y Altura de Escritura:**
+  - Se eliminó el botón duplicado de `⚡` junto al textarea para recuperar ancho horizontal completo, dejando el control de activación centralizado en el encabezado (`saberlab-ai-header-actions`) con resplandor animado `brief-active`.
+  - Altura del textarea incrementada (`min-height: 52px`, `padding: 12px 16px`, `line-height: 1.5`, `max-height: 160px`) con auto-expansión dinámica en tiempo real según el contenido escrito y restablecimiento automático al enviar.
+  - Placeholder simplificado y sin desbordamientos: `⚡ Pregunta rápida a [Bot]...`.
+- **Estética Flash en el Input (`.saberlab-ai-textarea.flash-input`):**
+  - **Paleta de Colores:** Transición viva entre amarillo ámbar (`#f59e0b`, `#fde68a`) y rojo vibrante (`#ef4444`).
+  - **Aura y Resplandor Animado (`@keyframes flashInputPulse`):** Pulso dinámico de sombras y bordes entre dorado y rojo fuego.
+  - **Botón de Envío Flash (`.saberlab-ai-send-btn.flash-send`):** Gradiente `linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)` con tamaño proporcional (`44px`).
+  - **Soporte de Tema Oscuro:** Fondo carbón cálido `#1c1917` con borde amarillo dorado y resplandor rojo fuego.
+- **Compilación:** Verificado con `npm run build` (0 errores en 9.49s). Cumplida regla de no ejecutar `git push` sin orden explícita.
+
+### 20. Hub de Fuentes, Herramientas Web & IA 3D en Semillero SIMI3D
+- **Catálogo Integrado (`SIMI_WEB_RESOURCES` en `simiData.js`):** 9 herramientas y plataformas clave curadas para el semillero:
+  - **Repositorios & Modelos 3D:** MakerWorld (Bambu Lab) y Banco de Tests de Calibración MakerWorld.
+  - **Calibración & Afinación de Máquinas:** Test de Flujo Volumétrico (15-30 mm³/s) y Teaching Tech 3D Calibration Suite (guía interactiva de E-steps, retracción, temperatura y PID).
+  - **MakerLab Paramétrico:** MakerLab Image to 3D, MakerLab Image to Keychain (llaveros rápidos para colegios) y Suite MakerLab de herramientas paramétricas.
+  - **Inteligencia Artificial 3D:** Meshy.ai (generador con texturas PBR completas) y Tripo3D (generación ultrarrápida en < 10s).
+- **Sub-Pestañas en Nuestros Recursos (`SimiResourcesTab.jsx`):**
+  - **Inventario Físico & Taller:** Control de impresoras FDM/SLA, filamentos, resinas e insumos con métricas en tiempo real.
+  - **Fuentes & Herramientas Web:** Buscador reactivo en vivo, filtro dinámico por 4 categorías, tarjetas interactivas con badges, tags, dominio y botón de apertura segura en nueva pestaña (`_blank`).
+- **Acceso Rápido en Inicio de SIMI (`PanelSimiHub.jsx`):**
+  - Card destacada en el inicio con píldoras de acceso directo a las herramientas recomendadas y enlace con cambio automático de sub-pestaña a `web`.
+- **Estilos Semánticos (`SimiResources.css` & `SimiHome.css`):** 100% compatibles con tema claro y tema oscuro mediante variables semánticas puras.
+- **Compilación:** Verificado con `npm run build` (0 errores en 14.90s). Cumplida regla de no ejecutar `git push` sin orden explícita.

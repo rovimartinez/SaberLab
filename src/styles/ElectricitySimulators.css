@@ -62,19 +62,15 @@ input[type=number] {
 
 /* ── Panel de visualización SVG ── */
 .sim-visual {
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--surface-sunken);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 180px;
     position: relative;
     overflow: hidden;
-}
-
-:root[data-theme='light'] .sim-visual {
-    background: rgba(0, 0, 0, 0.04);
 }
 
 /* ── Controles ── */
@@ -512,14 +508,10 @@ input[type=number] {
 
 /* ── Conductor Animation ── */
 .conductor-svg-wrapper {
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--surface-sunken);
     border-radius: 12px;
     padding: 0.75rem;
     overflow: hidden;
-}
-
-:root[data-theme='light'] .conductor-svg-wrapper {
-    background: rgba(0, 0, 0, 0.04);
 }
 
 .conductor-toggle-row {

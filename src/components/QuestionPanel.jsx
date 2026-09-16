@@ -1,4 +1,5 @@
 import React from 'react';
+import { Flag } from 'lucide-react';
 
 const QuestionPanel = ({ 
     currentQuestion, 
@@ -6,7 +7,9 @@ const QuestionPanel = ({
     question, 
     userAnswer, 
     onAnswer,
-    showFeedback = false
+    showFeedback = false,
+    isFlagged = false,
+    onToggleFlag
 }) => {
     const isAnswered = userAnswer !== undefined && userAnswer !== null && userAnswer !== '';
     const getOptionValue = (option) => {
@@ -28,8 +31,8 @@ const QuestionPanel = ({
     }
     
     return (
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="glass-panel evaluation-content-unselectable" style={{ padding: '2rem' }}>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <span style={{ 
                     color: 'var(--text-secondary)', 
                     fontSize: '0.85rem', 
@@ -37,10 +40,37 @@ const QuestionPanel = ({
                     border: '1px solid var(--glass-border)',
                     padding: '0.4rem 0.8rem', 
                     borderRadius: '20px',
-                    letterSpacing: '0.5px'
+                    letterSpacing: '0.5px',
+                    fontWeight: 600
                 }}>
                     Pregunta {currentQuestion + 1} de {totalQuestions}
                 </span>
+
+                {!showFeedback && onToggleFlag && (
+                    <button
+                        type="button"
+                        onClick={() => onToggleFlag(currentQuestion)}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
+                            background: isFlagged ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                            border: `1px solid ${isFlagged ? '#f59e0b' : 'rgba(255, 255, 255, 0.15)'}`,
+                            color: isFlagged ? '#fbbf24' : 'var(--text-secondary)',
+                            padding: '0.38rem 0.85rem',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            transition: 'all 0.2s ease',
+                            boxShadow: isFlagged ? '0 0 12px rgba(245, 158, 11, 0.25)' : 'none'
+                        }}
+                        title={isFlagged ? 'Desmarcar pregunta dudosa' : 'Marcar pregunta para revisarla antes de entregar'}
+                    >
+                        <Flag size={14} fill={isFlagged ? '#f59e0b' : 'none'} color={isFlagged ? '#f59e0b' : 'currentColor'} />
+                        <span>{isFlagged ? 'Marcada para revisión' : 'Marcar para revisión'}</span>
+                    </button>
+                )}
             </div>
 
             <h2 style={{ 
@@ -59,14 +89,15 @@ const QuestionPanel = ({
                     const isSelected = String(userAnswer) === String(optionValue);
                     const isCorrect = String(question?.correct) === String(optionValue);
                     
-                    let border = '1px solid var(--glass-border)';
-                    let background = 'var(--bg-secondary)';
+                    let border = '1px solid var(--border-default)';
+                    let background = 'var(--surface-card)';
                     let color = 'var(--text-primary)';
-                    let boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
-                    let badgeBg = 'var(--glass-bg)';
+                    let boxShadow = 'var(--shadow-sm)';
+                    let badgeBg = 'var(--bg-muted)';
                     let badgeColor = 'var(--text-secondary)';
                     let transform = 'translateY(0)';
                     let fontWeight = '500';
+                    let opacity = 1;
                     
                     if (showFeedback) {
                         if (isCorrect) {
@@ -86,12 +117,12 @@ const QuestionPanel = ({
                             badgeBg = 'rgba(255, 255, 255, 0.3)';
                             badgeColor = '#ffffff';
                         } else {
-                            border = '1px solid var(--glass-border)';
-                            background = 'var(--bg-secondary)';
-                            color = 'var(--text-muted)';
-                            badgeBg = 'var(--glass-bg)';
-                            badgeColor = 'var(--text-muted)';
-                            opacity = 0.6;
+                            border = '1px solid var(--border-subtle)';
+                            background = 'var(--surface-card-subtle)';
+                            color = 'var(--text-primary)';
+                            badgeBg = 'var(--bg-muted)';
+                            badgeColor = 'var(--text-secondary)';
+                            opacity = 0.95;
                         }
                     } else if (isSelected) {
                         border = 'none';
@@ -109,15 +140,16 @@ const QuestionPanel = ({
                         <button
                             key={index}
                             onClick={() => onAnswer(optionValue)}
-                            disabled={isAnswered && showFeedback}
+                            disabled={showFeedback}
                             style={{
                                 padding: '1rem 1.25rem',
                                 border,
                                 borderRadius: '12px',
                                 background,
                                 color,
+                                opacity,
                                 textAlign: 'left',
-                                cursor: (isAnswered && showFeedback) ? 'default' : 'pointer',
+                                cursor: showFeedback ? 'default' : 'pointer',
                                 fontSize: '1rem',
                                 fontWeight,
                                 transform,

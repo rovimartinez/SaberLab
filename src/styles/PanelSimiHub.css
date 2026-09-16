@@ -1,0 +1,1135 @@
+/* ============================================================
+   PanelSimiHub.css — Entorno Temático Exclusivo SIMI3D
+   Layout Principal, Sidebar, Mobile Nav y Formularios Base
+   ============================================================ */
+
+@import './simi-theme.css';
+@import './SimiHome.css';
+@import './SimiTracks.css';
+@import './SimiPins.css';
+@import './SimiEvents.css';
+@import './SimiResources.css';
+@import './SimiProjects.css';
+@import './SimiMembers.css';
+
+.simi-hub-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.25rem;
+    padding-bottom: 0.75rem;
+    min-height: calc(100vh - 2.5rem);
+    box-sizing: border-box;
+    color: var(--text-body);
+    background-color: #EDF2F9;
+    background-image: 
+        linear-gradient(rgba(25, 37, 132, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(25, 37, 132, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    border-radius: 24px;
+}
+
+/* ── Hero Banner Superior con Degradado Temático Completo ── */
+.simi-hero-banner {
+    position: relative;
+    background: linear-gradient(135deg, #B541FA 0%, #4FD2E9 45%, #38bdf8 80%, #60a5fa 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 1.5rem 1.75rem;
+    overflow: hidden;
+    box-shadow: 0 14px 32px -4px rgba(79, 210, 233, 0.25), 0 4px 12px rgba(181, 65, 250, 0.15);
+}
+
+.simi-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.simi-logo-container {
+    width: 62px;
+    height: 62px;
+    min-width: 62px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.simi-brand-icon-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(79, 210, 233, 0.2) 0%, rgba(181, 65, 250, 0.2) 100%);
+}
+
+.simi-brand-icon {
+    color: #192584;
+}
+
+.simi-logo-container:hover {
+    transform: scale(1.06);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.simi-header-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.simi-badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    color: #ffffff;
+    padding: 0.25rem 0.8rem;
+    border-radius: 99px;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.simi-title {
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.4px;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.simi-subtitle {
+    font-size: 0.86rem;
+    color: rgba(255, 255, 255, 0.92);
+    max-width: 580px;
+    line-height: 1.4;
+    margin: 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.simi-hero-stats {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    height: 58px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(12px);
+    padding: 0 1.15rem;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+}
+
+.simi-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.simi-stat-val {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.1;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.simi-stat-lbl {
+    font-size: 0.65rem;
+    font-weight: 850;
+    color: rgba(255, 255, 255, 0.85);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.simi-header-user-wrapper {
+    display: flex;
+    align-items: center;
+    margin-left: 0.25rem;
+}
+
+.simi-header-user-wrapper .hero-user-pill {
+    height: 58px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    color: #ffffff;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+
+.simi-header-user-wrapper .hero-user-pill:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: #ffffff;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Floating Action Buttons (FAB) Redes Sociales (WhatsApp & Instagram) ── */
+.simi-social-fabs-container {
+    position: fixed;
+    bottom: 26px;
+    right: 82px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 999;
+}
+
+.simi-social-fab {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border: 2px solid #ffffff;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.simi-whatsapp-fab {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    box-shadow: 0 8px 24px -3px rgba(37, 211, 102, 0.45);
+}
+
+.simi-whatsapp-fab:hover {
+    transform: scale(1.12) translateY(-2px);
+    box-shadow: 0 10px 30px -2px rgba(37, 211, 102, 0.65);
+    color: #ffffff;
+}
+
+.simi-instagram-fab {
+    background: linear-gradient(135deg, #B541FA, #ec4899, #4FD2E9);
+    box-shadow: 0 8px 24px -3px rgba(181, 65, 250, 0.45);
+}
+
+.simi-instagram-fab:hover {
+    transform: scale(1.12) translateY(-2px);
+    box-shadow: 0 10px 30px -2px rgba(181, 65, 250, 0.6);
+    color: #ffffff;
+}
+
+.simi-viewmode-fab {
+    position: relative;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    box-shadow: 0 8px 24px -3px rgba(2, 132, 199, 0.45);
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+
+.simi-viewmode-fab:hover {
+    transform: scale(1.12) translateY(-2px);
+    box-shadow: 0 10px 30px -2px rgba(2, 132, 199, 0.65);
+    color: #ffffff;
+}
+
+.simi-viewmode-fab.is-active {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 8px 24px -3px rgba(245, 158, 11, 0.55);
+    animation: simiPulseActive 2s infinite ease-in-out;
+}
+
+.simi-viewmode-fab.is-active:hover {
+    box-shadow: 0 10px 30px -2px rgba(245, 158, 11, 0.75);
+}
+
+.simi-viewmode-fab-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 0.55rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    padding: 1px 5px;
+    border-radius: 99px;
+    background: #0284c7;
+    color: #ffffff;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    line-height: 1.2;
+}
+
+.simi-viewmode-fab.is-active .simi-viewmode-fab-badge {
+    background: #f59e0b;
+}
+
+@keyframes simiPulseActive {
+    0%, 100% {
+        box-shadow: 0 8px 24px -3px rgba(245, 158, 11, 0.55);
+    }
+    50% {
+        box-shadow: 0 12px 32px 2px rgba(245, 158, 11, 0.85);
+    }
+}
+
+.simi-social-fab:active {
+    transform: scale(0.95);
+}
+
+/* ── Workspace con Panel Lateral Izquierdo SIMI3D ── */
+.simi-workspace-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    position: relative;
+    width: 100%;
+    flex: 1;
+}
+
+@media (max-width: 960px) {
+    .simi-workspace-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.simi-sidebar-nav {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 1rem 0.95rem 0.9rem 0.95rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.65rem;
+    box-shadow: 0 12px 30px -6px rgba(25, 37, 132, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
+    box-sizing: border-box;
+    position: sticky;
+    top: 1.25rem;
+    height: calc(100vh - 3.75rem);
+    min-height: calc(100vh - 3.75rem);
+    max-height: calc(100vh - 3.75rem);
+    overflow-y: auto;
+    scrollbar-width: none;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.simi-sidebar-nav::-webkit-scrollbar {
+    display: none;
+}
+
+@media (max-width: 960px) {
+    .simi-sidebar-nav {
+        display: none !important;
+    }
+}
+
+/* ── Encabezado de Marca en Sidebar ── */
+.simi-sidebar-brand-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.1rem 0.2rem;
+}
+
+.simi-sidebar-brand-logo-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 11px;
+    background: #ffffff;
+    border: 1.5px solid #4FD2E9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(79, 210, 233, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.simi-sidebar-brand-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.simi-sidebar-brand-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(79, 210, 233, 0.25) 0%, rgba(181, 65, 250, 0.25) 100%);
+}
+
+.simi-sidebar-brand-logo-box:hover {
+    transform: scale(1.06);
+    box-shadow: 0 6px 16px rgba(181, 65, 250, 0.35);
+}
+
+.simi-sidebar-brand-icon {
+    color: #192584;
+}
+
+.simi-sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.simi-sidebar-brand-title {
+    font-size: 1.18rem;
+    font-weight: 950;
+    letter-spacing: -0.4px;
+    color: #192584;
+    line-height: 1.1;
+}
+
+.simi-sidebar-brand-3d {
+    background: linear-gradient(135deg, #B541FA 0%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 950;
+}
+
+.simi-sidebar-brand-sub {
+    font-size: 0.65rem;
+    font-weight: 750;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.simi-sidebar-divider {
+    height: 1.5px;
+    background: linear-gradient(90deg, #e2e8f0 0%, rgba(79, 210, 233, 0.4) 50%, #e2e8f0 100%);
+    width: 100%;
+    margin-top: -0.25rem;
+    margin-bottom: -0.25rem;
+}
+
+.simi-sidebar-header {
+    padding-bottom: 0.5rem;
+    border-bottom: 1.5px solid #e2e8f0;
+}
+
+.simi-sidebar-label {
+    font-size: 0.72rem;
+    font-weight: 850;
+    color: #192584;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.simi-sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+}
+
+.simi-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.58rem 0.8rem;
+    border-radius: 13px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    color: #475569;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.simi-sidebar-item:hover {
+    background: #e6faff;
+    color: #192584;
+    border-color: #4FD2E9;
+    transform: translateX(3px);
+}
+
+.simi-sidebar-item.active {
+    background: linear-gradient(135deg, #f5e8ff 0%, #e6faff 100%);
+    border-color: #B541FA;
+    color: #192584;
+    box-shadow: 0 4px 14px -2px rgba(181, 65, 250, 0.22);
+    font-weight: 800;
+}
+
+.simi-sidebar-rules-btn {
+    border-color: rgba(6, 182, 212, 0.4);
+    background: #f0fdfa;
+}
+
+.simi-sidebar-rules-btn:hover {
+    background: linear-gradient(135deg, #ecfeff 0%, #fdf4ff 100%);
+    border-color: #06b6d4;
+    color: #0891b2;
+}
+
+.simi-sidebar-rules-btn .rules-icon {
+    border-color: #06b6d4;
+    color: #0891b2;
+    background: rgba(6, 182, 212, 0.1);
+}
+
+.simi-sidebar-requests-btn {
+    border-color: rgba(181, 65, 250, 0.35);
+    background: #faf5ff;
+}
+
+.simi-sidebar-requests-btn:hover {
+    background: linear-gradient(135deg, #f5e8ff 0%, #ede9fe 100%);
+    border-color: #B541FA;
+    color: #7e22ce;
+}
+
+.simi-sidebar-requests-btn .requests-icon {
+    border-color: #B541FA;
+    color: #9333ea;
+    background: rgba(181, 65, 250, 0.12);
+}
+
+.simi-sidebar-badge-counter {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.66rem;
+    font-weight: 900;
+    padding: 1px 6.5px;
+    border-radius: 99px;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+.simi-sidebar-icon {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1.5px solid #4FD2E9;
+    color: #4FD2E9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.simi-sidebar-item.active .simi-sidebar-icon {
+    background: linear-gradient(135deg, #B541FA 0%, #192584 100%);
+    color: #ffffff;
+    border-color: #4FD2E9;
+    box-shadow: 0 0 10px rgba(181, 65, 250, 0.35);
+}
+
+.simi-sidebar-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.simi-sidebar-title {
+    font-size: 0.86rem;
+    font-weight: 850;
+    color: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.simi-sidebar-desc {
+    font-size: 0.7rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.15;
+}
+
+/* ── Bloque Inferior del Sidebar (Solicitudes, Reglas y Usuario) ── */
+.simi-sidebar-secondary-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+/* ── Footer de Usuario en Sidebar ── */
+.simi-sidebar-user-footer {
+    padding-top: 0.55rem;
+    border-top: 1.5px solid #e2e8f0;
+    width: 100%;
+}
+
+.simi-sidebar-user-footer .hero-user-pill {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.8rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 13px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.simi-sidebar-user-footer .hero-user-pill:hover {
+    background: #e6faff;
+    border-color: #4FD2E9;
+    box-shadow: 0 4px 14px rgba(79, 210, 233, 0.25);
+    transform: translateY(-1px);
+}
+
+.simi-sidebar-user-footer .hero-user-name {
+    color: #192584;
+    font-weight: 850;
+    font-size: 0.85rem;
+}
+
+.simi-sidebar-user-footer .hero-user-role-badge {
+    background: rgba(181, 65, 250, 0.12);
+    color: #7e22ce;
+    border: 1px solid rgba(181, 65, 250, 0.3);
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+
+.simi-main-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ── Formularios y Modales Base SIMI3D ── */
+.simi-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.simi-form-label {
+    font-size: 0.76rem;
+    font-weight: 750;
+    color: #0f172a;
+    letter-spacing: 0.2px;
+}
+
+.simi-form-input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: #0f172a;
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.simi-form-input:hover {
+    border-color: #4FD2E9;
+}
+
+.simi-form-input:focus {
+    border-color: #B541FA;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(181, 65, 250, 0.2);
+}
+
+.simi-form-input::placeholder {
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+textarea.simi-form-input {
+    resize: vertical;
+    min-height: 65px;
+    line-height: 1.4;
+}
+
+select.simi-form-input {
+    cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── BARRA DE NAVEGACIÓN INFERIOR MÓVIL ESTILO APLICACIÓN BANCARIA ──
+   ═══════════════════════════════════════════════════════════════════════ */
+.simi-mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border-top: 1.5px solid #e2e8f0;
+    box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.08);
+    z-index: 900;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+    justify-content: space-around;
+    align-items: center;
+}
+
+/* ── Botones de Acción de Encabezado (Desktop Add Buttons) ── */
+.simi-desktop-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+    color: #ffffff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.simi-desktop-add-btn:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0369a1 100%);
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 18px rgba(6, 182, 212, 0.45);
+}
+
+.simi-desktop-add-btn:active {
+    transform: scale(0.97);
+}
+
+@media (max-width: 960px) {
+    .simi-mobile-bottom-nav {
+        display: flex;
+    }
+    
+    .simi-hub-container {
+        padding: 0.85rem;
+        padding-bottom: 78px;
+    }
+
+    .simi-social-fabs-container {
+        display: none !important;
+    }
+
+    .simi-desktop-add-btn {
+        display: none !important;
+    }
+
+    .simi-mobile-action-fab {
+        display: flex !important;
+        position: fixed;
+        bottom: 78px;
+        right: 20px;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #06b6d4 0%, #B541FA 100%);
+        color: #ffffff;
+        border: 2px solid #ffffff;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.45);
+        z-index: 850;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .simi-mobile-action-fab:active {
+        transform: scale(0.92);
+    }
+
+    .simi-main-content {
+        gap: 0.5rem !important;
+    }
+
+    .simi-home-dashboard {
+        gap: 0.5rem !important;
+    }
+
+    /* ── Hero Compacto en Móvil ── */
+    .simi-home-hero-card {
+        padding: 0.75rem 0.85rem;
+        gap: 0.5rem;
+        border-radius: 16px;
+        margin-bottom: 0 !important;
+    }
+
+    .simi-home-hero-body {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .simi-home-avatar-badge .simi-home-avatar-inner {
+        display: flex !important;
+        width: 84px;
+        height: 84px;
+        border-radius: 22px;
+        flex-shrink: 0;
+    }
+
+    .simi-home-hero-info {
+        min-width: 0;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .simi-home-greeting {
+        font-size: 1.1rem;
+        line-height: 1.2;
+    }
+
+    .simi-home-role-tag {
+        font-size: 0.68rem;
+        padding: 1px 6px;
+    }
+
+    .simi-home-hero-desc {
+        display: none;
+    }
+
+    .simi-home-xp-box {
+        padding: 6px 10px;
+        gap: 3px;
+        border-radius: 10px;
+    }
+
+    .simi-home-xp-header {
+        font-size: 0.72rem;
+    }
+
+    .simi-home-xp-header .simi-home-xp-subtext {
+        display: none;
+    }
+
+    /* ── Métricas Tácticas en Móvil ── */
+    .simi-standalone-metrics-bar {
+        padding: 0.4rem 0.65rem;
+        border-radius: 14px;
+        gap: 0.35rem;
+        box-shadow: 0 4px 14px -2px rgba(25, 37, 132, 0.05);
+        margin: 0 !important;
+    }
+
+    .simi-standalone-metrics-bar .simi-metric-interactive {
+        padding: 2px 4px;
+        border-radius: 8px;
+    }
+
+    .simi-standalone-metrics-bar .simi-home-metric-val {
+        font-size: 1.05rem;
+        line-height: 1.1;
+    }
+
+    .simi-standalone-metrics-bar .simi-home-metric-lbl {
+        font-size: 0.58rem;
+        letter-spacing: 0.2px;
+        line-height: 1.15;
+        margin-top: 1px;
+    }
+
+    .simi-standalone-metrics-bar .simi-home-metric-divider {
+        height: 18px;
+    }
+
+    /* ── Acordeón de Insignias en Móvil ── */
+    .simi-badges-ribbon-card {
+        padding: 0.65rem 0.85rem !important;
+        border-radius: 14px !important;
+        gap: 0.45rem !important;
+        margin: 0 !important;
+    }
+
+    .simi-badges-accordion-toggle {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .simi-badges-ribbon-hint {
+        font-size: 0.76rem !important;
+        color: #0284c7 !important;
+        font-weight: 700 !important;
+    }
+
+    .simi-badges-chevron {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        color: #0284c7 !important;
+    }
+
+    .simi-badges-chevron.open {
+        transform: rotate(180deg);
+        color: #06b6d4 !important;
+    }
+
+    .simi-badges-ribbon-content.is-collapsed {
+        display: none !important;
+    }
+
+    .simi-badges-ribbon-content.is-expanded {
+        display: block !important;
+        margin-top: 0.5rem;
+    }
+
+    /* Ocultar elementos de escritorio en móvil */
+    .simi-desktop-only {
+        display: none !important;
+    }
+}
+
+.simi-mobile-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 2px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.simi-mobile-nav-btn.active {
+    color: #06b6d4;
+    font-weight: 900;
+}
+
+.simi-mobile-nav-btn.active svg {
+    transform: translateY(-2px);
+    color: #06b6d4;
+}
+
+.simi-mobile-badge-dot {
+    position: absolute;
+    top: 5px;
+    right: 18px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 1.5px solid #ffffff;
+}
+
+/* ── Modal / Sheet de Más Opciones ('...') en Móvil ── */
+.simi-mobile-more-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: simi-backdrop-fade 0.2s ease;
+}
+
+.simi-mobile-more-sheet {
+    width: 100%;
+    max-width: 520px;
+    background: #ffffff;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 1rem 1.25rem 1.75rem 1.25rem;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: simi-sheet-slide 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-sizing: border-box;
+}
+
+.simi-mobile-more-handle {
+    width: 42px;
+    height: 5px;
+    background: #cbd5e1;
+    border-radius: 99px;
+    align-self: center;
+    margin-bottom: 0.25rem;
+}
+
+.simi-mobile-more-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    font-weight: 850;
+    color: #192584;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.65rem;
+}
+
+.simi-mobile-more-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.simi-mobile-more-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.simi-mobile-more-item:hover,
+.simi-mobile-more-item.active {
+    background: #e6faff;
+    border-color: #4FD2E9;
+}
+
+.simi-mobile-more-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.simi-mobile-more-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.simi-mobile-more-text strong {
+    font-size: 0.88rem;
+    color: #0f172a;
+}
+
+.simi-mobile-more-text small {
+    font-size: 0.74rem;
+    color: #64748b;
+}
+
+/* ── Tarjeta de Perfil Estilizada en Mobile Sheet ── */
+.simi-mobile-sheet-user-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    margin-top: 0.25rem;
+}
+
+.simi-mobile-sheet-user-card:hover {
+    background: #e6faff;
+    border-color: #4FD2E9;
+    box-shadow: 0 4px 14px rgba(79, 210, 233, 0.2);
+    transform: translateY(-1px);
+}
+
+.simi-mobile-sheet-user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 2px solid #06b6d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
+}
+
+.simi-mobile-sheet-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.simi-mobile-sheet-user-name {
+    font-size: 0.92rem;
+    font-weight: 850;
+    color: #192584;
+    line-height: 1.2;
+}
+
+.simi-mobile-sheet-role-pill {
+    background: #faf5ff;
+    color: #9333ea;
+    border: 1px solid #f3e8ff;
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 1px 7px;
+    border-radius: 99px;
+}
+
+.simi-mobile-sheet-tag-pill {
+    background: #ecfeff;
+    color: #0891b2;
+    border: 1px solid #cffafe;
+    font-size: 0.66rem;
+    font-weight: 850;
+    padding: 1px 7px;
+    border-radius: 99px;
+    letter-spacing: 0.3px;
+}
+
+@keyframes simi-backdrop-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes simi-sheet-slide {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Bell, Clock, AlertTriangle, ShieldCheck, Activity, Layers, CheckCircle2, Award, ShieldAlert, EyeOff, Maximize, Lock, AlertOctagon, Sparkles } from 'lucide-react';
+import { Bell, Clock, AlertTriangle, ShieldCheck, Activity, Layers, CheckCircle2, Award, ShieldAlert, Eye, EyeOff, Maximize, Lock, AlertOctagon, Sparkles, Flag, Wifi, WifiOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/useAuth';
 import { getLessonInfo, LESSONS_REGISTRY } from '../data/coursesData.jsx';
@@ -73,7 +73,9 @@ const normalizeSavedAnswers = (savedAnswers, normalizedQuestions) => {
 const EvaluationPlayer = () => {
     const { evaluationKey } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, isStaff } = useAuth();
+    const normKey = (evaluationKey || '').toLowerCase();
+    const isExamenL6 = normKey === 'ee-m1-l6';
     
     const [currentQuestion, setCurrentQuestion] = useState(() => {
         try {
@@ -150,6 +152,43 @@ const EvaluationPlayer = () => {
     const [showResults, setShowResults] = useState(false);
     const [result, setResult] = useState(null);
 
+    // ── ESTADOS DE MARCAR PREGUNTAS Y CONEXIÓN ──
+    const [flaggedQuestions, setFlaggedQuestions] = useState(() => {
+        try {
+            const saved = localStorage.getItem(`exam_flagged_${evaluationKey}`);
+            return saved ? JSON.parse(saved) : {};
+        } catch { return {}; }
+    });
+    const [showConfirmSubmitModal, setShowConfirmSubmitModal] = useState(false);
+    const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? navigator.onLine : true));
+
+    const handleToggleFlag = (index) => {
+        setFlaggedQuestions(prev => {
+            const next = { ...prev, [index]: !prev[index] };
+            if (!next[index]) delete next[index];
+            localStorage.setItem(`exam_flagged_${evaluationKey}`, JSON.stringify(next));
+            return next;
+        });
+    };
+
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOnline(true);
+            setSyncStatus('saved');
+        };
+        const handleOffline = () => {
+            setIsOnline(false);
+            setSyncStatus('offline');
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
     // Cargar puntaje de práctica en tiempo real
     useEffect(() => {
         const updatePracticalScore = () => {
@@ -185,12 +224,12 @@ const EvaluationPlayer = () => {
                         evalObj = {
                             id: evaluationKey,
                             evaluation_key: evaluationKey,
-                            title: lesson.title || 'Examen 1 - Fundamentos de Electricidad y Circuitos Básicos',
-                            description: 'Evaluación Integral del Módulo 1 (Teoría: 60 pts + Práctica: 90 pts = 150 pts)',
+                            title: lesson.title || 'Evaluación de Módulo',
+                            description: lesson.description || (evaluationKey.startsWith('ee-') ? 'Evaluación Integral del Módulo 1 (Teoría: 60 pts + Práctica: 90 pts = 150 pts)' : 'Evaluación del Módulo'),
                             questions: lesson.questions || [],
-                            points: 150,
-                            time_limit: 60,
-                            passing_score: 70
+                            points: lesson.points || 150,
+                            time_limit: lesson.time_limit || 60,
+                            passing_score: lesson.passing_score || 70
                         };
                     }
                 }
@@ -234,7 +273,8 @@ const EvaluationPlayer = () => {
                     }
 
                     if (!finalQuestions || finalQuestions.length === 0) {
-                        finalQuestions = rawQuestions.map(q => {
+                        const shuffledRawQuestions = shuffleArray(rawQuestions);
+                        finalQuestions = shuffledRawQuestions.map(q => {
                             let opts = [];
                             if (Array.isArray(q.options)) {
                                 opts = q.options.map(getOptionValue);
@@ -293,23 +333,26 @@ const EvaluationPlayer = () => {
                         const { data: attemptsData } = await api(`/attempts?evaluation_key=${encodeURIComponent(evaluationKey)}`);
                         const lastAttempt = (Array.isArray(attemptsData) && attemptsData.length > 0) ? attemptsData[0] : null;
                         const isReviewRequested = new URLSearchParams(window.location.search).get('review') === 'true';
+                        const areResultsReleased = isStaff || (evalObj.results_released !== 0 && evalObj.results_released !== false && lastAttempt?.results_released !== false);
 
                         if (lastAttempt && lastAttempt.completed_at) {
                             setFinalizing(false);
                             setExamStarted(false);
-                            if (!isReviewRequested) {
+                            if (!isReviewRequested || !areResultsReleased) {
                                 setShowResults(true);
+                                setReviewMode(false);
                             } else {
                                 setReviewMode(true);
                                 setShowResults(false);
                             }
                             setResult({
-                                score: lastAttempt.score,
-                                totalPts: lastAttempt.points_obtained ?? lastAttempt.score,
+                                score: areResultsReleased ? lastAttempt.score : null,
+                                totalPts: areResultsReleased ? (lastAttempt.points_obtained ?? lastAttempt.score) : null,
                                 maxExamPts: lastAttempt.max_points || 150,
-                                passed: lastAttempt.passed
+                                passed: areResultsReleased ? lastAttempt.passed : null,
+                                resultsReleased: areResultsReleased
                             });
-                            if (lastAttempt.answers) {
+                            if (areResultsReleased && lastAttempt.answers) {
                                 let parsed = lastAttempt.answers;
                                 if (typeof parsed === 'string') parsed = JSON.parse(parsed);
                                 if (parsed?.theory) setAnswers(parsed.theory);
@@ -318,13 +361,20 @@ const EvaluationPlayer = () => {
                         } else if (localCompleted) {
                             setFinalizing(false);
                             setExamStarted(false);
-                            if (!isReviewRequested) {
+                            const localReleased = isStaff || (evalObj.results_released !== 0 && evalObj.results_released !== false && localCompleted.resultsReleased !== false);
+                            if (!isReviewRequested || !localReleased) {
                                 setShowResults(true);
+                                setReviewMode(false);
                             } else {
                                 setReviewMode(true);
                                 setShowResults(false);
                             }
-                            setResult(localCompleted);
+                            setResult({
+                                ...localCompleted,
+                                score: localReleased ? localCompleted.score : null,
+                                totalPts: localReleased ? localCompleted.totalPts : null,
+                                resultsReleased: localReleased
+                            });
                         } else {
                             // Si no hay intento completado, deshabilitar modo revisión para permitir rendir la prueba
                             setReviewMode(false);
@@ -585,6 +635,7 @@ const EvaluationPlayer = () => {
     };
 
     const handleAnswer = (answerValue) => {
+        if (reviewMode || showResults) return;
         const newAnswers = { ...answers, [currentQuestion]: answerValue };
         setAnswers(newAnswers);
         setExamStarted(true);
@@ -617,15 +668,62 @@ const EvaluationPlayer = () => {
         setCurrentQuestion(index);
     };
 
-    const handleFinishExam = async (isAuto = false, infractionType = null) => {
-        if (!isAuto) {
-            const confirmed = window.confirm('¿Deseas finalizar el examen oficial? Se consolidarán tus puntajes de Teoría y Práctica.');
-            if (!confirmed) return;
+    const handleResetAttempt = async () => {
+        const confirmMsg = isStaff
+            ? '¿Deseas restablecer este intento como Docente/Admin? Se eliminará el registro de finalización y podrás realizar el examen nuevamente desde cero.'
+            : '¿Deseas restablecer este intento? Se borrará el registro anterior y podrás volver a realizar la evaluación.';
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            await api(`/attempts?evaluation_key=${encodeURIComponent(evaluationKey)}`, { method: 'DELETE' });
+        } catch (e) {
+            console.error('Error eliminando intento en la base de datos:', e);
         }
+
+        const normKey = (evaluationKey || '').toLowerCase();
+        localStorage.removeItem(`exam_completed_${evaluationKey}`);
+        localStorage.removeItem(`exam_completed_${normKey}`);
+        localStorage.removeItem(`exam_answers_${evaluationKey}`);
+        localStorage.removeItem(`exam_started_${evaluationKey}`);
+        localStorage.removeItem(`exam_end_time_${evaluationKey}`);
+        localStorage.removeItem(`exam_current_q_${evaluationKey}`);
+        localStorage.removeItem(`exam_shuffled_questions_${evaluationKey}`);
+        localStorage.removeItem(`exam_strikes_${evaluationKey}`);
+        localStorage.removeItem(`exam_infractions_${evaluationKey}`);
+        localStorage.removeItem(`practical_answers_${evaluationKey}`);
+        localStorage.removeItem(`practical_answers_${normKey}`);
+        localStorage.removeItem(`exam_flagged_${evaluationKey}`);
+
+        setShowResults(false);
+        setReviewMode(false);
+        setResult(null);
+        setAnswers({});
+        setFlaggedQuestions({});
+        setStrikes(0);
+        setCurrentQuestion(0);
+        setExamStarted(false);
+        window.location.href = `/dashboard/evaluations/${evaluationKey}`;
+    };
+
+    const handleResetAnswers = () => {
+        if (window.confirm('¿Deseas borrar todas las respuestas seleccionadas y reiniciar el examen desde la primera pregunta?')) {
+            localStorage.removeItem(`exam_answers_${evaluationKey}`);
+            localStorage.removeItem(`exam_current_q_${evaluationKey}`);
+            localStorage.removeItem(`exam_flagged_${evaluationKey}`);
+            setAnswers({});
+            setFlaggedQuestions({});
+            setCurrentQuestion(0);
+        }
+    };
+
+    const handleFinishExam = async (isAuto = false, infractionType = null) => {
+        setShowConfirmSubmitModal(false);
 
         if (document.fullscreenElement) {
             document.exitFullscreen().catch(() => {});
         }
+
+        setFinalizing(true);
 
         let correctCount = 0;
         questions.forEach((q, idx) => {
@@ -665,7 +763,7 @@ const EvaluationPlayer = () => {
         const integrityStatus = infractionType === 'infraction' || strikes >= 3 ? 'infraction' : strikes > 0 ? 'warning' : 'clean';
 
         try {
-            await api('/attempts', {
+            const res = await api('/attempts', {
                 method: 'POST',
                 body: {
                     evaluation_key: evaluationKey,
@@ -687,29 +785,33 @@ const EvaluationPlayer = () => {
                 }
             });
 
+            const isResultsReleased = isStaff || (evaluation?.results_released !== false && evaluation?.results_released !== 0 && res?.data?.results_released !== false);
+
             setResult({ 
-                score: scorePct, 
-                totalPts, 
+                score: isResultsReleased ? scorePct : null, 
+                totalPts: isResultsReleased ? totalPts : null, 
                 maxExamPts, 
-                theoryPts, 
+                theoryPts: isResultsReleased ? theoryPts : null, 
                 maxTheoryPts, 
-                practicalScore: currentPracticalScore, 
-                correctCount, 
+                practicalScore: isResultsReleased ? currentPracticalScore : null, 
+                correctCount: isResultsReleased ? correctCount : null, 
                 totalQuestions, 
-                passed,
-                integrityStatus
+                passed: isResultsReleased ? passed : null,
+                integrityStatus,
+                resultsReleased: isResultsReleased
             });
             setShowResults(true);
             setFinalizing(false);
             
             // Guardar marcador de finalización en cliente y base de datos
             const completionRecord = {
-                score: scorePct,
-                points_obtained: totalPts,
+                score: isResultsReleased ? scorePct : null,
+                points_obtained: isResultsReleased ? totalPts : null,
                 max_points: maxExamPts,
-                passed: passed,
+                passed: isResultsReleased ? passed : null,
                 integrityStatus: integrityStatus,
-                completed_at: new Date().toISOString()
+                completed_at: new Date().toISOString(),
+                resultsReleased: isResultsReleased
             };
             localStorage.setItem(`exam_completed_${normKey}`, JSON.stringify(completionRecord));
             localStorage.setItem(`exam_completed_${evaluationKey}`, JSON.stringify(completionRecord));
@@ -721,6 +823,7 @@ const EvaluationPlayer = () => {
             localStorage.removeItem(`exam_shuffled_questions_${evaluationKey}`);
             localStorage.removeItem(`exam_current_q_${evaluationKey}`);
             localStorage.removeItem(`exam_active_phase_${evaluationKey}`);
+            localStorage.removeItem(`exam_flagged_${evaluationKey}`);
             
         } catch (error) {
             console.error('Error guardando intento:', error);
@@ -746,7 +849,7 @@ const EvaluationPlayer = () => {
                     <h2 style={{ color: '#f8fafc', marginBottom: '1rem' }}>Sin Preguntas</h2>
                     <p style={{ color: '#94a3b8', marginBottom: '2rem' }}>Esta evaluación aún no tiene preguntas publicadas por el docente.</p>
                     <button
-                        onClick={() => navigate('/dashboard/my-courses')}
+                        onClick={() => navigate('/dashboard')}
                         style={{
                             background: 'rgba(255,255,255,0.1)',
                             color: 'white',
@@ -756,7 +859,7 @@ const EvaluationPlayer = () => {
                             cursor: 'pointer'
                         }}
                     >
-                        Volver a Cursos
+                        Volver al Inicio
                     </button>
                 </div>
             </div>
@@ -819,7 +922,7 @@ const EvaluationPlayer = () => {
                             <span>Aceptar Protocolo e Iniciar Examen en Pantalla Completa</span>
                         </button>
                         <button
-                            onClick={() => navigate('/dashboard/my-courses')}
+                            onClick={() => navigate('/dashboard')}
                             style={{
                                 background: 'rgba(255, 255, 255, 0.08)',
                                 color: '#cbd5e1',
@@ -840,9 +943,77 @@ const EvaluationPlayer = () => {
     }
 
     if (showResults) {
+        const isResultsProtected = !isStaff && (evaluation?.results_released === false || evaluation?.results_released === 0 || result?.resultsReleased === false);
+
+        if (isResultsProtected) {
+            return (
+                <div className="notifications-page">
+                    <div className="glass-panel" style={{ padding: '3.5rem 2rem', textAlign: 'center', maxWidth: '650px', margin: '2rem auto', borderRadius: '24px', border: '1.5px solid var(--border-default)' }}>
+                        <div style={{
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '24px',
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            border: '2px solid #10b981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 1.5rem',
+                            boxShadow: '0 0 30px rgba(16, 185, 129, 0.25)'
+                        }}>
+                            <CheckCircle2 size={46} color="#10b981" />
+                        </div>
+
+                        <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
+                            ¡Examen Enviado con Éxito!
+                        </h1>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1.05rem', lineHeight: '1.6' }}>
+                            Tus respuestas para <strong style={{ color: 'var(--text-primary)' }}>{evaluation.title}</strong> han sido consolidadas y almacenadas con sello temporal en el servidor.
+                        </p>
+
+                        <div style={{
+                            background: 'var(--surface-card-subtle)',
+                            border: '1.5px solid var(--border-default)',
+                            borderRadius: '18px',
+                            padding: '1.5rem',
+                            marginBottom: '2.25rem',
+                            textAlign: 'left',
+                            boxShadow: 'var(--shadow-sm)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem', color: 'var(--brand-primary)', fontWeight: 800 }}>
+                                <Lock size={20} />
+                                <span style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Calificaciones y Solucionario Protegidos</span>
+                            </div>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', margin: 0, lineHeight: '1.6' }}>
+                                El docente ha establecido que la retroalimentación detallada y el puntaje oficial se publicarán una vez culmine la sesión de evaluación para todo el grupo. Podrás consultar tu calificación y el solucionario ingresando nuevamente a este enlace cuando las notas sean liberadas.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            style={{
+                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                color: 'white',
+                                border: 'none',
+                                padding: '1rem 2.5rem',
+                                borderRadius: '14px',
+                                fontWeight: 800,
+                                fontSize: '1rem',
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 20px rgba(2, 132, 199, 0.4)',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            Volver al Inicio
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="notifications-page">
-                <div className="glass-panel" style={{ padding: '3rem 2rem', textAlign: 'center', maxWidth: '650px', margin: '2rem auto', borderRadius: '24px', border: '1.5px solid rgba(56, 189, 248, 0.3)' }}>
+                <div className="glass-panel" style={{ padding: '3rem 2rem', textAlign: 'center', maxWidth: '650px', margin: '2rem auto', borderRadius: '24px', border: '1.5px solid var(--border-default)', boxShadow: 'var(--shadow-md)' }}>
                     <div style={{
                         width: '72px',
                         height: '72px',
@@ -854,54 +1025,55 @@ const EvaluationPlayer = () => {
                         justifyContent: 'center',
                         margin: '0 auto 1.25rem'
                     }}>
-                        <Award size={40} color="#38bdf8" />
+                        <Award size={40} color="var(--brand-primary)" />
                     </div>
 
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.5rem', color: '#f8fafc' }}>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: 900, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
                         ¡Examen Terminado!
                     </h1>
-                    <p style={{ color: '#94a3b8', marginBottom: '2rem', fontSize: '1rem' }}>
-                        Has completado exitosamente <strong>{evaluation.title}</strong>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1rem' }}>
+                        Has completado exitosamente <strong style={{ color: 'var(--text-primary)' }}>{evaluation.title}</strong>
                     </p>
 
                     <div style={{
-                        background: 'rgba(0,0,0,0.35)',
+                        background: 'var(--surface-card-subtle)',
                         borderRadius: '20px',
                         padding: '1.75rem',
                         marginBottom: '2rem',
-                        border: '1px solid rgba(255,255,255,0.08)'
+                        border: '1px solid var(--border-default)',
+                        boxShadow: 'var(--shadow-sm)'
                     }}>
                         {/* 1. DESGLOSE TEÓRICO Y PRÁCTICO (ARRIBA) */}
-                        {evaluationKey === 'ee-m1-l6' && (
+                        {isExamenL6 && (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.75rem' }}>
-                                <div style={{ background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '1rem', borderRadius: '14px' }}>
-                                    <div style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 800, letterSpacing: '0.5px' }}>PARTE TEÓRICA</div>
-                                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'white', margin: '0.25rem 0' }}>{result?.theoryPts} / 60 pts</div>
-                                    <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>{result?.correctCount} de 30 preguntas</div>
+                                <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '1rem', borderRadius: '14px' }}>
+                                    <div style={{ fontSize: '0.78rem', color: 'var(--brand-primary)', fontWeight: 800, letterSpacing: '0.5px' }}>PARTE TEÓRICA</div>
+                                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.25rem 0' }}>{result?.theoryPts} / 60 pts</div>
+                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{result?.correctCount} de 30 preguntas</div>
                                 </div>
-                                <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '1rem', borderRadius: '14px' }}>
-                                    <div style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 800, letterSpacing: '0.5px' }}>PARTE PRÁCTICA</div>
-                                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'white', margin: '0.25rem 0' }}>{result?.practicalScore} / 90 pts</div>
-                                    <div style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>Red Mixta 8 Resistores</div>
+                                <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1rem', borderRadius: '14px' }}>
+                                    <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 800, letterSpacing: '0.5px' }}>PARTE PRÁCTICA</div>
+                                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)', margin: '0.25rem 0' }}>{result?.practicalScore} / 90 pts</div>
+                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Red Mixta 8 Resistores</div>
                                 </div>
                             </div>
                         )}
 
                         {/* 2. TOTAL CONSOLIDADO (ABAJO) */}
                         <div style={{
-                            paddingTop: evaluationKey === 'ee-m1-l6' ? '1.5rem' : 0,
-                            borderTop: evaluationKey === 'ee-m1-l6' ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                            paddingTop: isExamenL6 ? '1.5rem' : 0,
+                            borderTop: isExamenL6 ? '1px solid var(--border-subtle)' : 'none'
                         }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.25rem' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.25rem' }}>
                                 PUNTAJE TOTAL OBTENIDO
                             </div>
                             <div style={{
                                 fontSize: '3.5rem',
                                 fontWeight: 900,
-                                color: '#38bdf8',
+                                color: 'var(--brand-primary)',
                                 fontFamily: 'monospace'
                             }}>
-                                {result?.totalPts ?? result?.score} <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>/ {result?.maxExamPts || 100} pts</span>
+                                {result?.totalPts ?? result?.score} <span style={{ fontSize: '1.5rem', color: 'var(--text-secondary)' }}>/ {result?.maxExamPts || 100} pts</span>
                             </div>
                             
                             {/* Insignia de Integridad */}
@@ -928,37 +1100,109 @@ const EvaluationPlayer = () => {
                                 setActivePhase('teoria');
                             }}
                             style={{
-                                background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
+                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
                                 color: 'white',
                                 border: 'none',
-                                padding: '1rem 2rem',
+                                padding: '0.9rem 2rem',
                                 borderRadius: '14px',
                                 cursor: 'pointer',
                                 fontWeight: 900,
                                 fontSize: '1rem',
-                                boxShadow: '0 4px 20px rgba(56, 189, 248, 0.35)',
+                                boxShadow: '0 4px 18px rgba(2, 132, 199, 0.35)',
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            🔍 Revisar Examen (Teoría y Práctica)
+                            {isExamenL6 ? '🔍 Revisar Examen (Teoría y Práctica)' : '🔍 Revisar Examen'}
                         </button>
                         <button
-                            onClick={() => navigate('/dashboard/my-courses')}
+                            onClick={() => navigate('/dashboard')}
                             style={{
-                                background: 'rgba(255, 255, 255, 0.08)',
-                                color: '#cbd5e1',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                padding: '1rem 2rem',
+                                background: 'var(--surface-card)',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-default)',
+                                padding: '0.9rem 2rem',
                                 borderRadius: '14px',
                                 cursor: 'pointer',
                                 fontWeight: 800,
                                 fontSize: '1rem',
+                                boxShadow: 'var(--shadow-sm)',
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            Volver a Cursos
+                            Volver al Inicio
                         </button>
+
+                        {isStaff && (
+                            <button
+                                onClick={handleResetAttempt}
+                                style={{
+                                    background: 'rgba(239, 68, 68, 0.08)',
+                                    color: '#ef4444',
+                                    border: '1.5px dashed rgba(239, 68, 68, 0.4)',
+                                    padding: '0.9rem 1.75rem',
+                                    borderRadius: '14px',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                    fontSize: '0.95rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    width: '100%',
+                                    marginTop: '0.5rem',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.16)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
+                                title="Eliminar registro de examen completado para volver a rendirlo"
+                            >
+                                🔄 Restablecer Intento (Modo Docente / Admin)
+                            </button>
+                        )}
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (reviewMode && !isStaff && (evaluation?.results_released === false || evaluation?.results_released === 0 || result?.resultsReleased === false)) {
+        return (
+            <div className="notifications-page">
+                <div className="glass-panel" style={{ padding: '3.5rem 2rem', textAlign: 'center', maxWidth: '600px', margin: '2rem auto', borderRadius: '24px', border: '1.5px solid rgba(239, 68, 68, 0.4)', boxShadow: 'var(--shadow-md)' }}>
+                    <div style={{
+                        width: '72px',
+                        height: '72px',
+                        borderRadius: '20px',
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1.5px solid rgba(239, 68, 68, 0.35)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 1.25rem'
+                    }}>
+                        <Lock size={38} color="#ef4444" />
+                    </div>
+                    <h2 style={{ color: 'var(--text-primary)', fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.75rem' }}>
+                        Solucionario Protegido
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '2rem', lineHeight: '1.6' }}>
+                        El docente ha establecido que la retroalimentación y las respuestas correctas de esta prueba se habilitarán una vez concluya el periodo de examen de todos los estudiantes del curso.
+                    </p>
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        style={{
+                            background: 'var(--brand-primary)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.85rem 2rem',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            fontWeight: 800,
+                            fontSize: '0.95rem'
+                        }}
+                    >
+                        Volver al Inicio
+                    </button>
                 </div>
             </div>
         );
@@ -966,7 +1210,6 @@ const EvaluationPlayer = () => {
 
     const currentQ = questions[currentQuestion];
     const userAnswer = answers[currentQuestion];
-    const isExamenL6 = evaluationKey === 'ee-m1-l6';
 
     const answeredCount = Object.values(answers).filter(v => v !== undefined && v !== null && v !== '').length;
     const correctCount = questions.filter((q, idx) => {
@@ -980,6 +1223,144 @@ const EvaluationPlayer = () => {
     return (
         <div className="notifications-page" style={{ maxWidth: '1200px', margin: '0 auto' }}>
             
+            {/* Modal de Confirmación y Desglose Previo a la Entrega Definitiva */}
+            {showConfirmSubmitModal && (
+                <div className="submit-confirm-overlay">
+                    <div className="submit-confirm-modal">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                            <div style={{
+                                width: '46px',
+                                height: '46px',
+                                borderRadius: '14px',
+                                background: 'rgba(56, 189, 248, 0.15)',
+                                border: '1.5px solid rgba(56, 189, 248, 0.35)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#38bdf8'
+                            }}>
+                                <Award size={26} />
+                            </div>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, color: '#f8fafc' }}>
+                                    ¿Confirmar entrega definitiva?
+                                </h3>
+                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.84rem', color: '#94a3b8' }}>
+                                    Revisa el resumen de tus respuestas antes de consolidar el intento oficial.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="submit-stats-grid">
+                            <div className="submit-stat-box">
+                                <div className="submit-stat-val" style={{ color: '#10b981' }}>
+                                    {answeredCount} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ {totalQuestions}</span>
+                                </div>
+                                <div className="submit-stat-lbl">Respondidas</div>
+                            </div>
+
+                            <div className="submit-stat-box">
+                                <div className="submit-stat-val" style={{ color: (totalQuestions - answeredCount) > 0 ? '#ef4444' : '#10b981' }}>
+                                    {totalQuestions - answeredCount}
+                                </div>
+                                <div className="submit-stat-lbl">Sin responder</div>
+                            </div>
+
+                            <div className="submit-stat-box">
+                                <div className="submit-stat-val" style={{ color: '#fbbf24' }}>
+                                    {Object.values(flaggedQuestions).filter(Boolean).length}
+                                </div>
+                                <div className="submit-stat-lbl">Marcadas 🚩</div>
+                            </div>
+
+                            <div className="submit-stat-box">
+                                <div className="submit-stat-val" style={{ color: timeLeft <= 180 ? '#ef4444' : '#38bdf8', fontFamily: 'monospace' }}>
+                                    {formatTime(timeLeft)}
+                                </div>
+                                <div className="submit-stat-lbl">Tiempo Restante</div>
+                            </div>
+                        </div>
+
+                        {(totalQuestions - answeredCount) > 0 && (
+                            <div style={{
+                                background: 'rgba(239, 68, 68, 0.12)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                borderRadius: '12px',
+                                padding: '0.8rem 1rem',
+                                marginBottom: '1rem',
+                                fontSize: '0.86rem',
+                                color: '#fca5a5',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.55rem'
+                            }}>
+                                <AlertTriangle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
+                                <span>Tienes <strong>{totalQuestions - answeredCount}</strong> pregunta(s) sin responder. Las preguntas en blanco se calificarán con 0 puntos.</span>
+                            </div>
+                        )}
+
+                        {Object.values(flaggedQuestions).filter(Boolean).length > 0 && (
+                            <div style={{
+                                background: 'rgba(245, 158, 11, 0.12)',
+                                border: '1px solid rgba(245, 158, 11, 0.3)',
+                                borderRadius: '12px',
+                                padding: '0.8rem 1rem',
+                                marginBottom: '1rem',
+                                fontSize: '0.86rem',
+                                color: '#fcd34d',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.55rem'
+                            }}>
+                                <Flag size={18} color="#f59e0b" style={{ flexShrink: 0 }} />
+                                <span>Tienes <strong>{Object.values(flaggedQuestions).filter(Boolean).length}</strong> pregunta(s) marcadas para revisión.</span>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmSubmitModal(false)}
+                                style={{
+                                    padding: '0.8rem 1.4rem',
+                                    background: 'rgba(255, 255, 255, 0.08)',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    borderRadius: '12px',
+                                    color: '#cbd5e1',
+                                    fontSize: '0.92rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                Continuar respondiendo
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowConfirmSubmitModal(false);
+                                    handleFinishExam(true);
+                                }}
+                                style={{
+                                    padding: '0.8rem 1.6rem',
+                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    color: '#ffffff',
+                                    fontSize: '0.92rem',
+                                    fontWeight: 900,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)',
+                                    transition: 'all 0.2s ease'
+                                }}
+                            >
+                                Entregar Examen Definitivo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Modal de Strike Antitrampa en Pantalla Completa */}
             {showStrikeModal && (
                 <div className="strike-modal-overlay">
@@ -1054,12 +1435,11 @@ const EvaluationPlayer = () => {
             )}
             
             {/* Header del Examen Oficial */}
-            <div className="page-header" style={{ marginBottom: '1rem' }}>
-                <div className="header-title">
-                    <ShieldCheck size={28} color="#f59e0b" />
+            <div className="page-header" style={{ marginBottom: '1.25rem' }}>
+                <div className="eval-header-top" style={{ margin: 0 }}>
                     <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#f59e0b', letterSpacing: '0.5px' }}>EXAMEN OFICIAL</span>
-                        <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{evaluation.title}</h1>
+                        <div className="eval-header-badge">EVALUACIÓN OFICIAL</div>
+                        <h1 className="eval-header-title">{evaluation.title}</h1>
                     </div>
                 </div>
 
@@ -1070,52 +1450,93 @@ const EvaluationPlayer = () => {
                     gap: '1.25rem',
                     borderRadius: '12px'
                 }}>
-                    {/* Badge de Supervisión Antitrampa */}
-                    <div className={`anticheat-hud-badge ${strikes >= 2 ? 'danger' : strikes > 0 ? 'warning' : ''}`}>
-                        <div className="hud-pulse-dot"></div>
-                        <ShieldAlert size={14} />
-                        <span>SUPERVISIÓN: {strikes}/3 STRIKES</span>
-                    </div>
+                    {/* Badge de Supervisión Antitrampa o Modo Revisión */}
+                    {reviewMode ? (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            border: '1px solid rgba(56, 189, 248, 0.35)',
+                            color: '#38bdf8',
+                            padding: '0.35rem 0.75rem',
+                            borderRadius: '8px',
+                            fontWeight: 800,
+                            fontSize: '0.8rem',
+                            letterSpacing: '0.5px'
+                        }}>
+                            <Eye size={14} />
+                            <span>MODO REVISIÓN (SOLO LECTURA)</span>
+                        </div>
+                    ) : (
+                        <div className={`anticheat-hud-badge ${strikes >= 2 ? 'danger' : strikes > 0 ? 'warning' : ''}`}>
+                            <div className="hud-pulse-dot"></div>
+                            <ShieldAlert size={14} />
+                            <span>SUPERVISIÓN: {strikes}/3 STRIKES</span>
+                        </div>
+                    )}
 
                     <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
 
-                    <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem',
-                        color: timeLeft <= 180 ? '#ef4444' : '#f8fafc',
-                        background: timeLeft <= 180 ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
-                        padding: timeLeft <= 180 ? '0.3rem 0.6rem' : 0,
-                        borderRadius: '8px',
-                        border: timeLeft <= 180 ? '1px solid rgba(239, 68, 68, 0.4)' : 'none'
-                    }}>
-                        <Clock size={18} color={timeLeft <= 180 ? '#ef4444' : '#38bdf8'} />
-                        <span style={{ 
-                            fontWeight: 'bold', 
-                            fontSize: '1.1rem',
-                            fontFamily: 'monospace'
+                    {reviewMode ? (
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            color: '#10b981'
                         }}>
-                            {formatTime(timeLeft)}
-                        </span>
-                    </div>
+                            <Award size={18} color="#10b981" />
+                            <span style={{ 
+                                fontWeight: 'bold', 
+                                fontSize: '0.95rem'
+                            }}>
+                                FINALIZADO
+                            </span>
+                        </div>
+                    ) : (
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            color: timeLeft <= 180 ? '#ef4444' : '#f8fafc',
+                            background: timeLeft <= 180 ? 'rgba(239, 68, 68, 0.15)' : 'transparent',
+                            padding: timeLeft <= 180 ? '0.3rem 0.6rem' : 0,
+                            borderRadius: '8px',
+                            border: timeLeft <= 180 ? '1px solid rgba(239, 68, 68, 0.4)' : 'none'
+                        }}>
+                            <Clock size={18} color={timeLeft <= 180 ? '#ef4444' : '#38bdf8'} />
+                            <span style={{ 
+                                fontWeight: 'bold', 
+                                fontSize: '1.1rem',
+                                fontFamily: 'monospace'
+                            }}>
+                                {formatTime(timeLeft)}
+                            </span>
+                        </div>
+                    )}
 
                     <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {syncStatus === 'saving' ? (
+                        {!isOnline ? (
+                            <>
+                                <WifiOff size={15} color="#ef4444" />
+                                <span style={{ fontSize: '0.85rem', color: '#ef4444', fontWeight: 700 }}>Sin conexión (Local)</span>
+                            </>
+                        ) : syncStatus === 'saving' ? (
                             <>
                                 <div className="loading-spinner-tiny"></div>
-                                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Guardando...</span>
+                                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Sincronizando...</span>
                             </>
                         ) : syncStatus === 'error' ? (
                             <>
-                                <AlertTriangle size={16} color="#ef4444" />
-                                <span style={{ fontSize: '0.85rem', color: '#ef4444' }}>Error de red</span>
+                                <AlertTriangle size={15} color="#f59e0b" />
+                                <span style={{ fontSize: '0.85rem', color: '#f59e0b', fontWeight: 600 }}>Reintentando sync...</span>
                             </>
                         ) : (
                             <>
                                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>En línea</span>
+                                <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>En línea (Sync OK)</span>
                             </>
                         )}
                     </div>
@@ -1227,13 +1648,43 @@ const EvaluationPlayer = () => {
             {/* CONTENIDO SEGÚN LA FASE ACTIVA */}
             {(!isExamenL6 || activePhase === 'teoria') ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 0.45fr) 1fr', gap: '1.5rem', alignItems: 'start' }}>
-                    <QuestionNavigator
-                        questions={questions}
-                        currentQuestion={currentQuestion}
-                        answers={answers}
-                        onQuestionClick={handleQuestionClick}
-                        showFeedback={reviewMode || showResults}
-                    />
+                    <div>
+                        <QuestionNavigator
+                            questions={questions}
+                            currentQuestion={currentQuestion}
+                            answers={answers}
+                            flaggedQuestions={flaggedQuestions}
+                            onQuestionClick={handleQuestionClick}
+                            showFeedback={reviewMode || showResults}
+                        />
+                        {!reviewMode && !showResults && isStaff && Object.keys(answers).length > 0 && (
+                            <button
+                                onClick={handleResetAnswers}
+                                style={{
+                                    width: '100%',
+                                    marginTop: '0.75rem',
+                                    padding: '0.65rem 1rem',
+                                    background: 'rgba(239, 68, 68, 0.1)',
+                                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                                    color: '#f87171',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.82rem',
+                                    fontWeight: 700,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.4rem',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                title="Borrar respuestas marcadas y comenzar desde la pregunta 1"
+                            >
+                                🔄 Reiniciar respuestas ({Object.keys(answers).length})
+                            </button>
+                        )}
+                    </div>
 
                     <div style={{ width: '100%' }}>
                         <QuestionPanel
@@ -1243,6 +1694,8 @@ const EvaluationPlayer = () => {
                             userAnswer={userAnswer}
                             onAnswer={handleAnswer}
                             showFeedback={reviewMode || showResults}
+                            isFlagged={Boolean(flaggedQuestions[currentQuestion])}
+                            onToggleFlag={handleToggleFlag}
                         />
 
                         <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -1251,18 +1704,18 @@ const EvaluationPlayer = () => {
                                 disabled={currentQuestion === 0}
                                 style={{
                                     padding: '0.85rem 1.75rem',
-                                    border: '1px solid #334155',
+                                    border: '1px solid var(--border-default)',
                                     borderRadius: '12px',
-                                    background: '#1e293b',
-                                    color: '#fff',
+                                    background: 'var(--surface-card)',
+                                    color: 'var(--text-primary)',
                                     cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
-                                    opacity: currentQuestion === 0 ? 0.5 : 1,
+                                    opacity: currentQuestion === 0 ? 0.4 : 1,
                                     flex: 1,
                                     minWidth: '130px',
                                     maxWidth: '220px',
                                     fontWeight: 800,
                                     textAlign: 'center',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                                    boxShadow: 'var(--shadow-sm)'
                                 }}
                             >
                                 ⬅ Anterior
@@ -1290,7 +1743,7 @@ const EvaluationPlayer = () => {
                                 </button>
                             ) : (
                                 <button
-                                    onClick={isExamenL6 ? () => setActivePhase('practica') : (reviewMode ? () => navigate('/dashboard/my-courses') : handleFinishExam)}
+                                    onClick={isExamenL6 ? () => setActivePhase('practica') : (reviewMode ? () => navigate('/dashboard') : () => setShowConfirmSubmitModal(true))}
                                     style={{
                                         padding: '0.85rem 2rem',
                                         border: 'none',
@@ -1310,7 +1763,7 @@ const EvaluationPlayer = () => {
                                             : '0 4px 16px rgba(16, 185, 129, 0.4)'
                                     }}
                                 >
-                                    {isExamenL6 ? (reviewMode ? 'Ir a Fase Práctica ➔' : 'Terminar Teórico ➔') : (reviewMode ? 'Volver a Cursos' : 'Finalizar Evaluación')}
+                                    {isExamenL6 ? (reviewMode ? 'Ir a Fase Práctica ➔' : 'Terminar Teórico ➔') : (reviewMode ? 'Salir a Evaluaciones' : 'Finalizar Evaluación')}
                                 </button>
                             )}
                         </div>
@@ -1343,7 +1796,7 @@ const EvaluationPlayer = () => {
                         </button>
                         {reviewMode ? (
                             <button
-                                onClick={() => navigate('/dashboard/my-courses')}
+                                onClick={() => navigate('/dashboard')}
                                 style={{
                                     padding: '0.9rem 2rem',
                                     border: '1px solid #38bdf8',
@@ -1363,7 +1816,7 @@ const EvaluationPlayer = () => {
                             </button>
                         ) : (
                             <button
-                                onClick={handleFinishExam}
+                                onClick={() => setShowConfirmSubmitModal(true)}
                                 style={{
                                     padding: '0.9rem 2.2rem',
                                     border: 'none',

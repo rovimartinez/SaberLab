@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Eye, Shield, X } from 'lucide-react';
-import Sidebar from './Sidebar';
-import Topbar from './Topbar';
-import PanelPerfil from '../../pages/PanelPerfil';
+import { Eye, Shield, X, User } from 'lucide-react';
+const PanelPerfil = lazy(() => import('../../pages/PanelPerfil'));
 import { useAuth } from '../../context/useAuth';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
 import { AppsProvider } from '../../context/AppsContext';
@@ -11,128 +9,63 @@ import { useInactivityLogout } from '../../hooks/useInactivityLogout';
 import { useStudentPresence } from '../../hooks/useStudentPresence';
 import InactivityWarningModal from '../modals/InactivityWarningModal';
 import DirectMessagePopup from '../modals/DirectMessagePopup';
+import SaberLabAiChat from '../ai/SaberLabAiChat';
 import '../../styles/Layout.css';
 
 const LayoutContent = () => {
-    const { isImpersonating, setViewMode } = useAuth();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const { isImpersonating, setViewMode, toggleViewMode, isStaffUser, realRole, profile } = useAuth();
+    const hasTeacherPrivileges = isStaffUser || ['admin', 'teacher', 'docente', 'profesor', 'leader', 'lider'].includes(realRole || profile?.real_role || profile?.role);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const location = useLocation();
-    const isEvaluationRoute = /^\/dashboard\/evaluations\/[^/]+$/.test(location.pathname);
-    const isPracticeEvaluation = location.pathname.includes('re-m1-e2');
-    
+
     // Hooks de seguridad por inactividad y presencia en vivo
     const { showWarning, secondsRemaining, extendSession, handleLogout } = useInactivityLogout();
     const { pendingMessage, clearPendingMessage } = useStudentPresence();
-    
-    const [isEvaluationMode, setIsEvaluationMode] = useState(() => {
-        return localStorage.getItem('evaluationStarted') === 'true';
-    });
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const stored = localStorage.getItem('evaluationStarted');
-            setIsEvaluationMode(stored === 'true');
-        }, 200);
-        return () => clearInterval(interval);
-    }, []);
-
-    const toggleSidebar = () => {
-        setIsSidebarOpen(prev => !prev);
-    };
-
-    const showSidebar = !isEvaluationRoute || isPracticeEvaluation || !isEvaluationMode;
 
     useEffect(() => {
         if (!isProfileModalOpen) return undefined;
-
         const handleKeyDown = (event) => {
-            if (event.key === 'Escape') {
-                setIsProfileModalOpen(false);
-            }
+            if (event.key === 'Escape') setIsProfileModalOpen(false);
         };
-
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isProfileModalOpen]);
 
     return (
         <div className="app-layout">
-            {showSidebar && (
-                <Sidebar 
-                    isOpen={isSidebarOpen} 
-                    toggleSidebar={toggleSidebar}
-                    closeSidebar={() => setIsSidebarOpen(false)}
-                    onOpenProfile={() => setIsProfileModalOpen(true)}
-                />
-            )}
-            {isSidebarOpen && showSidebar && (
-                <div className="mobile-overlay" onClick={() => setIsSidebarOpen(false)}></div>
-            )}
             <div className="main-content">
-                {isImpersonating && (
-                    <div style={{
-                        background: 'linear-gradient(90deg, #d97706 0%, #b45309 100%)',
-                        color: 'white',
-                        padding: '0.55rem 1.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        fontWeight: 600,
-                        fontSize: '0.86rem',
-                        zIndex: 90,
-                        boxShadow: '0 4px 15px rgba(217, 119, 6, 0.35)',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                            <Eye size={17} />
-                            <span>
-                                <strong>Modo Vista de Estudiante Activo</strong> — Estás explorando la plataforma exactamente como un alumno.
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => setViewMode('admin')}
-                            style={{
-                                background: '#0f172a',
-                                color: '#f8fafc',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                padding: '5px 14px',
-                                borderRadius: '10px',
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.45rem',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            <Shield size={14} color="#38bdf8" />
-                            <span>Volver a Modo Admin</span>
-                        </button>
-                    </div>
-                )}
-                {(showSidebar || !isEvaluationRoute) && <Topbar toggleSidebar={toggleSidebar} />}
                 <main className="page-content animate-fade-in">
                     <Outlet />
                 </main>
             </div>
 
-            {/* Modal preventivo de inactividad (10 minutos) */}
+            {/* Dock flotante inferior de modo vista de estudiante (aviso discreto) */}
+            {isImpersonating && (
+                <div className="impersonate-floating-dock" role="status" aria-live="polite">
+                    <div className="impersonate-dock-left">
+                        <div className="impersonate-dock-icon">
+                            <User size={16} />
+                        </div>
+                        <div className="impersonate-dock-text">
+                            <span className="impersonate-dock-title">Modo Vista de Estudiante</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showWarning && (
-                <InactivityWarningModal 
-                    secondsRemaining={secondsRemaining} 
-                    onExtend={extendSession} 
-                    onLogout={handleLogout} 
+                <InactivityWarningModal
+                    secondsRemaining={secondsRemaining}
+                    onExtend={extendSession}
+                    onLogout={handleLogout}
                 />
             )}
 
-            {/* Alerta emergente en pantalla de mensaje del docente */}
+            {/* Alerta emergente de mensaje del docente */}
             {pendingMessage && (
-                <DirectMessagePopup 
-                    message={pendingMessage} 
-                    onConfirm={clearPendingMessage} 
+                <DirectMessagePopup
+                    message={pendingMessage}
+                    onConfirm={clearPendingMessage}
                 />
             )}
 
@@ -165,10 +98,28 @@ const LayoutContent = () => {
                             </button>
                         </header>
                         <div className="profile-modal-body">
-                            <PanelPerfil variant="floating" />
+                            <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Cargando perfil...</div>}>
+                                <PanelPerfil variant="floating" />
+                            </Suspense>
                         </div>
                     </section>
                 </div>
+            )}
+
+            {/* Tutor Inteligente SaberLab IA Flotante */}
+            <SaberLabAiChat />
+
+            {/* FAB Flotante: Vista de Estudiante (Para Docentes / Admin) */}
+            {hasTeacherPrivileges && (
+                <button
+                    type="button"
+                    onClick={() => setViewMode(isImpersonating ? 'admin' : 'student')}
+                    className={`global-viewmode-fab ${isImpersonating ? 'is-active' : ''}`}
+                    title={isImpersonating ? 'Modo Alumno Activo - Toca para volver a Modo Docente' : 'Ver como Alumno - Simular experiencia de estudiante'}
+                    aria-label="Alternar Vista de Estudiante"
+                >
+                    {isImpersonating ? <User size={20} /> : <Eye size={20} />}
+                </button>
             )}
         </div>
     );

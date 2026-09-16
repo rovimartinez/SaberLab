@@ -51,7 +51,10 @@ export async function onRequestGet({ env, data }) {
     if (!cursos || cursos.length === 0) {
       cursos = [
         { id: 1, name: 'Electricidad y Electrónica Básica', abbr: 'EE', slug: 'electricidad-y-electronica' },
-        { id: 5, name: 'Robótica Educativa', abbr: 'RE', slug: 'robotica-educativa' }
+        { id: 3, name: 'Mediaciones Tecnológicas en la Química', abbr: 'MQ', slug: 'quimica-tecnologica' },
+        { id: 4, name: 'Modelado y Animación 3D', abbr: 'MA', slug: 'modelado-y-animacion-3d' },
+        { id: 5, name: 'Robótica Educativa', abbr: 'RE', slug: 'robotica-educativa' },
+        { id: 6, name: 'Semillero de Investigación en Modelado e Impresión 3D', abbr: 'SIMI', slug: 'semillero-modelado-impresion-3d' }
       ];
     }
 

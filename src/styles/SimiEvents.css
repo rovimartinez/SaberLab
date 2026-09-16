@@ -1,0 +1,471 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   SimiEvents.css — Calendario & Salidas Pedagógicas STEAM
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Cabecera de Visitas (Card Contenedor) ── */
+.simi-events-header-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.25rem 1.4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 4px 16px -2px rgba(25, 37, 132, 0.05);
+}
+
+.simi-events-header-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.simi-events-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(6, 182, 212, 0.12);
+    color: #06b6d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.simi-events-header-title {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.18rem;
+    font-weight: 850;
+    color: #192584;
+    letter-spacing: -0.3px;
+}
+
+.simi-events-header-desc {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.simi-events-add-btn {
+    white-space: nowrap;
+}
+
+.simi-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.simi-event-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 1.15rem 1.3rem;
+    display: grid;
+    grid-template-columns: 130px 1fr 210px auto;
+    gap: 1.15rem;
+    align-items: center;
+    box-shadow: 0 4px 16px -2px rgba(25, 37, 132, 0.05);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.simi-event-card:hover {
+    border-color: #4FD2E9;
+    box-shadow: 0 12px 28px -4px rgba(25, 37, 132, 0.12);
+    transform: translateY(-2px);
+}
+
+.simi-clickable-event-card {
+    cursor: pointer;
+}
+
+/* ── Columna Lateral: Estudiantes Confirmados ── */
+.simi-event-attending-students-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+    max-height: 120px;
+    box-sizing: border-box;
+}
+
+.simi-event-attending-col-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 850;
+    color: #059669;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+}
+
+.simi-event-attending-names-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    max-height: 80px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.simi-event-attending-names-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.simi-event-attending-names-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+}
+
+.simi-event-attending-name-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.73rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.simi-event-attending-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    flex-shrink: 0;
+}
+
+.simi-event-attending-name-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.simi-event-no-attending-msg {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 4px 0;
+}
+
+/* ── Caja de Fecha ── */
+.simi-event-date-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    padding: 0.75rem 0.65rem;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    gap: 2px;
+}
+
+.simi-event-date-calendar-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(6, 182, 212, 0.12);
+    color: #06b6d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+}
+
+.simi-event-date-text {
+    font-size: 0.92rem;
+    font-weight: 850;
+    color: #0f172a;
+    letter-spacing: -0.2px;
+}
+
+.simi-event-time-text {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+}
+
+/* ── Información Principal ── */
+.simi-event-main-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.simi-event-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.simi-event-school-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #192584;
+    letter-spacing: -0.3px;
+}
+
+.simi-event-status-badge {
+    padding: 3px 9px;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.2px;
+    border: 1px solid transparent;
+}
+
+.simi-event-status-badge.programada {
+    background: #ecfeff;
+    color: #0891b2;
+    border-color: #a5f3fc;
+}
+
+.simi-event-status-badge.preparacion {
+    background: #faf5ff;
+    color: #9333ea;
+    border-color: #f3e8ff;
+}
+
+.simi-event-status-badge.realizada {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+.simi-event-badge-tier-pill {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #0284c7;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    padding: 2px 8px;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.simi-event-convalidated-pill {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #059669;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 2px 8px;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.simi-event-meta-line {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.simi-event-meta-sep {
+    color: #cbd5e1;
+    margin: 0 4px;
+}
+
+.simi-event-mission-line {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.simi-event-equip-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.simi-event-equip-tag {
+    font-size: 0.72rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    color: #475569;
+    font-weight: 600;
+}
+
+.simi-event-attending-count {
+    font-size: 0.72rem;
+    color: #059669;
+    font-weight: 800;
+    background: #f0fdf4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #bbf7d0;
+}
+
+.simi-event-not-attending-count {
+    font-size: 0.72rem;
+    color: #e11d48;
+    font-weight: 800;
+    background: #fff1f2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #fecdd3;
+}
+
+/* ── Acciones RSVP (Asistiré / No asistiré) ── */
+.simi-event-rsvp-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.simi-event-rsvp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 850;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.18s ease;
+}
+
+.simi-event-rsvp-btn.attending {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1.5px solid #a7f3d0;
+}
+
+.simi-event-rsvp-btn.attending:hover,
+.simi-event-rsvp-btn.attending.active {
+    background: #10b981;
+    color: #ffffff;
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.simi-event-rsvp-btn.not-attending {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1.5px solid #fecdd3;
+}
+
+.simi-event-rsvp-btn.not-attending:hover,
+.simi-event-rsvp-btn.not-attending.active {
+    background: #f43f5e;
+    color: #ffffff;
+    border-color: #f43f5e;
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── RESPONSIVE PARA MÓVILES (<960px) — TARJETAS LIMPIAS Y ELEGANTES ──
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+    .simi-events-header-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.1rem 1.2rem;
+        gap: 0.85rem;
+    }
+
+    .simi-events-header-title {
+        font-size: 1.05rem;
+    }
+
+    .simi-events-header-desc {
+        font-size: 0.82rem;
+    }
+
+    .simi-event-card {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 0.85rem;
+        border-radius: 16px;
+    }
+
+    /* En móvil, la fecha se vuelve una píldora horizontal superior elegante */
+    .simi-event-date-box {
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 6px 10px;
+        background: #f0fdfa;
+        border: 1px solid #ccfbf1;
+        border-radius: 10px;
+        gap: 6px 10px;
+    }
+
+    .simi-event-date-calendar-icon {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 0;
+    }
+
+    .simi-event-date-text {
+        font-size: 0.84rem;
+        color: #0f766e;
+    }
+
+    .simi-event-time-text {
+        font-size: 0.74rem;
+        color: #14b8a6;
+    }
+
+    .simi-event-date-box .simi-event-badge-tier-pill {
+        margin-left: auto;
+        font-size: 0.7rem;
+        padding: 1px 7px;
+    }
+
+    .simi-event-school-name {
+        font-size: 1rem;
+        line-height: 1.3;
+    }
+
+    .simi-event-meta-line {
+        font-size: 0.78rem;
+    }
+
+    .simi-event-mission-line {
+        font-size: 0.8rem;
+    }
+
+    /* En móvil los 2 botones de Asistiré / No Asistiré van en 1 sola fila horizontal (50% / 50%) */
+    .simi-event-rsvp-actions {
+        flex-direction: row;
+        width: 100%;
+        gap: 8px;
+        padding-top: 0.5rem;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .simi-event-rsvp-btn {
+        flex: 1;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+}

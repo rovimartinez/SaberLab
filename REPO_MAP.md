@@ -1,6 +1,12 @@
 # REPO MAP — SaberLab (school-platform)
 
-Mapa de repositorio. Antes de leer/editar código, consulta aquí para ubicar archivos. Mantener actualizado al crear/renombrar/eliminar símbolos o archivos.
+Mapa de repositorio. Antes de leer/editar código, consulta aquí o utiliza las **Skills Tácticas de Arquitectura** para ubicar archivos y esquemas al instante con mínimo consumo de tokens:
+
+- 🏛️ **Arquitectura General SaberLab:** [`saberlab-architecture-map`](.agents/skills/saberlab-architecture-map/SKILL.md)
+- ⚡ **Electricidad y Electrónica (EE):** [`ee-course-architecture-map`](.agents/skills/ee-course-architecture-map/SKILL.md)
+- 🤖 **Robótica Educativa (RE):** [`re-course-architecture-map`](.agents/skills/re-course-architecture-map/SKILL.md)
+- 🎨 **Modelado y Animación 3D (MA):** [`ma-course-architecture-map`](.agents/skills/ma-course-architecture-map/SKILL.md)
+- 🖨️ **Semillero SIMI3D (SIMI):** [`simi-architecture-map`](.agents/skills/simi-architecture-map/SKILL.md)
 
 ## Stack
 React 19 + Vite 7 + React Router 7 · Supabase (JS client) · Firebase · lucide-react · canvas-confetti · xlsx · jose (JWT en Functions). Lint: `npm run lint` · Build: `npm run build`.
@@ -51,6 +57,8 @@ src/
 │   ├── layout/               # Layout, Sidebar, Topbar, AdminAccessRequestsBubble
 │   ├── course/               # CourseSidebar
 │   ├── lesson/               # LessonRenderer + blocks (Content/Quiz/Flashcards/Missions) + modals + legacy
+│   ├── simulators/3d/        # Viewport WebGL Three.js (BlenderViewport, CoordinateSpaceDemo, PracticalLabMA1)
+│   ├── simulators/electricity/ # Simuladores Electricidad (MixedCircuitDemo, PracticalLabL1..L6, etc.)
 │   ├── simulators/RE/        # Simuladores Arduino (MisionLeccion, MisionRoadMap, ArduinoSimulatorV2, Blink, LedSimulator)
 │   ├── widgets/              # Apps flotantes (PizarraMagica, ArduinoIDE.tsx, Calculadora, Reloj, etc.)
 │   ├── CodeEditor.jsx        # Editor de código genérico
@@ -59,7 +67,7 @@ src/
 ├── context/                  # AuthContext, AppsContext, WhiteboardContext + hooks useAuth/useApps/useWhiteboard
 ├── hooks/                    # useLessonQuiz, usePlatformSettings
 ├── lib/                      # supabase (cliente), api.js (wrapper fetch D1), lessonSchema, learningAnalytics, studentProgress
-├── lessons/                  # Contenido de lecciones (lazy). RE/m1: l1..l5 + l*.missions
+├── lessons/                  # Contenido de lecciones (lazy). RE/m1, EE/m1, MA/m1
 ├── evaluations/              # Evaluaciones por curso. RE/m1/module1Evaluation
 └── styles/                   # CSS centralizado (un archivo por página/componente)
 ```
@@ -144,6 +152,19 @@ src/
 | EvaluationPlayer.jsx | EvaluationPlayer | Presentación de examen (⚠️ bugs pendientes) |
 | AccessRequests.jsx | AccessRequests | Aprobación solicitudes |
 | Settings.jsx | SettingsPage | Configuración |
+| PanelSimiHub.jsx | PanelSimiHub | Hub integral del Semillero SIMI3D |
+
+### SIMI3D (Semillero de Investigación en Modelado e Impresión 3D)
+> 💡 *Para mapa táctico detallado y esquemas D1 de SIMI, consultar la skill [simi-architecture-map](.agents/skills/simi-architecture-map/SKILL.md)*.
+
+- `src/pages/PanelSimiHub.jsx` — Layout principal del semillero, vitrina de insignias, visor interactivo y modo vista estudiante.
+- `src/components/simi/SimiEventsTab.jsx` — Calendario de visitas a colegios y capacitaciones (RSVP y convalidación 80/80).
+- `src/components/simi/SimiProjectsTab.jsx` — Banco de proyectos CAD/3D y prototipos.
+- `src/components/simi/SimiResourcesTab.jsx` — Inventario de impresoras 3D, filamentos, resinas y herramientas web.
+- `src/components/simi/SimiMembersTab.jsx` — Directorio de miembros, métricas de permanencia y condecoración de insignias.
+- `src/data/simiData.js` — Catálogo oficial de insignias (`SIMI_PINS_CATALOG`), tracks y datos semilla.
+- `src/data/simiTracksLessonsData.js` — Contenido curricular de las 8 rutas de modelado y autoevaluaciones.
+- `functions/api/simi.js` — Backend serverless Cloudflare D1 con auto-aprovisionamiento y CRUD para SIMI.
 
 ## Componentes clave (src/components/)
 

@@ -1,0 +1,2488 @@
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
+import { 
+    Home, Layers, Box, Sparkles, Cpu, Flame, FlaskConical, Rocket, 
+    School, FileText, Award, Calendar, CheckCircle2, 
+    Calculator, ArrowRight, Shield, Download, Users, Plus, ExternalLink, X,
+    Edit3, Trash2, MapPin, Clock, BookOpen, Check, AlertCircle, HelpCircle, ChevronRight, ChevronLeft, ChevronDown,
+    UserCheck, Zap, Trophy, TrendingUp, Target, Play, Menu, MoreHorizontal, MoreVertical, Compass, Eye, User
+} from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { api } from '../lib/api';
+import { SIMI_PINS_CATALOG, SIMI_TRACKS, SIMI_SCHOOL_EVENTS, SIMI_PROJECTS, INITIAL_SIMI_RESOURCES, SIMI_WEB_RESOURCES } from '../data/simiData';
+import { SIMI_TRACKS_LESSONS_DATA } from '../data/simiTracksLessonsData';
+import AccessRequests from './AccessRequests';
+import SimiEventsTab from '../components/simi/SimiEventsTab';
+import SimiProjectsTab from '../components/simi/SimiProjectsTab';
+import SimiResourcesTab from '../components/simi/SimiResourcesTab';
+import SimiMembersTab from '../components/simi/SimiMembersTab';
+import '../styles/PanelSimiHub.css';
+
+const ICON_MAP = {
+    Box: Box,
+    Sparkles: Sparkles,
+    Cpu: Cpu,
+    Layers: Layers,
+    Flame: Flame,
+    School: School,
+    FileText: FileText,
+    FlaskConical: FlaskConical,
+    Rocket: Rocket,
+    Shield: Shield
+};
+
+
+function formatSimiMarkdown(text) {
+    if (!text) return '';
+
+    // Limpieza de símbolos LaTeX comunes
+    let processed = text
+        .replace(/\\mu/g, 'µ')
+        .replace(/\\,/g, ' ')
+        .replace(/\\circ/g, '°')
+        .replace(/\\times/g, '×')
+        .replace(/\\approx/g, '≈')
+        .replace(/\\pm/g, '±')
+        .replace(/\\text\{([^\}]+)\}/g, '$1');
+
+    // Parseo de Tablas Markdown (| Col1 | Col2 | ... |)
+    const tableRegex = /((?:^[ \t]*\|[^\n]+\|[ \t]*\n)+)/gm;
+    processed = processed.replace(tableRegex, (match) => {
+        const rawLines = match.trim().split('\n').map(l => l.trim()).filter(l => l.startsWith('|') && l.endsWith('|'));
+        if (rawLines.length < 2) return match;
+
+        // Separar cabecera, divisor y filas
+        const headerRow = rawLines[0];
+        const hasDivider = rawLines[1].includes('---') || rawLines[1].includes(':---');
+        const bodyRows = hasDivider ? rawLines.slice(2) : rawLines.slice(1);
+
+        const parseCells = (rowStr) => rowStr.slice(1, -1).split('|').map(c => c.trim());
+
+        const headers = parseCells(headerRow);
+        const headerHtml = `<thead><tr style="background: var(--surface-hover); border-bottom: 2px solid var(--border-default);">${headers.map(h => `<th style="padding: 9px 12px; font-weight: 800; color: var(--text-heading); font-size: 0.8rem; text-align: left;">${h}</th>`).join('')}</tr></thead>`;
+
+        const rowsHtml = bodyRows.map((r, rIdx) => {
+            const cells = parseCells(r);
+            const isEven = rIdx % 2 === 0;
+            return `<tr style="border-bottom: 1px solid var(--border-subtle); background: ${isEven ? 'transparent' : 'rgba(255,255,255,0.02)'};">${cells.map(c => `<td style="padding: 8px 12px; font-size: 0.82rem; color: var(--text-body);">${c}</td>`).join('')}</tr>`;
+        }).join('');
+
+        return `\n<div style="overflow-x: auto; margin: 0.85rem 0; border-radius: 10px; border: 1px solid var(--border-default); background: var(--surface-card);"><table style="width: 100%; border-collapse: collapse; text-align: left;">${headerHtml}<tbody>${rowsHtml}</tbody></table></div>\n`;
+    });
+
+    return processed
+        // Código en bloque triple backtick
+        .replace(/\`\`\`([a-z]*)\n([\s\S]*?)\`\`\`/g, '<pre style="background: rgba(15,23,42,0.6); padding: 10px; border-radius: 8px; border: 1px solid var(--border-subtle); overflow-x: auto; font-family: monospace; font-size: 0.8rem; color: #38bdf8;"><code>$2</code></pre>')
+        // Negritas **texto**
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Cursiva *texto*
+        .replace(/(^|[^\*])\*([^\*\n]+)\*([^\*]|$)/g, '$1<em>$2</em>$3')
+        // Código inline `código`
+        .replace(/\`([^\`]+)\`/g, '<code style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #38bdf8; font-size: 0.85em;">$1</code>')
+        // Fórmulas matemáticas $formula$
+        .replace(/\$([^\$]+)\$/g, '<span style="font-family: serif; font-style: italic; color: #f59e0b; font-weight: 600;">$1</span>')
+        // Listas con viñetas
+        .replace(/^\s*\*\s+(.*)$/gm, '<li style="margin-left: 1.2rem; margin-bottom: 4px; list-style-type: disc;">$1</li>')
+        // Listas numeradas
+        .replace(/^\s*(\d+)\.\s+(.*)$/gm, '<li style="margin-left: 1.2rem; margin-bottom: 4px; list-style-type: decimal;">$2</li>')
+        // Saltos de línea
+        .replace(/\n/g, '<br/>');
+}
+
+export default function PanelSimiHub({ 
+    headerCourseSelector = null,
+    isEmbedded = false
+}) {
+    const navigate = useNavigate();
+    const { 
+        profile, 
+        isStaff, 
+        isStaffUser,
+        isLeaderUser,
+        isImpersonating,
+        toggleViewMode,
+        setViewMode,
+        pendingAccessRequestsCount = 0 
+    } = useAuth();
+    const [activeTab, setActiveTab] = useState('home');
+    const [isSimiStudentView, setIsSimiStudentView] = useState(false);
+    
+    // Estado del visor interactivo de contenidos de Ruta / Lección
+    const [activeLessonTrack, setActiveLessonTrack] = useState(null);
+    const [activeCategoryModal, setActiveCategoryModal] = useState(null);
+    const [activeUnitIndex, setActiveUnitIndex] = useState(0);
+    const [selectedQuizAnswers, setSelectedQuizAnswers] = useState({});
+    const [quizChecked, setQuizChecked] = useState({});
+
+    // Modal de Insignia Táctica
+    const [activePinModal, setActivePinModal] = useState(null);
+    const [selectedPinTiers, setSelectedPinTiers] = useState(() => {
+        const saved = localStorage.getItem('simi_pin_tiers');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return {
+            'pin-tinkercad': 'II',
+            'pin-blender': 'I',
+            'pin-fusion': 'III',
+            'pin-slicing': 'II',
+            'pin-fdm': 'II',
+            'pin-sla': 'I'
+        };
+    });
+
+    const handleOpenPinModal = (pinId) => {
+        const pin = SIMI_PINS_CATALOG.find(p => p.id === pinId);
+        if (pin) setActivePinModal(pin);
+    };
+
+    // Función para actualizar grado de insignia personal en Cloudflare D1
+    const [isSavingBadgeTier, setIsSavingBadgeTier] = useState(false);
+    const handleSetMyBadgeTier = async (pinId, tierLevel) => {
+        const myUid = profile?.id || profile?.email;
+        if (!myUid) return;
+        const tierNum = ['I', 'II', 'III', 'IV', 'V'].indexOf(tierLevel) + 1;
+        const exp = tierNum * 100;
+
+        // Actualización optimista inmediata
+        setSelectedPinTiers(prev => {
+            const up = { ...prev, [pinId]: tierLevel };
+            localStorage.setItem('simi_pin_tiers', JSON.stringify(up));
+            return up;
+        });
+        setMemberBadgesMap(prev => {
+            const up = { ...prev };
+            if (!up[myUid]) up[myUid] = {};
+            up[myUid][pinId] = { tier: tierLevel, exp, updatedAt: new Date().toISOString() };
+            localStorage.setItem('simi_member_badges_map', JSON.stringify(up));
+            return up;
+        });
+
+        setIsSavingBadgeTier(true);
+        try {
+            await api('/simi', {
+                method: 'POST',
+                body: {
+                    action: 'save-badge',
+                    targetUserId: myUid,
+                    pinId,
+                    tier: tierLevel,
+                    exp
+                }
+            });
+        } catch (err) {
+            console.error('[SIMI] Error al guardar insignia personal:', err);
+        } finally {
+            setIsSavingBadgeTier(false);
+        }
+    };
+
+    // Estado de visualización de la vitrina de insignias (acordeón en móviles)
+    const [isBadgesExpanded, setIsBadgesExpanded] = useState(false);
+    const [isBadgesModalOpen, setIsBadgesModalOpen] = useState(false);
+
+    // Modal de Reglas del Semillero
+    const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+
+    // Modal de Solicitudes de Acceso
+    const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
+
+    // Calculadora de Costos de Filamento
+    const [calcGrams, setCalcGrams] = useState(85);
+    const [calcPricePerKg, setCalcPricePerKg] = useState(65000);
+
+    // Estado para desplegar el submenú de "Más (...)" en navegación móvil estilo Banco
+    const [isMobileMoreMenuOpen, setIsMobileMoreMenuOpen] = useState(false);
+
+    // Estado central sincronizado con Cloudflare D1
+    const [simiEvents, setSimiEvents] = useState(() => {
+        const saved = localStorage.getItem('simi_events_list');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return SIMI_SCHOOL_EVENTS;
+    });
+
+    const [simiProjects, setSimiProjects] = useState(() => {
+        const saved = localStorage.getItem('simi_projects_list');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return SIMI_PROJECTS;
+    });
+
+    const [simiResources, setSimiResources] = useState(() => {
+        const fallback = INITIAL_SIMI_RESOURCES;
+        const saved = localStorage.getItem('simi_resources_list');
+        if (saved) {
+            try { 
+                const parsed = JSON.parse(saved);
+                return parsed.map(r => {
+                    const seed = fallback.find(s => s.id === r.id);
+                    return seed ? { ...seed, ...r, imageUrl: r.imageUrl || seed.imageUrl } : r;
+                });
+            } catch (e) { }
+        }
+        return fallback;
+    });
+
+    const [simiWebResources, setSimiWebResources] = useState(() => {
+        const saved = localStorage.getItem('simi_web_resources_list');
+        if (saved) {
+            try { 
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            } catch (e) { }
+        }
+        return SIMI_WEB_RESOURCES;
+    });
+
+    const [memberBadgesMap, setMemberBadgesMap] = useState(() => {
+        const saved = localStorage.getItem('simi_member_badges_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return {};
+    });
+
+    const [resourcesSubTab, setResourcesSubTab] = useState('inventory');
+
+    const [simiMembers, setSimiMembers] = useState(() => {
+        const saved = localStorage.getItem('simi_members_list');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return [{
+            id: 'docente-simi',
+            email: 'rovimartinez@gmail.com',
+            full_name: 'Ronny Martinez',
+            role: 'docente',
+            group_name: 'Dirección I+D'
+        }];
+    });
+    const [isLoadingSimiData, setIsLoadingSimiData] = useState(false);
+
+    const [catalogImageUrlsMap, setCatalogImageUrlsMap] = useState(() => {
+        const saved = localStorage.getItem('simi_catalog_image_urls_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return {};
+    });
+
+    // Cargar datos reales desde Cloudflare D1 al montar en ultra-alta velocidad (< 50ms)
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchSimiData() {
+            setIsLoadingSimiData(true);
+            try {
+                const [res, groupsRes] = await Promise.all([
+                    api('/simi'),
+                    api('/groups')
+                ]);
+
+                if (res?.data?.success && isMounted) {
+                    if (res.data.events && res.data.events.length > 0) {
+                        setSimiEvents(res.data.events);
+                        localStorage.setItem('simi_events_list', JSON.stringify(res.data.events));
+                    }
+                    if (res.data.projects && res.data.projects.length > 0) {
+                        setSimiProjects(res.data.projects);
+                        localStorage.setItem('simi_projects_list', JSON.stringify(res.data.projects));
+                    }
+                    if (res.data.resources && res.data.resources.length > 0) {
+                        setSimiResources(res.data.resources);
+                        localStorage.setItem('simi_resources_list', JSON.stringify(res.data.resources));
+                    }
+                    if (res.data.webResources && res.data.webResources.length > 0) {
+                        setSimiWebResources(res.data.webResources);
+                        localStorage.setItem('simi_web_resources_list', JSON.stringify(res.data.webResources));
+                    }
+                    if (res.data.badgeMap && Object.keys(res.data.badgeMap).length > 0) {
+                        setSelectedPinTiers(prev => {
+                            const updated = { ...prev, ...res.data.badgeMap };
+                            localStorage.setItem('simi_pin_tiers', JSON.stringify(updated));
+                            return updated;
+                        });
+                    }
+                    if (res.data.memberBadgesMap) {
+                        setMemberBadgesMap(res.data.memberBadgesMap);
+                        localStorage.setItem('simi_member_badges_map', JSON.stringify(res.data.memberBadgesMap));
+                    }
+                    if (res.data.catalogImageUrlsMap) {
+                        setCatalogImageUrlsMap(res.data.catalogImageUrlsMap);
+                        localStorage.setItem('simi_catalog_image_urls_map', JSON.stringify(res.data.catalogImageUrlsMap));
+                    }
+                }
+
+                // Sincronizar miembros estrictamente de los grupos activos de SIMI3D en paralelo
+                const allGroups = Array.isArray(groupsRes?.data) ? groupsRes.data : [];
+                const simiGroups = allGroups.filter(g => 
+                    g.course_id === 6 || String(g.course_id) === '6' ||
+                    (g.name && (g.name.toUpperCase().includes('SIMI') || g.name.toUpperCase().includes('SEMILLERO')))
+                );
+
+                const groupMembersPromises = simiGroups.map(g => api(`/groups?group_id=${g.id}`));
+                const groupMembersResults = await Promise.all(groupMembersPromises);
+
+                const memberMap = new Map();
+                const directorEmail = 'rovimartinez@gmail.com';
+                memberMap.set(directorEmail, {
+                    id: profile?.id || 'docente-simi',
+                    email: directorEmail,
+                    full_name: 'Ronny Martinez',
+                    role: 'docente',
+                    group_name: 'Dirección I+D'
+                });
+
+                simiGroups.forEach((group, idx) => {
+                    const studentsInGroup = Array.isArray(groupMembersResults[idx]?.data) ? groupMembersResults[idx].data : [];
+                    studentsInGroup.forEach(stu => {
+                        const key = (stu.email || stu.id || '').toLowerCase();
+                        if (key && key !== directorEmail) {
+                            memberMap.set(key, {
+                                ...stu,
+                                role: stu.role || 'student',
+                                group_id: group.id,
+                                group_name: group.name || 'SIMI 2026II'
+                            });
+                        }
+                    });
+                });
+
+                const finalMembers = Array.from(memberMap.values());
+                if (isMounted) {
+                    setSimiMembers(finalMembers);
+                    localStorage.setItem('simi_members_list', JSON.stringify(finalMembers));
+                }
+            } catch (err) {
+                console.warn('[SIMI] Usando cache local para SIMI Hub:', err);
+            } finally {
+                if (isMounted) setIsLoadingSimiData(false);
+            }
+        }
+        fetchSimiData();
+        return () => { isMounted = false; };
+    }, [profile]);
+
+    // Cálculo en vivo de métricas de permanencia y regla del 80/80 para el usuario actual
+    const currentUserId = profile?.id || profile?.email || 'current-user';
+    const schoolVisitsList = simiEvents.filter(e => (e.event_type || e.eventType) !== 'capacitacion_tecnica');
+    const technicalTrainingsList = simiEvents.filter(e => (e.event_type || e.eventType) === 'capacitacion_tecnica');
+
+    const myVisitsAttended = schoolVisitsList.reduce((acc, evt) => {
+        const attended = (evt.attendees || []).some(a => a.userId === currentUserId && (a.attended || a.status === 'Asistiré' || a.status === 'attending'));
+        return acc + (attended ? 1 : 0);
+    }, 0);
+
+    const myTrainingsAttended = technicalTrainingsList.reduce((acc, evt) => {
+        const attended = (evt.attendees || []).some(a => a.userId === currentUserId && (a.attended || a.status === 'Asistiré' || a.status === 'attending'));
+        return acc + (attended ? 1 : 0);
+    }, 0);
+
+    const visitsPercentage = schoolVisitsList.length > 0 ? Math.round((myVisitsAttended / schoolVisitsList.length) * 100) : 0;
+    const trainingsPercentage = technicalTrainingsList.length > 0 ? Math.round((myTrainingsAttended / technicalTrainingsList.length) * 100) : 0;
+
+    // Cálculo dinámico en tiempo real de EXP, Nivel y Rango a partir de las Insignias Acreditadas
+    const TIER_NUM_MAP = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5 };
+    const TIER_RANK_NAMES = { 'I': 'Novato', 'II': 'Aprendiz', 'III': 'Junior', 'IV': 'Especialista', 'V': 'Master' };
+    const tierRankName = (tier) => TIER_RANK_NAMES[tier] || 'Novato';
+
+  // Convert tier (Roman numeral) to star icons — with neon pill container (for image badges)
+  const tierToStars = (tier) => {
+    const num = TIER_NUM_MAP[tier] || 1;
+    const color = num >= 5 ? '#fde047' : num >= 3 ? '#e2e8f0' : '#cd7f32';
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '1px',
+        background: 'rgba(0,0,0,0.55)',
+        borderRadius: '99px',
+        padding: '1px 5px',
+        boxShadow: `0 0 8px 2px ${color}66, inset 0 0 4px rgba(0,0,0,0.4)`,
+        border: `1px solid ${color}55`,
+      }}>
+        {Array.from({ length: num }, (_, i) => (
+          <span key={i} style={{ color, textShadow: `0 0 5px ${color}`, fontSize: 'inherit', lineHeight: 1 }}>★</span>
+        ))}
+      </span>
+    );
+  };
+
+  // Plain stars (no pill) — used inside the .simi-badge-app-tier chip for no-image badges
+  const tierToStarsPlain = (tier) => {
+    const num = TIER_NUM_MAP[tier] || 1;
+    return '★'.repeat(num);
+  };
+    const myBadges = memberBadgesMap[currentUserId] || {};
+
+    // ── CÁLCULO DE ★ REALES (solo insignias ganadas, sin asumir tier por defecto) ──
+    const totalSimiStars = SIMI_PINS_CATALOG.reduce((acc, pin) => {
+        const earned = myBadges[pin.id] || null;
+        if (!earned) return acc; // No contar insignias no ganadas
+        const tier = earned.tier || selectedPinTiers[pin.id];
+        if (!tier) return acc;
+        const num = TIER_NUM_MAP[tier] || 0;
+        return acc + num;
+    }, 0);
+
+    const maxSimiStars = SIMI_PINS_CATALOG.length * 5; // 9 × 5 = 45 ★ máx
+    const totalSimiExp = totalSimiStars * 100; // compatibilidad con código existente
+    const simiExpPercentage = maxSimiStars > 0 ? Math.min(100, Math.round((totalSimiStars / maxSimiStars) * 100)) : 0;
+
+    // ── SISTEMA DE RANGOS POR ★ REALES (sin inflar con defaults) ──
+    const getRankInfo = (stars) => {
+        if (stars >= 35) return { level: 6, title: 'Gran Artífice SIMI3D',       rankTier: 'Gran Artífice',             emoji: '👑', color: '#fde047' };
+        if (stars >= 23) return { level: 5, title: 'Diseñador Avanzado',          rankTier: 'Diseñador Avanzado',        emoji: '🔴', color: '#f97316' };
+        if (stars >= 13) return { level: 4, title: 'Especialista en Manufactura', rankTier: 'Especialista',              emoji: '🟠', color: '#f59e0b' };
+        if (stars >= 6)  return { level: 3, title: 'Técnico 3D',                  rankTier: 'Técnico 3D',                emoji: '🟡', color: '#facc15' };
+        if (stars >= 1)  return { level: 2, title: 'Aprendiz Maker',              rankTier: 'Aprendiz Maker',            emoji: '🟢', color: '#4ade80' };
+        return             { level: 1, title: 'Iniciado SIMI3D',                  rankTier: 'Iniciado',                  emoji: '🔵', color: '#38bdf8' };
+    };
+
+    const myMakerInfo = getRankInfo(totalSimiStars);
+
+    const hasLeaderPrivileges = isStaffUser || isLeaderUser || ['admin', 'docente', 'profesor', 'leader', 'lider'].includes((profile?.real_role || profile?.role || '').toLowerCase());
+    const isStudentModeActive = isSimiStudentView || isImpersonating;
+    const isLeader = hasLeaderPrivileges && !isStudentModeActive;
+
+    return (
+        <div className="simi-hub-container">
+            {/* MODAL DE REGLAS Y ESTATUTOS DEL SEMILLERO */}
+            {isRulesModalOpen && createPortal(
+                <div className="simi-modal-backdrop" onClick={() => setIsRulesModalOpen(false)}>
+                    <div className="simi-modal-card" style={{ maxWidth: '620px', width: '95vw', maxHeight: '88vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                        <div className="simi-modal-header" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
+                                    <Shield size={20} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                        📜 Estatutos & Reglas del Semillero SIMI3D
+                                    </h3>
+                                    <span style={{ fontSize: '0.72rem', color: '#06b6d4', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                                        Compromiso de Excelencia y Formación STEAM
+                                    </span>
+                                </div>
+                            </div>
+                            <button className="simi-modal-close-btn" onClick={() => setIsRulesModalOpen(false)}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem', fontSize: '0.84rem', color: 'var(--text-body)' }}>
+                            {/* REGLA DE ORO DESTACADA: 80% ASISTENCIA */}
+                            <div style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%)', border: '1.5px solid rgba(6, 182, 212, 0.4)', borderRadius: '14px', padding: '1rem 1.15rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                    <span style={{ fontSize: '1.1rem' }}>⚡</span>
+                                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 850, color: '#22d3ee' }}>
+                                        Requisito Fundamental de Permanencia y Certificación (80 / 80)
+                                    </h4>
+                                </div>
+                                <p style={{ margin: '0 0 8px 0', fontSize: '0.82rem', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                                    Para conservar la calidad de miembro activo del semillero, postular a ponencias y recibir certificación institucional, todo semillerista debe cumplir rigurosamente con:
+                                </p>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.65rem' }}>
+                                    <div style={{ background: 'var(--surface-card)', padding: '8px 12px', borderRadius: '10px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#06b6d4' }}>80% Mínimo</div>
+                                        <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>Asistencia a Capacitaciones Técnicas & Talleres de Software</div>
+                                    </div>
+                                    <div style={{ background: 'var(--surface-card)', padding: '8px 12px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#10b981' }}>80% Mínimo</div>
+                                        <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>Asistencia y Acompañamiento a Visitas Pedagógicas Escolares</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* LISTADO DE REGLAS Y DEBERES */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <span style={{ background: 'rgba(6, 182, 212, 0.2)', color: '#06b6d4', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.72rem', flexShrink: 0 }}>1</span>
+                                    <div>
+                                        <strong style={{ color: 'var(--text-heading)' }}>Puntualidad y Registro de Asistencia:</strong>
+                                        <p style={{ margin: '2px 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                            Confirmar asistencia o no asistencia en cada evento del cronograma con al menos 48 horas de anticipación.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <span style={{ background: 'rgba(6, 182, 212, 0.2)', color: '#06b6d4', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.72rem', flexShrink: 0 }}>2</span>
+                                    <div>
+                                        <strong style={{ color: 'var(--text-heading)' }}>Cuidado de Equipos & Bioseguridad en Taller:</strong>
+                                        <p style={{ margin: '2px 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                            Uso obligatorio de EPP (guantes de nitrilo, gafas y mascarilla) al manipular resinas SLA, alcohol isopropílico o soldadura. Tratar impresoras 3D y herramientas con máxima responsabilidad.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <span style={{ background: 'rgba(6, 182, 212, 0.2)', color: '#06b6d4', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.72rem', flexShrink: 0 }}>3</span>
+                                    <div>
+                                        <strong style={{ color: 'var(--text-heading)' }}>Desarrollo de Proyectos I+D+i y Trabajo Colaborativo:</strong>
+                                        <p style={{ margin: '2px 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                            Participar activamente en el Banco de Proyectos, documentar iteraciones de diseño paramétrico y compartir buenas prácticas con nuevos integrantes.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                    <span style={{ background: 'rgba(6, 182, 212, 0.2)', color: '#06b6d4', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.72rem', flexShrink: 0 }}>4</span>
+                                    <div>
+                                        <strong style={{ color: 'var(--text-heading)' }}>Representación Institucional y Vocación STEAM:</strong>
+                                        <p style={{ margin: '2px 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                                            En las visitas a colegios, mantener una actitud empática, didáctica y respetuosa inspirando a niños y jóvenes hacia la ciencia y la tecnología.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setIsRulesModalOpen(false)}
+                                style={{
+                                    marginTop: '0.5rem',
+                                    background: '#06b6d4',
+                                    color: '#042f2e',
+                                    border: 'none',
+                                    padding: '10px 18px',
+                                    borderRadius: '12px',
+                                    fontWeight: 850,
+                                    fontSize: '0.86rem',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 14px -2px rgba(6, 182, 212, 0.4)',
+                                    alignSelf: 'flex-end'
+                                }}
+                            >
+                                Entendido y Aceptado
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {/* 2. Layout Principal con Panel Lateral Izquierdo */}
+            <div className="simi-workspace-layout">
+                {/* Panel Lateral Izquierdo de Navegación SIMI3D */}
+                <aside className="simi-sidebar-nav">
+                    {/* Encabezado de Marca SIMI 3D */}
+                    <div className="simi-sidebar-brand-header">
+                        <div className="simi-sidebar-brand-logo-box">
+                            <img 
+                                src="https://i.postimg.cc/6794HFnS/simi3d.jpg" 
+                                alt="SIMI 3D Logo" 
+                                className="simi-sidebar-brand-img"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                            <div className="simi-sidebar-brand-fallback" style={{ display: 'none' }}>
+                                <Box size={22} className="simi-sidebar-brand-icon" />
+                            </div>
+                        </div>
+                        <div className="simi-sidebar-brand-text">
+                            <span className="simi-sidebar-brand-title">SIMI <span className="simi-sidebar-brand-3d">3D</span></span>
+                            <span className="simi-sidebar-brand-sub">Semillero de Investigación</span>
+                        </div>
+                    </div>
+
+                    <div className="simi-sidebar-divider" />
+
+                    <nav className="simi-sidebar-menu">
+                        <button 
+                            className={`simi-sidebar-item ${activeTab === 'home' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('home')}
+                            title="Dashboard y logros del semillero"
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Home size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Inicio</span>
+                                <span className="simi-sidebar-desc">Dashboard & Logros</span>
+                            </div>
+                        </button>
+
+                        <button 
+                            className={`simi-sidebar-item ${activeTab === 'tracks' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('tracks')}
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Box size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Rutas de Modelado</span>
+                                <span className="simi-sidebar-desc">Software & CAD 3D</span>
+                            </div>
+                        </button>
+
+                        <button 
+                            className={`simi-sidebar-item ${activeTab === 'events' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('events')}
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Calendar size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Cronograma STEAM</span>
+                                <span className="simi-sidebar-desc">Talleres, Proyectos & Visitas</span>
+                            </div>
+                        </button>
+
+                        <button 
+                            className={`simi-sidebar-item ${activeTab === 'projects' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('projects')}
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Rocket size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Banco de Proyectos</span>
+                                <span className="simi-sidebar-desc">Prototipos & Ensambles</span>
+                            </div>
+                        </button>
+
+                        <button 
+                            className={`simi-sidebar-item ${activeTab === 'resources' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('resources')}
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Layers size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Nuestros Recursos</span>
+                                <span className="simi-sidebar-desc">Impresoras & Insumos</span>
+                            </div>
+                        </button>
+
+                        <button 
+                            className={`simi-sidebar-item ${activeTab === 'members' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('members')}
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Users size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Miembros Activos</span>
+                                <span className="simi-sidebar-desc">Directorio & 80/80</span>
+                            </div>
+                        </button>
+                    </nav>
+
+                    {/* Acciones Secundarias Tácticas del Semillero (Solicitudes + Reglas) */}
+                    <div className="simi-sidebar-secondary-group">
+                        {isLeader && (
+                            <button 
+                                className="simi-sidebar-item simi-sidebar-requests-btn"
+                                onClick={() => setIsRequestsModalOpen(true)}
+                                title="Gestionar y aprobar solicitudes de acceso a la plataforma"
+                            >
+                                <div className="simi-sidebar-icon requests-icon">
+                                    <UserCheck size={18} />
+                                </div>
+                                <div className="simi-sidebar-text" style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                                        <span className="simi-sidebar-title">Solicitudes</span>
+                                        {pendingAccessRequestsCount > 0 && (
+                                            <span className="simi-sidebar-badge-counter">
+                                                {pendingAccessRequestsCount}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="simi-sidebar-desc">Gestión de Acceso</span>
+                                </div>
+                            </button>
+                        )}
+
+                        <button 
+                            className="simi-sidebar-item simi-sidebar-rules-btn"
+                            onClick={() => setIsRulesModalOpen(true)}
+                            title="Consultar estatutos y reglamento oficial del semillero"
+                        >
+                            <div className="simi-sidebar-icon rules-icon">
+                                <FileText size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Reglas del Semillero</span>
+                                <span className="simi-sidebar-desc">Estatutos & Compromisos</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Píldora de Usuario en la parte inferior del panel */}
+                    {headerCourseSelector && (
+                        <div className="simi-sidebar-user-footer">
+                            {headerCourseSelector}
+                        </div>
+                    )}
+                </aside>
+
+                {/* ── BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES (ESTILO BANCO CON BOTÓN MÁS '...') ── */}
+                <nav className="simi-mobile-bottom-nav">
+                    <button 
+                        className={`simi-mobile-nav-btn ${activeTab === 'home' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('home'); setIsMobileMoreMenuOpen(false); }}
+                    >
+                        <Home size={19} />
+                        <span>Inicio</span>
+                    </button>
+
+                    <button 
+                        className={`simi-mobile-nav-btn ${activeTab === 'tracks' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('tracks'); setIsMobileMoreMenuOpen(false); }}
+                    >
+                        <Box size={19} />
+                        <span>Rutas</span>
+                    </button>
+
+                    <button 
+                        className={`simi-mobile-nav-btn ${activeTab === 'events' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('events'); setIsMobileMoreMenuOpen(false); }}
+                    >
+                        <Calendar size={19} />
+                        <span>Cronograma</span>
+                    </button>
+
+                    <button 
+                        className={`simi-mobile-nav-btn ${activeTab === 'projects' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('projects'); setIsMobileMoreMenuOpen(false); }}
+                    >
+                        <Rocket size={19} />
+                        <span>Proyectos</span>
+                    </button>
+
+                    <button 
+                        className={`simi-mobile-nav-btn ${activeTab === 'resources' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('resources'); setIsMobileMoreMenuOpen(false); }}
+                    >
+                        <Layers size={19} />
+                        <span>Recursos</span>
+                    </button>
+
+                    <button 
+                        className={`simi-mobile-nav-btn ${isMobileMoreMenuOpen ? 'active' : ''}`}
+                        onClick={() => setIsMobileMoreMenuOpen(!isMobileMoreMenuOpen)}
+                    >
+                        <MoreHorizontal size={20} />
+                        <span>Más</span>
+                        {pendingAccessRequestsCount > 0 && <span className="simi-mobile-badge-dot" />}
+                    </button>
+                </nav>
+
+                {/* ── SHEET / MODAL FLOTANTE DE OPCIONES ADICIONALES PARA MÓVIL ('...') ── */}
+                {isMobileMoreMenuOpen && (
+                    <div className="simi-mobile-more-backdrop" onClick={() => setIsMobileMoreMenuOpen(false)}>
+                        <div className="simi-mobile-more-sheet" onClick={e => e.stopPropagation()}>
+                            <div className="simi-mobile-more-handle" />
+                            
+                            <div className="simi-mobile-more-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Sparkles size={16} />
+                                    </div>
+                                    <span style={{ fontWeight: 900, color: '#192584', fontSize: '1rem' }}>
+                                        Opciones & Herramientas SIMI3D
+                                    </span>
+                                </div>
+                                <button className="simi-modal-close-btn" onClick={() => setIsMobileMoreMenuOpen(false)}>
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div className="simi-mobile-more-grid">
+                                {isLeader && (
+                                    <button 
+                                        className="simi-mobile-more-item"
+                                        onClick={() => { setIsRequestsModalOpen(true); setIsMobileMoreMenuOpen(false); }}
+                                    >
+                                        <div className="simi-mobile-more-icon" style={{ background: '#faf5ff', color: '#B541FA', border: '1px solid #f3e8ff' }}>
+                                            <UserCheck size={20} />
+                                        </div>
+                                        <div className="simi-mobile-more-text" style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <strong>Solicitudes de Acceso</strong>
+                                                {pendingAccessRequestsCount > 0 && (
+                                                    <span className="simi-sidebar-badge-counter">{pendingAccessRequestsCount}</span>
+                                                )}
+                                            </div>
+                                            <small>Aprobar y gestionar nuevos integrantes</small>
+                                        </div>
+                                        <ChevronRight size={16} color="#94a3b8" />
+                                    </button>
+                                )}
+
+                                <button 
+                                    className="simi-mobile-more-item"
+                                    onClick={() => { setActiveTab('members'); setIsMobileMoreMenuOpen(false); }}
+                                >
+                                    <div className="simi-mobile-more-icon" style={{ background: '#ecfeff', color: '#06b6d4', border: '1px solid #cffafe' }}>
+                                        <Users size={20} />
+                                    </div>
+                                    <div className="simi-mobile-more-text" style={{ flex: 1 }}>
+                                        <strong>Miembros Activos</strong>
+                                        <small>Directorio y Regla 80/80</small>
+                                    </div>
+                                    <ChevronRight size={16} color="#94a3b8" />
+                                </button>
+
+                                <button 
+                                    className="simi-mobile-more-item"
+                                    onClick={() => { setIsRulesModalOpen(true); setIsMobileMoreMenuOpen(false); }}
+                                >
+                                    <div className="simi-mobile-more-icon" style={{ background: '#f0fdfa', color: '#059669', border: '1px solid #ccfbf1' }}>
+                                        <FileText size={20} />
+                                    </div>
+                                    <div className="simi-mobile-more-text" style={{ flex: 1 }}>
+                                        <strong>Reglas del Semillero</strong>
+                                        <small>Estatutos STEAM y Regla del 80%</small>
+                                    </div>
+                                    <ChevronRight size={16} color="#94a3b8" />
+                                </button>
+                            </div>
+
+                            {/* Tarjeta de Perfil de Usuario Móvil Rediseñada */}
+                            <div className="simi-mobile-sheet-user-card" onClick={() => navigate('/dashboard/profile')}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div className="simi-mobile-sheet-user-avatar">
+                                        {profile?.avatar_url ? (
+                                            <img 
+                                                src={profile.avatar_url} 
+                                                alt={profile?.full_name || 'Usuario'} 
+                                                referrerPolicy="no-referrer"
+                                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                            />
+                                        ) : (
+                                            <Users size={20} color="#06b6d4" />
+                                        )}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                        <span className="simi-mobile-sheet-user-name">
+                                            {profile?.full_name || 'Maker SIMI3D'}
+                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <span className="simi-mobile-sheet-role-pill">
+                                                {profile?.role === 'leader' || profile?.role === 'lider' ? 'Líder SIMI' : isStaff ? 'Admin' : 'Estudiante'}
+                                            </span>
+                                            <span className="simi-mobile-sheet-tag-pill">
+                                                SIMI 3D
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#06b6d4', fontSize: '0.76rem', fontWeight: 800 }}>
+                                    <span>Mi Perfil</span>
+                                    <ChevronRight size={16} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <main className="simi-main-content">
+                    {/* ── HERO HEROICO DEL ESTUDIANTE / LÍDER SIMI (Visible en todas en desktop, solo en inicio en móvil) ── */}
+                    <div className={`simi-home-hero-card ${activeTab !== 'home' ? 'simi-hero-hide-mobile' : ''}`}>
+                        <div className="simi-home-hero-body">
+                            <div className="simi-home-avatar-badge">
+                                <div className="simi-home-avatar-inner">
+                                    {profile?.avatar_url ? (
+                                        <img 
+                                            src={profile.avatar_url} 
+                                            alt={profile?.full_name || 'Semillerista'} 
+                                            referrerPolicy="no-referrer"
+                                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <Users size={40} color="#06b6d4" />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="simi-home-hero-info">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <h2 className="simi-home-greeting">
+                                        ¡Bienvenido, <span className="simi-home-name-gradient">{profile?.full_name || 'Maker SIMI3D'}</span>! 🚀
+                                    </h2>
+                                    <span className="simi-home-role-tag">
+                                        {profile?.role === 'leader' || profile?.role === 'lider' ? '🛡️ Líder de Semillero' : isStaff ? '🎓 Docente Investigador' : '⚡ Semillerista Activo'}
+                                    </span>
+                                    <span className="simi-home-tier-badge" title="Rango de Especialista 3D">
+                                        ⭐ Rango {profile?.role === 'leader' || profile?.role === 'lider' ? 'Líder I+D' : myMakerInfo.rankTier}
+                                    </span>
+                                </div>
+                                <p className="simi-home-hero-desc">
+                                    Progreso táctico en diseño paramétrico, modelado poligonal, laminación y manufactura aditiva FDM/SLA.
+                                </p>
+
+                                {/* Barra de Progreso de Rango y EXP Dinámica */}
+                                <div className="simi-home-xp-box">
+                                    <div className="simi-home-xp-header">
+                                        <span>⚡ <strong>Nivel {myMakerInfo.level} Maker</strong><span className="simi-home-xp-subtext"> • {myMakerInfo.title}</span></span>
+                                        <span className="simi-home-xp-numbers"><strong>{totalSimiExp.toLocaleString()}</strong> / {(maxSimiStars * 100).toLocaleString()} EXP</span>
+                                    </div>
+                                    <div className="simi-home-xp-bar-bg">
+                                        <div className="simi-home-xp-bar-fill" style={{ width: `${simiExpPercentage}%` }} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── PESTAÑA 0: DASHBOARD PRINCIPAL SIMI3D (SOLO EN INICIO) ── */}
+                    {activeTab === 'home' && (
+                        <div className="simi-home-dashboard animate-fade-in">
+                            {/* ── BARRA DE MÉTRICAS TÁCTICAS (DEBAJO DEL ENCABEZADO) ── */}
+                            <div className="simi-standalone-metrics-bar animate-fade-in">
+                                <div 
+                                    className="simi-home-metric-item simi-metric-interactive"
+                                    onClick={() => setIsBadgesModalOpen(true)}
+                                    title="Ver todas mis insignias y logros tácticos"
+                                >
+                                    <div className="simi-home-metric-val" style={{ color: '#06b6d4' }}>{SIMI_PINS_CATALOG.length}</div>
+                                    <div className="simi-home-metric-lbl">Insignias Tácticas</div>
+                                </div>
+                                <div className="simi-home-metric-divider" />
+                                <div 
+                                    className="simi-home-metric-item simi-metric-interactive"
+                                    onClick={() => setIsRulesModalOpen(true)}
+                                    title="Asistencia a Capacitaciones Técnicas (Requisito mínimo 80%)"
+                                >
+                                    <div className="simi-home-metric-val" style={{ color: trainingsPercentage >= 80 ? '#06b6d4' : '#f59e0b' }}>
+                                        {trainingsPercentage}%
+                                    </div>
+                                    <div className="simi-home-metric-lbl">Capacitaciones</div>
+                                </div>
+                                <div className="simi-home-metric-divider" />
+                                <div 
+                                    className="simi-home-metric-item simi-metric-interactive"
+                                    onClick={() => setIsRulesModalOpen(true)}
+                                    title="Acompañamiento a Visitas Escolares (Requisito mínimo 80%)"
+                                >
+                                    <div className="simi-home-metric-val" style={{ color: visitsPercentage >= 80 ? '#10b981' : '#f59e0b' }}>
+                                        {visitsPercentage}%
+                                    </div>
+                                    <div className="simi-home-metric-lbl">Visitas Escolares</div>
+                                </div>
+                                <div className="simi-home-metric-divider" />
+                                <div 
+                                    className="simi-home-metric-item simi-metric-interactive"
+                                    onClick={() => setActiveTab('projects')}
+                                    title="Ir al Banco de Proyectos"
+                                >
+                                    <div className="simi-home-metric-val" style={{ color: '#B541FA' }}>{simiProjects.length}</div>
+                                    <div className="simi-home-metric-lbl">Proyectos I+D</div>
+                                </div>
+                            </div>
+
+                            {/* ── BARRA DE INSIGNIAS Y LOGOS (ACORDEÓN EN MÓVIL, VISIBLE EN ESCRITORIO) ── */}
+                            <div className="simi-badges-ribbon-card animate-fade-in">
+                                <div 
+                                    className="simi-badges-ribbon-header simi-badges-accordion-toggle"
+                                    onClick={() => setIsBadgesExpanded(!isBadgesExpanded)}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div className="simi-badges-ribbon-icon">
+                                            <Trophy size={16} />
+                                        </div>
+                                        <h3 className="simi-badges-ribbon-title">
+                                            🎖️ Mis Insignias & Especialidades ({SIMI_PINS_CATALOG.length})
+                                        </h3>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span className="simi-badges-ribbon-hint">
+                                            {isBadgesExpanded ? 'Ocultar insignias' : 'Ver insignias'}
+                                        </span>
+                                        <div className={`simi-badges-chevron ${isBadgesExpanded ? 'open' : ''}`}>
+                                            <ChevronDown size={18} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={`simi-badges-ribbon-content ${isBadgesExpanded ? 'is-expanded' : 'is-collapsed'}`}>
+                                    <div className="simi-badges-ribbon-items">
+                                        {SIMI_PINS_CATALOG.map((pin) => {
+                                            const IconComp = ICON_MAP[pin.icon] || Shield;
+                                            const currentTier = selectedPinTiers[pin.id] || 'I';
+                                            const isPrestige = currentTier === 'V';
+                                            const hasImg = Boolean(pin.badgeImageUrl);
+
+                                            return (
+                                                <button
+                                                    key={pin.id}
+                                                    type="button"
+                                                    className={`simi-badge-app-item ${isPrestige ? 'prestige' : ''} ${hasImg ? 'has-custom-badge' : ''}`}
+                                                    onClick={() => handleOpenPinModal(pin.id)}
+                                                    style={{ 
+                                                        '--badge-color': pin.color,
+                                                        padding: hasImg ? '0.4rem 0.25rem 0.2rem 0.25rem' : undefined,
+                                                        background: hasImg ? 'transparent' : undefined,
+                                                        border: hasImg ? 'none' : undefined,
+                                                        boxShadow: hasImg ? 'none' : undefined,
+                                                        position: 'relative'
+                                                    }}
+                                                    title={`Insignia: ${pin.name} — ${tierRankName(currentTier)} • Toca para ver requisitos`}
+                                                >
+                                                    {/* Nombre Arriba de la Insignia */}
+                                                    <span 
+                                                        className="simi-badge-app-name"
+                                                        style={{
+                                                            fontSize: hasImg ? '0.84rem' : '0.8rem',
+                                                            fontWeight: 900,
+                                                            color: 'var(--text-heading, #0f172a)',
+                                                            marginBottom: hasImg ? '2px' : 0
+                                                        }}
+                                                    >
+                                                        {pin.shortName || pin.name}
+                                                    </span>
+
+                                                    <div 
+                                                        className="simi-badge-app-icon-box" 
+                                                        style={{ 
+                                                            width: hasImg ? '96px' : '48px',
+                                                            height: hasImg ? '96px' : '48px',
+                                                            color: pin.color, 
+                                                            borderColor: hasImg ? 'transparent' : pin.color, 
+                                                            border: hasImg ? 'none' : undefined,
+                                                            background: hasImg ? 'transparent' : `color-mix(in srgb, ${pin.color} 15%, #ffffff)`,
+                                                            boxShadow: hasImg ? 'none' : undefined,
+                                                            position: 'relative'
+                                                        }}
+                                                    >
+                                                        {hasImg ? (
+                                                            <>
+                                                                <img 
+                                                                    src={pin.badgeImageUrl} 
+                                                                    alt={pin.name} 
+                                                                    referrerPolicy="no-referrer"
+                                                                    style={{ 
+                                                                        width: '100%', 
+                                                                        height: '100%', 
+                                                                        objectFit: 'contain', 
+                                                                        filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.18))',
+                                                                        transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                                                    }} 
+                                                                />
+                                                                <span 
+                                                                    style={{
+                                                                        position: 'absolute',
+                                                                        bottom: '10.5px',
+                                                                        left: '50%',
+                                                                        transform: 'translateX(-50%)',
+                                                                        color: '#1e293b',
+                                                                        fontSize: '0.76rem',
+                                                                        fontWeight: 950,
+                                                                        letterSpacing: '0.5px',
+                                                                        textShadow: '0 1px 1px rgba(255, 255, 255, 0.5), 0 -1px 1px rgba(0, 0, 0, 0.35)',
+                                                                        pointerEvents: 'none'
+                                                                    }}
+                                                                >
+                                                                    {tierToStars(currentTier)}
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <IconComp size={24} />
+                                                        )}
+
+                                                    </div>
+                                                    
+                                                    {!hasImg && (
+                                                        <span 
+                                                            className="simi-badge-app-tier" 
+                                                            style={{ 
+                                                                color: pin.color,
+                                                                background: `color-mix(in srgb, ${pin.color} 12%, transparent)`,
+                                                                borderColor: `color-mix(in srgb, ${pin.color} 30%, transparent)`
+                                                            }}
+                                                        >
+                                                            {tierToStarsPlain(currentTier)}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                            {/* 2. FILA DOBLE: ACCESO RÁPIDO A RUTAS + PRÓXIMA VISITA ESCOLAR */}
+                            <div className="simi-home-bottom-grid">
+                                {/* Rutas Formativas Abiertas (Solo en escritorio) */}
+                                <div className="simi-home-subcard simi-desktop-only">
+                                    <div className="simi-home-subcard-header">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Box size={18} color="#B541FA" />
+                                            <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                                Rutas de Formación Activas (8 Software & Taller)
+                                            </h4>
+                                        </div>
+                                        <button 
+                                            className="simi-home-text-link"
+                                            onClick={() => setActiveTab('tracks')}
+                                        >
+                                            Ver Todas <ArrowRight size={13} />
+                                        </button>
+                                    </div>
+
+                                    <div className="simi-home-quick-tracks-list">
+                                        {SIMI_TRACKS.slice(0, 3).map(track => (
+                                            <div 
+                                                key={track.id} 
+                                                className="simi-home-quick-track-item"
+                                                onClick={() => {
+                                                    setActiveLessonTrack(track);
+                                                    setActiveUnitIndex(0);
+                                                }}
+                                            >
+                                                <div className="simi-home-quick-track-icon" style={{ color: track.color, borderColor: track.color }}>
+                                                    {track.logoUrl ? (
+                                                        <img src={track.logoUrl} alt={track.title} style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
+                                                    ) : (
+                                                        <Box size={18} />
+                                                    )}
+                                                </div>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--text-heading)' }}>
+                                                        {track.title}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                                                        {track.level} • {track.units.length} Módulos
+                                                    </div>
+                                                </div>
+                                                <button className="simi-home-quick-play-btn" style={{ color: track.color }}>
+                                                    <Play size={13} fill={track.color} /> Continuar
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Próximas Visitas a Colegios & Eventos */}
+                                <div className="simi-home-subcard">
+                                    <div className="simi-home-subcard-header">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <School size={18} color="#06b6d4" />
+                                            <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                                Próxima Salida de Extensión Escolar STEAM
+                                            </h4>
+                                        </div>
+                                        <button 
+                                            className="simi-home-text-link"
+                                            onClick={() => setActiveTab('events')}
+                                        >
+                                            Cronograma <ArrowRight size={13} />
+                                        </button>
+                                    </div>
+
+                                    {SIMI_SCHOOL_EVENTS[0] && (
+                                        <div className="simi-home-event-highlight">
+                                            <div className="simi-home-event-top">
+                                                <span className="simi-home-event-badge">Visita Pedagógica</span>
+                                                <span className="simi-home-event-date">📅 {SIMI_SCHOOL_EVENTS[0].date}</span>
+                                            </div>
+                                            <h4 className="simi-home-event-title">{SIMI_SCHOOL_EVENTS[0].schoolName}</h4>
+                                            <p className="simi-home-event-desc">{SIMI_SCHOOL_EVENTS[0].objective}</p>
+                                            <div className="simi-home-event-footer">
+                                                <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                                                    👥 <strong>Público:</strong> {SIMI_SCHOOL_EVENTS[0].studentsCount} estudiantes
+                                                </span>
+                                                <button 
+                                                    className="simi-home-event-btn"
+                                                    onClick={() => setActiveTab('events')}
+                                                >
+                                                    Ver Detalles
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                            </div>
+
+                            {/* 3. FILA: FUENTES & HERRAMIENTAS WEB DESTACADAS */}
+                            <div className="simi-home-subcard" style={{ marginTop: '1.25rem' }}>
+                                <div className="simi-home-subcard-header">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Compass size={18} color="#06b6d4" />
+                                        <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                            Fuentes, Herramientas Web & IA 3D de Interés
+                                        </h4>
+                                    </div>
+                                    <button 
+                                        className="simi-home-text-link"
+                                        onClick={() => {
+                                            setResourcesSubTab('web');
+                                            setActiveTab('resources');
+                                        }}
+                                    >
+                                        Ver Catálogo Completo ({simiWebResources.length} Herramientas) <ArrowRight size={13} />
+                                    </button>
+                                </div>
+
+                                <div className="simi-home-quick-tools-grid">
+                                    {simiWebResources.filter(r => r.featured).slice(0, 6).map(tool => (
+                                        <a
+                                            key={tool.id}
+                                            href={tool.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="simi-home-quick-tool-pill"
+                                            style={{ '--tool-accent': tool.color }}
+                                            title={`Abrir ${tool.name} (${tool.host})`}
+                                        >
+                                            <div className="simi-home-quick-tool-avatar">
+                                                <img 
+                                                    src={tool.logoUrl || `https://www.google.com/s2/favicons?domain=${tool.host}&sz=64`}
+                                                    alt=""
+                                                    className="simi-home-quick-tool-img"
+                                                    referrerPolicy="no-referrer"
+                                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                                />
+                                                <div className="simi-home-quick-tool-dot" style={{ background: tool.color }} />
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div className="simi-home-quick-tool-title">{tool.name}</div>
+                                                <div className="simi-home-quick-tool-sub">{tool.tag} • {tool.host}</div>
+                                            </div>
+                                            <ExternalLink size={13} color="#94a3b8" className="simi-home-quick-tool-icon" />
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PESTAÑA 1: 3 CARDS DE CATEGORÍAS EN LA MISMA FILA */}
+                    {activeTab === 'tracks' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            {/* Contenedor Superior de Rutas Formativas */}
+                            <div className="simi-tracks-header-card">
+                                <div className="simi-tracks-header-info">
+                                    <div className="simi-tracks-header-icon">
+                                        <Compass size={22} />
+                                    </div>
+                                    <div>
+                                        <h3 className="simi-tracks-header-title">
+                                            Rutas Formativas & Especialidades 3D
+                                        </h3>
+                                        <p className="simi-tracks-header-desc">
+                                            Explora software de diseño paramétrico, modelado poligonal, laminación y manufactura aditiva FDM/SLA.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="simi-categories-trio-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                                {[
+                                    { 
+                                        id: 'cat-cad', 
+                                        title: 'Software de Modelado 3D & CAD', 
+                                        subtitle: 'Diseño geométrico, poligonal y mecánico paramétrico', 
+                                        color: '#B541FA', 
+                                        barColor: '#B541FA',
+                                        badgeTheme: 'purple',
+                                        icon: Box, 
+                                        category: 'Modelado 3D',
+                                        badges: ['Tinkercad', 'Blender 4.x', 'Fusion 360'],
+                                        expTotal: '300 EXP'
+                                    },
+                                    { 
+                                        id: 'cat-slicer', 
+                                        title: 'Software de Laminación (Slicers)', 
+                                        subtitle: 'Optimización de código G, soportes orgánicos y alta velocidad', 
+                                        color: '#4FD2E9', 
+                                        barColor: '#4FD2E9',
+                                        badgeTheme: 'cyan',
+                                        icon: Layers, 
+                                        category: 'Laminación',
+                                        badges: ['Cura 5.x', 'OrcaSlicer', 'PrusaSlicer'],
+                                        expTotal: '300 EXP'
+                                    },
+                                    { 
+                                        id: 'cat-hardware', 
+                                        title: 'Equipos & Manufactura Aditiva', 
+                                        subtitle: 'Hardware FDM/SLA, calibración, filamentos y resinas', 
+                                        color: '#192584', 
+                                        barColor: 'linear-gradient(90deg, #192584 0%, #4FD2E9 100%)',
+                                        badgeTheme: 'navy',
+                                        icon: Flame, 
+                                        category: 'Equipos & Manufactura',
+                                        badges: ['FDM / FFF', 'Resina SLA', 'DFAM'],
+                                        expTotal: '250 EXP'
+                                    }
+                                ].map(cat => {
+                                    const catTracks = SIMI_TRACKS.filter(t => t.category === cat.category);
+                                    const CatIcon = cat.icon;
+                                    return (
+                                        <div 
+                                            key={cat.id} 
+                                            className={`simi-category-hub-card theme-${cat.badgeTheme}`}
+                                            onClick={() => setActiveCategoryModal(cat)}
+                                            style={{ '--cat-accent': cat.color }}
+                                        >
+                                            <div className="simi-cat-body">
+                                                <div className="simi-cat-header-row">
+                                                    <div className="simi-cat-icon-wrapper" style={{ color: cat.color }}>
+                                                        <CatIcon size={22} />
+                                                    </div>
+                                                    <span className="simi-cat-count-badge">
+                                                        {catTracks.length} Rutas
+                                                    </span>
+                                                </div>
+
+                                                <div>
+                                                    <h3 className="simi-cat-title">
+                                                        {cat.title}
+                                                    </h3>
+                                                    <p className="simi-cat-subtitle">
+                                                        {cat.subtitle}
+                                                    </p>
+                                                </div>
+
+                                                {/* Píldoras de software / rutas incluidas */}
+                                                <div className="simi-cat-badges-row">
+                                                    {cat.badges.map((b, bIdx) => (
+                                                        <span key={bIdx} className="simi-cat-badge-pill">
+                                                            {b}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="simi-cat-footer-row">
+                                                <span className="simi-cat-footer-hint">
+                                                    Explorar Módulos
+                                                </span>
+                                                <button className="simi-cat-cta-btn">
+                                                    Abrir Rutas <ArrowRight size={15} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+            
+            {/* MODAL DE RUTAS FORMATIVAS POR CATEGORÍA */}
+            {activeCategoryModal && (
+                <div className="simi-modal-backdrop" onClick={() => setActiveCategoryModal(null)}>
+                    <div 
+                        className="simi-modal-card" 
+                        onClick={e => e.stopPropagation()}
+                        style={{ maxWidth: '980px', width: '95vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column', padding: '1.4rem 1.6rem' }}
+                    >
+                        {/* Cabecera del Modal de Categoría */}
+                        <div className="simi-modal-header" style={{ alignItems: 'flex-start', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.85rem', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                <div 
+                                    className="simi-shield-emblem"
+                                    style={{ 
+                                        background: `radial-gradient(circle, color-mix(in srgb, ${activeCategoryModal.color} 25%, var(--surface-card)) 0%, var(--surface-card) 100%)`,
+                                        borderColor: activeCategoryModal.color,
+                                        color: activeCategoryModal.color
+                                    }}
+                                >
+                                    <activeCategoryModal.icon size={24} />
+                                </div>
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeCategoryModal.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            CATEGORÍA FORMATIVA • SIMI3D
+                                        </span>
+                                    </div>
+                                    <h2 style={{ margin: '2px 0 0 0', fontSize: '1.28rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                        {activeCategoryModal.title}
+                                    </h2>
+                                </div>
+                            </div>
+
+                            <button 
+                                className="simi-modal-close-btn" 
+                                onClick={() => setActiveCategoryModal(null)}
+                                title="Cerrar modal"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Grid de Rutas dentro del Modal */}
+                        <div style={{ overflowY: 'auto', padding: '1rem 0.2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '1.25rem' }}>
+                            {SIMI_TRACKS.filter(t => t.category === activeCategoryModal.category).map(track => {
+                                const IconComponent = ICON_MAP[track.icon] || Box;
+                                const pin = SIMI_PINS_CATALOG.find(p => p.id === track.pinId);
+                                const currentTier = selectedPinTiers[track.pinId] || 'I';
+                                const isPrestige = currentTier === 'V';
+
+                                return (
+                                    <div key={track.id} className="simi-track-card simi-track-card-showcase">
+                                        {/* Barra superior con Badge, Nivel y Rango */}
+                                        <div className="simi-track-showcase-top">
+                                            <div className="simi-track-meta">
+                                                <span className="simi-track-tag" style={{ color: track.color }}>
+                                                    {track.badge}
+                                                </span>
+                                                <span className="simi-track-level-pill">
+                                                    {track.level}
+                                                </span>
+                                            </div>
+
+                                            {pin && (
+                                                <button 
+                                                    className={`simi-track-pin-trigger ${isPrestige ? 'prestige' : ''}`}
+                                                    style={{
+                                                        background: isPrestige ? 'rgba(245, 158, 11, 0.15)' : `color-mix(in srgb, ${track.color} 14%, var(--surface-card))`,
+                                                        borderColor: isPrestige ? '#f59e0b' : `color-mix(in srgb, ${track.color} 40%, var(--border-subtle))`,
+                                                        color: isPrestige ? '#f59e0b' : track.color
+                                                    }}
+                                                    onClick={() => handleOpenPinModal(track.pinId)}
+                                                    title="Ver Insignia y Rango de Maestría"
+                                                >
+                                                    <Shield size={12} />
+                                                    <span>{tierToStars(currentTier)}</span>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Showcase Visual Protagónico de la Imagen / Logo del Equipo o Software */}
+                                        <div 
+                                            className="simi-track-hero-showcase"
+                                            style={{
+                                                background: `radial-gradient(ellipse at center, color-mix(in srgb, ${track.color} 18%, transparent) 0%, color-mix(in srgb, ${track.color} 5%, transparent) 60%, transparent 100%)`,
+                                                borderColor: `color-mix(in srgb, ${track.color} 22%, var(--border-subtle))`
+                                            }}
+                                        >
+                                            {track.logoUrl ? (
+                                                <img 
+                                                    src={track.logoUrl} 
+                                                    alt={track.title} 
+                                                    className="simi-track-hero-img"
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                            ) : (
+                                                <div 
+                                                    className="simi-track-hero-icon-fallback"
+                                                    style={{ color: track.color }}
+                                                >
+                                                    <IconComponent size={56} />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Información y Títulos */}
+                                        <div className="simi-track-info">
+                                            <h3 className="simi-track-name">
+                                                {track.title}
+                                            </h3>
+                                            <p className="simi-track-desc">
+                                                {track.subtitle}
+                                            </p>
+                                        </div>
+
+                                        {/* Footer de la tarjeta */}
+                                        <div className="simi-track-footer">
+                                            <div className="simi-track-stats-pill">
+                                                <span>{track.units.length} Módulos</span>
+                                                <span>•</span>
+                                                <span>{track.software}</span>
+                                            </div>
+                                            <button 
+                                                className="simi-track-action-btn"
+                                                style={{
+                                                    background: `color-mix(in srgb, ${track.color} 14%, var(--surface-card))`,
+                                                    borderColor: `color-mix(in srgb, ${track.color} 30%, var(--border-subtle))`,
+                                                    color: track.color
+                                                }}
+                                                onClick={() => {
+                                                    setActiveCategoryModal(null);
+                                                    setActiveLessonTrack(track);
+                                                    setActiveUnitIndex(0);
+                                                }}
+                                                title={`Entrar a las unidades de ${track.title}`}
+                                            >
+                                                Ingresar <ArrowRight size={14} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL / VISOR INTERACTIVO DE CONTENIDO DE RUTA FORMATIVA */}
+            {activeLessonTrack && (() => {
+                const trackData = SIMI_TRACKS_LESSONS_DATA[activeLessonTrack.id];
+                const unitsList = trackData?.units || activeLessonTrack.units || [];
+                const currentUnit = trackData?.units?.[activeUnitIndex] || {
+                    title: unitsList[activeUnitIndex]?.title || 'Contenido en desarrollo',
+                    type: unitsList[activeUnitIndex]?.type || 'Práctica',
+                    duration: unitsList[activeUnitIndex]?.duration || '20 min',
+                    summary: 'Módulo formativo en desarrollo para la ruta seleccionada.',
+                    sections: [
+                        {
+                            title: 'Objetivos de la Unidad',
+                            content: `Esta unidad cubre los conceptos fundamentales, buenas prácticas y flujos de trabajo de ${activeLessonTrack.title}.`
+                        }
+                    ]
+                };
+
+                const quizKey = `${activeLessonTrack.id}_${activeUnitIndex}`;
+                const selectedAns = selectedQuizAnswers[quizKey];
+                const isChecked = quizChecked[quizKey];
+                const quiz = currentUnit.quiz;
+
+                return (
+                    <div className="simi-modal-backdrop" onClick={() => setActiveLessonTrack(null)}>
+                        <div 
+                            className="simi-modal-card simi-lesson-viewer-modal" 
+                            onClick={e => e.stopPropagation()}
+                            style={{ maxWidth: '1060px', width: '95vw', height: '88vh', maxHeight: '88vh', display: 'flex', flexDirection: 'column', padding: '1.4rem 1.6rem' }}
+                        >
+                            {/* Cabecera del Visor de Lección */}
+                            <div className="simi-modal-header" style={{ alignItems: 'flex-start', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.85rem', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                                    <div 
+                                        className="simi-shield-emblem"
+                                        style={{ 
+                                            background: `radial-gradient(circle, color-mix(in srgb, ${activeLessonTrack.color} 25%, var(--surface-card)) 0%, var(--surface-card) 100%)`,
+                                            borderColor: activeLessonTrack.color,
+                                            color: activeLessonTrack.color,
+                                            boxShadow: `0 0 16px -2px color-mix(in srgb, ${activeLessonTrack.color} 40%, transparent)`
+                                        }}
+                                    >
+                                        <Flame size={24} />
+                                    </div>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: activeLessonTrack.color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                {activeLessonTrack.badge} • {activeLessonTrack.level}
+                                            </span>
+                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>•</span>
+                                            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                                                {activeLessonTrack.software}
+                                            </span>
+                                        </div>
+                                        <h2 style={{ margin: '2px 0 0 0', fontSize: '1.28rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                            {activeLessonTrack.title}
+                                        </h2>
+                                    </div>
+                                </div>
+
+                                <button 
+                                    className="simi-modal-close-btn" 
+                                    onClick={() => setActiveLessonTrack(null)}
+                                    title="Cerrar lección"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Pestañas de Unidades de la Ruta */}
+                            <div className="simi-lesson-units-bar" style={{ display: 'grid', gridTemplateColumns: `repeat(${unitsList.length}, minmax(0, 1fr))`, gap: '8px', padding: '8px 0', borderBottom: '1.5px solid #e2e8f0', flexShrink: 0 }}>
+                                {unitsList.map((u, idx) => {
+                                    const isUnitActive = idx === activeUnitIndex;
+                                    return (
+                                        <button
+                                            key={u.id || idx}
+                                            onClick={() => setActiveUnitIndex(idx)}
+                                            style={{
+                                                padding: '9px 6px', width: '100%', justifyContent: 'center',
+                                                borderRadius: '10px',
+                                                border: '1.5px solid',
+                                                borderColor: isUnitActive ? activeLessonTrack.color : '#e2e8f0',
+                                                background: isUnitActive ? '#ffffff' : '#f8fafc',
+                                                color: isUnitActive ? '#0f172a' : '#64748b',
+                                                fontSize: '0.78rem',
+                                                fontWeight: isUnitActive ? 850 : 600,
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                textAlign: 'center',
+                                                boxShadow: isUnitActive ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            title={u.fullTitle || u.title}
+                                        >
+                                            <span>{u.title.split(' y ')[0].split(',')[0].split(' (')[0].split('/')[0].trim()}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Contenido Principal de la Unidad Activa con Scroll Independiente */}
+                            <div className="simi-unit-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginTop: '0.5rem', overflowY: 'auto', paddingRight: '6px', flex: 1 }}>
+                                {/* Banner de Cabecera de la Unidad */}
+                                <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.1rem 1.25rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '4px' }}>
+                                        <span style={{ fontSize: '0.74rem', fontWeight: 850, color: activeLessonTrack.color, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                                            Unidad {activeUnitIndex + 1} • {currentUnit.type || 'Taller Práctico'}
+                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>
+                                            <Clock size={13} />
+                                            <span>{currentUnit.duration || '25 min'}</span>
+                                            <span>•</span>
+                                            <span style={{ color: '#059669', fontWeight: 800, background: '#ecfdf5', padding: '2px 8px', borderRadius: '6px', border: '1px solid #a7f3d0' }}>+25 EXP</span>
+                                        </div>
+                                    </div>
+                                    <h3 style={{ margin: '6px 0 6px 0', fontSize: '1.2rem', fontWeight: 850, color: '#0f172a', lineHeight: 1.3 }}>
+                                        {currentUnit.title}
+                                    </h3>
+                                    {currentUnit.summary && (
+                                        <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: 1.55 }}>
+                                            {currentUnit.summary}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Secciones Teórico-Prácticas */}
+                                {currentUnit.sections?.map((sec, sIdx) => (
+                                    <div key={sIdx} style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                                        <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 850, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: '#f1f5f9', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeLessonTrack.color }}>
+                                                <BookOpen size={14} />
+                                            </div>
+                                            {sec.title}
+                                        </h4>
+                                        {sec.content && (
+                                            <div 
+                                                style={{ fontSize: '0.88rem', color: '#334155', lineHeight: 1.65 }}
+                                                dangerouslySetInnerHTML={{ __html: formatSimiMarkdown(sec.content) }}
+                                            />
+                                        )}
+
+                                        {/* Diagrama Técnico SVG */}
+                                        {sec.svgDiagram && (
+                                            <div 
+                                                style={{ margin: '0.65rem 0', background: '#090d16', border: '1.5px solid #06b6d4', borderRadius: '12px', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}
+                                                dangerouslySetInnerHTML={{ __html: sec.svgDiagram }}
+                                            />
+                                        )}
+
+                                        {sec.imageUrl && (
+                                            <div style={{ margin: '0.65rem 0', borderRadius: '12px', overflow: 'hidden', border: '1.5px solid #e2e8f0', background: '#f8fafc' }}>
+                                                <img 
+                                                    src={sec.imageUrl} 
+                                                    alt={sec.imageCaption || sec.title} 
+                                                    style={{ width: '100%', maxHeight: '320px', objectFit: 'cover', display: 'block' }}
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                                {sec.imageCaption && (
+                                                    <div style={{ padding: '8px 12px', width: '100%', fontSize: '0.76rem', color: '#64748b', background: '#ffffff', textAlign: 'center', borderTop: '1px solid #e2e8f0', fontWeight: 600 }}>
+                                                        📷 {sec.imageCaption}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Tabla técnica */}
+                                        {sec.table && (
+                                            <div style={{ overflowX: 'auto', margin: '0.5rem 0', borderRadius: '10px', border: '1.5px solid #e2e8f0', background: '#ffffff' }}>
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
+                                                    <thead>
+                                                        <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0' }}>
+                                                            {sec.table.headers.map((h, hIdx) => (
+                                                                <th key={hIdx} style={{ padding: '9px 12px', fontWeight: 850, color: '#0f172a' }}>
+                                                                    {h}
+                                                                </th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {sec.table.rows.map((row, rIdx) => (
+                                                            <tr key={rIdx} style={{ borderBottom: '1px solid #f1f5f9', background: rIdx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                                                                {row.map((cell, cIdx) => (
+                                                                    <td key={cIdx} style={{ padding: '9px 12px', color: cIdx === 0 ? activeLessonTrack.color : '#334155', fontWeight: cIdx === 0 ? 800 : 500 }}>
+                                                                        {cell}
+                                                                    </td>
+                                                                ))}
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+
+                                        {/* Callout de tip/alerta */}
+                                        {sec.callout && (
+                                            <div style={{ background: '#f0fdfa', borderLeft: '4px solid #06b6d4', border: '1px solid #ccfbf1', borderLeftWidth: '4px', borderRadius: '10px', padding: '0.85rem 1.1rem', fontSize: '0.84rem', color: '#0f766e', margin: '0.4rem 0' }}>
+                                                <strong style={{ color: '#0e7490', fontWeight: 850 }}>💡 {sec.callout.title}: </strong>
+                                                <span style={{ color: '#134e4a' }}>{sec.callout.text}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Pasos ordenados */}
+                                        {sec.steps && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '0.4rem 0' }}>
+                                                {sec.steps.map((st, stIdx) => (
+                                                    <div key={stIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.86rem', color: '#334155' }}>
+                                                        <span style={{ width: '22px', height: '22px', minWidth: '22px', borderRadius: '50%', background: '#e0f2fe', color: '#0284c7', border: '1.5px solid #bae6fd', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.74rem', fontWeight: 850 }}>
+                                                            {stIdx + 1}
+                                                        </span>
+                                                        <span style={{ lineHeight: 1.5 }}>{st}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Reto Interactivo de Autoevaluación (Quiz) */}
+                                {quiz && (
+                                    <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.25rem', marginTop: '0.5rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.65rem' }}>
+                                            <div style={{ width: '26px', height: '26px', borderRadius: '7px', background: '#ffffff', border: '1.5px solid #4FD2E9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+                                                <HelpCircle size={15} />
+                                            </div>
+                                            <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 850, color: '#0f172a' }}>
+                                                Comprobación de Conocimiento Rápido
+                                            </h4>
+                                        </div>
+                                        <p style={{ margin: '0 0 0.95rem 0', fontSize: '0.88rem', fontWeight: 700, color: '#1e293b', lineHeight: 1.5 }}>
+                                            {quiz.question}
+                                        </p>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {quiz.options.map((opt, oIdx) => {
+                                                const isSelected = selectedAns === oIdx;
+                                                const isCorrect = oIdx === quiz.correctIndex;
+                                                let borderCol = '#e2e8f0';
+                                                let bgCol = '#ffffff';
+                                                let textCol = '#334155';
+
+                                                if (isChecked) {
+                                                    if (isCorrect) {
+                                                        borderCol = '#10b981';
+                                                        bgCol = '#ecfdf5';
+                                                        textCol = '#065f46';
+                                                    } else if (isSelected) {
+                                                        borderCol = '#f43f5e';
+                                                        bgCol = '#fff1f2';
+                                                        textCol = '#9f1239';
+                                                    }
+                                                } else if (isSelected) {
+                                                    borderCol = '#B541FA';
+                                                    bgCol = '#faf5ff';
+                                                    textCol = '#581c87';
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={oIdx}
+                                                        disabled={isChecked}
+                                                        onClick={() => {
+                                                            setSelectedQuizAnswers(prev => ({ ...prev, [quizKey]: oIdx }));
+                                                        }}
+                                                        style={{
+                                                            padding: '10px 14px',
+                                                            borderRadius: '10px',
+                                                            border: `1.5px solid ${borderCol}`,
+                                                            background: bgCol,
+                                                            color: textCol,
+                                                            fontSize: '0.84rem',
+                                                            fontWeight: isSelected ? 750 : 500,
+                                                            textAlign: 'left',
+                                                            cursor: isChecked ? 'default' : 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between',
+                                                            gap: '8px',
+                                                            boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                                                            transition: 'all 0.15s ease'
+                                                        }}
+                                                    >
+                                                        <span>{opt}</span>
+                                                        {isChecked && isCorrect && <Check size={16} style={{ color: '#10b981', minWidth: '16px' }} />}
+                                                        {isChecked && isSelected && !isCorrect && <X size={16} style={{ color: '#f43f5e', minWidth: '16px' }} />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+                                            {!isChecked ? (
+                                                <button
+                                                    disabled={selectedAns === undefined}
+                                                    onClick={() => {
+                                                        setQuizChecked(prev => ({ ...prev, [quizKey]: true }));
+                                                    }}
+                                                    style={{
+                                                        background: selectedAns !== undefined ? 'linear-gradient(135deg, #B541FA 0%, #192584 100%)' : '#e2e8f0',
+                                                        color: selectedAns !== undefined ? '#ffffff' : '#94a3b8',
+                                                        border: selectedAns !== undefined ? '1.5px solid #4FD2E9' : 'none',
+                                                        padding: '8px 18px',
+                                                        borderRadius: '10px',
+                                                        fontSize: '0.84rem',
+                                                        fontWeight: 850,
+                                                        cursor: selectedAns !== undefined ? 'pointer' : 'not-allowed',
+                                                        boxShadow: selectedAns !== undefined ? '0 4px 14px rgba(181, 65, 250, 0.3)' : 'none'
+                                                    }}
+                                                >
+                                                    Verificar Respuesta
+                                                </button>
+                                            ) : (
+                                                <div style={{ fontSize: '0.84rem', color: selectedAns === quiz.correctIndex ? '#059669' : '#e11d48', fontWeight: 800 }}>
+                                                    {selectedAns === quiz.correctIndex ? '✓ ¡Excelente! Respuesta correcta (+25 EXP)' : '✕ Incorrecto. Revisa la explicación:'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {isChecked && quiz.explanation && (
+                                            <div style={{ marginTop: '0.75rem', padding: '0.75rem 1rem', borderRadius: '10px', background: '#ffffff', border: '1.5px solid #e2e8f0', fontSize: '0.82rem', color: '#475569', lineHeight: 1.5 }}>
+                                                💡 <strong style={{ color: '#0f172a' }}>Explicación Técnica: </strong>{quiz.explanation}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer del Modal con Navegación Anterior / Siguiente */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #e2e8f0', paddingTop: '1rem', marginTop: '0.75rem' }}>
+                                <button
+                                    disabled={activeUnitIndex === 0}
+                                    onClick={() => setActiveUnitIndex(prev => Math.max(0, prev - 1))}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        background: '#ffffff',
+                                        border: '1.5px solid #cbd5e1',
+                                        color: '#334155',
+                                        padding: '8px 14px',
+                                        borderRadius: '10px',
+                                        fontSize: '0.82rem',
+                                        fontWeight: 800,
+                                        cursor: activeUnitIndex === 0 ? 'not-allowed' : 'pointer',
+                                        opacity: activeUnitIndex === 0 ? 0.4 : 1,
+                                        boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
+                                    }}
+                                >
+                                    <ChevronLeft size={16} /> Unidad Anterior
+                                </button>
+
+                                <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 750 }}>
+                                    Módulo {activeUnitIndex + 1} de {unitsList.length}
+                                </span>
+
+                                <button
+                                    disabled={activeUnitIndex === unitsList.length - 1}
+                                    onClick={() => setActiveUnitIndex(prev => Math.min(unitsList.length - 1, prev + 1))}
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        background: 'linear-gradient(135deg, #B541FA 0%, #192584 100%)',
+                                        color: '#ffffff',
+                                        border: '1.5px solid #4FD2E9',
+                                        padding: '8px 16px',
+                                        borderRadius: '10px',
+                                        fontSize: '0.82rem',
+                                        fontWeight: 850,
+                                        cursor: activeUnitIndex === unitsList.length - 1 ? 'not-allowed' : 'pointer',
+                                        opacity: activeUnitIndex === unitsList.length - 1 ? 0.4 : 1,
+                                        boxShadow: '0 4px 14px rgba(181, 65, 250, 0.3)'
+                                    }}
+                                >
+                                    Siguiente Unidad <ChevronRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+
+            {/* PESTAÑA 2: CALENDARIO DE VISITAS A COLEGIOS & EVENTOS (EDITABLE) */}
+            {activeTab === 'events' && (
+                <SimiEventsTab 
+                    isLeader={isLeader} 
+                    profile={profile} 
+                    initialEvents={simiEvents} 
+                    onEventsChange={(updated) => setSimiEvents(updated)} 
+                />
+            )}
+
+            {/* PESTAÑA 3: BANCO DE PROYECTOS (EDITABLE) */}
+            {activeTab === 'projects' && (
+                <SimiProjectsTab 
+                    isLeader={isLeader} 
+                    initialProjects={simiProjects} 
+                    onProjectsChange={(updated) => setSimiProjects(updated)} 
+                />
+            )}
+
+            {/* PESTAÑA 4: NUESTROS RECURSOS & INVENTARIO (EDITABLE) */}
+            {activeTab === 'resources' && (
+                <SimiResourcesTab 
+                    isLeader={isLeader} 
+                    initialResources={simiResources} 
+                    onResourcesChange={(updated) => setSimiResources(updated)} 
+                    initialWebResources={simiWebResources}
+                    onWebResourcesChange={(updated) => setSimiWebResources(updated)}
+                    defaultSubTab={resourcesSubTab}
+                />
+            )}
+
+            {/* PESTAÑA 5: DIRECTORIO DE MIEMBROS ACTIVOS & REGLA 80/80 */}
+            {activeTab === 'members' && (
+                <SimiMembersTab 
+                    members={simiMembers} 
+                    events={simiEvents} 
+                    isLeader={isLeader} 
+                    profile={profile}
+                    memberBadgesMap={memberBadgesMap}
+                    catalogImageUrlsMap={catalogImageUrlsMap}
+                    onCatalogImageUpdate={(pinId, newUrl) => {
+                        setCatalogImageUrlsMap(prev => {
+                            const updated = { ...prev };
+                            if (!newUrl) {
+                                delete updated[pinId];
+                            } else {
+                                updated[pinId] = newUrl;
+                            }
+                            localStorage.setItem('simi_catalog_image_urls_map', JSON.stringify(updated));
+                            return updated;
+                        });
+                    }}
+                    onBadgeUpdate={(userId, pinId, tier, exp) => {
+                        setMemberBadgesMap(prev => {
+                            const updated = { ...prev };
+                            if (!updated[userId]) updated[userId] = {};
+                            if (tier === 'none' || !tier) {
+                                delete updated[userId][pinId];
+                            } else {
+                                updated[userId][pinId] = { tier, exp, updatedAt: new Date().toISOString() };
+                            }
+                            localStorage.setItem('simi_member_badges_map', JSON.stringify(updated));
+                            return updated;
+                        });
+
+                        // Si el usuario condecorado es el mismo usuario actual, actualizar selectedPinTiers
+                        const currentUid = profile?.id || profile?.email;
+                        if (userId === currentUid) {
+                            setSelectedPinTiers(prev => {
+                                const up = { ...prev };
+                                if (tier === 'none' || !tier) {
+                                    delete up[pinId];
+                                } else {
+                                    up[pinId] = tier;
+                                }
+                                localStorage.setItem('simi_pin_tiers', JSON.stringify(up));
+                                return up;
+                            });
+                        }
+                    }}
+                />
+            )}
+                </main>
+            </div>
+
+            {/* BOTONES FLOTANTES (VISTA ESTUDIANTE + WHATSAPP + INSTAGRAM) */}
+            <div className="simi-social-fabs-container">
+                {hasLeaderPrivileges && (
+                    <button
+                        type="button"
+                        onClick={() => setIsSimiStudentView(prev => !prev)}
+                        className={`simi-social-fab simi-viewmode-fab ${isStudentModeActive ? 'is-active' : ''}`}
+                        title={isStudentModeActive ? 'Modo Alumno Activo - Toca para volver a Líder/Admin' : 'Vista Estudiante - Simular experiencia de semillerista alumno'}
+                        aria-label="Alternar Vista de Estudiante"
+                    >
+                        {isStudentModeActive ? <User size={20} /> : <Eye size={20} />}
+                    </button>
+                )}
+                <a 
+                    href="https://chat.whatsapp.com/JUZSpEgGnd3LmtZy4aQYtE" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="simi-social-fab simi-whatsapp-fab"
+                    title="Grupo Oficial de WhatsApp - Semillero SIMI3D"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                </a>
+                <a 
+                    href="https://www.instagram.com/semillero_simi3d/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="simi-social-fab simi-instagram-fab"
+                    title="Instagram oficial: @semillero_simi3d"
+                >
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                    </svg>
+                </a>
+            </div>
+
+            {/* MODAL DE SOLICITUDES DE ACCESO */}
+            {isRequestsModalOpen && (
+                <div className="simi-modal-backdrop" onClick={() => setIsRequestsModalOpen(false)}>
+                    <div 
+                        className="simi-modal-card" 
+                        style={{ maxWidth: '850px', width: '95vw', maxHeight: '88vh', overflowY: 'auto', padding: '1.5rem' }} 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="simi-modal-header" style={{ borderBottom: '1.5px solid var(--border-subtle)', paddingBottom: '0.85rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(181, 65, 250, 0.15)', border: '1.5px solid rgba(181, 65, 250, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#B541FA' }}>
+                                    <UserCheck size={22} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-heading)' }}>
+                                        Gestión de Solicitudes de Acceso
+                                    </h3>
+                                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                        Aprobación y autorización de nuevos integrantes
+                                    </span>
+                                </div>
+                            </div>
+                            <button 
+                                className="simi-modal-close-btn" 
+                                onClick={() => setIsRequestsModalOpen(false)}
+                                title="Cerrar modal"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <AccessRequests />
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL DE INSIGNIA / PIN TÁCTICO */}
+            {activePinModal && (() => {
+                const ROMAN_MAP = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5 };
+                const currentTierStr = selectedPinTiers[activePinModal.id] || 'I';
+                const currentTierNum = ROMAN_MAP[currentTierStr] || 1;
+                const maxTierNum = 5;
+                const currentExp = currentTierNum * 100;
+                const maxExp = 500;
+                const missingGrades = Math.max(0, maxTierNum - currentTierNum);
+                const missingExp = Math.max(0, maxExp - currentExp);
+                const progressPercent = Math.round((currentTierNum / maxTierNum) * 100);
+                const isMaxLevel = currentTierNum === maxTierNum;
+                const IconComp = ICON_MAP[activePinModal.icon] || Shield;
+
+                return (
+                    <div className="simi-modal-backdrop" onClick={() => setActivePinModal(null)}>
+                        <div 
+                            className="simi-modal-card" 
+                            style={{ maxWidth: '600px', width: '95vw', maxHeight: '88vh', overflowY: 'auto' }} 
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="simi-modal-header" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <div 
+                                        style={{ 
+                                            width: '56px', 
+                                            height: '56px', 
+                                            borderRadius: '12px', 
+                                            background: activePinModal.badgeImageUrl ? 'transparent' : `color-mix(in srgb, ${activePinModal.color} 15%, transparent)`, 
+                                            border: activePinModal.badgeImageUrl ? 'none' : `1.5px solid ${activePinModal.color}`, 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            color: activePinModal.color,
+                                            overflow: 'hidden',
+                                            padding: 0
+                                        }}
+                                    >
+                                        {activePinModal.badgeImageUrl ? (
+                                            <img 
+                                                src={activePinModal.badgeImageUrl} 
+                                                alt={activePinModal.name} 
+                                                referrerPolicy="no-referrer"
+                                                style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.12))' }}
+                                            />
+                                        ) : (
+                                            <IconComp size={24} />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '1.18rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                            Insignia: {activePinModal.name}
+                                        </h3>
+                                        <span style={{ fontSize: '0.74rem', color: activePinModal.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            {activePinModal.category} • {tierToStars(currentTierStr)} {tierRankName(currentTierStr)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button className="simi-modal-close-btn" onClick={() => setActivePinModal(null)} title="Cerrar modal">
+                                    <X size={18} />
+                                </button>
+                            </div>
+
+                            <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                                <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--text-body)', lineHeight: 1.5 }}>
+                                    {activePinModal.description}
+                                </p>
+
+                                {/* ── TARJETA DE ESTADO Y PROGRESIÓN HACIA EL GRADO MÁXIMO ── */}
+                                <div style={{
+                                    background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(181, 65, 250, 0.06) 100%)',
+                                    border: '1.5px solid rgba(6, 182, 212, 0.28)',
+                                    borderRadius: '14px',
+                                    padding: '0.9rem 1rem',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.55rem'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{
+                                                background: isMaxLevel ? '#f59e0b' : '#06b6d4',
+                                                color: '#042f2e',
+                                                fontWeight: 900,
+                                                fontSize: '0.72rem',
+                                                padding: '2px 9px',
+                                                borderRadius: '99px',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.4px'
+                                            }}>
+                                                {isMaxLevel ? '👑 Master · Grado Máximo' : `${tierRankName(currentTierStr)} · ${tierToStars(currentTierStr)}`}
+                                            </span>
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-heading)', fontWeight: 800 }}>
+                                                {currentExp} / {maxExp} EXP
+                                            </span>
+                                        </div>
+                                        <span style={{ fontSize: '0.76rem', fontWeight: 850, color: isMaxLevel ? '#10b981' : '#0891b2' }}>
+                                            {progressPercent}% hacia el Máximo
+                                        </span>
+                                    </div>
+
+                                    {/* Barra de Progreso */}
+                                    <div style={{ width: '100%', height: '7px', background: 'rgba(0,0,0,0.06)', borderRadius: '99px', overflow: 'hidden' }}>
+                                        <div style={{
+                                            width: `${progressPercent}%`,
+                                            height: '100%',
+                                            background: isMaxLevel 
+                                                ? 'linear-gradient(90deg, #f59e0b, #eab308)' 
+                                                : `linear-gradient(90deg, ${activePinModal.color}, #B541FA)`,
+                                            borderRadius: '99px',
+                                            transition: 'width 0.35s ease'
+                                        }} />
+                                    </div>
+
+                                    {/* Callout Informativo de Niveles Faltantes */}
+                                    <div style={{
+                                        fontSize: '0.78rem',
+                                        color: isMaxLevel ? '#047857' : 'var(--text-heading)',
+                                        fontWeight: 700,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        background: isMaxLevel ? 'rgba(16, 185, 129, 0.12)' : 'var(--surface-card)',
+                                        padding: '6px 10px',
+                                        borderRadius: '8px',
+                                        border: `1px solid ${isMaxLevel ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-subtle)'}`
+                                    }}>
+                                        {isMaxLevel ? (
+                                            <>🎉 ¡Excelente! Has alcanzado la <strong>Maestría Técnica Suprema (Grado V)</strong> en esta especialidad.</>
+                                        ) : (
+                                            <>⚡ <strong>Faltan {missingGrades} {missingGrades === 1 ? 'grado' : 'grados'} ({missingExp} EXP)</strong> para alcanzar el <strong>Grado Máximo V</strong>.</>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', marginTop: '0.15rem' }}>
+                                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+                                        Escalafón de Ascensos & Requisitos Técnicos:
+                                    </span>
+
+                                    {activePinModal.tiers.map((tier) => {
+                                        const tierNum = ROMAN_MAP[tier.level] || 1;
+                                        const isDone = tierNum < currentTierNum;
+                                        const isCurrent = tierNum === currentTierNum;
+                                        const isLocked = tierNum > currentTierNum;
+                                        const isPrestige = tier.level === 'V';
+
+                                        return (
+                                            <div 
+                                                key={tier.level}
+                                                onClick={() => handleSetMyBadgeTier(activePinModal.id, tier.level)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: '10px',
+                                                    padding: '0.75rem 0.9rem',
+                                                    borderRadius: '12px',
+                                                    background: isCurrent 
+                                                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.14) 0%, rgba(181, 65, 250, 0.1) 100%)' 
+                                                        : isDone 
+                                                            ? 'rgba(16, 185, 129, 0.08)' 
+                                                            : 'var(--surface-card)',
+                                                    border: isCurrent 
+                                                        ? '2px solid #06b6d4' 
+                                                        : isDone
+                                                            ? '1.5px solid rgba(16, 185, 129, 0.4)'
+                                                            : '1px solid var(--border-default)',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                    transform: isCurrent ? 'scale(1.01)' : 'none',
+                                                    boxShadow: isCurrent ? '0 4px 14px rgba(6, 182, 212, 0.25)' : 'none'
+                                                }}
+                                                title={`Toca para seleccionar Grado ${tier.level} (+${tier.expReq} EXP)`}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div 
+                                                        style={{ 
+                                                            width: '32px', 
+                                                            height: '32px', 
+                                                            borderRadius: '10px', 
+                                                            background: isCurrent 
+                                                                ? '#06b6d4' 
+                                                                : isDone 
+                                                                    ? '#10b981' 
+                                                                    : isPrestige 
+                                                                        ? '#f59e0b' 
+                                                                        : 'var(--border-default)', 
+                                                            color: (isCurrent || isDone || isPrestige) ? '#ffffff' : 'var(--text-secondary)', 
+                                                            display: 'flex', 
+                                                            alignItems: 'center', 
+                                                            justifyContent: 'center', 
+                                                            fontWeight: 900, 
+                                                            fontSize: '0.84rem',
+                                                            flexShrink: 0,
+                                                            boxShadow: isCurrent ? '0 2px 8px rgba(6, 182, 212, 0.4)' : 'none'
+                                                        }}
+                                                    >
+                                                        {isCurrent ? tier.level : isDone ? '✓' : tier.level}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span style={{ fontSize: '0.88rem', fontWeight: 850, color: isCurrent ? '#0891b2' : isDone ? '#047857' : 'var(--text-heading)' }}>
+                                                                {tier.title}
+                                                            </span>
+                                                            {isCurrent && (
+                                                                <span style={{ background: '#06b6d4', color: '#042f2e', fontWeight: 900, fontSize: '0.62rem', padding: '1px 7px', borderRadius: '99px' }}>
+                                                                    ACTIVO
+                                                                </span>
+                                                            )}
+                                                            {isDone && (
+                                                                <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#047857', fontWeight: 800, fontSize: '0.62rem', padding: '1px 6px', borderRadius: '99px' }}>
+                                                                    DESBLOQUEADO
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                                            {tier.reqDesc}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <span style={{ fontSize: '0.78rem', fontWeight: 900, color: isCurrent ? '#0891b2' : isDone ? '#10b981' : '#f59e0b', whiteSpace: 'nowrap' }}>
+                                                    +{tier.expReq} EXP
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <button
+                                    onClick={() => setActivePinModal(null)}
+                                    style={{
+                                        marginTop: '0.4rem',
+                                        background: '#06b6d4',
+                                        color: '#042f2e',
+                                        border: 'none',
+                                        padding: '9px 18px',
+                                        borderRadius: '10px',
+                                        fontWeight: 850,
+                                        fontSize: '0.85rem',
+                                        cursor: 'pointer',
+                                        alignSelf: 'flex-end',
+                                        boxShadow: '0 4px 12px -2px rgba(6, 182, 212, 0.4)'
+                                    }}
+                                >
+                                    Entendido
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* MODAL DE VITRINA DE INSIGNIAS, NIVELES Y LOGROS TÁCTICOS */}
+            {isBadgesModalOpen && (
+                <div className="simi-modal-backdrop" onClick={() => setIsBadgesModalOpen(false)}>
+                    <div 
+                        className="simi-modal-card" 
+                        style={{ maxWidth: '880px', width: '95vw', maxHeight: '90vh', overflowY: 'auto' }} 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Cabecera del Modal */}
+                        <div className="simi-modal-header" style={{ borderBottom: '1.5px solid var(--border-subtle)', paddingBottom: '0.85rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(6, 182, 212, 0.15)', border: '1.5px solid #06b6d4', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
+                                    <Trophy size={22} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-heading)' }}>
+                                        🏆 Mis Insignias, Nivel & Rango Táctico SIMI3D
+                                    </h3>
+                                    <span style={{ fontSize: '0.75rem', color: '#06b6d4', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        Acreditación de Software 3D, Laminación y Taller STEAM
+                                    </span>
+                                </div>
+                            </div>
+                            <button className="simi-modal-close-btn" onClick={() => setIsBadgesModalOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Resumen del Rango y Nivel del Usuario */}
+                        <div style={{ marginTop: '1rem', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(181, 65, 250, 0.1) 100%)', border: '1.5px solid rgba(79, 210, 233, 0.35)', borderRadius: '16px', padding: '1.15rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', border: '2px solid #06b6d4', overflow: 'hidden', background: '#ffffff' }}>
+                                        {profile?.avatar_url ? (
+                                            <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <Users size={32} color="#06b6d4" style={{ margin: '10px' }} />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '1.05rem', fontWeight: 900, color: 'var(--text-heading)' }}>
+                                            {profile?.full_name || 'Maker SIMI3D'}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                                            <span style={{ background: '#06b6d4', color: '#042f2e', fontWeight: 900, fontSize: '0.68rem', padding: '2px 8px', borderRadius: '99px' }}>
+                                                NIVEL {myMakerInfo.level} MAKER
+                                            </span>
+                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', fontWeight: 700 }}>
+                                                • {myMakerInfo.title}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ textAlign: 'right' }}>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 950, color: '#f59e0b' }}>{totalSimiExp.toLocaleString()}</span>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}> / {maxSimiExp.toLocaleString()} EXP</span>
+                                    <div style={{ width: '140px', height: '6px', background: '#e2e8f0', borderRadius: '99px', marginTop: '4px', overflow: 'hidden' }}>
+                                        <div style={{ width: `${simiExpPercentage}%`, height: '100%', background: 'linear-gradient(90deg, #06b6d4, #B541FA)', borderRadius: '99px' }} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Vitrina de Insignias Tácticas */}
+                        <div style={{ marginTop: '1.25rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                                <span style={{ fontSize: '0.82rem', fontWeight: 900, color: 'var(--text-heading)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    🎖️ Insignias Acreditadas ({SIMI_PINS_CATALOG.length} Especialidades)
+                                </span>
+                                <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                                    Toca una insignia para ver los requisitos de grado
+                                </span>
+                            </div>
+
+                            <div className="simi-home-pins-grid">
+                                {SIMI_PINS_CATALOG.map((pin) => {
+                                    const IconComp = ICON_MAP[pin.icon] || Shield;
+                                    const currentTier = selectedPinTiers[pin.id] || 'I';
+                                    const isPrestige = currentTier === 'V';
+                                    return (
+                                        <div 
+                                            key={pin.id}
+                                            className="simi-home-pin-card"
+                                            onClick={() => handleOpenPinModal(pin.id)}
+                                            style={{ '--pin-accent': pin.color }}
+                                        >
+                                            <div className="simi-home-pin-header">
+                                                <span className="simi-home-pin-cat">{pin.category}</span>
+                                                <span 
+                                                    className={`simi-home-pin-tier-pill ${isPrestige ? 'prestige' : ''}`}
+                                                    style={{
+                                                        background: `color-mix(in srgb, ${pin.color} 15%, var(--surface-card))`,
+                                                        color: pin.color,
+                                                        borderColor: `color-mix(in srgb, ${pin.color} 40%, transparent)`
+                                                    }}
+                                                >
+                                                    {tierToStars(currentTier)}
+                                                </span>
+                                            </div>
+
+                                            <div 
+                                                className="simi-home-pin-icon-wrap" 
+                                                style={{ 
+                                                    color: pin.color, 
+                                                    borderColor: pin.badgeImageUrl ? 'transparent' : pin.color, 
+                                                    border: pin.badgeImageUrl ? 'none' : undefined,
+                                                    background: pin.badgeImageUrl ? 'transparent' : undefined, 
+                                                    boxShadow: pin.badgeImageUrl ? 'none' : undefined,
+                                                    padding: 0 
+                                                }}
+                                            >
+                                                {pin.badgeImageUrl ? (
+                                                    <img 
+                                                        src={pin.badgeImageUrl} 
+                                                        alt={pin.name} 
+                                                        referrerPolicy="no-referrer"
+                                                        style={{ width: '64px', height: '64px', objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.14))' }} 
+                                                    />
+                                                ) : (
+                                                    <IconComp size={28} />
+                                                )}
+                                            </div>
+
+                                            <h4 className="simi-home-pin-name">{pin.name}</h4>
+                                            <p className="simi-home-pin-desc">{pin.description}</p>
+
+                                            <div className="simi-home-pin-footer">
+                                                <span className="simi-home-pin-exp">+{currentTier === 'I' ? 100 : currentTier === 'II' ? 200 : currentTier === 'III' ? 300 : currentTier === 'IV' ? 400 : 500} EXP</span>
+                                                <span className="simi-home-pin-action">Detalles <ChevronRight size={13} /></span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Botón de Cierre */}
+                        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={() => setIsBadgesModalOpen(false)}
+                                style={{
+                                    background: '#192584',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    padding: '9px 20px',
+                                    borderRadius: '10px',
+                                    fontWeight: 850,
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 12px rgba(25, 37, 132, 0.3)'
+                                }}
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Dock flotante inferior exclusivo de SIMI cuando está en modo estudiante */}
+            {isSimiStudentView && (
+                <div className="impersonate-floating-dock" role="status" aria-live="polite">
+                    <div className="impersonate-dock-left">
+                        <div className="impersonate-dock-icon">
+                            <User size={16} />
+                        </div>
+                        <div className="impersonate-dock-text">
+                            <span className="impersonate-dock-title">SIMI3D: Vista de Estudiante</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

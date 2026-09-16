@@ -50,21 +50,251 @@
 
 .stat-value {
     font-size: 1.8rem;
-    font-weight: 700;
-    color: white;
+    font-weight: 800;
+    color: var(--text-primary);
     line-height: 1;
 }
 
 .stat-label {
     font-size: 0.85rem;
+    font-weight: 600;
     color: var(--text-secondary);
     margin-top: 0.25rem;
+}
+
+.header-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0 0;
+}
+
+.evaluations-controls-container {
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(12px);
+}
+
+.evaluations-top-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.course-pill-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.course-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.95rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.course-pill-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.course-pill-btn.active {
+    background: rgba(59, 130, 246, 0.15);
+    color: #ffffff;
+    border-color: var(--course-accent, #38bdf8);
+}
+
+.course-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.pill-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.active-group-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.group-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.group-filter-select {
+    background: rgba(15, 23, 42, 0.85);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.group-filter-select:hover,
+.group-filter-select:focus {
+    border-color: #38bdf8;
+}
+
+.evaluations-secondary-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.search-filter-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    padding: 0.45rem 0.75rem;
+    min-width: 260px;
+    color: var(--text-secondary);
+}
+
+.search-filter-box:focus-within {
+    border-color: #38bdf8;
+}
+
+.search-filter-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    width: 100%;
+}
+
+.search-filter-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.clear-search-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.course-badge-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.course-dot-mini {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.card-quick-lobby-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.card-quick-lobby-btn:hover {
+    background: rgba(16, 185, 129, 0.28);
+    transform: translateY(-1px);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.evaluation-desc-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0 0 1rem;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.btn-reset-filters {
+    margin-top: 1rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-reset-filters:hover {
+    background: rgba(99, 102, 241, 0.25);
+    color: #a5b4fc;
 }
 
 .filter-tabs {
     display: flex;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0;
     overflow-x: auto;
 }
 
@@ -72,7 +302,7 @@
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 0.9rem;
     border-radius: 8px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -151,14 +381,16 @@
 }
 
 .evaluation-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.15rem;
+    font-weight: 700;
     margin: 0 0 0.5rem;
-    color: white;
+    color: var(--text-primary);
+    line-height: 1.35;
 }
 
 .evaluation-subject {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 500;
     color: var(--text-secondary);
     margin: 0 0 1.25rem;
 }
@@ -184,8 +416,8 @@
 
 .points-value {
     font-size: 1.2rem;
-    font-weight: 700;
-    color: white;
+    font-weight: 800;
+    color: var(--text-primary);
 }
 
 .points-label {
@@ -239,7 +471,7 @@
 
 .empty-state h3 {
     margin: 1rem 0 0.5rem;
-    color: white;
+    color: var(--text-primary);
 }
 
 .empty-state p {

@@ -17,7 +17,13 @@ export function useStudentPresence() {
 
     const getActivityFromPath = (pathname) => {
         // ── Evaluaciones / Exámenes ──
-        if (pathname.includes('/evaluations/') || pathname.match(/e\d+$/)) {
+        if (pathname.includes('/evaluations/') && pathname.includes('/play')) {
+            return '✍️ Resolviendo Examen';
+        }
+        if (pathname.includes('/evaluations/')) {
+            return '🟢 En Sala de Espera (Instrucciones)';
+        }
+        if (pathname.match(/e\d+$/)) {
             return '📝 Presentando Examen';
         }
         // ── Lecciones activas ──

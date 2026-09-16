@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    open: false,
     host: '127.0.0.1',
     proxy: {
       '/api': {
@@ -15,7 +16,11 @@ export default defineConfig({
         secure: false,
         ws: true,
         timeout: 60000,
-        proxyTimeout: 60000
+        proxyTimeout: 60000,
+        headers: {
+          'X-Forwarded-Host': 'localhost:5173',
+          'X-Forwarded-Proto': 'http'
+        }
       }
     }
   }

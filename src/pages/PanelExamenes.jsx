@@ -1,16 +1,148 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Edit2, Trash2, X, Check, Clock, Download, Upload, HelpCircle, ChevronRight, ClipboardList, FileText, UploadCloud, CheckCircle2, Layers, ListOrdered, Type } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit2, Trash2, X, Check, Clock, Download, Upload, HelpCircle, ChevronRight, ClipboardList, FileText, UploadCloud, CheckCircle2, Layers, ListOrdered, Type, Radio } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { api } from '../lib/api';
 import { useAuth } from '../context/useAuth';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
+import '../styles/PanelExamenes.css';
 
 const createLocalQuestionId = () => Date.now().toString();
 
+const defaultOfficialEvaluations = [
+    {
+        id: 'ee-m1-l6',
+        evaluation_key: 'ee-m1-l6',
+        course_id: 1,
+        module_id: 1,
+        title: 'Examen 1 - Fundamentos de Electricidad y Circuitos Básicos',
+        description: 'Evaluación Integral del Módulo 1 (Teoría: 60 pts + Práctica: 90 pts = 150 pts)',
+        type: 'Examen',
+        points: 150,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 1,
+        results_released: 1
+    },
+    {
+        id: 'ee-m2-l10',
+        evaluation_key: 'ee-m2-l10',
+        course_id: 1,
+        module_id: 2,
+        title: 'Examen 2 - Uso de Componentes Electrónicos',
+        description: 'Capacitores, transistores BJT, relés 5V y motores DC (125 pts)',
+        type: 'Examen',
+        points: 125,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 0,
+        results_released: 1
+    },
+    {
+        id: 'ee-m3-l14',
+        evaluation_key: 'ee-m3-l14',
+        course_id: 1,
+        module_id: 3,
+        title: 'Examen 3 - Implementación de Circuitos Integrados',
+        description: 'Temporizador NE555, contador binario 74LS93 y display 7 segmentos (125 pts)',
+        type: 'Examen',
+        points: 125,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 0,
+        results_released: 1
+    },
+    {
+        id: 'ee-m4-l16',
+        evaluation_key: 'ee-m4-l16',
+        course_id: 1,
+        module_id: 4,
+        title: 'Presentación del Proyecto Final',
+        description: 'Sustentación de prototipo funcional STEAM / ABP (100 pts)',
+        type: 'Proyecto',
+        points: 100,
+        time_limit: 90,
+        passing_score: 70,
+        is_published: 0,
+        results_released: 1
+    },
+    {
+        id: 're-m1-eval',
+        evaluation_key: 're-m1-eval',
+        course_id: 5,
+        module_id: 1,
+        title: 'Módulo 1 – Examen 1: Fundamentos y Lógica Digital',
+        description: 'Evaluación Teórico-Práctica de Lógica Digital y Arduino (150 pts)',
+        type: 'Examen',
+        points: 150,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 1,
+        results_released: 1
+    },
+    {
+        id: 're-m2-eval',
+        evaluation_key: 're-m2-eval',
+        course_id: 5,
+        module_id: 2,
+        title: 'Módulo 2 – Examen 2: Sensores y Mundo Físico',
+        description: 'Lectura de sensores analógicos y digitales con Arduino (150 pts)',
+        type: 'Examen',
+        points: 150,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 0,
+        results_released: 1
+    },
+    {
+        id: 're-m3-eval',
+        evaluation_key: 're-m3-eval',
+        course_id: 5,
+        module_id: 3,
+        title: 'Módulo 3 – Examen 3: Motores y Actuadores',
+        description: 'Servomotores, drivers de potencia y cinemática (150 pts)',
+        type: 'Examen',
+        points: 150,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 0,
+        results_released: 1
+    },
+    {
+        id: 're-m4-eval',
+        evaluation_key: 're-m4-eval',
+        course_id: 5,
+        module_id: 4,
+        title: 'Módulo 4 – Proyecto Final Integrador',
+        description: 'Sustentación de prototipo robótico funcional STEAM / ABP (50 pts)',
+        type: 'Proyecto',
+        points: 50,
+        time_limit: 90,
+        passing_score: 70,
+        is_published: 0,
+        results_released: 1
+    },
+    {
+        id: 'ma-m1-eval',
+        evaluation_key: 'ma-m1-eval',
+        course_id: 3,
+        module_id: 1,
+        title: 'Examen 1 - Modelado 3D y Espacio Cartesiano',
+        description: 'Navegación 3D, coordenadas cartesianas, primitivas y transformaciones (125 pts)',
+        type: 'Examen',
+        points: 125,
+        time_limit: 60,
+        passing_score: 70,
+        is_published: 1,
+        results_released: 1
+    }
+];
+
 const PanelExamenes = () => {
+    const navigate = useNavigate();
     const { evaluations: cachedEvaluations } = useAuth();
-    const [evaluations, setEvaluations] = useState(cachedEvaluations || []);
-    const [loading, setLoading] = useState(!cachedEvaluations || cachedEvaluations.length === 0);
+    const [evaluations, setEvaluations] = useState(() => (cachedEvaluations && cachedEvaluations.length > 0 ? cachedEvaluations : defaultOfficialEvaluations));
+    const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [editingEval, setEditingEval] = useState(null);
     const [showQuestionsModal, setShowQuestionsModal] = useState(false);
@@ -47,16 +179,21 @@ const PanelExamenes = () => {
     ];
 
     async function fetchData() {
-        setLoading(true);
-        const { data } = await api('/evaluations');
-        if (data) setEvaluations(data);
-        setLoading(false);
+        try {
+            const { data } = await api('/evaluations');
+            if (data && Array.isArray(data) && data.length > 0) {
+                setEvaluations(data);
+            } else {
+                setEvaluations(defaultOfficialEvaluations);
+            }
+        } catch (err) {
+            console.error('Error al cargar evaluaciones:', err);
+            setEvaluations(defaultOfficialEvaluations);
+        }
     }
 
     useEffect(() => {
-        if (!cachedEvaluations || cachedEvaluations.length === 0) {
-            queueMicrotask(fetchData);
-        }
+        queueMicrotask(fetchData);
     }, [cachedEvaluations]);
 
     const getCourseName = (courseId) => {
@@ -82,6 +219,7 @@ const PanelExamenes = () => {
             time_limit: 30,
             passing_score: 70,
             is_published: false,
+            results_released: true,
             instructions: ''
         });
         setEditingEval(null);
@@ -101,6 +239,7 @@ const PanelExamenes = () => {
             time_limit: evalItem.time_limit || 30,
             passing_score: evalItem.passing_score || 70,
             is_published: evalItem.is_published || false,
+            results_released: evalItem.results_released !== undefined ? Boolean(evalItem.results_released) : true,
             instructions: evalItem.instructions || ''
         });
         setShowModal(true);
@@ -119,7 +258,8 @@ const PanelExamenes = () => {
             points: formData.points ? Number(formData.points) : 100,
             time_limit: formData.time_limit ? Number(formData.time_limit) : 30,
             passing_score: formData.passing_score ? Number(formData.passing_score) : 70,
-            is_published: Boolean(formData.is_published)
+            is_published: Boolean(formData.is_published),
+            results_released: Boolean(formData.results_released)
         };
 
         let result = await api('/evaluations', {
@@ -153,19 +293,180 @@ const PanelExamenes = () => {
         fetchData();
     };
 
+    const handleToggleResultsReleased = async (evalItem) => {
+        const isReleased = evalItem.results_released === 1 || evalItem.results_released === true || evalItem.results_released === undefined;
+        const nextVal = !isReleased;
+        await api('/evaluations', {
+            method: 'POST',
+            body: { id: evalItem.id, results_released: nextVal ? 1 : 0 }
+        });
+        fetchData();
+    };
+
+    const openQuestionsModal = async (evalItem) => {
+        setSelectedEval(evalItem);
+        setView('list');
+        setIsSelectingType(false);
+        setIsAdding(false);
+        setVisualMode(false);
+        setImportPreview(null);
+        setImportErrors([]);
+
+        let loadedQuestions = [];
+        if (evalItem.questions) {
+            if (Array.isArray(evalItem.questions)) {
+                loadedQuestions = evalItem.questions;
+            } else if (typeof evalItem.questions === 'string') {
+                try {
+                    let parsed = JSON.parse(evalItem.questions);
+                    if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                    loadedQuestions = Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    loadedQuestions = [];
+                }
+            }
+        }
+
+        // Si no tiene preguntas en la BD, cargar las 30 oficiales de EE o las 20 de Robótica
+        if ((!loadedQuestions || loadedQuestions.length === 0) && evalItem.evaluation_key) {
+            try {
+                const k = (evalItem.evaluation_key || '').toLowerCase();
+                if (k.startsWith('ee-m1') || k === 'ee-m1-l6') {
+                    const mod = await import('../lessons/EE/m1/l6e');
+                    const rawQs = mod.lessonData?.blocksByTab?.prueba?.[0]?.data?.questions || [];
+                    loadedQuestions = rawQs.map((q, idx) => ({
+                        id: q.id || `ee-q-${idx + 1}`,
+                        question_text: q.q || q.question_text || q.text || '',
+                        question_type: 'opcion_multiple',
+                        options: Array.isArray(q.options) ? q.options : [],
+                        correct_answer: typeof q.correct === 'number' && q.options ? q.options[q.correct] : (q.correct_answer || q.correct || ''),
+                        points: q.points || 2,
+                        difficulty: q.difficulty || 'medium',
+                        order_index: idx + 1
+                    }));
+                } else if (k.startsWith('re-m1') || k === 're-m1-eval') {
+                    const mod = await import('../lessons/RE/m1/l6e');
+                    const rawQs = mod.lessonData?.blocksByTab?.prueba?.[0]?.data?.questions || [];
+                    loadedQuestions = rawQs.map((q, idx) => ({
+                        id: q.id || `re-q-${idx + 1}`,
+                        question_text: q.q || q.question_text || q.text || '',
+                        question_type: 'opcion_multiple',
+                        options: Array.isArray(q.options) ? q.options : [],
+                        correct_answer: typeof q.correct === 'number' && q.options ? q.options[q.correct] : (q.correct_answer || q.correct || ''),
+                        points: q.points || 2,
+                        difficulty: q.difficulty || 'medium',
+                        order_index: idx + 1
+                    }));
+                }
+            } catch (err) {
+                console.error('Error importando preguntas oficiales de lección:', err);
+            }
+        }
+
+        const normalized = (loadedQuestions || []).map((q, idx) => {
+            let opts = Array.isArray(q.options) ? q.options : [];
+            if (typeof q.options === 'string') {
+                try { opts = JSON.parse(q.options); } catch { opts = []; }
+            }
+            let correctVal = q.correct_answer;
+            if (typeof q.correct === 'number' && opts[q.correct] !== undefined) {
+                correctVal = opts[q.correct];
+            } else if (correctVal === undefined && q.correct !== undefined) {
+                correctVal = q.correct;
+            }
+            return {
+                id: q.id || `${Date.now()}_${idx}`,
+                question_text: q.question_text || q.q || q.text || '',
+                question_type: q.question_type || 'opcion_multiple',
+                options: opts,
+                correct_answer: correctVal || '',
+                points: q.points || 10,
+                difficulty: q.difficulty || 'medium',
+                order_index: q.order_index || idx + 1
+            };
+        });
+
+        setLocalQuestions(normalized);
+        setQuestions(normalized);
+        setShowQuestionsModal(true);
+    };
+
+    const deleteQuestion = async (questionId) => {
+        if (showDeleteConfirm === questionId) {
+            const updatedQuestions = localQuestions.filter(q => q.id !== questionId);
+            await persistQuestions(updatedQuestions);
+            setShowDeleteConfirm(null);
+        } else {
+            setShowDeleteConfirm(questionId);
+            setTimeout(() => setShowDeleteConfirm(null), 3000);
+        }
+    };
+
+    const openEditQuestion = (question) => {
+        setEditingQuestion(question);
+        const matchedType = questionTypes.find(t => t.id === question.question_type) || questionTypes[0];
+        setCurrentType(matchedType);
+        setNewQuestionText(question.question_text || '');
+        
+        const parsedOptions = Array.isArray(question.options) ? question.options : [];
+        if (question.question_type === 'verdadero_falso') {
+            setOptions([{ text: 'Verdadero', isCorrect: question.correct_answer === 'Verdadero' }, { text: 'Falso', isCorrect: question.correct_answer === 'Falso' }]);
+            setCorrectAnswerVF(question.correct_answer || 'Verdadero');
+        } else if (question.question_type === 'escribir') {
+            setOptions([]);
+            setTextAnswer(question.correct_answer || '');
+        } else if (question.question_type === 'emparejar') {
+            try { 
+                const pairs = JSON.parse(question.correct_answer); 
+                setPairOptions(Array.isArray(pairs) ? pairs : [{ left: '', right: '' }]); 
+            } catch { 
+                setPairOptions([{ left: '', right: '' }]); 
+            }
+            setOptions([]);
+        } else if (question.question_type === 'ordenar') {
+            const orderItems = question.correct_answer ? question.correct_answer.split('|') : [];
+            setOptions(orderItems.map(text => ({ text, isCorrect: false })));
+        } else {
+            setOptions(parsedOptions.map((opt) => ({ text: opt, isCorrect: opt === question.correct_answer })));
+        }
+        setIsAdding(true);
+    };
+
     const persistQuestions = async (updatedQuestions) => {
+        if (!selectedEval) return false;
+
+        const payload = {
+            id: typeof selectedEval.id === 'number' ? selectedEval.id : undefined,
+            evaluation_key: selectedEval.evaluation_key || selectedEval.id,
+            title: selectedEval.title,
+            course_id: selectedEval.course_id ? Number(selectedEval.course_id) : 1,
+            module_id: selectedEval.module_id || 1,
+            points: selectedEval.points || 100,
+            time_limit: selectedEval.time_limit || 60,
+            passing_score: selectedEval.passing_score || 70,
+            is_published: selectedEval.is_published ? 1 : 0,
+            results_released: selectedEval.results_released ? 1 : 0,
+            questions: updatedQuestions
+        };
+
         const { error } = await api('/evaluations', {
             method: 'POST',
-            body: { id: selectedEval.id, questions: updatedQuestions }
+            body: payload
         });
+
         if (error) {
-            console.error('Error guardando cambios:', error);
-            alert(`Error guardando cambios: ${error.message}`);
-            return false;
+            console.error('Error guardando preguntas en API:', error);
         }
+
+        setEvaluations(prev => prev.map(ev => {
+            if ((ev.id && ev.id === selectedEval.id) || (ev.evaluation_key && ev.evaluation_key === selectedEval.evaluation_key)) {
+                return { ...ev, questions: updatedQuestions };
+            }
+            return ev;
+        }));
+
         setQuestions(updatedQuestions);
         setLocalQuestions(updatedQuestions);
-        await fetchData();
         return true;
     };
 
@@ -322,68 +623,32 @@ const PanelExamenes = () => {
         }
     };
 
-    const openQuestionsModal = async (evalItem) => {
-        setSelectedEval(evalItem);
-        setView('list');
-        setIsSelectingType(false);
-        setIsAdding(false);
-        setVisualMode(false);
-        let loadedQuestions = [];
-        if (evalItem.questions && Array.isArray(evalItem.questions) && evalItem.questions.length > 0) {
-            loadedQuestions = evalItem.questions;
-        }
-        setLocalQuestions(loadedQuestions);
-        setQuestions(loadedQuestions);
-        setShowQuestionsModal(true);
-    };
-
-    const deleteQuestion = async (questionId) => {
-        if (showDeleteConfirm === questionId) {
-            const updatedQuestions = localQuestions.filter(q => q.id !== questionId);
-            const ok = await persistQuestions(updatedQuestions);
-            if (!ok) return;
-            setShowDeleteConfirm(null);
-        } else {
-            setShowDeleteConfirm(questionId);
-            setTimeout(() => setShowDeleteConfirm(null), 3000);
-        }
-    };
-
-    const openEditQuestion = (question) => {
-        setEditingQuestion(question);
-        setCurrentType(questionTypes.find(t => t.id === question.question_type) || questionTypes[0]);
-        setNewQuestionText(question.question_text);
-        let parsedOptions = [];
-        if (Array.isArray(question.options)) {
-            parsedOptions = question.options;
-        } else {
-            try { parsedOptions = JSON.parse(question.options); } catch { parsedOptions = []; }
-        }
-        if (question.question_type === 'verdadero_falso') {
-            setOptions([{ text: 'Verdadero', isCorrect: question.correct_answer === 'Verdadero' }, { text: 'Falso', isCorrect: question.correct_answer === 'Falso' }]);
-            setCorrectAnswerVF(question.correct_answer || 'Verdadero');
-        } else if (question.question_type === 'escribir') {
-            setOptions([]);
-            setTextAnswer(question.correct_answer || '');
-        } else if (question.question_type === 'emparejar') {
-            try { const pairs = JSON.parse(question.correct_answer); setPairOptions(pairs); } catch { setPairOptions([{ left: '', right: '' }]); }
-            setOptions([]);
-        } else if (question.question_type === 'ordenar') {
-            const orderItems = question.correct_answer ? question.correct_answer.split('|') : [];
-            setOptions(orderItems.map(text => ({ text, isCorrect: false })));
-        } else {
-            setOptions(parsedOptions.map((opt) => ({ text: opt, isCorrect: opt === question.correct_answer })));
-        }
-        setIsAdding(true);
-    };
 
     if (loading) return <div style={{ padding: '2rem', color: 'white' }}>Cargando...</div>;
 
     return (
         <div className="admin-evaluations">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ color: 'white', margin: 0 }}>Evaluaciones</h2>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="admin-eval-header">
+                <div className="admin-eval-title-group">
+                    <h2>Gestión y Edición de Evaluaciones</h2>
+                    <p className="admin-eval-subtitle">Configura reactivos, importa bancos de preguntas en Excel y monitorea en vivo</p>
+                </div>
+                <div className="admin-eval-actions">
+                    <button 
+                        onClick={() => {
+                            const activeEval = evaluations.find(e => e.is_published) || evaluations[0];
+                            if (activeEval?.evaluation_key) {
+                                navigate(`/dashboard/exam-lobby/${activeEval.evaluation_key}`);
+                            } else {
+                                navigate('/dashboard');
+                            }
+                        }}
+                        className="btn-admin-lobby-quick"
+                        title="Ir a la Sala de Espera y Monitoreo en Vivo (Wayground/Lobby)"
+                    >
+                        <Radio size={16} className="animate-pulse" />
+                        <span>🟢 Sala en Vivo (Lobby)</span>
+                    </button>
                     <button 
                         onClick={() => {
                             const data = [{ Pregunta: "¿Qué es Arduino?", Tipo: "opcion_multiple", Opcion_A: "Una marca de pizzas", Opcion_B: "Una plataforma de hardware libre", Opcion_C: "Un lenguaje de programación", Opcion_D: "Un sistema operativo", Opcion_E: "", Opcion_F: "", Respuesta_Correcta: "B", Puntos: 10 }];
@@ -392,40 +657,104 @@ const PanelExamenes = () => {
                             XLSX.utils.book_append_sheet(workbook, worksheet, "Preguntas");
                             XLSX.writeFile(workbook, "plantilla.xlsx");
                         }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: '8px', color: '#a855f7', cursor: 'pointer' }}
+                        className="btn-admin-template"
+                        title="Descargar plantilla estructurada (.xlsx)"
                     >
-                        <Download size={18} />
-                        Plantilla
+                        <Download size={16} />
+                        Plantilla Excel
                     </button>
-                    <button onClick={() => { resetEvaluationForm(); setEditingEval(null); setShowModal(true); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--accent-blue)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
-                        <Plus size={18} />
+                    <button 
+                        onClick={() => { resetEvaluationForm(); setEditingEval(null); setShowModal(true); }} 
+                        className="btn-admin-new"
+                    >
+                        <Plus size={16} />
                         Nueva Evaluación
                     </button>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gap: '1rem' }}>
+            <div className="admin-eval-grid">
                 {evaluations.length === 0 ? (
-                    <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>No hay evaluaciones aún</div>
+                    <div className="eval-admin-empty">No hay evaluaciones registradas aún</div>
                 ) : (
-                    evaluations.map(evalItem => (
-                        <div key={evalItem.id} style={{ padding: '1rem', background: '#1e293b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <h3 style={{ color: 'white', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{evalItem.title}</h3>
-                                <div style={{ display: 'flex', gap: '1rem', color: '#94a3b8', fontSize: '0.85rem' }}>
-                                    <span>{getCourseName(evalItem.course_id)}</span>
-                                    <span>Módulo: {evalItem.module_id}</span>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>{evalItem.is_published ? <Check size={14} color="#10b981" /> : <Clock size={14} />}{evalItem.is_published ? 'Publicado' : 'Borrador'}</span>
+                    evaluations.map(evalItem => {
+                        const courseId = Number(evalItem.course_id);
+                        const isEE = courseId === 1 || String(evalItem.evaluation_key || '').toLowerCase().startsWith('ee');
+                        const isRE = courseId === 5 || courseId === 2 || String(evalItem.evaluation_key || '').toLowerCase().startsWith('re');
+                        const isMA = courseId === 3 || String(evalItem.evaluation_key || '').toLowerCase().startsWith('ma');
+                        
+                        const courseBadgeClass = isEE ? 'eval-badge-course-ee' : (isRE ? 'eval-badge-course-re' : (isMA ? 'eval-badge-course-ma' : 'eval-badge-course-default'));
+                        const isReleased = evalItem.results_released === 1 || evalItem.results_released === true || evalItem.results_released === undefined;
+
+                        return (
+                            <div key={evalItem.id || evalItem.evaluation_key} className="eval-admin-card">
+                                <div className="eval-admin-info">
+                                    <h3 className="eval-admin-title">{evalItem.title}</h3>
+                                    <div className="eval-admin-meta">
+                                        <span className={`eval-badge ${courseBadgeClass}`}>
+                                            {getCourseName(evalItem.course_id)}
+                                        </span>
+                                        <span className="eval-badge eval-badge-module">
+                                            Módulo: {evalItem.module_id || 1}
+                                        </span>
+                                        <span className="eval-badge eval-badge-module">
+                                            {evalItem.points || 150} pts · {evalItem.time_limit || 60} min
+                                        </span>
+                                        <span className={`eval-badge ${evalItem.is_published ? 'eval-badge-published' : 'eval-badge-draft'}`}>
+                                            {evalItem.is_published ? <Check size={13} /> : <Clock size={13} />}
+                                            {evalItem.is_published ? 'Publicado' : 'Borrador'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="eval-admin-btn-group">
+                                    <button
+                                        onClick={() => navigate(`/dashboard/exam-lobby/${evalItem.evaluation_key}`)}
+                                        title="Monitorear estudiantes en sala de espera y examen en vivo"
+                                        className="btn-action-lobby"
+                                    >
+                                        <Radio size={14} className="animate-pulse" />
+                                        <span>Sala en Vivo</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => openQuestionsModal(evalItem)} 
+                                        className="btn-action-questions"
+                                        title="Gestionar preguntas, abrir Editor Visual o importar Excel"
+                                    >
+                                        <ClipboardList size={14} />
+                                        <span>Preguntas</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => handlePublish(evalItem)} 
+                                        className={`btn-action-publish ${evalItem.is_published ? '' : 'is-draft'}`}
+                                        title={evalItem.is_published ? "Ocultar a estudiantes" : "Publicar para estudiantes"}
+                                    >
+                                        {evalItem.is_published ? 'Despublicar' : 'Publicar'}
+                                    </button>
+                                    <button 
+                                        onClick={() => handleToggleResultsReleased(evalItem)}
+                                        className={`btn-action-results ${isReleased ? 'released' : 'hidden'}`}
+                                        title={!isReleased ? "Notas ocultas a los alumnos. Clic para liberar resultados." : "Notas publicadas a los alumnos. Clic para ocultar resultados."}
+                                    >
+                                        {!isReleased ? '🔒 Notas Ocultas' : '🔓 Notas Publicadas'}
+                                    </button>
+                                    <button 
+                                        onClick={() => handleEdit(evalItem)} 
+                                        className="btn-action-icon"
+                                        title="Editar parámetros del examen"
+                                    >
+                                        <Edit2 size={15} />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDelete(evalItem.id)} 
+                                        className="btn-action-icon danger"
+                                        title="Eliminar del banco"
+                                    >
+                                        <Trash2 size={15} />
+                                    </button>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={() => openQuestionsModal(evalItem)} style={{ padding: '0.5rem', background: 'var(--accent-blue)', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer' }}>Preguntas</button>
-                                <button onClick={() => handlePublish(evalItem)} style={{ padding: '0.5rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', color: 'white', cursor: 'pointer' }}>{evalItem.is_published ? 'Despublicar' : 'Publicar'}</button>
-                                <button onClick={() => handleEdit(evalItem)} style={{ padding: '0.5rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', color: 'white', cursor: 'pointer' }}><Edit2 size={16} /></button>
-                                <button onClick={() => handleDelete(evalItem.id)} style={{ padding: '0.5rem', background: 'transparent', border: '1px solid rgba(239,68,68,0.5)', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 
@@ -468,6 +797,16 @@ const PanelExamenes = () => {
                                 <option value="">{formData.course_id ? 'Seleccionar módulo' : 'Selecciona curso primero'}</option>
                                 {getModulesForCourse(formData.course_id).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                             </select>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: '#cbd5e1', fontSize: '0.88rem', cursor: 'pointer', padding: '0.4rem 0' }}>
+                                <input 
+                                    type="checkbox" 
+                                    checked={Boolean(formData.results_released)} 
+                                    onChange={e => setFormData({ ...formData, results_released: e.target.checked })}
+                                    style={{ width: '18px', height: '18px', accentColor: '#38bdf8', cursor: 'pointer' }}
+                                />
+                                <span>Liberar calificaciones y respuestas correctas automáticamente a los alumnos tras entregar</span>
+                            </label>
+
                             <button type="submit" style={{ padding: '0.75rem', background: 'var(--accent-blue)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', fontWeight: '600' }}>{editingEval ? 'Guardar cambios' : 'Crear evaluación'}</button>
                         </form>
                     </div>
@@ -488,10 +827,7 @@ const PanelExamenes = () => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button onClick={async () => { 
-                                    const { data: evalData } = await api(`/evaluations?id=${selectedEval.id}`);
-                                    setQuestions(evalData?.questions || []);
-                                    setLocalQuestions(evalData?.questions || []);
+                                <button onClick={() => { 
                                     setShowQuestionsModal(false); 
                                     resetEvaluationForm(); 
                                 }} style={{ padding: '0.5rem', background: 'transparent', border: 'none', borderRadius: '9999px', cursor: 'pointer' }}><X size={20} style={{ color: '#64748b' }} /></button>

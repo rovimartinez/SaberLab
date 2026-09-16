@@ -218,6 +218,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const normalizeRole = (role) => {
         const r = (role || '').toLowerCase();
         if (r === 'admin') return 'admin';
+        if (['leader', 'lider', 'semillero_leader'].includes(r)) return 'leader';
         if (['profesor', 'teacher', 'docente'].includes(r)) return 'profesor';
         return 'student';
     };
@@ -228,6 +229,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                             user.role === filterRole || 
                             normUserRole === filterRole ||
                             (filterRole === 'estudiantes' && normUserRole === 'student') ||
+                            (filterRole === 'lideres' && normUserRole === 'leader') ||
                             (filterRole === 'profesores' && normUserRole === 'profesor') ||
                             (filterRole === 'admins' && normUserRole === 'admin');
         const matchesInst = filterInst === 'todas' || user.institution === filterInst;
@@ -241,6 +243,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const getRoleBadgeClass = (role) => {
         const r = normalizeRole(role);
         if (r === 'admin') return 'role-admin';
+        if (r === 'leader') return 'role-leader';
         if (r === 'profesor') return 'role-profesor';
         return 'role-estudiante';
     };
@@ -248,6 +251,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const getRoleLabel = (role) => {
         const r = normalizeRole(role);
         if (r === 'admin') return 'ADMIN';
+        if (r === 'leader') return 'LÍDER';
         if (r === 'profesor') return 'PROFESOR';
         return 'STUDENT';
     };
@@ -345,10 +349,11 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                             </select>
 
                             {/* Filtro por Rol */}
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 <button className={`filter-btn ${filterRole === 'admin' ? 'active' : ''}`} onClick={() => setFilterRole('admin')}>Admins</button>
                                 <button className={`filter-btn ${filterRole === 'profesor' ? 'active' : ''}`} onClick={() => setFilterRole('profesor')}>Profesores</button>
-                                <button className={`filter-btn ${filterRole === 'estudiante' ? 'active' : ''}`} onClick={() => setFilterRole('estudiante')}>Estudiantes</button>
+                                <button className={`filter-btn ${filterRole === 'lideres' || filterRole === 'leader' ? 'active' : ''}`} onClick={() => setFilterRole('lideres')}>Líderes</button>
+                                <button className={`filter-btn ${filterRole === 'estudiante' || filterRole === 'estudiantes' ? 'active' : ''}`} onClick={() => setFilterRole('estudiantes')}>Estudiantes</button>
                                 <button className={`filter-btn ${filterRole === 'todos' ? 'active' : ''}`} onClick={() => setFilterRole('todos')}>Todos</button>
                             </div>
                         </div>
@@ -420,6 +425,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                                                 style={{ cursor: updatingUserId === user.id ? 'wait' : 'pointer' }}
                                             >
                                                 <option value="student">Estudiante</option>
+                                                <option value="leader">Líder Semillero</option>
                                                 <option value="profesor">Profesor</option>
                                                 <option value="admin">Administrador</option>
                                             </select>
@@ -664,6 +670,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                                     }}
                                 >
                                     <option value="student">Estudiante</option>
+                                    <option value="leader">Líder de Semillero</option>
                                     <option value="profesor">Profesor / Docente</option>
                                     <option value="admin">Administrador</option>
                                 </select>

@@ -10,6 +10,9 @@
     gap: 1.5rem;
     padding: 1.5rem 2rem;
     border-radius: 16px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-sm);
 }
 
 .back-btn {
@@ -18,16 +21,17 @@
     justify-content: center;
     width: 44px;
     height: 44px;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
     border-radius: 12px;
-    color: white;
+    color: var(--text-heading);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .back-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--surface-hover);
+    color: var(--brand-primary);
 }
 
 .course-detail-icon {
@@ -48,7 +52,7 @@
 .course-detail-info h1 {
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-heading);
     margin: 0 0 0.25rem 0;
 }
 
@@ -65,6 +69,8 @@
     gap: 0.5rem;
     padding: 0.75rem;
     border-radius: 16px;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
 }
 
 .detail-tab {
@@ -83,13 +89,13 @@
 }
 
 .detail-tab:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: var(--surface-hover);
+    color: var(--text-heading);
 }
 
 .detail-tab.active {
-    background: var(--gradient-primary);
-    color: white;
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--brand-primary);
 }
 
 .course-detail-content {
@@ -137,8 +143,8 @@
     flex-direction: column;
     gap: 0.85rem;
     padding: 1.25rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--glass-border);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
     border-radius: 14px;
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -159,7 +165,7 @@
 .group-card-name {
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--text-heading);
 }
 
 .group-card-teacher {
@@ -201,8 +207,8 @@
 }
 
 .module-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -243,7 +249,7 @@
 .module-card-name {
     font-size: 1rem;
     font-weight: 600;
-    color: white;
+    color: var(--text-heading);
     flex: 1;
 }
 
@@ -523,8 +529,9 @@
     max-width: 450px;
     padding: 2rem;
     border-radius: 20px;
-    background: var(--bg-secondary);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-xl);
     animation: scaleIn 0.3s ease;
 }
 
@@ -687,142 +694,6 @@
     }
 }
 
-/* ==========================================================================
-   LIGHT MODE SUPPORT — CourseDetail
-   ========================================================================== */
-:root[data-theme='light'] .course-detail-header {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(239, 246, 255, 0.9) 100%);
-    border-color: rgba(59, 130, 246, 0.25);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-}
 
-:root[data-theme='light'] .course-detail-info h1 {
-    color: #0f172a;
-}
 
-:root[data-theme='light'] .course-detail-stats {
-    color: #475569;
-}
-
-:root[data-theme='light'] .back-btn {
-    background: rgba(241, 245, 249, 0.85);
-    color: #0f172a;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-:root[data-theme='light'] .back-btn:hover {
-    background: #ffffff;
-    border-color: #38bdf8;
-}
-
-:root[data-theme='light'] .course-detail-tabs {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(148, 163, 184, 0.25);
-}
-
-:root[data-theme='light'] .detail-tab {
-    color: #475569;
-}
-
-:root[data-theme='light'] .detail-tab:hover {
-    color: #0f172a;
-    background: rgba(59, 130, 246, 0.08);
-}
-
-:root[data-theme='light'] .detail-tab.active {
-    background: rgba(59, 130, 246, 0.12);
-    color: #2563eb;
-}
-
-:root[data-theme='light'] .form-group input,
-:root[data-theme='light'] .form-group select {
-    background: #ffffff;
-    border-color: rgba(148, 163, 184, 0.35);
-    color: #0f172a;
-}
-
-:root[data-theme='light'] .form-group input::placeholder {
-    color: #94a3b8;
-}
-
-:root[data-theme='light'] .panel-header h3 {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .group-card {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
-}
-
-:root[data-theme='light'] .group-card-name {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .group-card-students {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .group-card-teacher {
-    color: #0284c7 !important;
-}
-
-:root[data-theme='light'] .group-card .btn-small {
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #334155 !important;
-}
-
-:root[data-theme='light'] .group-card .btn-small:hover {
-    background: #e2e8f0 !important;
-    color: #0f172a !important;
-    border-color: #94a3b8 !important;
-}
-
-:root[data-theme='light'] .group-card .btn-danger {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border-color: rgba(239, 68, 68, 0.3) !important;
-    color: #dc2626 !important;
-}
-
-:root[data-theme='light'] .group-card .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2) !important;
-}
-
-:root[data-theme='light'] .module-card {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04) !important;
-}
-
-:root[data-theme='light'] .module-card-name {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .lesson-name {
-    color: #1e293b !important;
-}
-
-:root[data-theme='light'] .setting-card {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-}
-
-:root[data-theme='light'] .setting-name {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .setting-desc {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .code-modal {
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15) !important;
-}
-
-:root[data-theme='light'] .modal-course-name {
-    color: #0f172a !important;
-}
 

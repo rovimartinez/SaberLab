@@ -25,7 +25,8 @@
 
 .time-range-selector {
     display: flex;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-input);
+    border: 1px solid var(--border-subtle);
     padding: 0.35rem;
     border-radius: 10px;
     gap: 0.25rem;
@@ -44,12 +45,12 @@
 }
 
 .range-btn:hover {
-    color: white;
+    color: var(--text-heading);
 }
 
 .range-btn.active {
-    background: rgba(139, 92, 246, 0.2);
-    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.18);
+    color: var(--brand-secondary, #8b5cf6);
 }
 
 .overview-cards {
@@ -467,7 +468,7 @@
 .grade-exam {
     font-size: 0.9rem;
     font-weight: 500;
-    color: white;
+    color: var(--text-heading);
 }
 
 .grade-subject {
@@ -478,24 +479,21 @@
 .grade-value {
     font-size: 1.5rem;
     font-weight: 800;
+    color: #10b981;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
     .overview-cards {
         grid-template-columns: 1fr;
     }
 
-    .stats-row {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .content-grid {
+    .analytics-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (max-width: 640px) {
-    .page-header {
+@media (max-width: 600px) {
+    .progreso-header {
         flex-direction: column;
         align-items: flex-start;
     }
@@ -509,33 +507,3 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
-
-/* ==========================================================================
-   LIGHT MODE SUPPORT — PanelProgreso
-   ========================================================================== */
-:root[data-theme='light'] .time-range-selector {
-    background: rgba(241, 245, 249, 0.85);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-}
-
-:root[data-theme='light'] .range-btn {
-    color: #475569;
-}
-
-:root[data-theme='light'] .range-btn:hover {
-    color: #0f172a;
-}
-
-:root[data-theme='light'] .range-btn.active {
-    background: rgba(139, 92, 246, 0.15);
-    color: #7c3aed;
-}
-
-:root[data-theme='light'] .grade-exam {
-    color: #0f172a;
-}
-
-:root[data-theme='light'] .grade-subject {
-    color: #475569;
-}
-

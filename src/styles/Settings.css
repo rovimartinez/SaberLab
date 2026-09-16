@@ -19,6 +19,7 @@
 .header-title h1 {
     font-size: 1.8rem;
     margin: 0;
+    color: var(--text-heading);
 }
 
 .settings-tabs {
@@ -53,8 +54,8 @@
 }
 
 .settings-tab:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: var(--surface-hover);
+    color: var(--text-heading);
 }
 
 .settings-tab.active {
@@ -75,11 +76,16 @@
 
 .settings-section {
     padding: 2rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
 }
 
 .settings-section h2 {
     font-size: 1.3rem;
     margin: 0 0 0.5rem;
+    color: var(--text-heading);
 }
 
 .section-description {
@@ -126,18 +132,18 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-card-subtle);
+    border: 1px solid var(--border-default);
     border-radius: 10px;
-    color: white;
+    color: var(--text-body);
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .upload-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(139, 92, 246, 0.5);
+    background: var(--surface-hover);
+    border-color: var(--border-focus);
 }
 
 .settings-form {
@@ -212,10 +218,10 @@
 .form-group input,
 .form-group select {
     padding: 0.9rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--surface-input);
+    border: 1px solid var(--border-default);
     border-radius: 10px;
-    color: white;
+    color: var(--text-body);
     font-size: 0.95rem;
     transition: all 0.2s;
 }
@@ -223,8 +229,9 @@
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #8b5cf6;
-    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-focus);
+    background: var(--surface-input-hover);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
 }
 
 .form-group input:disabled {
@@ -234,7 +241,7 @@
 
 .input-hint {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .btn {
@@ -253,7 +260,7 @@
 
 .btn-primary {
     background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-    color: white;
+    color: #ffffff;
     width: fit-content;
 }
 
@@ -263,18 +270,19 @@
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
+    background: var(--surface-card-subtle);
+    border: 1px solid var(--border-default);
+    color: var(--text-body);
 }
 
 .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--surface-hover);
 }
 
 .btn-danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #f43f5e;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: var(--status-danger-bg);
+    color: var(--status-danger-text);
+    border: 1px solid var(--status-danger-border);
 }
 
 .btn-danger:hover {
@@ -311,8 +319,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid transparent;
+    background: var(--surface-card-subtle);
+    border: 2px solid var(--border-subtle);
     border-radius: 12px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -320,12 +328,13 @@
 }
 
 .theme-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
+    background: var(--surface-hover);
+    color: var(--text-heading);
+    border-color: var(--border-focus);
 }
 
 .theme-btn.active {
-    background: rgba(139, 92, 246, 0.1);
+    background: rgba(139, 92, 246, 0.12);
     border-color: #8b5cf6;
     color: #a78bfa;
 }
@@ -341,7 +350,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--surface-card-subtle);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
 }
 
@@ -359,25 +369,25 @@
 
 .security-name {
     font-weight: 500;
-    color: white;
+    color: var(--text-heading);
 }
 
 .security-desc {
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .danger-zone {
     margin-top: 2rem;
     padding: 1.5rem;
-    background: rgba(239, 68, 68, 0.05);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: var(--status-danger-bg);
+    border: 1px solid var(--status-danger-border);
     border-radius: 12px;
 }
 
 .danger-zone h3 {
     font-size: 1rem;
-    color: #f43f5e;
+    color: var(--status-danger-text);
     margin: 0 0 0.5rem;
 }
 
@@ -440,31 +450,3 @@
         grid-template-columns: 1fr !important;
     }
 }
-
-/* ==========================================================================
-   LIGHT MODE SUPPORT — Settings
-   ========================================================================== */
-:root[data-theme='light'] .settings-page h1,
-:root[data-theme='light'] .settings-page h2 {
-    color: #0f172a;
-}
-
-:root[data-theme='light'] .theme-btn {
-    background: rgba(241, 245, 249, 0.85);
-    border-color: rgba(148, 163, 184, 0.3);
-    color: #475569;
-}
-
-:root[data-theme='light'] .theme-btn:hover {
-    background: #ffffff;
-    color: #0f172a;
-    border-color: #38bdf8;
-}
-
-:root[data-theme='light'] .theme-btn.active {
-    background: rgba(59, 130, 246, 0.12);
-    border-color: #2563eb;
-    color: #2563eb;
-}
-
-

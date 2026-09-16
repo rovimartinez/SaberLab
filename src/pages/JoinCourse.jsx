@@ -43,10 +43,9 @@ export default function JoinCourse() {
                 await refreshEnrolledCourses();
             }
 
-            // Redirigir automáticamente al curso tras breve confirmación
+            // Redirigir automáticamente al dashboard tras breve confirmación
             setTimeout(() => {
-                const targetSlug = data.curso?.slug || 'robotica-educativa';
-                navigate(`/dashboard/my-courses/${targetSlug}`, { replace: true });
+                navigate('/dashboard', { replace: true });
             }, 1800);
         } catch (err) {
             setErrorMsg(err.message || 'No fue posible unirse al curso con este enlace');

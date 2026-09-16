@@ -51,10 +51,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.95rem;
-    background: rgba(30, 41, 59, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
     border-radius: 12px;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 0.85rem;
     font-weight: 700;
     cursor: pointer;
@@ -63,22 +63,22 @@
 }
 
 .category-nav-pill:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f8fafc;
-    border-color: rgba(255, 255, 255, 0.16);
+    background: var(--surface-hover);
+    color: var(--text-heading);
+    border-color: var(--border-strong);
 }
 
 .category-nav-pill.active {
-    background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
-    border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+    background: rgba(37, 99, 235, 0.12);
+    color: var(--brand-primary);
+    border-color: var(--brand-primary);
 }
 
 .category-count {
     font-size: 0.72rem;
     font-weight: 700;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--surface-elevated);
+    color: var(--text-muted);
     min-width: 22px;
     height: 20px;
     padding: 0 5px;
@@ -91,8 +91,8 @@
 }
 
 .category-nav-pill.active .category-count {
-    background: rgba(56, 189, 248, 0.25);
-    color: #38bdf8;
+    background: rgba(37, 99, 235, 0.2);
+    color: var(--brand-primary);
 }
 
 /* Lado Derecho de la Toolbar */
@@ -107,10 +107,10 @@
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    background: var(--bg-secondary);
+    background: var(--surface-input);
     padding: 3px;
     border-radius: 12px;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border-default);
 }
 
 .course-filter-btn {
@@ -129,13 +129,14 @@
 }
 
 .course-filter-btn:hover {
-    color: var(--text-primary);
+    color: var(--text-heading);
 }
 
 .course-filter-btn.active {
-    background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
-    border-color: rgba(56, 189, 248, 0.4);
+    background: var(--surface-card);
+    color: var(--brand-primary);
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Selector Desplegable de Tipo de Recurso */
@@ -159,9 +160,9 @@
     width: 100%;
     padding: 0.5rem 1.2rem 0.5rem 2.25rem;
     border-radius: 12px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
+    background: var(--surface-input);
+    border: 1px solid var(--border-default);
+    color: var(--text-heading);
     font-size: 0.85rem;
     font-weight: 700;
     outline: none;
@@ -170,20 +171,14 @@
     appearance: auto;
 }
 
+.resources-category-select option {
+    background: var(--surface-card);
+    color: var(--text-heading);
+}
+
 .resources-category-select:focus {
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-}
-
-:root[data-theme='light'] .resources-category-select {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .resources-category-select option {
-    background: #ffffff !important;
-    color: #0f172a !important;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 
@@ -208,21 +203,21 @@
     width: 100%;
     padding: 0.5rem 1.8rem 0.5rem 2.25rem;
     border-radius: 12px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
+    background: var(--surface-input);
+    border: 1px solid var(--border-default);
+    color: var(--text-heading);
     font-size: 0.85rem;
     outline: none;
     transition: all 0.2s ease;
 }
 
 .search-box-unified input:focus {
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .search-box-unified input::placeholder {
-    color: var(--text-secondary);
+    color: var(--text-muted);
 }
 
 .search-clear-btn {
@@ -255,6 +250,10 @@
 
 .resource-card {
     padding: 1.5rem;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
     transition: all 0.2s;
     display: flex;
     flex-direction: column;
@@ -263,7 +262,8 @@
 
 .resource-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: var(--brand-primary);
+    box-shadow: var(--shadow-md);
 }
 
 .resource-card svg,
@@ -301,7 +301,7 @@
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
-    color: white;
+    color: var(--text-heading);
 }
 
 .resource-description {
@@ -405,79 +405,5 @@
     }
 }
 
-/* ==========================================================================
-   LIGHT MODE SUPPORT — PanelRecursos
-   ========================================================================== */
-:root[data-theme='light'] .search-box-unified input {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    color: #0f172a !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-}
 
-:root[data-theme='light'] .course-filter-group {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-}
 
-:root[data-theme='light'] .course-filter-btn {
-    color: #64748b !important;
-}
-
-:root[data-theme='light'] .course-filter-btn.active {
-    background: rgba(56, 189, 248, 0.15) !important;
-    color: #0284c7 !important;
-    border-color: #38bdf8 !important;
-}
-
-:root[data-theme='light'] .category-nav-pill {
-    background: #ffffff !important;
-    border: 1px solid rgba(203, 213, 225, 0.9) !important;
-    color: #475569 !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-}
-
-:root[data-theme='light'] .category-nav-pill:hover {
-    background: #f8fafc !important;
-    color: #0f172a !important;
-    border-color: #38bdf8 !important;
-}
-
-:root[data-theme='light'] .category-nav-pill.active {
-    background: rgba(56, 189, 248, 0.15) !important;
-    color: #0284c7 !important;
-    border-color: #38bdf8 !important;
-    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15) !important;
-}
-
-:root[data-theme='light'] .category-count {
-    background: #f1f5f9 !important;
-    color: #475569 !important;
-}
-
-:root[data-theme='light'] .category-nav-pill.active .category-count {
-    background: rgba(56, 189, 248, 0.25) !important;
-    color: #0284c7 !important;
-}
-
-:root[data-theme='light'] .resource-card {
-    background: #ffffff !important;
-    border-color: rgba(203, 213, 225, 0.85) !important;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05) !important;
-}
-
-:root[data-theme='light'] .resource-card:hover {
-    background: #ffffff !important;
-    border-color: #38bdf8 !important;
-    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.15) !important;
-}
-
-:root[data-theme='light'] .resource-title {
-    color: #0f172a !important;
-}
-
-:root[data-theme='light'] .resource-desc,
-:root[data-theme='light'] .resource-description {
-    color: #475569 !important;
-}

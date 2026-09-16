@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   SimiPins.css — Vitrina de Pines Tácticos (Insignias & Grados I al V)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.simi-pins-header-info {
+    background: rgba(6, 182, 212, 0.08);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    border-radius: 14px;
+    padding: 0.85rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.simi-pins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.25rem;
+}
+
+.simi-pin-card {
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.9rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.simi-pin-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 8px 24px -6px rgba(6, 182, 212, 0.2);
+}
+
+.simi-pin-card.prestige-mode {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 20px -6px rgba(245, 158, 11, 0.25);
+}
+
+.simi-pin-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.simi-shield-emblem {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 1.5px solid;
+    transition: transform 0.2s ease;
+}
+
+.simi-pin-card:hover .simi-shield-emblem {
+    transform: scale(1.06);
+}
+
+.simi-prestige-star {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #f59e0b;
+    color: #0f172a;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 6px #f59e0b;
+}
+
+.simi-pin-titles {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.simi-pin-name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 850;
+    color: var(--text-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.simi-tier-active-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid;
+    white-space: nowrap;
+}
+
+.simi-pin-category-tag {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Barra de progreso sutil */
+.simi-pin-progress-wrapper {
+    width: 100%;
+}
+
+.simi-pin-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--surface-hover);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.simi-pin-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.simi-pin-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+    min-height: 34px;
+}
+
+/* Selector táctico de rangos */
+.simi-pin-tier-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.simi-tier-section-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+}
+
+.simi-tier-label {
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.simi-tier-val {
+    font-weight: 850;
+}
+
+.simi-pin-tier-pills {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.simi-tier-pill {
+    flex: 1;
+    padding: 5px 0;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 850;
+    border-radius: 8px;
+    background: var(--surface-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.simi-tier-pill:hover {
+    color: var(--text-primary);
+    border-color: rgba(6, 182, 212, 0.4);
+    background: color-mix(in srgb, var(--surface-hover) 80%, rgba(6, 182, 212, 0.15));
+}
+
+.simi-tier-pill.active {
+    font-weight: 900;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+
+.simi-tier-pill.prestige-pill:hover {
+    border-color: #f59e0b;
+}
+
+/* Requisito de ascenso */
+.simi-pin-req-box {
+    background: color-mix(in srgb, var(--surface-hover) 40%, var(--surface-card));
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.simi-pin-req-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.simi-pin-req-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--text-heading);
+}
+
+.simi-pin-req-points {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #10b981;
+}
+
+.simi-pin-req-text {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.35;
+}

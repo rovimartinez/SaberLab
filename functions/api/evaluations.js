@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { id, course_id, module_id, evaluation_key, title, description, instructions, questions, time_limit, passing_score, points, is_published, type } = body;
+  const { id, course_id, module_id, evaluation_key, title, description, instructions, questions, time_limit, passing_score, points, is_published, type, results_released, show_detailed_answers } = body;
   const questionsText = questions ? JSON.stringify(questions) : null;
 
   if (id) {
@@ -88,7 +88,9 @@ export async function onRequestPost({ request, env }) {
          passing_score = COALESCE(?, passing_score),
          points = COALESCE(?, points),
          is_published = COALESCE(?, is_published),
-         type = COALESCE(?, type)
+         type = COALESCE(?, type),
+         results_released = COALESCE(?, results_released),
+         show_detailed_answers = COALESCE(?, show_detailed_answers)
        WHERE id = ?`
     ).bind(
       course_id ?? null,
@@ -101,8 +103,10 @@ export async function onRequestPost({ request, env }) {
       time_limit ?? null,
       passing_score ?? null,
       points ?? null,
-      is_published ?? null,
+      is_published !== undefined ? (is_published ? 1 : 0) : null,
       type ?? null,
+      results_released !== undefined ? (results_released ? 1 : 0) : null,
+      show_detailed_answers !== undefined ? (show_detailed_answers ? 1 : 0) : null,
       id
     ).run();
 
@@ -113,8 +117,9 @@ export async function onRequestPost({ request, env }) {
   const { meta } = await env.DB.prepare(
     `INSERT INTO evaluaciones (
        course_id, module_id, evaluation_key, title, description, instructions,
-       questions, time_limit, passing_score, points, is_published, type, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+       questions, time_limit, passing_score, points, is_published, type,
+       results_released, show_detailed_answers, created_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
   ).bind(
     course_id ?? null,
     module_id ?? null,
@@ -127,7 +132,9 @@ export async function onRequestPost({ request, env }) {
     passing_score ?? null,
     points ?? null,
     is_published ? 1 : 0,
-    type ?? null
+    type ?? null,
+    results_released ? 1 : 0,
+    show_detailed_answers ? 1 : 0
   ).run();
 
   const row = await env.DB.prepare('SELECT * FROM evaluaciones WHERE id = ?').bind(meta.last_row_id).first();
@@ -151,6 +158,8 @@ function parseEvaluationRow(row) {
     ...row,
     questions: safeParseQuestions(row.questions),
     is_published: row.is_published === 1 || row.is_published === true,
+    results_released: row.results_released === 1 || row.results_released === true,
+    show_detailed_answers: row.show_detailed_answers === 1 || row.show_detailed_answers === true,
   };
 }
 
@@ -181,14 +190,16 @@ async function ensureEvaluationsSchema(env) {
       passing_score INTEGER,
       points INTEGER,
       is_published INTEGER NOT NULL DEFAULT 0,
+      results_released INTEGER NOT NULL DEFAULT 0,
+      show_detailed_answers INTEGER NOT NULL DEFAULT 0,
       type TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
 
-  for (const column of ['evaluation_key', 'module_id', 'passing_score', 'points', 'type']) {
+  for (const column of ['evaluation_key', 'module_id', 'passing_score', 'points', 'type', 'results_released', 'show_detailed_answers']) {
     try {
-      await env.DB.prepare(`ALTER TABLE evaluaciones ADD COLUMN ${column} TEXT`).run();
+      await env.DB.prepare(`ALTER TABLE evaluaciones ADD COLUMN ${column} INTEGER DEFAULT 0`).run();
     } catch {
       // ignore if column already exists or ALTER not supported
     }

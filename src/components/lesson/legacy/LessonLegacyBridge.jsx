@@ -20,6 +20,9 @@ import PracticalLabL3 from '../../simulators/electricity/PracticalLabL3';
 import PracticalLabL4 from '../../simulators/electricity/PracticalLabL4';
 import PracticalLabL5 from '../../simulators/electricity/PracticalLabL5';
 import PracticalLabL6 from '../../simulators/electricity/PracticalLabL6';
+import PracticalLabL7 from '../../simulators/electricity/PracticalLabL7';
+import CapacitorChargeSimulator from '../../simulators/electricity/CapacitorChargeSimulator';
+import CapacitorCodeDecoder from '../../simulators/electricity/CapacitorCodeDecoder';
 import SeriesCircuitDemo from '../../simulators/electricity/SeriesCircuitDemo';
 import SeriesCalculationVisualizer from '../../simulators/electricity/SeriesCalculationVisualizer';
 import ParallelCircuitDemo from '../../simulators/electricity/ParallelCircuitDemo';
@@ -27,6 +30,9 @@ import ParallelCalculationVisualizer from '../../simulators/electricity/Parallel
 import MixedCircuitDemo from '../../simulators/electricity/MixedCircuitDemo';
 import MixedCalculationVisualizer from '../../simulators/electricity/MixedCalculationVisualizer';
 import HorsepowerSimulator from '../../simulators/electricity/HorsepowerSimulator';
+import CoordinateSpaceDemo from '../../simulators/3d/CoordinateSpaceDemo';
+import PracticalLabMA1 from '../../simulators/3d/PracticalLabMA1';
+import PrimitivesTransformLab from '../../simulators/3d/PrimitivesTransformLab';
 
 const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) => {
     const rootsRef = useRef(new Map());
@@ -146,6 +152,27 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
             );
 
             mountInto(
+                'capacitor-charge-simulator-container',
+                <div style={{ width: '100%', margin: '0 auto' }}>
+                    <CapacitorChargeSimulator />
+                </div>
+            );
+
+            mountInto(
+                'capacitor-code-decoder-container',
+                <div style={{ width: '100%', margin: '0 auto' }}>
+                    <CapacitorCodeDecoder />
+                </div>
+            );
+
+            mountInto(
+                'practical-lab-l7-container',
+                <div style={{ width: '100%' }}>
+                    <PracticalLabL7 />
+                </div>
+            );
+
+            mountInto(
                 'series-circuit-demo-container',
                 <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                     <SeriesCircuitDemo />
@@ -240,6 +267,28 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
                 'multimeter-explorer-container',
                 <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                     <MultimeterExplorer />
+                </div>
+            );
+
+            // Modelado y Animación 3D (MA)
+            mountInto(
+                'coordinate-space-demo-container',
+                <div style={{ width: '100%', maxWidth: '960px', margin: '0 auto' }}>
+                    <CoordinateSpaceDemo />
+                </div>
+            );
+
+            mountInto(
+                'practical-lab-ma1-container',
+                <div style={{ width: '100%' }}>
+                    <PracticalLabMA1 />
+                </div>
+            );
+
+            mountInto(
+                'primitives-transform-lab-container',
+                <div style={{ width: '100%' }}>
+                    <PrimitivesTransformLab />
                 </div>
             );
         };
