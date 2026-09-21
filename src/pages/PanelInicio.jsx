@@ -236,16 +236,14 @@ const PanelInicio = () => {
                     });
                 }
 
-                ['ee-m1-l6', 'ee-m2-l10', 'ee-m3-l14', 'ee-m4-l16'].forEach(key => {
+                ['ee-m1-l6e', 'ee-m2-eval', 'ee-m3-eval', 'ee-m4-eval'].forEach(key => {
                     const localData = localStorage.getItem(`exam_completed_${key}`);
                     if (localData) {
                         try {
                             const parsed = JSON.parse(localData);
                             aMap[key] = parsed;
-                            lMap[key] = true;
                         } catch (e) {
                             aMap[key] = { points_obtained: 150 };
-                            lMap[key] = true;
                         }
                     }
                 });
@@ -264,6 +262,12 @@ const PanelInicio = () => {
         };
 
         fetchDashboardData();
+
+        const handleProgressUpdated = () => {
+            fetchDashboardData();
+        };
+        window.addEventListener('lesson-progress-updated', handleProgressUpdated);
+        return () => window.removeEventListener('lesson-progress-updated', handleProgressUpdated);
     }, [user?.id]);
 
     const completedLessonsCount = Object.keys(completedLessonsMap).length;

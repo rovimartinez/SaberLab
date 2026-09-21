@@ -57,22 +57,23 @@ export const LESSONS_REGISTRY = {
     're-m4-l4': { id: 're-m4-l4', title: 'Proyecto Integrador Final', load: null },
     
     // --- ELECTRICIDAD (EE) ---
-    'ee-m1-l1': { id: 'ee-m1-l1', title: 'Introducción a la Electricidad', load: () => import('../lessons/EE/m1/l1').then(m => m.lessonData) },
-    'ee-m1-l2': { id: 'ee-m1-l2', title: 'Ley de Ohm y Herramientas de Medición', load: () => import('../lessons/EE/m1/l2').then(m => m.lessonData) },
-    'ee-m1-l3': { id: 'ee-m1-l3', title: 'Análisis de Circuitos en Serie', load: () => import('../lessons/EE/m1/l3').then(m => m.lessonData) },
-    'ee-m1-l4': { id: 'ee-m1-l4', title: 'Análisis de Circuitos en Paralelo', load: () => import('../lessons/EE/m1/l4').then(m => m.lessonData) },
-    'ee-m1-l5': { id: 'ee-m1-l5', title: 'Análisis de Circuitos Mixtos', load: () => import('../lessons/EE/m1/l5').then(m => m.lessonData) },
-    'ee-m1-l6': { id: 'ee-m1-l6', title: 'Evaluación de Fundamentos', load: () => import('../lessons/EE/m1/l6e').then(m => m.lessonData) },
+    'ee-m1-l1': { id: 'ee-m1-l1', title: 'Fundamentos de Electricidad, Historia y Magnitudes Físicas', load: () => import('../lessons/EE/m1/l1').then(m => m.lessonData) },
+    'ee-m1-l2': { id: 'ee-m1-l2', title: 'Circuitos Eléctricos, Ley de Ohm y Medición', load: () => import('../lessons/EE/m1/l2').then(m => m.lessonData) },
+    'ee-m1-l3': { id: 'ee-m1-l3', title: 'Circuitos en Serie, Leyes de Kirchhoff y Medición', load: () => import('../lessons/EE/m1/l3').then(m => m.lessonData) },
+    'ee-m1-l4': { id: 'ee-m1-l4', title: 'Análisis de Circuitos en Paralelo, Ley de Corrientes (LCK) y Divisor de Corriente', load: () => import('../lessons/EE/m1/l4').then(m => m.lessonData) },
+    'ee-m1-l5': { id: 'ee-m1-l5', title: 'Análisis de Circuitos Mixtos Serie-Paralelo', load: () => import('../lessons/EE/m1/l5').then(m => m.lessonData) },
+    'ee-m1-l6': { id: 'ee-m1-l6', title: 'Evaluación 1 - Fundamentos Eléctricos', load: () => import('../lessons/EE/m1/l6e').then(m => m.lessonData) },
     'ee-m2-l7': { id: 'ee-m2-l7', title: 'Capacitores y Almacenamiento de Energía', load: () => import('../lessons/EE/m2/l7').then(m => m.lessonData) },
-    'ee-m2-l8': { id: 'ee-m2-l8', title: 'Bobinas y Motores DC', load: () => import('../lessons/EE/m2/l8').then(m => m.lessonData) },
-    'ee-m2-l9': { id: 'ee-m2-l9', title: 'Transistores y Control Electromecánico', load: () => import('../lessons/EE/m2/l9').then(m => m.lessonData) },
-    'ee-m2-l10': { id: 'ee-m2-l10', title: 'Evaluación de Componentes', load: () => import('../lessons/EE/m2/l10').then(m => m.lessonData) },
-    'ee-m3-l11': { id: 'ee-m3-l11', title: 'Circuitos Integrados - Temporización', load: () => import('../lessons/EE/m3/l11').then(m => m.lessonData) },
-    'ee-m3-l12': { id: 'ee-m3-l12', title: 'Circuitos Integrados - Contadores', load: () => import('../lessons/EE/m3/l12').then(m => m.lessonData) },
-    'ee-m3-l13': { id: 'ee-m3-l13', title: 'Visualización de Datos', load: () => import('../lessons/EE/m3/l13').then(m => m.lessonData) },
-    'ee-m3-l14': { id: 'ee-m3-l14', title: 'Evaluación de Aplicaciones Avanzadas', load: () => import('../lessons/EE/m3/l14').then(m => m.lessonData) },
-    'ee-m4-l15': { id: 'ee-m4-l15', title: 'Optimización de Prototipos', load: () => import('../lessons/EE/m4/l15').then(m => m.lessonData) },
-    'ee-m4-l16': { id: 'ee-m4-l16', title: 'Presentación de Proyecto Final', load: () => import('../lessons/EE/m4/l16').then(m => m.lessonData) },
+    'ee-m2-l8': { id: 'ee-m2-l8', title: 'Bobinas e Inducción Electromagnética / Motores DC', load: () => import('../lessons/EE/m2/l8').then(m => m.lessonData) },
+    'ee-m2-l9': { id: 'ee-m2-l9', title: 'Diodos Semiconductores y Rectificación', load: () => import('../lessons/EE/m2/l9').then(m => m.lessonData) },
+    'ee-m2-l10': { id: 'ee-m2-l10', title: 'Transistores BJT como Interruptor y Amplificador', load: () => import('../lessons/EE/m2/l10').then(m => m.lessonData) },
+    'ee-m2-eval': { id: 'ee-m2-eval', title: 'Examen 2 - Uso de Componentes Electrónicos', load: null },
+    'ee-m3-l11': { id: 'ee-m3-l11', title: 'Temporizador CI NE555 (Modo Astable y Monoestable)', load: () => import('../lessons/EE/m3/l11').then(m => m.lessonData) },
+    'ee-m3-l12': { id: 'ee-m3-l12', title: 'Contadores Binarios y Divisores de Frecuencia (CI 74LS93)', load: () => import('../lessons/EE/m3/l12').then(m => m.lessonData) },
+    'ee-m3-l13': { id: 'ee-m3-l13', title: 'Decodificadores BCD y Visualización en Displays de 7 Segmentos (CD4511)', load: () => import('../lessons/EE/m3/l13').then(m => m.lessonData) },
+    'ee-m3-l14': { id: 'ee-m3-l14', title: 'Evaluación 3 - Aplicaciones Avanzadas y Circuitos Integrados', load: () => import('../lessons/EE/m3/l14').then(m => m.lessonData) },
+    'ee-m4-l15': { id: 'ee-m4-l15', title: 'Lectura de Planos Esquemáticos, Ensamble y Optimización de Prototipos', load: () => import('../lessons/EE/m4/l15').then(m => m.lessonData) },
+    'ee-m4-l16': { id: 'ee-m4-l16', title: 'Evaluación 4 - Sustentación y Presentación del Proyecto Final', load: () => import('../lessons/EE/m4/l16').then(m => m.lessonData) },
 
 
     // --- QUIMICA (MQ) ---
@@ -175,11 +176,10 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m1-l2', visible: true },
                     { id: 'ee-m1-l3', visible: true },
                     { id: 'ee-m1-l4', visible: true },
-                    { id: 'ee-m1-l5', visible: true },
-                    { id: 'ee-m1-l6', visible: true }
+                    { id: 'ee-m1-l5', visible: true }
                 ],
                 evaluation: {
-                    id: 'ee-m1-l6',
+                    id: 'ee-m1-l6e',
                     title: 'Examen 1 - Fundamentos Eléctricos',
                     date: '2 Sep 2026',
                     points: 150
@@ -203,7 +203,7 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m2-l10', visible: true }
                 ],
                 evaluation: {
-                    id: 'ee-m2-l10',
+                    id: 'ee-m2-eval',
                     title: 'Examen 2 - Uso de Componentes Electrónicos',
                     date: '28 Sep 2026',
                     points: 125

@@ -1,7 +1,7 @@
 import { createContentBlock, createQuizBlock, defineLesson } from '../../../lib/lessonSchema';
 
 export const lessonData = defineLesson({
-    title: 'Evaluación de Componentes',
+    title: 'Transistores BJT como Interruptor y Amplificador',
     blocksByTab: {
         contenido: [
             createContentBlock({

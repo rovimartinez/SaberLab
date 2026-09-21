@@ -26,7 +26,7 @@ export const CoursesModalContent = ({
 
     const isExamLesson = (id) => {
         const lower = (id || '').toLowerCase();
-        return lower.endsWith('-l6') || lower.endsWith('-l6e') || lower.endsWith('-l10') || lower.endsWith('-l14') || lower.endsWith('-l16') || lower.includes('eval') || lower.includes('examen');
+        return lower.endsWith('e') || lower.includes('eval') || lower.includes('examen');
     };
 
     // ── VISTA EXCLUSIVA: PLAN DE ESTUDIOS DEL CURSO ACTIVO ──
