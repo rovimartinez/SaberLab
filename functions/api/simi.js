@@ -100,6 +100,8 @@ export async function onRequestGet({ env, data }) {
           parsedEquipment = String(evt.equipment).split(',').map(s => s.trim()).filter(Boolean);
         }
       }
+      const isPrivVal = evt.is_private === 1 || evt.is_private === true;
+      const visState = evt.visibility_state || (evt.is_locked === 1 ? 'locked' : evt.is_hidden === 1 ? 'hidden' : 'unlocked');
       return {
         ...evt,
         schoolName: evt.school_name || evt.schoolName || 'Institución Educativa STEAM',
@@ -110,6 +112,12 @@ export async function onRequestGet({ env, data }) {
         badge_tier: evt.badge_tier || evt.badgeTier || 'Misión Escolar II',
         studentsCount: evt.students_count !== undefined ? Number(evt.students_count) : (evt.studentsCount !== undefined ? Number(evt.studentsCount) : 40),
         students_count: evt.students_count !== undefined ? Number(evt.students_count) : (evt.studentsCount !== undefined ? Number(evt.studentsCount) : 40),
+        visibilityState: visState,
+        visibility_state: visState,
+        isLocked: visState === 'locked',
+        is_locked: visState === 'locked' ? 1 : 0,
+        isHidden: visState === 'hidden',
+        is_hidden: visState === 'hidden' ? 1 : 0,
         equipment: parsedEquipment,
         attendees: evtAttendees.map(a => ({
           userId: a.user_id,
@@ -270,18 +278,24 @@ export async function onRequestPost({ request, env, data }) {
       const { 
         id, eventType = 'visita_escolar', schoolName, date, time, location, 
         status = 'Programada', leader = 'Ing. Ronny Martinez Reyes', 
-        objective, equipment = [], badgeTier = 'Misión Escolar II', studentsCount = 0
+        objective, equipment = [], badgeTier = 'Misión Escolar II', studentsCount = 0,
+        visibilityState = 'unlocked', visibility_state = 'unlocked',
+        isLocked = false, is_locked = 0, isHidden = false, is_hidden = 0
       } = body;
 
       const eventId = id || `evt-${Date.now()}`;
       const equipmentStr = JSON.stringify(equipment);
+      const finalVisState = visibilityState || visibility_state || (isLocked || is_locked === 1 ? 'locked' : isHidden || is_hidden === 1 ? 'hidden' : 'unlocked');
+      const lockedVal = finalVisState === 'locked' ? 1 : 0;
+      const hiddenVal = finalVisState === 'hidden' ? 1 : 0;
 
       await env.DB.prepare(`
         INSERT INTO simi_eventos (
           id, event_type, school_name, date, time, location, 
-          status, leader, objective, equipment, badge_tier, students_count, updated_at
+          status, leader, objective, equipment, badge_tier, students_count,
+          visibility_state, is_locked, is_hidden, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         ON CONFLICT(id) DO UPDATE SET
           event_type = excluded.event_type,
           school_name = excluded.school_name,
@@ -294,13 +308,17 @@ export async function onRequestPost({ request, env, data }) {
           equipment = excluded.equipment,
           badge_tier = excluded.badge_tier,
           students_count = excluded.students_count,
+          visibility_state = excluded.visibility_state,
+          is_locked = excluded.is_locked,
+          is_hidden = excluded.is_hidden,
           updated_at = datetime('now')
       `).bind(
         eventId, eventType, schoolName, date, time, location,
-        status, leader, objective, equipmentStr, badgeTier, Number(studentsCount)
+        status, leader, objective, equipmentStr, badgeTier, Number(studentsCount),
+        finalVisState, lockedVal, hiddenVal
       ).run();
 
-      return Response.json({ success: true, eventId });
+      return Response.json({ success: true, eventId, visibilityState: finalVisState });
     }
 
     // ── 4. ELIMINAR EVENTO ──
@@ -720,10 +738,17 @@ async function ensureSimiSchema(env) {
       equipment TEXT,
       badge_tier TEXT DEFAULT 'Misión Escolar II',
       students_count INTEGER DEFAULT 0,
+      visibility_state TEXT DEFAULT 'unlocked',
+      is_locked INTEGER DEFAULT 0,
+      is_hidden INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
+
+  try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN visibility_state TEXT DEFAULT "unlocked"').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN is_locked INTEGER DEFAULT 0').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN is_hidden INTEGER DEFAULT 0').run(); } catch (_) { }
 
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS simi_asistencias (

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
     Calendar, CheckCircle2, Plus, X,
-    Edit3, Trash2, Check, School, Users, Award, Shield, CheckCheck, Clock
+    Edit3, Trash2, Check, School, Users, Award, Shield, CheckCheck, Clock,
+    Eye, EyeOff, Lock, Unlock
 } from 'lucide-react';
 import { SIMI_SCHOOL_EVENTS } from '../../data/simiData';
 import { api } from '../../lib/api';
@@ -27,7 +28,14 @@ export function formatSimiDate(dateStr) {
 }
 
 // Subcomponente de Calendario de Visitas a Colegios & Eventos (Editable para líder/admin, visualizable para estudiantes)
-export default function SimiEventsTab({ isLeader, profile, initialEvents, onEventsChange }) {
+export default function SimiEventsTab({ 
+    isLeader, 
+    profile, 
+    initialEvents, 
+    onEventsChange,
+    isManageModeActive = false,
+    onToggleManageMode
+}) {
     const [events, setEvents] = useState(() => {
         if (initialEvents && initialEvents.length > 0) return initialEvents;
         const saved = localStorage.getItem('simi_events_list');
@@ -37,9 +45,33 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
         return SIMI_SCHOOL_EVENTS;
     });
 
+    // Mapa local de visibilidad por evento (3 estados: 'unlocked' | 'locked' | 'hidden')
+    const [eventVisibilityMap, setEventVisibilityMap] = useState(() => {
+        const saved = localStorage.getItem('simi_event_visibility_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return {};
+    });
+
     useEffect(() => {
         if (initialEvents && initialEvents.length > 0) {
             setEvents(initialEvents);
+            // Sincronizar visibilidad inicial desde los eventos cargados
+            const mapFromEvents = {};
+            initialEvents.forEach(evt => {
+                if (evt && evt.id) {
+                    const st = evt.visibility_state || evt.visibilityState || (evt.is_locked || evt.isLocked ? 'locked' : (evt.is_hidden || evt.isHidden ? 'hidden' : 'unlocked'));
+                    mapFromEvents[evt.id] = st;
+                }
+            });
+            if (Object.keys(mapFromEvents).length > 0) {
+                setEventVisibilityMap(prev => {
+                    const merged = { ...mapFromEvents, ...prev };
+                    localStorage.setItem('simi_event_visibility_map', JSON.stringify(merged));
+                    return merged;
+                });
+            }
         }
     }, [initialEvents]);
 
@@ -47,6 +79,56 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
     const [editingEvent, setEditingEvent] = useState(null);
     const [viewingEvent, setViewingEvent] = useState(null);
     const [eventCategoryFilter, setEventCategoryFilter] = useState('all');
+
+    // Ciclar visibilidad de un evento: Visible -> Bloqueado -> Oculto -> Visible
+    const cycleEventVisibility = async (eventId, e) => {
+        e?.stopPropagation();
+        if (!isLeader) return;
+        
+        const currentEvt = events.find(ev => ev.id === eventId);
+        const currentState = eventVisibilityMap[eventId] || currentEvt?.visibilityState || currentEvt?.visibility_state || 'unlocked';
+        const nextState = currentState === 'unlocked' ? 'locked' : currentState === 'locked' ? 'hidden' : 'unlocked';
+
+        const updatedMap = { ...eventVisibilityMap, [eventId]: nextState };
+        setEventVisibilityMap(updatedMap);
+        localStorage.setItem('simi_event_visibility_map', JSON.stringify(updatedMap));
+
+        const updatedEvents = events.map(ev => {
+            if (ev.id === eventId) {
+                return {
+                    ...ev,
+                    visibilityState: nextState,
+                    visibility_state: nextState,
+                    isLocked: nextState === 'locked',
+                    is_locked: nextState === 'locked' ? 1 : 0,
+                    isHidden: nextState === 'hidden',
+                    is_hidden: nextState === 'hidden' ? 1 : 0
+                };
+            }
+            return ev;
+        });
+        persistEvents(updatedEvents);
+
+        try {
+            if (currentEvt) {
+                await api('/simi', {
+                    method: 'POST',
+                    body: {
+                        action: 'save-event',
+                        ...currentEvt,
+                        visibilityState: nextState,
+                        visibility_state: nextState,
+                        isLocked: nextState === 'locked',
+                        is_locked: nextState === 'locked' ? 1 : 0,
+                        isHidden: nextState === 'hidden',
+                        is_hidden: nextState === 'hidden' ? 1 : 0
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn('[SIMI] Error guardando estado de visibilidad:', err);
+        }
+    };
 
     // Formulario de Visita / Evento
     const [formEventType, setFormEventType] = useState('visita_escolar');
@@ -355,15 +437,29 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                     </div>
                 </div>
 
-                {isLeader && (
-                    <button 
-                        onClick={handleOpenAdd}
-                        className="simi-desktop-add-btn simi-events-add-btn"
-                        title="Agendar Nueva Actividad"
-                    >
-                        <Plus size={16} /> Agendar Actividad
-                    </button>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {isLeader && (
+                        <button 
+                            className={`simi-home-admin-edit-btn ${isManageModeActive ? 'active-manage-mode' : ''}`}
+                            onClick={onToggleManageMode}
+                            title={isManageModeActive ? "Modo Gestión Activo: Haz clic para salir" : "Activar Gestión de Visibilidad y Bloqueo (Solo Docente/Líder)"}
+                            style={{ position: 'static' }}
+                        >
+                            <Edit3 size={18} />
+                            {isManageModeActive && <span className="simi-manage-badge-dot" />}
+                        </button>
+                    )}
+
+                    {isLeader && (
+                        <button 
+                            onClick={handleOpenAdd}
+                            className="simi-desktop-add-btn simi-events-add-btn"
+                            title="Agendar Nueva Actividad"
+                        >
+                            <Plus size={16} /> Agendar Actividad
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Barra de Filtros: Categorías y Estados */}
@@ -454,6 +550,12 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
 
             <div className="simi-events-list">
                 {events
+                    .filter(e => {
+                        const visState = eventVisibilityMap[e.id] || e.visibilityState || e.visibility_state || (e.isLocked || e.is_locked ? 'locked' : (e.isHidden || e.is_hidden ? 'hidden' : 'unlocked'));
+                        // Los alumnos nunca ven los eventos ocultos; el admin/docente los ve siempre
+                        if (!isLeader && visState === 'hidden') return false;
+                        return true;
+                    })
                     .filter(e => eventCategoryFilter === 'all' || (e.event_type || e.eventType) === eventCategoryFilter)
                     .filter(e => {
                         const st = (e.status || 'Programada').toLowerCase();
@@ -462,6 +564,13 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                         if (statusFilter === 'cancelada') return st === 'cancelada';
                         return true; // 'all_status'
                     })
+                    .sort((a, b) => {
+                        // Ordenar: Desbloqueados (1) -> Bloqueados (2) -> Ocultos (3)
+                        const stateOrder = { 'unlocked': 1, 'locked': 2, 'hidden': 3 };
+                        const stateA = eventVisibilityMap[a.id] || a.visibilityState || a.visibility_state || 'unlocked';
+                        const stateB = eventVisibilityMap[b.id] || b.visibilityState || b.visibility_state || 'unlocked';
+                        return (stateOrder[stateA] || 1) - (stateOrder[stateB] || 1);
+                    })
                     .map(evt => {
                     const attendees = evt.attendees || [];
                     const userRsvp = attendees.find(a => a.userId === userId)?.status || null;
@@ -469,12 +578,60 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                     const attendingCount = attendingStudents.length;
                     const notAttendingCount = attendees.filter(a => a.status === 'not_attending').length;
 
+                    const visState = eventVisibilityMap[evt.id] || evt.visibilityState || evt.visibility_state || (evt.isLocked || evt.is_locked ? 'locked' : (evt.isHidden || evt.is_hidden ? 'hidden' : 'unlocked'));
+                    const isLocked = visState === 'locked';
+                    const isHidden = visState === 'hidden';
+                    const effectiveLocked = !isLeader && isLocked;
+
                     return (
                         <div 
                             key={evt.id} 
-                            className="simi-event-card simi-clickable-event-card"
-                            onClick={() => setViewingEvent(evt)}
+                            className={`simi-event-card simi-clickable-event-card ${isLocked ? 'simi-item-locked' : ''} ${isHidden ? 'simi-item-hidden' : ''}`}
+                            onClick={() => {
+                                if (effectiveLocked) return;
+                                setViewingEvent(evt);
+                            }}
+                            style={{
+                                position: 'relative',
+                                cursor: effectiveLocked ? 'not-allowed' : 'pointer',
+                                opacity: isHidden ? 0.38 : isLocked ? (isLeader ? 0.75 : 0.52) : 1,
+                                filter: isHidden ? 'grayscale(1) opacity(0.5)' : isLocked && !isLeader ? 'grayscale(0.7)' : 'none'
+                            }}
+                            title={effectiveLocked ? `Actividad Bloqueada: ${evt.schoolName || evt.school_name || evt.title}` : isHidden ? `[Oculta para alumnos] ${evt.schoolName || evt.school_name || evt.title}` : 'Ver detalles y lista de asistencia'}
                         >
+                            {/* Botón Central de 3 Estados (Visible / Bloqueado / Oculto) en Modo Gestión (Solo Admin/Líder) */}
+                            {isLeader && isManageModeActive && (
+                                <button
+                                    type="button"
+                                    className={`simi-manage-center-toggle-btn event-center-toggle is-state-${visState}`}
+                                    onClick={(e) => cycleEventVisibility(evt.id, e)}
+                                    title={`Estado actual: ${visState.toUpperCase()} — Haz clic para alternar (Visible / Bloqueado / Oculto)`}
+                                >
+                                    <div className="simi-manage-center-icon-wrap">
+                                        {visState === 'unlocked' && <Eye size={30} />}
+                                        {visState === 'locked' && <Lock size={30} />}
+                                        {visState === 'hidden' && <EyeOff size={30} />}
+                                    </div>
+                                    <span className="simi-manage-center-text">
+                                        {visState === 'unlocked' ? 'Visible' : visState === 'locked' ? 'Bloqueado' : 'Oculto'}
+                                    </span>
+                                    <small className="simi-manage-center-sub">
+                                        {visState === 'unlocked' ? 'Toca para Bloquear' : visState === 'locked' ? 'Toca para Ocultar' : 'Toca para Habilitar'}
+                                    </small>
+                                </button>
+                            )}
+
+                            {/* Overlay de Bloqueado para Estudiantes */}
+                            {effectiveLocked && (
+                                <div className="simi-event-student-blocked-overlay">
+                                    <div className="simi-student-lock-icon-circle-sm">
+                                        <Lock size={22} />
+                                    </div>
+                                    <span className="simi-student-lock-title-sm">Actividad Bloqueada</span>
+                                    <span className="simi-student-lock-desc-sm">Disponible próximamente bajo indicación docente</span>
+                                </div>
+                            )}
+
                             <div className="simi-event-date-box">
                                 <div className="simi-event-date-calendar-icon">
                                     <Calendar size={18} />
@@ -556,22 +713,26 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                             >
                                 <button 
                                     onClick={(e) => {
+                                        if (effectiveLocked) return;
                                         e.stopPropagation();
                                         handleSetRsvp(evt.id, 'attending');
                                     }}
+                                    disabled={effectiveLocked}
                                     className={`simi-event-rsvp-btn attending ${userRsvp === 'attending' ? 'active' : ''}`}
-                                    title="Confirmar que asistirás a esta visita"
+                                    title={effectiveLocked ? "Actividad bloqueada" : "Confirmar que asistirás a esta visita"}
                                 >
                                     <Check size={15} /> Asistiré
                                 </button>
 
                                 <button 
                                     onClick={(e) => {
+                                        if (effectiveLocked) return;
                                         e.stopPropagation();
                                         handleSetRsvp(evt.id, 'not_attending');
                                     }}
+                                    disabled={effectiveLocked}
                                     className={`simi-event-rsvp-btn not-attending ${userRsvp === 'not_attending' ? 'active' : ''}`}
-                                    title="Indicar que no podrás asistir a esta salida"
+                                    title={effectiveLocked ? "Actividad bloqueada" : "Indicar que no podrás asistir a esta salida"}
                                 >
                                     <X size={15} /> No Asistiré
                                 </button>

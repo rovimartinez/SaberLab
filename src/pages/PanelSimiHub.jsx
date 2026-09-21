@@ -2077,6 +2077,8 @@ export default function PanelSimiHub({
                     profile={profile} 
                     initialEvents={simiEvents} 
                     onEventsChange={(updated) => setSimiEvents(updated)} 
+                    isManageModeActive={isManageModeActive}
+                    onToggleManageMode={() => setIsManageModeActive(!isManageModeActive)}
                 />
             )}
 
