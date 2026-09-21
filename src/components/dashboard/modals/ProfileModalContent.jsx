@@ -23,6 +23,8 @@ export const ProfileModalContent = ({
     handleJoinGroupSubmit,
     enrolledCourses
 }) => {
+    const isAdmin = profile?.role === 'admin' || profile?.real_role === 'admin';
+
     return (
         <>
             <div className="app-user-hero-box">
@@ -62,7 +64,14 @@ export const ProfileModalContent = ({
             </div>
 
             <div className="theme-selector-box">
-                <h4 className="theme-selector-title">Apariencia y Tema del Sistema</h4>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <h4 className="theme-selector-title" style={{ margin: 0 }}>Apariencia y Tema del Sistema</h4>
+                    {!isAdmin && (
+                        <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700 }}>
+                            Tema Claro Predeterminado
+                        </span>
+                    )}
+                </div>
                 <div className="theme-options-segmented">
                     <button
                         type="button"
@@ -74,19 +83,25 @@ export const ProfileModalContent = ({
                     </button>
                     <button
                         type="button"
-                        className={`theme-option-btn ${activeTheme === 'dark' ? 'active' : ''}`}
-                        onClick={() => handleThemeSelect('dark')}
+                        className={`theme-option-btn ${activeTheme === 'dark' ? 'active' : ''} ${!isAdmin ? 'theme-option-disabled' : ''}`}
+                        onClick={() => isAdmin && handleThemeSelect('dark')}
+                        disabled={!isAdmin}
+                        title={!isAdmin ? 'Tema oscuro inhabilitado temporalmente hasta nueva orden' : 'Activar tema oscuro'}
                     >
                         <Moon size={16} />
                         <span>Oscuro</span>
+                        {!isAdmin && <span className="theme-opt-badge-disabled">Inhabilitado</span>}
                     </button>
                     <button
                         type="button"
-                        className={`theme-option-btn ${activeTheme === 'system' ? 'active' : ''}`}
-                        onClick={() => handleThemeSelect('system')}
+                        className={`theme-option-btn ${activeTheme === 'system' ? 'active' : ''} ${!isAdmin ? 'theme-option-disabled' : ''}`}
+                        onClick={() => isAdmin && handleThemeSelect('system')}
+                        disabled={!isAdmin}
+                        title={!isAdmin ? 'Inhabilitado temporalmente (predeterminado Claro)' : 'Sincronizar con el sistema'}
                     >
                         <Monitor size={16} />
                         <span>Sistema</span>
+                        {!isAdmin && <span className="theme-opt-badge-disabled">Inhabilitado</span>}
                     </button>
                 </div>
             </div>

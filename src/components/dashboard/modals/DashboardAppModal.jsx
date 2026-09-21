@@ -8,6 +8,7 @@ const CoursesModalContent = React.lazy(() => import('./CoursesModalContent'));
 const ActivitiesModalContent = React.lazy(() => import('./ActivitiesModalContent'));
 const GradesModalContent = React.lazy(() => import('./GradesModalContent'));
 const PanelNotificaciones = React.lazy(() => import('../../../pages/PanelNotificaciones'));
+const ComponentsModalContent = React.lazy(() => import('./ComponentsModalContent'));
 
 // Componentes de Gestión Independientes (Categoría 4)
 const LiveMonitorModalContent = React.lazy(() => import('./LiveMonitorModalContent'));
@@ -81,12 +82,13 @@ export const DashboardAppModal = ({
     if (!currentApp) return null;
 
     const isCoursesModal = activeAppModal === 'courses';
+    const isComponentsModal = activeAppModal === 'components';
     const isAdminLargeModal = ['liveMonitor', 'inviteLinks', 'coursesManagement', 'platformAdmin', 'examsManagement'].includes(activeAppModal);
 
     return createPortal(
         <div className="app-modal-backdrop animate-fade-in" onClick={onClose}>
             <div 
-                className={`app-modal-container glass-panel ${isCoursesModal ? 'is-courses-modal' : ''} ${isAdminLargeModal ? 'is-admin-large-modal' : ''}`} 
+                className={`app-modal-container glass-panel ${isCoursesModal ? 'is-courses-modal' : ''} ${isComponentsModal ? 'is-components-modal' : ''} ${isAdminLargeModal ? 'is-admin-large-modal' : ''}`} 
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Cabecera del Modal */}
@@ -329,6 +331,14 @@ export const DashboardAppModal = ({
                                 upcomingActivities={upcomingActivities}
                                 getCourseIcon={getCourseIcon}
                                 onClose={onClose}
+                            />
+                        )}
+
+                        {/* APP: COMPONENTES 3D (ROBÓTICA EDUCATIVA) */}
+                        {activeAppModal === 'components' && (
+                            <ComponentsModalContent
+                                mainCourseDef={mainCourseDef}
+                                isStaff={isStaff}
                             />
                         )}
 

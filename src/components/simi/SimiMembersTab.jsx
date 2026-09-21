@@ -213,6 +213,7 @@ export default function SimiMembersTab({
 
                     return (
                         <div key={member.id || member.email} className="simi-member-card">
+                            {/* Encabezado Superior de la Tarjeta */}
                             <div className="simi-member-card-top">
                                 <div className="simi-member-avatar-box">
                                     {member.avatar_url ? (
@@ -241,125 +242,131 @@ export default function SimiMembersTab({
                                         </span>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Tira Resumen de Insignias Obtenidas */}
-                            <div className="simi-member-badges-mini-row">
-                                {badgeKeys.length > 0 ? (
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', paddingTop: '2px' }}>
-                                        {badgeKeys.slice(0, 5).map(pinId => {
-                                            const pin = SIMI_PINS_CATALOG.find(p => p.id === pinId);
-                                            const activeImageUrl = catalogImageUrlsMap[pinId] || pin?.badgeImageUrl;
-                                            const tier = badges[pinId]?.tier || 'I';
-                                            const TIER_RANK_NAMES = { 'I': 'Novato', 'II': 'Aprendiz', 'III': 'Junior', 'IV': 'Especialista', 'V': 'Master' };
-                                            const tierNum = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5 }[tier] || 1;
-                                            const starColor = tierNum >= 5 ? '#fde047' : tierNum >= 3 ? '#e2e8f0' : '#cd7f32';
-                                            const rankName = TIER_RANK_NAMES[tier] || 'Novato';
-                                            return (
-                                                <div
-                                                    key={pinId}
-                                                    title={`${pin?.name || pinId} — ${rankName}`}
-                                                    style={{
-                                                        position: 'relative',
-                                                        width: '36px',
-                                                        height: '36px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        flexShrink: 0,
-                                                    }}
-                                                >
-                                                    {activeImageUrl ? (
-                                                        <img
-                                                            src={activeImageUrl}
-                                                            alt={pin?.name || pinId}
-                                                            style={{ width: '36px', height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}
-                                                        />
-                                                    ) : (
-                                                        <div style={{
-                                                            width: '36px', height: '36px', borderRadius: '50%',
-                                                            background: `color-mix(in srgb, ${pin?.color || '#06b6d4'} 18%, #1e293b)`,
-                                                            border: `1.5px solid ${pin?.color || '#06b6d4'}`,
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                        }}>
-                                                            <Medal size={16} color={pin?.color || '#06b6d4'} />
-                                                        </div>
-                                                    )}
-                                                    {/* Estrellas sobre la insignia */}
-                                                    <span style={{
-                                                        position: 'absolute', bottom: '-4px', left: '50%',
-                                                        transform: 'translateX(-50%)',
-                                                        background: 'rgba(0,0,0,0.6)',
-                                                        borderRadius: '99px',
-                                                        padding: '0px 3px',
-                                                        fontSize: '0.52rem',
-                                                        lineHeight: 1.4,
-                                                        boxShadow: `0 0 5px ${starColor}88`,
-                                                        border: `1px solid ${starColor}44`,
-                                                        whiteSpace: 'nowrap',
-                                                        color: starColor,
-                                                        textShadow: `0 0 4px ${starColor}`,
-                                                    }}>
-                                                        {'★'.repeat(tierNum)}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                        {badgeKeys.length > 5 && (
-                                            <span className="simi-badge-more-chip">+{badgeKeys.length - 5}</span>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="simi-member-no-badges-msg">
-                                        <span>🔒 Sin insignias asignadas</span>
-                                    </div>
+                                {/* Botón de Gestión de Insignias Exclusivo para Docente / Líder en la parte superior derecha */}
+                                {isLeader && (
+                                    <button
+                                        className="simi-member-manage-badges-btn simi-member-manage-top-right"
+                                        onClick={() => setSelectedMemberForBadges(member)}
+                                        title={`Gestionar y condecorar insignias a ${member.full_name}`}
+                                    >
+                                        <Award size={14} />
+                                        <span>Condecorar</span>
+                                    </button>
                                 )}
                             </div>
 
-                            {/* Telemetría de Asistencia Separada (80/80) */}
-                            <div className="simi-member-telemetry-box">
-                                <div className="simi-member-tel-item">
-                                    <div className="simi-member-tel-header">
-                                        <span>🛠️ Capacitaciones Técnicas</span>
-                                        <strong style={{ color: member.trainingPercent >= 80 ? '#059669' : '#d97706' }}>
-                                            {member.trainingPercent}%
-                                        </strong>
-                                    </div>
-                                    <div className="simi-member-tel-bar">
-                                        <div 
-                                            className="simi-member-tel-bar-fill training"
-                                            style={{ width: `${Math.min(100, member.trainingPercent)}%` }}
-                                        />
+                            {/* Cuerpo Principal en 2 Columnas Horizontales */}
+                            <div className="simi-member-card-body-grid">
+                                {/* Columna Izquierda: Insignias */}
+                                <div className="simi-member-col-left">
+                                    <div className="simi-member-badges-mini-row">
+                                        {badgeKeys.length > 0 ? (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                                {badgeKeys.slice(0, 6).map(pinId => {
+                                                    const pin = SIMI_PINS_CATALOG.find(p => p.id === pinId);
+                                                    const activeImageUrl = catalogImageUrlsMap[pinId] || pin?.badgeImageUrl;
+                                                    const tier = badges[pinId]?.tier || 'I';
+                                                    const TIER_RANK_NAMES = { 'I': 'Novato', 'II': 'Aprendiz', 'III': 'Junior', 'IV': 'Especialista', 'V': 'Master' };
+                                                    const tierNum = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5 }[tier] || 1;
+                                                    const starColor = tierNum >= 5 ? '#fde047' : tierNum >= 3 ? '#e2e8f0' : '#cd7f32';
+                                                    const rankName = TIER_RANK_NAMES[tier] || 'Novato';
+                                                    return (
+                                                        <div
+                                                            key={pinId}
+                                                            title={`${pin?.name || pinId} — ${rankName}`}
+                                                            style={{
+                                                                position: 'relative',
+                                                                width: '36px',
+                                                                height: '36px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                flexShrink: 0,
+                                                            }}
+                                                        >
+                                                            {activeImageUrl ? (
+                                                                <img
+                                                                    src={activeImageUrl}
+                                                                    alt={pin?.name || pinId}
+                                                                    style={{ width: '36px', height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.25))' }}
+                                                                />
+                                                            ) : (
+                                                                <div style={{
+                                                                    width: '36px', height: '36px', borderRadius: '50%',
+                                                                    background: `color-mix(in srgb, ${pin?.color || '#06b6d4'} 18%, #1e293b)`,
+                                                                    border: `1.5px solid ${pin?.color || '#06b6d4'}`,
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                                }}>
+                                                                    <Medal size={16} color={pin?.color || '#06b6d4'} />
+                                                                </div>
+                                                            )}
+                                                            <span style={{
+                                                                position: 'absolute', bottom: '-4px', left: '50%',
+                                                                transform: 'translateX(-50%)',
+                                                                background: 'rgba(0,0,0,0.6)',
+                                                                borderRadius: '99px',
+                                                                padding: '0px 3px',
+                                                                fontSize: '0.52rem',
+                                                                lineHeight: 1.4,
+                                                                boxShadow: `0 0 5px ${starColor}88`,
+                                                                border: `1px solid ${starColor}44`,
+                                                                whiteSpace: 'nowrap',
+                                                                color: starColor,
+                                                                textShadow: `0 0 4px ${starColor}`,
+                                                            }}>
+                                                                {'★'.repeat(tierNum)}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {badgeKeys.length > 6 && (
+                                                    <span className="simi-badge-more-chip">+{badgeKeys.length - 6}</span>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="simi-member-no-badges-msg">
+                                                <span>🔒 Sin insignias asignadas</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="simi-member-tel-item">
-                                    <div className="simi-member-tel-header">
-                                        <span>🏫 Visitas Escolares STEAM</span>
-                                        <strong style={{ color: member.visitPercent >= 80 ? '#059669' : '#d97706' }}>
-                                            {member.visitPercent}%
-                                        </strong>
-                                    </div>
-                                    <div className="simi-member-tel-bar">
-                                        <div 
-                                            className="simi-member-tel-bar-fill visit"
-                                            style={{ width: `${Math.min(100, member.visitPercent)}%` }}
-                                        />
+                                {/* Columna Derecha: Telemetría de Asistencia Separada (80/80) */}
+                                <div className="simi-member-col-right">
+                                    <div className="simi-member-telemetry-box">
+                                        <div className="simi-member-tel-item">
+                                            <div className="simi-member-tel-header">
+                                                <span>🛠️ Capacitaciones Técnicas</span>
+                                                <strong style={{ color: member.trainingPercent >= 80 ? '#059669' : '#d97706' }}>
+                                                    {member.trainingPercent}%
+                                                </strong>
+                                            </div>
+                                            <div className="simi-member-tel-bar">
+                                                <div 
+                                                    className="simi-member-tel-bar-fill training"
+                                                    style={{ width: `${Math.min(100, member.trainingPercent)}%` }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="simi-member-tel-item">
+                                            <div className="simi-member-tel-header">
+                                                <span>🏫 Visitas Escolares STEAM</span>
+                                                <strong style={{ color: member.visitPercent >= 80 ? '#059669' : '#d97706' }}>
+                                                    {member.visitPercent}%
+                                                </strong>
+                                            </div>
+                                            <div className="simi-member-tel-bar">
+                                                <div 
+                                                    className="simi-member-tel-bar-fill visit"
+                                                    style={{ width: `${Math.min(100, member.visitPercent)}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Botón de Gestión de Insignias Exclusivo para Docente / Líder */}
-                            {isLeader && (
-                                <button
-                                    className="simi-member-manage-badges-btn"
-                                    onClick={() => setSelectedMemberForBadges(member)}
-                                    title={`Gestionar y condecorar insignias a ${member.full_name}`}
-                                >
-                                    <Award size={15} />
-                                    <span>Condecorar / Gestionar Insignias</span>
-                                </button>
-                            )}
 
                             {/* Footer con Estado de la Regla del 80% */}
                             <div className="simi-member-card-footer">

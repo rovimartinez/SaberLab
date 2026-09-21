@@ -245,6 +245,24 @@
     border-color: #a7f3d0;
 }
 
+.simi-event-status-badge.cancelada {
+    background: #fff1f2;
+    color: #e11d48;
+    border-color: #fecdd3;
+}
+
+.simi-event-status-badge.archivada {
+    background: #f1f5f9;
+    color: #64748b;
+    border-color: #cbd5e1;
+}
+
+.simi-event-status-badge.reprogramada {
+    background: #fefce8;
+    color: #ca8a04;
+    border-color: #fef08a;
+}
+
 .simi-event-badge-tier-pill {
     font-size: 0.72rem;
     font-weight: 800;

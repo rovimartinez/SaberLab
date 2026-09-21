@@ -71,9 +71,20 @@ const Lesson = () => {
     const isLockedByVisibility = !isStaff && courseVisibility[internalId] === false;
     const isLocked = isLockedByVisibility;
 
+    // Ocultar pestaña Práctica para estudiantes
+    const activeTabs = useMemo(() => {
+        return tabs.filter(tab => tab.id !== 'simulador' || isStaff);
+    }, [isStaff]);
+
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('contenido');
+
+    useEffect(() => {
+        if (!isStaff && activeTab === 'simulador') {
+            setActiveTab('contenido');
+        }
+    }, [isStaff, activeTab]);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [showGuide, setShowGuide] = useState(false);
     const [showArduinoParts, setShowArduinoParts] = useState(false);
@@ -397,7 +408,7 @@ const Lesson = () => {
             </header>
 
             <nav className="lesson-tabs-wrapper" style={{ '--subject-color': subject.color || '#38bdf8' }}>
-                {tabs.map((tab) => (
+                {activeTabs.map((tab) => (
                     <button
                         key={tab.id}
                         className={`lesson-tab-btn ${activeTab === tab.id ? 'active' : ''}`}

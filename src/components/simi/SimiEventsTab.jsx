@@ -6,6 +6,26 @@ import {
 import { SIMI_SCHOOL_EVENTS } from '../../data/simiData';
 import { api } from '../../lib/api';
 
+// Función para formatear fechas a día mes año (DD/MM/AAAA o DD de Mes, AAAA)
+export function formatSimiDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const [y, m, d] = parts;
+            return `${d}/${m}/${y}`;
+        }
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+    } catch (e) {}
+    return dateStr;
+}
+
 // Subcomponente de Calendario de Visitas a Colegios & Eventos (Editable para líder/admin, visualizable para estudiantes)
 export default function SimiEventsTab({ isLeader, profile, initialEvents, onEventsChange }) {
     const [events, setEvents] = useState(() => {
@@ -83,6 +103,49 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
             });
         } catch (e) {
             console.warn('[SIMI] Fallback local RSVP:', e);
+        }
+    };
+
+    const [statusFilter, setStatusFilter] = useState('active'); // 'active' (Programadas/En Prep) | 'all' | 'realizada' | 'cancelada' | 'archivada'
+
+    // Cambio rápido de estado (Realizada, Cancelada, Archivada, Programada)
+    const handleQuickStatusChange = async (eventId, newStatus) => {
+        if (!isLeader) return;
+        const currentEvt = events.find(e => e.id === eventId);
+        if (!currentEvt) return;
+
+        const isRealizada = newStatus === 'Realizada';
+        const updated = events.map(evt => {
+            if (evt.id === eventId) {
+                return {
+                    ...evt,
+                    status: newStatus,
+                    attendanceConfirmed: isRealizada ? true : (newStatus === 'Cancelada' || newStatus === 'Archivada' ? false : evt.attendanceConfirmed)
+                };
+            }
+            return evt;
+        });
+        persistEvents(updated);
+
+        if (viewingEvent && viewingEvent.id === eventId) {
+            setViewingEvent(prev => ({
+                ...prev,
+                status: newStatus,
+                attendanceConfirmed: isRealizada ? true : (newStatus === 'Cancelada' || newStatus === 'Archivada' ? false : prev.attendanceConfirmed)
+            }));
+        }
+
+        try {
+            await api('/simi', {
+                method: 'POST',
+                body: {
+                    action: 'save-event',
+                    ...currentEvt,
+                    status: newStatus
+                }
+            });
+        } catch (e) {
+            console.warn('[SIMI] Error sincronizando nuevo estado:', e);
         }
     };
 
@@ -303,59 +366,102 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                 )}
             </div>
 
-            {/* Barra de Filtros por Categoría de Actividad */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '4px 0' }}>
-                {[
-                    { id: 'all', label: '📅 Todas las Actividades', color: '#06b6d4' },
-                    { id: 'capacitacion_tecnica', label: '⚡ Capacitaciones Técnicas', color: '#06b6d4' },
-                    { id: 'trabajo_proyecto', label: '🛠️ Trabajo de Proyectos', color: '#38bdf8' },
-                    { id: 'visita_escolar', label: '🏫 Visitas a Colegios', color: '#10b981' }
-                ].map(tab => {
-                    const isActive = eventCategoryFilter === tab.id;
-                    const count = tab.id === 'all' 
-                        ? events.length 
-                        : events.filter(e => (e.event_type || e.eventType) === tab.id).length;
+            {/* Barra de Filtros: Categorías y Estados */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '4px 0' }}>
+                {/* Categorías */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    {[
+                        { id: 'all', label: 'Todas las Actividades', color: '#06b6d4' },
+                        { id: 'capacitacion_tecnica', label: '⚡ Capacitaciones', color: '#06b6d4' },
+                        { id: 'trabajo_proyecto', label: '🛠️ Proyectos', color: '#38bdf8' },
+                        { id: 'visita_escolar', label: '🏫 Visitas Escolares', color: '#10b981' }
+                    ].map(tab => {
+                        const isActive = eventCategoryFilter === tab.id;
+                        const count = tab.id === 'all' 
+                            ? events.length 
+                            : events.filter(e => (e.event_type || e.eventType) === tab.id).length;
 
-                    return (
-                        <button
-                            key={tab.id}
-                            type="button"
-                            onClick={() => setEventCategoryFilter(tab.id)}
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '6px 14px',
-                                borderRadius: '99px',
-                                fontSize: '0.82rem',
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                border: isActive ? `1.5px solid ${tab.color}` : '1px solid #e2e8f0',
-                                backgroundColor: isActive ? `color-mix(in srgb, ${tab.color} 12%, #ffffff)` : '#ffffff',
-                                color: isActive ? '#0f172a' : '#64748b',
-                                boxShadow: isActive ? `0 2px 8px color-mix(in srgb, ${tab.color} 25%, transparent)` : 'none'
-                            }}
-                        >
-                            <span>{tab.label}</span>
-                            <span style={{
-                                fontSize: '0.72rem',
-                                padding: '1px 6px',
-                                borderRadius: '99px',
-                                backgroundColor: isActive ? tab.color : '#e2e8f0',
-                                color: isActive ? '#ffffff' : '#475569',
-                                fontWeight: 900
-                            }}>
-                                {count}
-                            </span>
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setEventCategoryFilter(tab.id)}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '5px 12px',
+                                    borderRadius: '99px',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 800,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    border: isActive ? `1.5px solid ${tab.color}` : '1px solid #e2e8f0',
+                                    backgroundColor: isActive ? `color-mix(in srgb, ${tab.color} 12%, #ffffff)` : '#ffffff',
+                                    color: isActive ? '#0f172a' : '#64748b',
+                                    boxShadow: isActive ? `0 2px 8px color-mix(in srgb, ${tab.color} 25%, transparent)` : 'none'
+                                }}
+                            >
+                                <span>{tab.label}</span>
+                                <span style={{
+                                    fontSize: '0.7rem',
+                                    padding: '1px 6px',
+                                    borderRadius: '99px',
+                                    backgroundColor: isActive ? tab.color : '#e2e8f0',
+                                    color: isActive ? '#ffffff' : '#475569',
+                                    fontWeight: 900
+                                }}>
+                                    {count}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Filtro por Estado (Próximas Activas vs Historial Realizadas / Canceladas) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface-sunken, #f8fafc)', padding: '3px', borderRadius: '10px', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                    {[
+                        { id: 'active', label: '🕒 Próximas' },
+                        { id: 'realizada', label: '✓ Realizadas' },
+                        { id: 'cancelada', label: '✗ Canceladas' },
+                        { id: 'all_status', label: '🗄️ Todo el Historial' }
+                    ].map(st => {
+                        const isSelected = statusFilter === st.id;
+                        return (
+                            <button
+                                key={st.id}
+                                type="button"
+                                onClick={() => setStatusFilter(st.id)}
+                                style={{
+                                    background: isSelected ? 'var(--surface-card, #ffffff)' : 'transparent',
+                                    color: isSelected ? 'var(--text-heading, #0f172a)' : 'var(--text-secondary, #64748b)',
+                                    border: isSelected ? '1px solid var(--border-default, #cbd5e1)' : '1px solid transparent',
+                                    padding: '4px 9px',
+                                    borderRadius: '8px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: isSelected ? 850 : 700,
+                                    cursor: 'pointer',
+                                    boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.05)' : 'none',
+                                    transition: 'all 0.15s ease'
+                                }}
+                            >
+                                {st.label}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="simi-events-list">
                 {events
                     .filter(e => eventCategoryFilter === 'all' || (e.event_type || e.eventType) === eventCategoryFilter)
+                    .filter(e => {
+                        const st = (e.status || 'Programada').toLowerCase();
+                        if (statusFilter === 'active') return st !== 'realizada' && st !== 'cancelada' && st !== 'archivada';
+                        if (statusFilter === 'realizada') return st === 'realizada';
+                        if (statusFilter === 'cancelada') return st === 'cancelada';
+                        return true; // 'all_status'
+                    })
                     .map(evt => {
                     const attendees = evt.attendees || [];
                     const userRsvp = attendees.find(a => a.userId === userId)?.status || null;
@@ -374,20 +480,20 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                                     <Calendar size={18} />
                                 </div>
                                 <span className="simi-event-date-text">
-                                    {evt.date}
+                                    {formatSimiDate(evt.date)}
                                 </span>
                                 <span className="simi-event-time-text">
                                     {evt.time}
                                 </span>
                                 <span className="simi-event-badge-tier-pill">
-                                    🏆 {evt.attendanceConfirmed ? `Insignia: ${evt.badgeTier}` : `Otorga: ${evt.badgeTier}`}
+                                    ⚡ {evt.attendanceConfirmed ? `+100 EXP • ${evt.badgeTier || evt.badge_tier || 'Misión Escolar'}` : `Otorga: +100 EXP`}
                                 </span>
                             </div>
 
                             <div className="simi-event-main-info">
                                 <div className="simi-event-title-row">
                                     <h4 className="simi-event-school-name">
-                                        {evt.schoolName}
+                                        {evt.schoolName || evt.school_name || evt.title || 'Institución Educativa STEAM'}
                                     </h4>
                                     <span className={`simi-event-status-badge ${evt.status === 'Realizada' ? 'realizada' : evt.status === 'Programada' ? 'programada' : 'preparacion'}`}>
                                         {evt.status}
@@ -482,7 +588,7 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                         <div className="simi-modal-header">
                             <div>
                                 <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 850, color: '#0f172a' }}>
-                                    🏫 {viewingEvent.schoolName}
+                                    🏫 {viewingEvent.schoolName || viewingEvent.school_name || viewingEvent.title || 'Institución Educativa STEAM'}
                                 </h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                     <span style={{ fontSize: '0.76rem', color: '#0284c7', fontWeight: 800 }}>
@@ -519,14 +625,17 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.85rem', color: '#334155' }}>
                             <div style={{ background: '#f8fafc', padding: '0.9rem', borderRadius: '12px', border: '1.5px solid #e2e8f0' }}>
-                                <div>📅 <strong>Fecha y Horario:</strong> {viewingEvent.date} ({viewingEvent.time})</div>
+                                <div>📅 <strong>Fecha y Horario:</strong> {formatSimiDate(viewingEvent.date)} ({viewingEvent.time})</div>
                                 <div style={{ marginTop: '4px' }}>📍 <strong>Lugar:</strong> {viewingEvent.location}</div>
                                 <div style={{ marginTop: '4px' }}>👨‍🏫 <strong>Responsable:</strong> {viewingEvent.leader}</div>
+                                <div style={{ marginTop: '4px' }}>
+                                    ⚡ <strong>Recompensa de Experiencia:</strong> <span style={{ color: '#0284c7', fontWeight: 800 }}>+100 EXP</span>
+                                </div>
                                 <div style={{ marginTop: '4px' }}>
                                     🎖️ <strong>Insignia del Semillero:</strong> {viewingEvent.attendanceConfirmed || viewingEvent.status === 'Realizada' ? (
                                         <span style={{ color: '#059669', fontWeight: 800 }}>Otorgada ({viewingEvent.badgeTier || 'Misión Escolar'})</span>
                                     ) : (
-                                        <span style={{ color: '#64748b' }}>Se otorga al confirmar la asistencia</span>
+                                        <span style={{ color: '#64748b' }}>Se otorga al convalidar asistencia ({viewingEvent.badgeTier || 'Misión Escolar'})</span>
                                     )}
                                 </div>
                             </div>
@@ -613,6 +722,86 @@ export default function SimiEventsTab({ isLeader, profile, initialEvents, onEven
                                     </div>
                                 )}
                             </div>
+
+                            {/* BARRA DE ACCIÓN RÁPIDA DE ESTADO (LÍDER/DOCENTE) */}
+                            {isLeader && (
+                                <div style={{ background: 'var(--surface-sunken, #f8fafc)', padding: '0.85rem 1rem', borderRadius: '12px', border: '1.5px solid var(--border-default, #e2e8f0)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-heading, #0f172a)' }}>
+                                            ⚡ Gestión de Estado y Archivo:
+                                        </span>
+                                        <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary, #64748b)' }}>
+                                            Estado actual: <strong>{viewingEvent.status || 'Programada'}</strong>
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleQuickStatusChange(viewingEvent.id, 'Realizada')}
+                                            style={{
+                                                background: viewingEvent.status === 'Realizada' ? '#059669' : '#ecfdf5',
+                                                color: viewingEvent.status === 'Realizada' ? '#ffffff' : '#059669',
+                                                border: '1.5px solid #10b981',
+                                                padding: '5px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.74rem',
+                                                fontWeight: 850,
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            ✓ Realizada (Convalidar)
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleQuickStatusChange(viewingEvent.id, 'Cancelada')}
+                                            style={{
+                                                background: viewingEvent.status === 'Cancelada' ? '#e11d48' : '#fff1f2',
+                                                color: viewingEvent.status === 'Cancelada' ? '#ffffff' : '#e11d48',
+                                                border: '1.5px solid #fecdd3',
+                                                padding: '5px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.74rem',
+                                                fontWeight: 850,
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            ✗ Cancelada
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleQuickStatusChange(viewingEvent.id, 'Archivada')}
+                                            style={{
+                                                background: viewingEvent.status === 'Archivada' ? '#475569' : '#f1f5f9',
+                                                color: viewingEvent.status === 'Archivada' ? '#ffffff' : '#475569',
+                                                border: '1.5px solid #cbd5e1',
+                                                padding: '5px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.74rem',
+                                                fontWeight: 850,
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            🗄️ Archivar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleQuickStatusChange(viewingEvent.id, 'Programada')}
+                                            style={{
+                                                background: viewingEvent.status === 'Programada' ? '#0891b2' : '#ecfeff',
+                                                color: viewingEvent.status === 'Programada' ? '#ffffff' : '#0891b2',
+                                                border: '1.5px solid #a5f3fc',
+                                                padding: '5px 12px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.74rem',
+                                                fontWeight: 850,
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            🕒 Programada
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* ACCIÓN DOCENTE / LÍDER PARA OTORGAR INSIGNIA Y CONVALIDAR */}
                             {isLeader && (

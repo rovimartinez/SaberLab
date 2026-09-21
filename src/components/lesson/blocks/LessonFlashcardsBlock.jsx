@@ -28,12 +28,13 @@ const getCategoryBadge = (type) => {
         case 'atomic': return { label: 'Modelo Atómico', color: '#38bdf8', icon: '🔬' };
         case 'materials': return { label: 'Materiales & Dieléctricos', color: '#34d399', icon: '🛡️' };
         case 'theory': return { label: 'Teoría Fundamental', color: '#60a5fa', icon: '⚡' };
+        case 'code': return { label: 'Código & Sintaxis C++', color: '#38bdf8', icon: '💻' };
         case 'safety': return { label: 'Seguridad Eléctrica', color: '#f87171', icon: '⚠️' };
         case 'math': return { label: 'Leyes & Fórmulas', color: '#c084fc', icon: '📐' };
         case 'si': return { label: 'Prefijos del SI', color: '#a78bfa', icon: '📏' };
         case 'measurement': return { label: 'Medición & Tester', color: '#fb923c', icon: '🧰' };
         case 'hw': return { label: 'Hardware', color: '#38bdf8', icon: '🔌' };
-        case 'sw': return { label: 'Software', color: '#34d399', icon: '💻' };
+        case 'sw': return { label: 'Software', color: '#34d399', icon: '⚙️' };
         default: return { label: 'Concepto Clave', color: '#a855f7', icon: '📚' };
     }
 };
@@ -250,34 +251,6 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
             }
         });
     }, [trackFlashcard]);
-
-    useEffect(() => {
-        if (!flashcards.length || summaryShown) return;
-        const allDone = flashcards.every((card) => mastered[card.id]);
-        if (!allDone) return;
-
-        const mainTimeout = setTimeout(() => {
-            const unknownCards = flashcards.filter((card) => mastered[card.id] === 'unknown');
-            if (unknownCards.length === 0) {
-                setSummaryShown(true);
-                openSummary([]);
-                return;
-            }
-
-            const sections = buildSummarySections();
-            setAnalyzing(true);
-
-            const analysisTimeout = setTimeout(() => {
-                setAnalyzing(false);
-                openSummary(sections);
-                setSummaryShown(true);
-            }, 2000);
-
-            return () => clearTimeout(analysisTimeout);
-        }, 2000);
-
-        return () => clearTimeout(mainTimeout);
-    }, [buildSummarySections, flashcards, mastered, openSummary, summaryShown]);
 
     const closeSummary = () => {
         const responseTimeMs = summaryOpenedAtRef.current ? Date.now() - summaryOpenedAtRef.current : null;
@@ -496,6 +469,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                                 fontWeight: 800,
                                 color: category.color,
                                 background: `${category.color}18`,
+                                border: `1px solid ${category.color}40`,
                                 padding: '4px 10px',
                                 borderRadius: '8px',
                                 display: 'flex',
@@ -505,7 +479,7 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                                 💡 RESPUESTA
                             </span>
 
-                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94a3b8' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                                 #{index + 1} / {flashcards.length}
                             </span>
                         </div>
@@ -513,25 +487,27 @@ const LessonFlashcardsBlock = ({ block, user, lessonKey, subject }) => {
                         {/* Centro: Respuesta y Subtítulo */}
                         <div style={{ margin: 'auto 0', textAlign: 'center', padding: '0.25rem 0', maxHeight: '165px', overflowY: 'auto' }}>
                             <div style={{
-                                color: category.color,
+                                color: 'var(--text-heading)',
                                 fontWeight: 800,
-                                fontSize: isSingleDeckView ? '1.2rem' : '1.05rem',
-                                lineHeight: 1.4,
-                                marginBottom: '0.45rem',
-                                textShadow: `0 0 15px ${category.color}40`
+                                fontSize: isSingleDeckView ? '1.25rem' : '1.05rem',
+                                lineHeight: 1.35,
+                                marginBottom: '0.65rem',
+                                letterSpacing: '-0.01em'
                             }}>
                                 {card.a}
                             </div>
 
                             {card.sub && (
                                 <div style={{
-                                    background: 'rgba(255,255,255,0.04)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '10px',
-                                    padding: '0.45rem 0.65rem',
-                                    fontSize: '0.76rem',
-                                    color: '#cbd5e1',
-                                    lineHeight: 1.45
+                                    background: 'var(--surface-card-subtle)',
+                                    border: '1px solid var(--border-default)',
+                                    borderRadius: '12px',
+                                    padding: '0.55rem 0.75rem',
+                                    fontSize: '0.82rem',
+                                    fontWeight: 500,
+                                    color: 'var(--text-body)',
+                                    lineHeight: 1.5,
+                                    boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
                                 }}>
                                     📖 {card.sub}
                                 </div>

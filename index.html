@@ -6,6 +6,29 @@
   <link rel="icon" type="image/png" href="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SaberLab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      try {
+        var p = localStorage.getItem('saberlab_cached_profile');
+        var isAdmin = false;
+        if (p) {
+          var parsed = JSON.parse(p);
+          isAdmin = !!(parsed && (parsed.real_role === 'admin' || parsed.role === 'admin'));
+        }
+        var saved = localStorage.getItem('saberlab-theme') || localStorage.getItem('theme');
+        if (isAdmin && saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 </head>
 
 <body>

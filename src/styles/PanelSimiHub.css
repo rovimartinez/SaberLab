@@ -189,15 +189,19 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* ── Floating Action Buttons (FAB) Redes Sociales (WhatsApp & Instagram) ── */
+/* ── Floating Action Buttons (FAB) Redes Sociales SIMI3D (WhatsApp & Instagram) ── */
 .simi-social-fabs-container {
     position: fixed;
-    bottom: 26px;
+    bottom: 24px;
     right: 82px;
     display: flex;
     align-items: center;
     gap: 10px;
     z-index: 999;
+}
+
+.simi-social-fabs-container.with-viewmode-fab {
+    right: 138px;
 }
 
 .simi-social-fab {
@@ -235,59 +239,21 @@
     color: #ffffff;
 }
 
-.simi-viewmode-fab {
-    position: relative;
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-    box-shadow: 0 8px 24px -3px rgba(2, 132, 199, 0.45);
-    cursor: pointer;
-    font-family: inherit;
-    padding: 0;
-}
-
-.simi-viewmode-fab:hover {
-    transform: scale(1.12) translateY(-2px);
-    box-shadow: 0 10px 30px -2px rgba(2, 132, 199, 0.65);
-    color: #ffffff;
-}
-
-.simi-viewmode-fab.is-active {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    box-shadow: 0 8px 24px -3px rgba(245, 158, 11, 0.55);
-    animation: simiPulseActive 2s infinite ease-in-out;
-}
-
-.simi-viewmode-fab.is-active:hover {
-    box-shadow: 0 10px 30px -2px rgba(245, 158, 11, 0.75);
-}
-
-.simi-viewmode-fab-badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    font-size: 0.55rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    padding: 1px 5px;
-    border-radius: 99px;
-    background: #0284c7;
-    color: #ffffff;
-    border: 1.5px solid #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    line-height: 1.2;
-}
-
-.simi-viewmode-fab.is-active .simi-viewmode-fab-badge {
-    background: #f59e0b;
-}
-
-@keyframes simiPulseActive {
-    0%, 100% {
-        box-shadow: 0 8px 24px -3px rgba(245, 158, 11, 0.55);
+@media (max-width: 640px) {
+    .simi-social-fabs-container {
+        bottom: 20px;
+        right: 74px;
+        gap: 6px;
     }
-    50% {
-        box-shadow: 0 12px 32px 2px rgba(245, 158, 11, 0.85);
+    .simi-social-fabs-container.with-viewmode-fab {
+        right: 124px;
+    }
+    .simi-social-fab {
+        width: 40px;
+        height: 40px;
     }
 }
+
 
 .simi-social-fab:active {
     transform: scale(0.95);
@@ -317,7 +283,6 @@
     padding: 1rem 0.95rem 0.9rem 0.95rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     gap: 0.65rem;
     box-shadow: 0 12px 30px -6px rgba(25, 37, 132, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
     box-sizing: border-box;
@@ -508,6 +473,23 @@
     border-color: #B541FA;
     color: #9333ea;
     background: rgba(181, 65, 250, 0.12);
+}
+
+.simi-sidebar-notifs-btn {
+    border-color: rgba(6, 182, 212, 0.35);
+    background: #ecfeff;
+}
+
+.simi-sidebar-notifs-btn:hover {
+    background: linear-gradient(135deg, #cffafe 0%, #e0f2fe 100%);
+    border-color: #06b6d4;
+    color: #0891b2;
+}
+
+.simi-sidebar-notifs-btn .notifs-icon {
+    border-color: #06b6d4;
+    color: #0891b2;
+    background: rgba(6, 182, 212, 0.15);
 }
 
 .simi-sidebar-badge-counter {
@@ -1133,3 +1115,58 @@ select.simi-form-input {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
 }
+
+/* ── 3 Enlaces de Ejemplo / Fuentes en Cards de Proyectos 3D ── */
+.simi-project-link-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 750;
+    padding: 3px 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.simi-project-link-badge:hover {
+    transform: translateY(-1px);
+}
+
+.simi-project-link-badge.cad {
+    background: rgba(6, 182, 212, 0.1);
+    color: #0891b2;
+    border-color: rgba(6, 182, 212, 0.3);
+}
+
+.simi-project-link-badge.cad:hover {
+    background: rgba(6, 182, 212, 0.2);
+    color: #0e7490;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
+}
+
+.simi-project-link-badge.repo {
+    background: rgba(181, 65, 250, 0.1);
+    color: #9333ea;
+    border-color: rgba(181, 65, 250, 0.3);
+}
+
+.simi-project-link-badge.repo:hover {
+    background: rgba(181, 65, 250, 0.2);
+    color: #7e22ce;
+    box-shadow: 0 2px 8px rgba(181, 65, 250, 0.25);
+}
+
+.simi-project-link-badge.video {
+    background: rgba(244, 63, 94, 0.1);
+    color: #e11d48;
+    border-color: rgba(244, 63, 94, 0.3);
+}
+
+.simi-project-link-badge.video:hover {
+    background: rgba(244, 63, 94, 0.2);
+    color: #be123c;
+    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25);
+}
+

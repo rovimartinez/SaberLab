@@ -6,7 +6,8 @@ import {
     School, FileText, Award, Calendar, CheckCircle2, 
     Calculator, ArrowRight, Shield, Download, Users, Plus, ExternalLink, X,
     Edit3, Trash2, MapPin, Clock, BookOpen, Check, AlertCircle, HelpCircle, ChevronRight, ChevronLeft, ChevronDown,
-    UserCheck, Zap, Trophy, TrendingUp, Target, Play, Menu, MoreHorizontal, MoreVertical, Compass, Eye, User
+    UserCheck, Zap, Trophy, TrendingUp, Target, Play, Menu, MoreHorizontal, MoreVertical, Compass, Eye, EyeOff, User,
+    Lock, Unlock
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
@@ -32,6 +33,37 @@ const ICON_MAP = {
     Shield: Shield
 };
 
+export function normalizeDirectImageUrl(url) {
+    if (!url) return '';
+    let clean = url.trim();
+
+    // 1. Convertir enlaces de PostImages visor: https://postimg.cc/xxxx o https://postimg.cc/image/xxxx -> https://i.postimg.cc/xxxx/image.png
+    const postimgMatch = clean.match(/https?:\/\/(?:www\.)?postimg\.cc\/(?:image\/)?([a-zA-Z0-9_-]+)/i);
+    if (postimgMatch && !clean.includes('i.postimg.cc')) {
+        clean = `https://i.postimg.cc/${postimgMatch[1]}/image.png`;
+    }
+
+    // 2. Convertir Google Drive: drive.google.com/file/d/ID/view -> drive.google.com/uc?export=view&id=ID
+    if (clean.includes('drive.google.com/file/d/')) {
+        const match = clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+            clean = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+    }
+
+    // 3. Convertir Dropbox: dl=0 -> raw=1
+    if (clean.includes('dropbox.com') && clean.includes('dl=0')) {
+        clean = clean.replace('dl=0', 'raw=1');
+    }
+
+    // 4. Convertir Imgur visor: https://imgur.com/xxxx -> https://i.imgur.com/xxxx.png
+    const imgurMatch = clean.match(/https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9_-]+)(?!\.)/i);
+    if (imgurMatch && !clean.includes('i.imgur.com')) {
+        clean = `https://i.imgur.com/${imgurMatch[1]}.png`;
+    }
+
+    return clean;
+}
 
 function formatSimiMarkdown(text) {
     if (!text) return '';
@@ -106,7 +138,6 @@ export default function PanelSimiHub({
         pendingAccessRequestsCount = 0 
     } = useAuth();
     const [activeTab, setActiveTab] = useState('home');
-    const [isSimiStudentView, setIsSimiStudentView] = useState(false);
     
     // Estado del visor interactivo de contenidos de Ruta / Lección
     const [activeLessonTrack, setActiveLessonTrack] = useState(null);
@@ -132,9 +163,14 @@ export default function PanelSimiHub({
         };
     });
 
+    const [failedImageMap, setFailedImageMap] = useState({});
+    const isAdminUser = Boolean((isStaff || isStaffUser || isLeaderUser || profile?.role === 'admin' || profile?.role === 'docente' || profile?.role === 'director' || profile?.role === 'lider' || profile?.role === 'leader') && !isImpersonating);
+
     const handleOpenPinModal = (pinId) => {
         const pin = SIMI_PINS_CATALOG.find(p => p.id === pinId);
-        if (pin) setActivePinModal(pin);
+        if (pin) {
+            setActivePinModal(pin);
+        }
     };
 
     // Función para actualizar grado de insignia personal en Cloudflare D1
@@ -248,6 +284,70 @@ export default function PanelSimiHub({
 
     const [resourcesSubTab, setResourcesSubTab] = useState('inventory');
 
+    // Modo de Edición / Gestión de Bloqueo para Administrador / Docente
+    const [isManageModeActive, setIsManageModeActive] = useState(false);
+
+    // Estado de visibilidad de Rutas / Cursos (3 estados: 'unlocked' | 'locked' | 'hidden')
+    const [trackVisibilityMap, setTrackVisibilityMap] = useState(() => {
+        const saved = localStorage.getItem('simi_track_visibility_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        // Compatibilidad con versión previa
+        const legacy = localStorage.getItem('simi_locked_tracks_map');
+        if (legacy) {
+            try {
+                const parsed = JSON.parse(legacy);
+                const converted = {};
+                Object.keys(parsed).forEach(k => { if (parsed[k]) converted[k] = 'locked'; });
+                return converted;
+            } catch (e) { }
+        }
+        return {};
+    });
+
+    // Estado de visibilidad de Insignias (3 estados: 'unlocked' | 'locked' | 'hidden')
+    const [badgeVisibilityMap, setBadgeVisibilityMap] = useState(() => {
+        const saved = localStorage.getItem('simi_badge_visibility_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        // Compatibilidad con versión previa
+        const legacy = localStorage.getItem('simi_locked_badges_map');
+        if (legacy) {
+            try {
+                const parsed = JSON.parse(legacy);
+                const converted = {};
+                Object.keys(parsed).forEach(k => { if (parsed[k]) converted[k] = 'locked'; });
+                return converted;
+            } catch (e) { }
+        }
+        return {};
+    });
+
+    // Ciclo de 3 estados: Desbloqueado (unlocked) -> Bloqueado (locked) -> Oculto (hidden) -> Desbloqueado (unlocked)
+    const cycleTrackVisibility = (trackId, e) => {
+        e?.stopPropagation();
+        setTrackVisibilityMap(prev => {
+            const current = prev[trackId] || 'unlocked';
+            const nextState = current === 'unlocked' ? 'locked' : current === 'locked' ? 'hidden' : 'unlocked';
+            const next = { ...prev, [trackId]: nextState };
+            localStorage.setItem('simi_track_visibility_map', JSON.stringify(next));
+            return next;
+        });
+    };
+
+    const cycleBadgeVisibility = (pinId, e) => {
+        e?.stopPropagation();
+        setBadgeVisibilityMap(prev => {
+            const current = prev[pinId] || 'unlocked';
+            const nextState = current === 'unlocked' ? 'locked' : current === 'locked' ? 'hidden' : 'unlocked';
+            const next = { ...prev, [pinId]: nextState };
+            localStorage.setItem('simi_badge_visibility_map', JSON.stringify(next));
+            return next;
+        });
+    };
+
     const [simiMembers, setSimiMembers] = useState(() => {
         const saved = localStorage.getItem('simi_members_list');
         if (saved) {
@@ -288,8 +388,15 @@ export default function PanelSimiHub({
                         localStorage.setItem('simi_events_list', JSON.stringify(res.data.events));
                     }
                     if (res.data.projects && res.data.projects.length > 0) {
-                        setSimiProjects(res.data.projects);
-                        localStorage.setItem('simi_projects_list', JSON.stringify(res.data.projects));
+                        const uniqueProjectsMap = new Map();
+                        res.data.projects.forEach(p => {
+                            if (p && p.id && !uniqueProjectsMap.has(p.id)) {
+                                uniqueProjectsMap.set(p.id, p);
+                            }
+                        });
+                        const uniqueProjects = Array.from(uniqueProjectsMap.values());
+                        setSimiProjects(uniqueProjects);
+                        localStorage.setItem('simi_projects_list', JSON.stringify(uniqueProjects));
                     }
                     if (res.data.resources && res.data.resources.length > 0) {
                         setSimiResources(res.data.resources);
@@ -350,6 +457,23 @@ export default function PanelSimiHub({
                         }
                     });
                 });
+
+                // Incluir los miembros devueltos directamente por /api/simi (filtrados estrictamente para SIMI3D)
+                if (Array.isArray(res?.data?.members)) {
+                    res.data.members.forEach(m => {
+                        const key = (m.email || m.id || '').toLowerCase();
+                        if (key && !memberMap.has(key)) {
+                            memberMap.set(key, {
+                                id: m.id,
+                                email: m.email,
+                                full_name: m.full_name || m.name || m.email,
+                                avatar_url: m.avatar_url || null,
+                                role: m.role || 'student',
+                                group_name: m.group_name || 'Semillero SIMI3D'
+                            });
+                        }
+                    });
+                }
 
                 const finalMembers = Array.from(memberMap.values());
                 if (isMounted) {
@@ -445,7 +569,7 @@ export default function PanelSimiHub({
     const myMakerInfo = getRankInfo(totalSimiStars);
 
     const hasLeaderPrivileges = isStaffUser || isLeaderUser || ['admin', 'docente', 'profesor', 'leader', 'lider'].includes((profile?.real_role || profile?.role || '').toLowerCase());
-    const isStudentModeActive = isSimiStudentView || isImpersonating;
+    const isStudentModeActive = isImpersonating;
     const isLeader = hasLeaderPrivileges && !isStudentModeActive;
 
     return (
@@ -671,9 +795,10 @@ export default function PanelSimiHub({
                                 <span className="simi-sidebar-desc">Directorio & 80/80</span>
                             </div>
                         </button>
+
                     </nav>
 
-                    {/* Acciones Secundarias Tácticas del Semillero (Solicitudes + Reglas) */}
+                    {/* Acciones Secundarias y Gestión al fondo */}
                     <div className="simi-sidebar-secondary-group">
                         {isLeader && (
                             <button 
@@ -794,6 +919,7 @@ export default function PanelSimiHub({
                             </div>
 
                             <div className="simi-mobile-more-grid">
+
                                 {isLeader && (
                                     <button 
                                         className="simi-mobile-more-item"
@@ -885,6 +1011,18 @@ export default function PanelSimiHub({
                 <main className="simi-main-content">
                     {/* ── HERO HEROICO DEL ESTUDIANTE / LÍDER SIMI (Visible en todas en desktop, solo en inicio en móvil) ── */}
                     <div className={`simi-home-hero-card ${activeTab !== 'home' ? 'simi-hero-hide-mobile' : ''}`}>
+                        {/* Icono de edición (lápiz) exclusivo para Administrador / Docente para habilitar/bloquear cursos e insignias */}
+                        {isLeader && (
+                            <button 
+                                className={`simi-home-admin-edit-btn ${isManageModeActive ? 'active-manage-mode' : ''}`}
+                                onClick={() => setIsManageModeActive(!isManageModeActive)}
+                                title={isManageModeActive ? "Modo Gestión de Visibilidad Activo: Haz clic para salir" : "Activar Gestión de Habilitar / Bloquear (Solo Admin)"}
+                            >
+                                <Edit3 size={18} />
+                                {isManageModeActive && <span className="simi-manage-badge-dot" />}
+                            </button>
+                        )}
+
                         <div className="simi-home-hero-body">
                             <div className="simi-home-avatar-badge">
                                 <div className="simi-home-avatar-inner">
@@ -1004,161 +1142,160 @@ export default function PanelSimiHub({
 
                                 <div className={`simi-badges-ribbon-content ${isBadgesExpanded ? 'is-expanded' : 'is-collapsed'}`}>
                                     <div className="simi-badges-ribbon-items">
-                                        {SIMI_PINS_CATALOG.map((pin) => {
+                                        {SIMI_PINS_CATALOG
+                                            .filter(pin => {
+                                                const state = badgeVisibilityMap[pin.id] || 'unlocked';
+                                                // Los estudiantes nunca ven los ocultos; el admin/líder los ve siempre (con marca de oculto)
+                                                if (!isLeader && state === 'hidden') return false;
+                                                return true;
+                                            })
+                                            .sort((a, b) => {
+                                                // Ordenar: Desbloqueados (1) -> Bloqueados (2) -> Ocultos (3)
+                                                const stateOrder = { 'unlocked': 1, 'locked': 2, 'hidden': 3 };
+                                                const stateA = badgeVisibilityMap[a.id] || 'unlocked';
+                                                const stateB = badgeVisibilityMap[b.id] || 'unlocked';
+                                                return (stateOrder[stateA] || 1) - (stateOrder[stateB] || 1);
+                                            })
+                                            .map((pin) => {
                                             const IconComp = ICON_MAP[pin.icon] || Shield;
                                             const currentTier = selectedPinTiers[pin.id] || 'I';
                                             const isPrestige = currentTier === 'V';
-                                            const hasImg = Boolean(pin.badgeImageUrl);
+                                            const currentPinImg = pin.badgeImageUrl;
+                                            const hasImg = Boolean(currentPinImg && !failedImageMap[pin.id]);
+                                            const visState = badgeVisibilityMap[pin.id] || 'unlocked';
+                                            const isLocked = visState === 'locked';
+                                            const isHidden = visState === 'hidden';
 
                                             return (
-                                                <button
+                                                <div
                                                     key={pin.id}
-                                                    type="button"
-                                                    className={`simi-badge-app-item ${isPrestige ? 'prestige' : ''} ${hasImg ? 'has-custom-badge' : ''}`}
-                                                    onClick={() => handleOpenPinModal(pin.id)}
-                                                    style={{ 
-                                                        '--badge-color': pin.color,
-                                                        padding: hasImg ? '0.4rem 0.25rem 0.2rem 0.25rem' : undefined,
-                                                        background: hasImg ? 'transparent' : undefined,
-                                                        border: hasImg ? 'none' : undefined,
-                                                        boxShadow: hasImg ? 'none' : undefined,
-                                                        position: 'relative'
-                                                    }}
-                                                    title={`Insignia: ${pin.name} — ${tierRankName(currentTier)} • Toca para ver requisitos`}
+                                                    style={{ position: 'relative' }}
                                                 >
-                                                    {/* Nombre Arriba de la Insignia */}
-                                                    <span 
-                                                        className="simi-badge-app-name"
-                                                        style={{
-                                                            fontSize: hasImg ? '0.84rem' : '0.8rem',
-                                                            fontWeight: 900,
-                                                            color: 'var(--text-heading, #0f172a)',
-                                                            marginBottom: hasImg ? '2px' : 0
+                                                    <button
+                                                        type="button"
+                                                        className={`simi-badge-app-item ${isPrestige ? 'prestige' : ''} ${hasImg ? 'has-custom-badge' : ''} ${isLocked ? 'simi-item-locked' : ''} ${isHidden ? 'simi-item-hidden' : ''}`}
+                                                        onClick={() => {
+                                                            if (isLocked && !isLeader) return;
+                                                            handleOpenPinModal(pin.id);
                                                         }}
-                                                    >
-                                                        {pin.shortName || pin.name}
-                                                    </span>
-
-                                                    <div 
-                                                        className="simi-badge-app-icon-box" 
                                                         style={{ 
-                                                            width: hasImg ? '96px' : '48px',
-                                                            height: hasImg ? '96px' : '48px',
-                                                            color: pin.color, 
-                                                            borderColor: hasImg ? 'transparent' : pin.color, 
+                                                            '--badge-color': pin.color,
+                                                            padding: hasImg ? '0.4rem 0.25rem 0.2rem 0.25rem' : undefined,
+                                                            background: hasImg ? 'transparent' : undefined,
                                                             border: hasImg ? 'none' : undefined,
-                                                            background: hasImg ? 'transparent' : `color-mix(in srgb, ${pin.color} 15%, #ffffff)`,
                                                             boxShadow: hasImg ? 'none' : undefined,
-                                                            position: 'relative'
+                                                            position: 'relative',
+                                                            width: '100%',
+                                                            cursor: isLocked && !isLeader ? 'not-allowed' : 'pointer',
+                                                            opacity: isHidden ? 0.38 : isLocked ? (isLeader ? 0.65 : 0.45) : 1,
+                                                            filter: isHidden ? 'grayscale(1) opacity(0.5)' : isLocked ? 'grayscale(0.7)' : 'none'
                                                         }}
+                                                        title={isLocked && !isLeader ? `Insignia Bloqueada: ${pin.name}` : isHidden ? `Insignia Oculta para alumnos: ${pin.name}` : `Insignia: ${pin.name} — ${tierRankName(currentTier)} • Toca para ver requisitos`}
                                                     >
-                                                        {hasImg ? (
-                                                            <>
-                                                                <img 
-                                                                    src={pin.badgeImageUrl} 
-                                                                    alt={pin.name} 
-                                                                    referrerPolicy="no-referrer"
-                                                                    style={{ 
-                                                                        width: '100%', 
-                                                                        height: '100%', 
-                                                                        objectFit: 'contain', 
-                                                                        filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.18))',
-                                                                        transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                                                    }} 
-                                                                />
-                                                                <span 
-                                                                    style={{
-                                                                        position: 'absolute',
-                                                                        bottom: '10.5px',
-                                                                        left: '50%',
-                                                                        transform: 'translateX(-50%)',
-                                                                        color: '#1e293b',
-                                                                        fontSize: '0.76rem',
-                                                                        fontWeight: 950,
-                                                                        letterSpacing: '0.5px',
-                                                                        textShadow: '0 1px 1px rgba(255, 255, 255, 0.5), 0 -1px 1px rgba(0, 0, 0, 0.35)',
-                                                                        pointerEvents: 'none'
-                                                                    }}
-                                                                >
-                                                                    {tierToStars(currentTier)}
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <IconComp size={24} />
-                                                        )}
-
-                                                    </div>
-                                                    
-                                                    {!hasImg && (
+                                                        {/* Nombre Arriba de la Insignia */}
                                                         <span 
-                                                            className="simi-badge-app-tier" 
-                                                            style={{ 
-                                                                color: pin.color,
-                                                                background: `color-mix(in srgb, ${pin.color} 12%, transparent)`,
-                                                                borderColor: `color-mix(in srgb, ${pin.color} 30%, transparent)`
+                                                            className="simi-badge-app-name"
+                                                            style={{
+                                                                fontSize: hasImg ? '0.84rem' : '0.8rem',
+                                                                fontWeight: 900,
+                                                                color: 'var(--text-heading, #0f172a)',
+                                                                marginBottom: hasImg ? '2px' : 0
                                                             }}
                                                         >
-                                                            {tierToStarsPlain(currentTier)}
+                                                            {pin.shortName || pin.name}
                                                         </span>
+
+                                                        <div 
+                                                            className="simi-badge-app-icon-box" 
+                                                            style={{ 
+                                                                width: hasImg ? '96px' : '48px',
+                                                                height: hasImg ? '96px' : '48px',
+                                                                color: pin.color, 
+                                                                borderColor: hasImg ? 'transparent' : pin.color, 
+                                                                border: hasImg ? 'none' : undefined,
+                                                                background: hasImg ? 'transparent' : `color-mix(in srgb, ${pin.color} 15%, #ffffff)`,
+                                                                boxShadow: hasImg ? 'none' : undefined,
+                                                                position: 'relative'
+                                                            }}
+                                                        >
+                                                            {hasImg ? (
+                                                                <>
+                                                                    <img 
+                                                                        src={currentPinImg} 
+                                                                        alt={pin.name} 
+                                                                        referrerPolicy="no-referrer"
+                                                                        onError={() => setFailedImageMap(prev => ({ ...prev, [pin.id]: true }))}
+                                                                        style={{ 
+                                                                            width: '100%', 
+                                                                            height: '100%', 
+                                                                            objectFit: 'contain', 
+                                                                            filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.18))',
+                                                                            transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                                                        }} 
+                                                                    />
+                                                                    <span 
+                                                                        style={{
+                                                                            position: 'absolute',
+                                                                            bottom: '10.5px',
+                                                                            left: '50%',
+                                                                            transform: 'translateX(-50%)',
+                                                                            color: '#1e293b',
+                                                                            fontSize: '0.76rem',
+                                                                            fontWeight: 950,
+                                                                            letterSpacing: '0.5px',
+                                                                            textShadow: '0 1px 1px rgba(255, 255, 255, 0.5), 0 -1px 1px rgba(0, 0, 0, 0.35)',
+                                                                            pointerEvents: 'none'
+                                                                        }}
+                                                                    >
+                                                                        {tierToStars(currentTier)}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                <IconComp size={24} />
+                                                            )}
+
+                                                        </div>
+                                                        
+                                                        {!hasImg && (
+                                                            <span 
+                                                                className="simi-badge-app-tier" 
+                                                                style={{ 
+                                                                    color: pin.color,
+                                                                    background: `color-mix(in srgb, ${pin.color} 12%, transparent)`,
+                                                                    borderColor: `color-mix(in srgb, ${pin.color} 30%, transparent)`
+                                                                }}
+                                                            >
+                                                                {tierToStarsPlain(currentTier)}
+                                                            </span>
+                                                        )}
+                                                    </button>
+
+                                                    {/* Botón Central Grande de 3 Estados (Visible / Bloqueada / Oculta) en Modo Gestión (Solo Admin/Líder) */}
+                                                    {isLeader && isManageModeActive && (
+                                                        <button
+                                                            type="button"
+                                                            className={`simi-manage-center-toggle-btn badge-center-toggle is-state-${visState}`}
+                                                            onClick={(e) => cycleBadgeVisibility(pin.id, e)}
+                                                            title={`Estado actual: ${visState.toUpperCase()} — Haz clic para alternar`}
+                                                        >
+                                                            {visState === 'unlocked' && <Eye size={22} className="simi-toggle-icon" />}
+                                                            {visState === 'locked' && <Lock size={22} className="simi-toggle-icon" />}
+                                                            {visState === 'hidden' && <EyeOff size={22} className="simi-toggle-icon" />}
+                                                            <span className="simi-toggle-label">
+                                                                {visState === 'unlocked' ? 'Visible' : visState === 'locked' ? 'Bloqueada' : 'Oculta'}
+                                                            </span>
+                                                        </button>
                                                     )}
-                                                </button>
+
+                                                </div>
                                             );
                                         })}
                                     </div>
                                 </div>
                             </div>
-                            {/* 2. FILA DOBLE: ACCESO RÁPIDO A RUTAS + PRÓXIMA VISITA ESCOLAR */}
-                            <div className="simi-home-bottom-grid">
-                                {/* Rutas Formativas Abiertas (Solo en escritorio) */}
-                                <div className="simi-home-subcard simi-desktop-only">
-                                    <div className="simi-home-subcard-header">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Box size={18} color="#B541FA" />
-                                            <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 850, color: 'var(--text-heading)' }}>
-                                                Rutas de Formación Activas (8 Software & Taller)
-                                            </h4>
-                                        </div>
-                                        <button 
-                                            className="simi-home-text-link"
-                                            onClick={() => setActiveTab('tracks')}
-                                        >
-                                            Ver Todas <ArrowRight size={13} />
-                                        </button>
-                                    </div>
 
-                                    <div className="simi-home-quick-tracks-list">
-                                        {SIMI_TRACKS.slice(0, 3).map(track => (
-                                            <div 
-                                                key={track.id} 
-                                                className="simi-home-quick-track-item"
-                                                onClick={() => {
-                                                    setActiveLessonTrack(track);
-                                                    setActiveUnitIndex(0);
-                                                }}
-                                            >
-                                                <div className="simi-home-quick-track-icon" style={{ color: track.color, borderColor: track.color }}>
-                                                    {track.logoUrl ? (
-                                                        <img src={track.logoUrl} alt={track.title} style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
-                                                    ) : (
-                                                        <Box size={18} />
-                                                    )}
-                                                </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--text-heading)' }}>
-                                                        {track.title}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                                                        {track.level} • {track.units.length} Módulos
-                                                    </div>
-                                                </div>
-                                                <button className="simi-home-quick-play-btn" style={{ color: track.color }}>
-                                                    <Play size={13} fill={track.color} /> Continuar
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
+                            {/* 2. FILA: PRÓXIMA VISITA ESCOLAR */}
+                            <div className="simi-home-bottom-grid" style={{ gridTemplateColumns: '1fr' }}>
                                 {/* Próximas Visitas a Colegios & Eventos */}
                                 <div className="simi-home-subcard">
                                     <div className="simi-home-subcard-header">
@@ -1176,85 +1313,72 @@ export default function PanelSimiHub({
                                         </button>
                                     </div>
 
-                                    {SIMI_SCHOOL_EVENTS[0] && (
-                                        <div className="simi-home-event-highlight">
-                                            <div className="simi-home-event-top">
-                                                <span className="simi-home-event-badge">Visita Pedagógica</span>
-                                                <span className="simi-home-event-date">📅 {SIMI_SCHOOL_EVENTS[0].date}</span>
+                                    {(() => {
+                                        const today = new Date().toISOString().split('T')[0];
+                                        const nextEvt = (simiEvents || [])
+                                            .filter(e => {
+                                                const st = (e.status || '').toLowerCase();
+                                                return (st === 'programada' || st === 'en preparación' || st === 'en preparacion')
+                                                    && e.date >= today;
+                                            })
+                                            .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+                                        if (!nextEvt) {
+                                            return (
+                                                <div style={{
+                                                    padding: '1.2rem', borderRadius: '12px',
+                                                    background: 'rgba(100,116,139,0.07)',
+                                                    border: '1.5px dashed rgba(100,116,139,0.25)',
+                                                    textAlign: 'center', color: 'var(--text-secondary)',
+                                                    fontSize: '0.82rem'
+                                                }}>
+                                                    📅 No hay visitas programadas próximamente.<br />
+                                                    <button
+                                                        onClick={() => setActiveTab('events')}
+                                                        style={{
+                                                            marginTop: '8px', background: 'none', border: 'none',
+                                                            color: '#06b6d4', cursor: 'pointer', fontWeight: 800,
+                                                            fontSize: '0.8rem', padding: 0
+                                                        }}
+                                                    >
+                                                        Ver cronograma →
+                                                    </button>
+                                                </div>
+                                            );
+                                        }
+
+                                        const isCapacitacion = (nextEvt.event_type || nextEvt.eventType || '') === 'capacitacion_tecnica';
+                                        return (
+                                            <div className="simi-home-event-highlight">
+                                                <div className="simi-home-event-top">
+                                                    <span className="simi-home-event-badge">
+                                                        {isCapacitacion ? '🎓 Capacitación Técnica' : '🏫 Visita Pedagógica'}
+                                                    </span>
+                                                    <span className="simi-home-event-date">📅 {nextEvt.date}</span>
+                                                </div>
+                                                <h4 className="simi-home-event-title">{nextEvt.schoolName || nextEvt.school_name}</h4>
+                                                <p className="simi-home-event-desc">{nextEvt.objective}</p>
+                                                <div className="simi-home-event-footer">
+                                                    <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+                                                        👥 <strong>Estudiantes:</strong> {nextEvt.studentsCount || nextEvt.students_count || '—'}
+                                                    </span>
+                                                    <button 
+                                                        className="simi-home-event-btn"
+                                                        onClick={() => setActiveTab('events')}
+                                                    >
+                                                        Ver Detalles
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <h4 className="simi-home-event-title">{SIMI_SCHOOL_EVENTS[0].schoolName}</h4>
-                                            <p className="simi-home-event-desc">{SIMI_SCHOOL_EVENTS[0].objective}</p>
-                                            <div className="simi-home-event-footer">
-                                                <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                                                    👥 <strong>Público:</strong> {SIMI_SCHOOL_EVENTS[0].studentsCount} estudiantes
-                                                </span>
-                                                <button 
-                                                    className="simi-home-event-btn"
-                                                    onClick={() => setActiveTab('events')}
-                                                >
-                                                    Ver Detalles
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                 </div>
 
-                            </div>
-
-                            {/* 3. FILA: FUENTES & HERRAMIENTAS WEB DESTACADAS */}
-                            <div className="simi-home-subcard" style={{ marginTop: '1.25rem' }}>
-                                <div className="simi-home-subcard-header">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Compass size={18} color="#06b6d4" />
-                                        <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 850, color: 'var(--text-heading)' }}>
-                                            Fuentes, Herramientas Web & IA 3D de Interés
-                                        </h4>
-                                    </div>
-                                    <button 
-                                        className="simi-home-text-link"
-                                        onClick={() => {
-                                            setResourcesSubTab('web');
-                                            setActiveTab('resources');
-                                        }}
-                                    >
-                                        Ver Catálogo Completo ({simiWebResources.length} Herramientas) <ArrowRight size={13} />
-                                    </button>
-                                </div>
-
-                                <div className="simi-home-quick-tools-grid">
-                                    {simiWebResources.filter(r => r.featured).slice(0, 6).map(tool => (
-                                        <a
-                                            key={tool.id}
-                                            href={tool.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="simi-home-quick-tool-pill"
-                                            style={{ '--tool-accent': tool.color }}
-                                            title={`Abrir ${tool.name} (${tool.host})`}
-                                        >
-                                            <div className="simi-home-quick-tool-avatar">
-                                                <img 
-                                                    src={tool.logoUrl || `https://www.google.com/s2/favicons?domain=${tool.host}&sz=64`}
-                                                    alt=""
-                                                    className="simi-home-quick-tool-img"
-                                                    referrerPolicy="no-referrer"
-                                                    onError={(e) => { e.target.style.display = 'none'; }}
-                                                />
-                                                <div className="simi-home-quick-tool-dot" style={{ background: tool.color }} />
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div className="simi-home-quick-tool-title">{tool.name}</div>
-                                                <div className="simi-home-quick-tool-sub">{tool.tag} • {tool.host}</div>
-                                            </div>
-                                            <ExternalLink size={13} color="#94a3b8" className="simi-home-quick-tool-icon" />
-                                        </a>
-                                    ))}
-                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* PESTAÑA 1: 3 CARDS DE CATEGORÍAS EN LA MISMA FILA */}
+                    {/* PESTAÑA 1: RUTAS FORMATIVAS DIRECTAS EN GRID SIN CARDS INTERMEDIAS */}
                     {activeTab === 'tracks' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                             {/* Contenedor Superior de Rutas Formativas */}
@@ -1272,92 +1396,141 @@ export default function PanelSimiHub({
                                         </p>
                                     </div>
                                 </div>
+
+                                {isLeader && (
+                                    <button 
+                                        className={`simi-home-admin-edit-btn ${isManageModeActive ? 'active-manage-mode' : ''}`}
+                                        onClick={() => setIsManageModeActive(!isManageModeActive)}
+                                        title={isManageModeActive ? "Modo Gestión Activo: Haz clic para finalizar" : "Activar Gestión de Visibilidad / Bloqueo (Solo Docente/Líder)"}
+                                        style={{ position: 'static' }}
+                                    >
+                                        <Edit3 size={18} />
+                                        {isManageModeActive && <span className="simi-manage-badge-dot" />}
+                                    </button>
+                                )}
                             </div>
 
-                            <div className="simi-categories-trio-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-                                {[
-                                    { 
-                                        id: 'cat-cad', 
-                                        title: 'Software de Modelado 3D & CAD', 
-                                        subtitle: 'Diseño geométrico, poligonal y mecánico paramétrico', 
-                                        color: '#B541FA', 
-                                        barColor: '#B541FA',
-                                        badgeTheme: 'purple',
-                                        icon: Box, 
-                                        category: 'Modelado 3D',
-                                        badges: ['Tinkercad', 'Blender 4.x', 'Fusion 360'],
-                                        expTotal: '300 EXP'
-                                    },
-                                    { 
-                                        id: 'cat-slicer', 
-                                        title: 'Software de Laminación (Slicers)', 
-                                        subtitle: 'Optimización de código G, soportes orgánicos y alta velocidad', 
-                                        color: '#4FD2E9', 
-                                        barColor: '#4FD2E9',
-                                        badgeTheme: 'cyan',
-                                        icon: Layers, 
-                                        category: 'Laminación',
-                                        badges: ['Cura 5.x', 'OrcaSlicer', 'PrusaSlicer'],
-                                        expTotal: '300 EXP'
-                                    },
-                                    { 
-                                        id: 'cat-hardware', 
-                                        title: 'Equipos & Manufactura Aditiva', 
-                                        subtitle: 'Hardware FDM/SLA, calibración, filamentos y resinas', 
-                                        color: '#192584', 
-                                        barColor: 'linear-gradient(90deg, #192584 0%, #4FD2E9 100%)',
-                                        badgeTheme: 'navy',
-                                        icon: Flame, 
-                                        category: 'Equipos & Manufactura',
-                                        badges: ['FDM / FFF', 'Resina SLA', 'DFAM'],
-                                        expTotal: '250 EXP'
-                                    }
-                                ].map(cat => {
-                                    const catTracks = SIMI_TRACKS.filter(t => t.category === cat.category);
-                                    const CatIcon = cat.icon;
+                            {/* Grid Directo con Todas las Rutas / Cursos Ordenados: Desbloqueados -> Bloqueados -> Ocultos */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1.25rem' }}>
+                                {SIMI_TRACKS
+                                    .filter(track => {
+                                        const state = trackVisibilityMap[track.id] || 'unlocked';
+                                        // Los alumnos nunca ven los cursos ocultos; el admin/docente los ve siempre
+                                        if (!isLeader && state === 'hidden') return false;
+                                        return true;
+                                    })
+                                    .sort((a, b) => {
+                                        // Ordenar: Desbloqueados (1) -> Bloqueados (2) -> Ocultos (3)
+                                        const stateOrder = { 'unlocked': 1, 'locked': 2, 'hidden': 3 };
+                                        const stateA = trackVisibilityMap[a.id] || 'unlocked';
+                                        const stateB = trackVisibilityMap[b.id] || 'unlocked';
+                                        return (stateOrder[stateA] || 1) - (stateOrder[stateB] || 1);
+                                    })
+                                    .map(track => {
+                                    const IconComponent = ICON_MAP[track.icon] || Box;
+                                    const pin = SIMI_PINS_CATALOG.find(p => p.id === track.pinId);
+                                    const currentTier = selectedPinTiers[track.pinId] || 'I';
+                                    const isPrestige = currentTier === 'V';
+                                    const visState = trackVisibilityMap[track.id] || 'unlocked';
+                                    const isLocked = visState === 'locked';
+                                    const isHidden = visState === 'hidden';
+
                                     return (
                                         <div 
-                                            key={cat.id} 
-                                            className={`simi-category-hub-card theme-${cat.badgeTheme}`}
-                                            onClick={() => setActiveCategoryModal(cat)}
-                                            style={{ '--cat-accent': cat.color }}
+                                            key={track.id} 
+                                            className={`simi-track-card simi-track-card-showcase simi-track-card-clickable ${isLocked ? 'simi-item-locked' : ''} ${isHidden ? 'simi-item-hidden' : ''}`}
+                                            onClick={() => {
+                                                if (isLocked && !isLeader) return;
+                                                setActiveLessonTrack(track);
+                                                setActiveUnitIndex(0);
+                                            }}
+                                            style={{
+                                                position: 'relative',
+                                                cursor: isLocked && !isLeader ? 'not-allowed' : 'pointer',
+                                                opacity: isHidden ? 0.38 : isLocked ? (isLeader ? 0.72 : 0.48) : 1,
+                                                filter: isHidden ? 'grayscale(1) opacity(0.5)' : isLocked ? 'grayscale(0.7)' : 'none'
+                                            }}
+                                            title={isLocked && !isLeader ? `Ruta Bloqueada: ${track.title}` : isHidden ? `Ruta Oculta para alumnos: ${track.title}` : `Entrar a las unidades de ${track.title}`}
                                         >
-                                            <div className="simi-cat-body">
-                                                <div className="simi-cat-header-row">
-                                                    <div className="simi-cat-icon-wrapper" style={{ color: cat.color }}>
-                                                        <CatIcon size={22} />
+                                            {/* Botón Central Grande de 3 Estados (Visible / Bloqueado / Oculto) en Modo Gestión (Solo Admin/Líder) */}
+                                            {isLeader && isManageModeActive && (
+                                                <button
+                                                    type="button"
+                                                    className={`simi-manage-center-toggle-btn track-center-toggle is-state-${visState}`}
+                                                    onClick={(e) => cycleTrackVisibility(track.id, e)}
+                                                    title={`Estado actual: ${visState.toUpperCase()} — Haz clic para alternar`}
+                                                >
+                                                    <div className="simi-manage-center-icon-wrap">
+                                                        {visState === 'unlocked' && <Eye size={36} />}
+                                                        {visState === 'locked' && <Lock size={36} />}
+                                                        {visState === 'hidden' && <EyeOff size={36} />}
                                                     </div>
-                                                    <span className="simi-cat-count-badge">
-                                                        {catTracks.length} Rutas
+                                                    <span className="simi-manage-center-text">
+                                                        {visState === 'unlocked' ? 'Visible' : visState === 'locked' ? 'Bloqueado' : 'Oculto'}
                                                     </span>
-                                                </div>
+                                                    <small className="simi-manage-center-sub">
+                                                        {visState === 'unlocked' ? 'Toca para Bloquear' : visState === 'locked' ? 'Toca para Ocultar' : 'Toca para Habilitar'}
+                                                    </small>
+                                                </button>
+                                            )}
 
-                                                <div>
-                                                    <h3 className="simi-cat-title">
-                                                        {cat.title}
-                                                    </h3>
-                                                    <p className="simi-cat-subtitle">
-                                                        {cat.subtitle}
-                                                    </p>
+                                            {/* Overlay de Bloqueado para Estudiantes */}
+                                            {!isLeader && isLocked && (
+                                                <div className="simi-track-student-blocked-overlay">
+                                                    <div className="simi-student-lock-icon-circle">
+                                                        <Lock size={36} />
+                                                    </div>
+                                                    <span className="simi-student-lock-title">Curso Bloqueado</span>
+                                                    <small className="simi-student-lock-desc">Próximamente disponible</small>
                                                 </div>
+                                            )}
 
-                                                {/* Píldoras de software / rutas incluidas */}
-                                                <div className="simi-cat-badges-row">
-                                                    {cat.badges.map((b, bIdx) => (
-                                                        <span key={bIdx} className="simi-cat-badge-pill">
-                                                            {b}
-                                                        </span>
-                                                    ))}
+                                            {/* Barra superior limpia con Badge y Nivel */}
+                                            <div className="simi-track-showcase-top">
+                                                <div className="simi-track-meta">
+                                                    <span className="simi-track-tag" style={{ color: track.color }}>
+                                                        {track.badge}
+                                                    </span>
+                                                    <span className="simi-track-level-pill">
+                                                        {track.level}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            <div className="simi-cat-footer-row">
-                                                <span className="simi-cat-footer-hint">
-                                                    Explorar Módulos
-                                                </span>
-                                                <button className="simi-cat-cta-btn">
-                                                    Abrir Rutas <ArrowRight size={15} />
-                                                </button>
+                                            {/* Cuerpo Compacto: Icono a un lado de la información */}
+                                            <div className="simi-track-compact-body">
+                                                <div 
+                                                    className="simi-track-compact-avatar"
+                                                    style={{
+                                                        background: `radial-gradient(circle at center, color-mix(in srgb, ${track.color} 18%, transparent) 0%, color-mix(in srgb, ${track.color} 6%, transparent) 100%)`,
+                                                        borderColor: `color-mix(in srgb, ${track.color} 26%, var(--border-subtle))`
+                                                    }}
+                                                >
+                                                    {track.logoUrl ? (
+                                                        <img 
+                                                            src={track.logoUrl} 
+                                                            alt={track.title} 
+                                                            className="simi-track-compact-img"
+                                                            referrerPolicy="no-referrer"
+                                                        />
+                                                    ) : (
+                                                        <div className="simi-track-hero-icon-fallback" style={{ color: track.color }}>
+                                                            <IconComponent size={26} />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="simi-track-info" style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                                        <h3 className="simi-track-name">
+                                                            {track.title}
+                                                        </h3>
+                                                        <ArrowRight size={14} color={track.color} className="simi-track-arrow-hint" />
+                                                    </div>
+                                                    <p className="simi-track-desc">
+                                                        {track.subtitle}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -1911,6 +2084,8 @@ export default function PanelSimiHub({
             {activeTab === 'projects' && (
                 <SimiProjectsTab 
                     isLeader={isLeader} 
+                    profile={profile}
+                    members={simiMembers}
                     initialProjects={simiProjects} 
                     onProjectsChange={(updated) => setSimiProjects(updated)} 
                 />
@@ -1982,19 +2157,8 @@ export default function PanelSimiHub({
                 </main>
             </div>
 
-            {/* BOTONES FLOTANTES (VISTA ESTUDIANTE + WHATSAPP + INSTAGRAM) */}
-            <div className="simi-social-fabs-container">
-                {hasLeaderPrivileges && (
-                    <button
-                        type="button"
-                        onClick={() => setIsSimiStudentView(prev => !prev)}
-                        className={`simi-social-fab simi-viewmode-fab ${isStudentModeActive ? 'is-active' : ''}`}
-                        title={isStudentModeActive ? 'Modo Alumno Activo - Toca para volver a Líder/Admin' : 'Vista Estudiante - Simular experiencia de semillerista alumno'}
-                        aria-label="Alternar Vista de Estudiante"
-                    >
-                        {isStudentModeActive ? <User size={20} /> : <Eye size={20} />}
-                    </button>
-                )}
+            {/* BOTONES FLOTANTES SOCIALES SIMI3D (WHATSAPP + INSTAGRAM) */}
+            <div className={`simi-social-fabs-container ${hasLeaderPrivileges ? 'with-viewmode-fab' : ''}`}>
                 <a 
                     href="https://chat.whatsapp.com/JUZSpEgGnd3LmtZy4aQYtE" 
                     target="_blank" 
@@ -2069,6 +2233,7 @@ export default function PanelSimiHub({
                 const progressPercent = Math.round((currentTierNum / maxTierNum) * 100);
                 const isMaxLevel = currentTierNum === maxTierNum;
                 const IconComp = ICON_MAP[activePinModal.icon] || Shield;
+                const activeBadgeImageUrl = activePinModal.badgeImageUrl;
 
                 return (
                     <div className="simi-modal-backdrop" onClick={() => setActivePinModal(null)}>
@@ -2077,46 +2242,52 @@ export default function PanelSimiHub({
                             style={{ maxWidth: '600px', width: '95vw', maxHeight: '88vh', overflowY: 'auto' }} 
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="simi-modal-header" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <div 
-                                        style={{ 
-                                            width: '56px', 
-                                            height: '56px', 
-                                            borderRadius: '12px', 
-                                            background: activePinModal.badgeImageUrl ? 'transparent' : `color-mix(in srgb, ${activePinModal.color} 15%, transparent)`, 
-                                            border: activePinModal.badgeImageUrl ? 'none' : `1.5px solid ${activePinModal.color}`, 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            justifyContent: 'center', 
-                                            color: activePinModal.color,
-                                            overflow: 'hidden',
-                                            padding: 0
-                                        }}
-                                    >
-                                        {activePinModal.badgeImageUrl ? (
-                                            <img 
-                                                src={activePinModal.badgeImageUrl} 
-                                                alt={activePinModal.name} 
-                                                referrerPolicy="no-referrer"
-                                                style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.12))' }}
-                                            />
-                                        ) : (
-                                            <IconComp size={24} />
-                                        )}
+                            <div className="simi-modal-header" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', flexDirection: 'column', alignItems: 'stretch' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', width: '100%' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                        <div 
+                                            style={{ 
+                                                width: '56px', 
+                                                height: '56px', 
+                                                borderRadius: '12px', 
+                                                background: (activeBadgeImageUrl && !failedImageMap[activePinModal.id]) ? 'transparent' : `color-mix(in srgb, ${activePinModal.color} 15%, transparent)`, 
+                                                border: (activeBadgeImageUrl && !failedImageMap[activePinModal.id]) ? 'none' : `1.5px solid ${activePinModal.color}`, 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center', 
+                                                color: activePinModal.color,
+                                                overflow: 'hidden',
+                                                padding: 0
+                                            }}
+                                        >
+                                            {(activeBadgeImageUrl && !failedImageMap[activePinModal.id]) ? (
+                                                <img 
+                                                    src={activeBadgeImageUrl} 
+                                                    alt={activePinModal.name} 
+                                                    referrerPolicy="no-referrer"
+                                                    onError={() => setFailedImageMap(prev => ({ ...prev, [activePinModal.id]: true }))}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.12))' }}
+                                                />
+                                            ) : (
+                                                <IconComp size={24} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: '1.18rem', fontWeight: 850, color: 'var(--text-heading)' }}>
+                                                Insignia: {activePinModal.name}
+                                            </h3>
+                                            <span style={{ fontSize: '0.74rem', color: activePinModal.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                {activePinModal.category} • {tierToStars(currentTierStr)} {tierRankName(currentTierStr)}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 style={{ margin: 0, fontSize: '1.18rem', fontWeight: 850, color: 'var(--text-heading)' }}>
-                                            Insignia: {activePinModal.name}
-                                        </h3>
-                                        <span style={{ fontSize: '0.74rem', color: activePinModal.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                            {activePinModal.category} • {tierToStars(currentTierStr)} {tierRankName(currentTierStr)}
-                                        </span>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <button className="simi-modal-close-btn" onClick={() => setActivePinModal(null)} title="Cerrar modal">
+                                            <X size={18} />
+                                        </button>
                                     </div>
                                 </div>
-                                <button className="simi-modal-close-btn" onClick={() => setActivePinModal(null)} title="Cerrar modal">
-                                    <X size={18} />
-                                </button>
                             </div>
 
                             <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -2390,6 +2561,9 @@ export default function PanelSimiHub({
                                     const IconComp = ICON_MAP[pin.icon] || Shield;
                                     const currentTier = selectedPinTiers[pin.id] || 'I';
                                     const isPrestige = currentTier === 'V';
+                                    const pinImageUrl = pin.badgeImageUrl;
+                                    const hasPinImg = Boolean(pinImageUrl && !failedImageMap[pin.id]);
+
                                     return (
                                         <div 
                                             key={pin.id}
@@ -2415,18 +2589,19 @@ export default function PanelSimiHub({
                                                 className="simi-home-pin-icon-wrap" 
                                                 style={{ 
                                                     color: pin.color, 
-                                                    borderColor: pin.badgeImageUrl ? 'transparent' : pin.color, 
-                                                    border: pin.badgeImageUrl ? 'none' : undefined,
-                                                    background: pin.badgeImageUrl ? 'transparent' : undefined, 
-                                                    boxShadow: pin.badgeImageUrl ? 'none' : undefined,
+                                                    borderColor: hasPinImg ? 'transparent' : pin.color, 
+                                                    border: hasPinImg ? 'none' : undefined,
+                                                    background: hasPinImg ? 'transparent' : undefined, 
+                                                    boxShadow: hasPinImg ? 'none' : undefined,
                                                     padding: 0 
                                                 }}
                                             >
-                                                {pin.badgeImageUrl ? (
+                                                {hasPinImg ? (
                                                     <img 
-                                                        src={pin.badgeImageUrl} 
+                                                        src={pinImageUrl} 
                                                         alt={pin.name} 
                                                         referrerPolicy="no-referrer"
+                                                        onError={() => setFailedImageMap(prev => ({ ...prev, [pin.id]: true }))}
                                                         style={{ width: '64px', height: '64px', objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.14))' }} 
                                                     />
                                                 ) : (
@@ -2470,19 +2645,6 @@ export default function PanelSimiHub({
                 </div>
             )}
 
-            {/* Dock flotante inferior exclusivo de SIMI cuando está en modo estudiante */}
-            {isSimiStudentView && (
-                <div className="impersonate-floating-dock" role="status" aria-live="polite">
-                    <div className="impersonate-dock-left">
-                        <div className="impersonate-dock-icon">
-                            <User size={16} />
-                        </div>
-                        <div className="impersonate-dock-text">
-                            <span className="impersonate-dock-title">SIMI3D: Vista de Estudiante</span>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { BookOpen, Target, User, ArrowRight, Check, Lock, Eye, EyeOff, Play, ExternalLink, GraduationCap, Award } from 'lucide-react';
 import { COURSES_DEFINITION, getLessonInfo, getCourseColor } from '../../../data/coursesData.jsx';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import LessonModalViewer from '../../lesson/modals/LessonModalViewer';
 
 export const CoursesModalContent = ({
     availableCourses = [],
@@ -22,6 +22,7 @@ export const CoursesModalContent = ({
 }) => {
     const { refreshLessonVisibility } = useAuth() || {};
     const [localVisibility, setLocalVisibility] = useState({});
+    const [activeLessonModal, setActiveLessonModal] = useState(null);
 
     const isExamLesson = (id) => {
         const lower = (id || '').toLowerCase();
@@ -43,11 +44,25 @@ export const CoursesModalContent = ({
 
     const isLessonItemVisible = (moduleId, lessonId) => {
         const normId = getNormalizedLessonId(moduleId, lessonId);
-        if (localVisibility.hasOwnProperty(normId)) return localVisibility[normId];
-        if (lessonVisibility.hasOwnProperty(normId)) return lessonVisibility[normId];
-        if (cVis.hasOwnProperty(lessonId)) return cVis[lessonId];
-        if (cVis.hasOwnProperty(lessonId.toLowerCase())) return cVis[lessonId.toLowerCase()];
+        if (localVisibility.hasOwnProperty(normId)) return localVisibility[normId] !== false && localVisibility[normId] !== 'hidden';
+        if (lessonVisibility.hasOwnProperty(normId)) return lessonVisibility[normId] !== false && lessonVisibility[normId] !== 'hidden';
+        if (cVis.hasOwnProperty(lessonId)) return cVis[lessonId] !== false && cVis[lessonId] !== 'hidden';
+        if (cVis.hasOwnProperty(lessonId.toLowerCase())) return cVis[lessonId.toLowerCase()] !== false && cVis[lessonId.toLowerCase()] !== 'hidden';
         return true;
+    };
+
+    // Returns 'visible' | 'locked' | 'hidden'
+    const getLessonState = (moduleId, lessonId) => {
+        const normId = getNormalizedLessonId(moduleId, lessonId);
+        const raw =
+            localVisibility.hasOwnProperty(normId) ? localVisibility[normId] :
+            lessonVisibility.hasOwnProperty(normId) ? lessonVisibility[normId] :
+            cVis.hasOwnProperty(lessonId) ? cVis[lessonId] :
+            cVis.hasOwnProperty(lessonId.toLowerCase()) ? cVis[lessonId.toLowerCase()] :
+            true;
+        if (raw === 'hidden') return 'hidden';
+        if (raw === false) return 'locked';
+        return 'visible';
     };
 
     const handleToggleLessonVisibility = async (e, moduleId, lessonId) => {
@@ -55,10 +70,11 @@ export const CoursesModalContent = ({
         if (!isStaff) return;
 
         const normId = getNormalizedLessonId(moduleId, lessonId);
-        const currentVis = isLessonItemVisible(moduleId, lessonId);
-        const newVis = !currentVis;
+        const currentState = getLessonState(moduleId, lessonId);
+        // Cycle: visible → locked → hidden → visible
+        const nextState = currentState === 'visible' ? false : currentState === 'locked' ? 'hidden' : true;
 
-        const nextLocal = { ...lessonVisibility, ...localVisibility, [normId]: newVis };
+        const nextLocal = { ...lessonVisibility, ...localVisibility, [normId]: nextState };
         setLocalVisibility(nextLocal);
 
         try {
@@ -80,18 +96,12 @@ export const CoursesModalContent = ({
         if (!targetModule) return;
 
         const targetLessons = (targetModule.lessons || []).filter(l => !isExamLesson(l.id));
-        const evalObj = targetModule.evaluation;
-        const evalId = evalObj?.id || (targetModule.lessons || []).find(l => isExamLesson(l.id))?.id;
-        
-        const allItemsToCheck = [...targetLessons.map(l => l.id)];
-        if (evalId) allItemsToCheck.push(evalId);
-
-        const allVisible = allItemsToCheck.every(id => isLessonItemVisible(moduleId, id));
+        const allVisible = targetLessons.every(l => isLessonItemVisible(moduleId, l.id));
         const newVis = !allVisible;
 
         const nextLocal = { ...lessonVisibility, ...localVisibility };
-        allItemsToCheck.forEach(id => {
-            const normId = getNormalizedLessonId(moduleId, id);
+        targetLessons.forEach(l => {
+            const normId = getNormalizedLessonId(moduleId, l.id);
             nextLocal[normId] = newVis;
         });
 
@@ -156,11 +166,8 @@ export const CoursesModalContent = ({
                         completedLessonsMap[`ee-${m.id}-${l.id}`]
                     ).length;
 
-                    const modItemsForStaff = [...modLessons.map(l => l.id)];
-                    if (evalId) modItemsForStaff.push(evalId);
-
-                    const visibleCountInMod = modItemsForStaff.filter(id => isLessonItemVisible(m.id, id)).length;
-                    const allModLessonsVisible = visibleCountInMod === modItemsForStaff.length;
+                    const visibleCountInMod = modLessons.filter(l => getLessonState(m.id, l.id) === 'visible').length;
+                    const allModLessonsVisible = visibleCountInMod === modLessons.length;
                     const someModLessonsVisible = visibleCountInMod > 0;
 
                     return (
@@ -179,7 +186,7 @@ export const CoursesModalContent = ({
                                             title={allModLessonsVisible ? 'Ocultar todo el módulo para alumnos' : 'Hacer visible todo el módulo para alumnos'}
                                         >
                                             {allModLessonsVisible ? <Eye size={14} /> : <EyeOff size={14} />}
-                                            <span>{visibleCountInMod}/{modItemsForStaff.length}</span>
+                                            <span>{visibleCountInMod}/{modLessons.length}</span>
                                         </button>
                                     ) : (
                                         <span className="module-count-badge">{completedLessonsInMod}/{modLessons.length} lecciones</span>
@@ -191,19 +198,44 @@ export const CoursesModalContent = ({
                             {isExpanded && (
                                 <div className="course-module-content animate-fade-in">
                                     <div className="module-lessons-list">
-                                        {modLessons.map((l, lIdx) => {
+                                    {modLessons.map((l, lIdx) => {
                                             const isLessonCompleted = !!(completedLessonsMap[l.id] || completedLessonsMap[l.id.toLowerCase()] || completedLessonsMap[`ee-${m.id}-${l.id}`]);
-                                            const isVisible = isLessonItemVisible(m.id, l.id);
-                                            const isLessonLocked = !isVisible;
+                                            const lessonState = getLessonState(m.id, l.id);
+                                            const isVisible = lessonState === 'visible';
+                                            const isHidden = lessonState === 'hidden';
+                                            const isLessonLocked = !isVisible; // locked OR hidden
                                             const lessonInfo = getLessonInfo(l.id);
                                             const lessonTitle = lessonInfo?.title || l.title || `Lección ${lIdx + 1}`;
-                                            const lessonLink = `/dashboard/my-courses/${modalCourse.slug || 'electricidad-y-electronica'}/${m.id}/${l.id}`;
+
+                                            // Students don't see hidden lessons at all
+                                            if (isHidden && !isStaff) return null;
+
+                                            // Staff visibility icon config
+                                            const visIconMap = {
+                                                visible: { icon: <Eye size={14} />, title: 'Visible → Clic para Bloquear',   cls: 'visible' },
+                                                locked:  { icon: <Lock size={14} />, title: 'Bloqueada → Clic para Ocultar', cls: 'locked'  },
+                                                hidden:  { icon: <EyeOff size={14} />, title: 'Oculta → Clic para Hacer Visible', cls: 'hidden' },
+                                            };
+                                            const visCfg = visIconMap[lessonState];
 
                                             return (
-                                                <div key={l.id} className={`module-lesson-row ${isLessonCompleted ? 'completed' : ''} ${isLessonLocked ? 'locked' : ''}`}>
+                                                <div 
+                                                    key={l.id} 
+                                                    className={`module-lesson-row ${isLessonCompleted ? 'completed' : ''} ${isLessonLocked && !isHidden ? 'locked' : ''} ${isHidden ? 'hidden-lesson' : ''}`}
+                                                    onClick={() => {
+                                                        if (!isLessonLocked || isStaff) {
+                                                            setActiveLessonModal({
+                                                                courseId: modalCourse.slug || modalCourse.abbr || 're',
+                                                                moduleId: m.id,
+                                                                lessonId: l.id
+                                                            });
+                                                        }
+                                                    }}
+                                                    style={{ cursor: (!isLessonLocked || isStaff) ? 'pointer' : 'default', opacity: isHidden ? 0.45 : 1 }}
+                                                >
                                                     <div className="module-lesson-row-left">
-                                                        <div className={`lesson-status-icon ${isLessonCompleted ? 'completed' : isLessonLocked ? 'locked' : 'ready'}`}>
-                                                            {isLessonCompleted ? <Check size={13} strokeWidth={3} /> : isLessonLocked ? <Lock size={12} /> : <span style={{ fontSize: '0.75rem', fontWeight: 800 }}>{lIdx + 1}</span>}
+                                                        <div className={`lesson-status-icon ${isLessonCompleted ? 'completed' : isHidden ? 'hidden' : isLessonLocked ? 'locked' : 'ready'}`}>
+                                                            {isLessonCompleted ? <Check size={13} strokeWidth={3} /> : isHidden ? <EyeOff size={11} /> : isLessonLocked ? <Lock size={12} /> : <span style={{ fontSize: '0.75rem', fontWeight: 800 }}>{lIdx + 1}</span>}
                                                         </div>
                                                         <div className="module-lesson-info">
                                                             <span className="module-lesson-title">{lessonTitle}</span>
@@ -213,11 +245,11 @@ export const CoursesModalContent = ({
                                                         {isStaff ? (
                                                             <button
                                                                 type="button"
-                                                                className={`lesson-visibility-toggle-btn icon-only ${isVisible ? 'visible' : 'locked'}`}
+                                                                className={`lesson-visibility-toggle-btn icon-only ${visCfg.cls}`}
                                                                 onClick={(e) => handleToggleLessonVisibility(e, m.id, l.id)}
-                                                                title={isVisible ? 'Lección Visible (Clic para Bloquear para alumnos)' : 'Lección Bloqueada (Clic para Hacer Visible)'}
+                                                                title={visCfg.title}
                                                             >
-                                                                {isVisible ? <Eye size={14} /> : <Lock size={14} />}
+                                                                {visCfg.icon}
                                                             </button>
                                                         ) : (
                                                             <>
@@ -226,10 +258,24 @@ export const CoursesModalContent = ({
                                                         )}
                                                         {isLessonLocked && !isStaff ? (
                                                             <div className="action-btn-mini locked" title="Bloqueado por el docente"><Lock size={13} /></div>
+                                                        ) : isHidden && isStaff ? (
+                                                            <div className="action-btn-mini locked" title="Oculta para alumnos" style={{ opacity: 0.5 }}><EyeOff size={13} /></div>
                                                         ) : (
-                                                            <Link to={lessonLink} className="action-btn-mini present" onClick={onClose} title={isLessonCompleted ? 'Repasar Lección' : 'Comenzar Lección'}>
+                                                            <button 
+                                                                type="button"
+                                                                className="action-btn-mini present" 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setActiveLessonModal({
+                                                                        courseId: modalCourse.slug || modalCourse.abbr || 're',
+                                                                        moduleId: m.id,
+                                                                        lessonId: l.id
+                                                                    });
+                                                                }} 
+                                                                title={isLessonCompleted ? 'Repasar Lección' : 'Comenzar Lección'}
+                                                            >
                                                                 <Play size={13} fill="currentColor" />
-                                                            </Link>
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -242,6 +288,19 @@ export const CoursesModalContent = ({
                     );
                 })}
             </div>
+
+            {/* Modal de Visor de Lección */}
+            {activeLessonModal && (
+                <LessonModalViewer
+                    courseId={activeLessonModal.courseId}
+                    moduleId={activeLessonModal.moduleId}
+                    lessonId={activeLessonModal.lessonId}
+                    onClose={() => setActiveLessonModal(null)}
+                    onLessonCompleted={(lessonKey) => {
+                        if (refreshLessonVisibility) refreshLessonVisibility();
+                    }}
+                />
+            )}
         </div>
     );
 };

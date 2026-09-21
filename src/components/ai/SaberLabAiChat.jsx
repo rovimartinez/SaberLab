@@ -391,7 +391,7 @@ function resolveCourseContext(pathname, enrolledCourses) {
     if (p.includes('robotica-educativa') || p.includes('/re/') || p.includes('re-m') || p.includes('re-') || p.includes('/courses/2') || p.includes('/my-courses/2') || p.includes('/courses/5') || p.includes('/my-courses/5')) {
         return { courseAbbr: 'RE', courseTitle: 'Robótica Educativa', botId: 'robobot', isSimi: false };
     }
-    if (p.includes('modelado-y-animacion-3d') || p.includes('/ma/') || p.includes('ma-m') || p.includes('ma-') || p.includes('/courses/3') || p.includes('/my-courses/3')) {
+    if (p.includes('modelado-y-animacion-3d') || p.includes('/ma/') || p.includes('ma-m') || p.includes('ma-') || p.includes('/courses/3') || p.includes('/my-courses/3') || p.includes('/courses/4') || p.includes('/my-courses/4')) {
         return { courseAbbr: 'MA', courseTitle: 'Modelado y Animación 3D', botId: 'tridibot', isSimi: false };
     }
     if (p.includes('/simi') || p.includes('simi-m') || p.includes('/courses/6') || p.includes('/my-courses/6')) {
@@ -409,7 +409,7 @@ function resolveCourseContext(pathname, enrolledCourses) {
             if (s === '2' || s === '5' || s === 'RE') {
                 return { courseAbbr: 'RE', courseTitle: 'Robótica Educativa', botId: 'robobot', isSimi: false };
             }
-            if (s === '3' || s === 'MA') {
+            if (s === '3' || s === '4' || s === 'MA') {
                 return { courseAbbr: 'MA', courseTitle: 'Modelado y Animación 3D', botId: 'tridibot', isSimi: false };
             }
             if (s === '6' || s === 'SIMI') {
@@ -427,7 +427,7 @@ function resolveCourseContext(pathname, enrolledCourses) {
     if (pAbbr === 'RE' || pAbbr === '2' || pAbbr === '5') {
         return { courseAbbr: 'RE', courseTitle: 'Robótica Educativa', botId: 'robobot', isSimi: false };
     }
-    if (pAbbr === 'MA' || pAbbr === '3') {
+    if (pAbbr === 'MA' || pAbbr === '3' || pAbbr === '4') {
         return { courseAbbr: 'MA', courseTitle: 'Modelado y Animación 3D', botId: 'tridibot', isSimi: false };
     }
     if (pAbbr === 'SIMI' || pAbbr === '6') {
@@ -438,11 +438,12 @@ function resolveCourseContext(pathname, enrolledCourses) {
     return { courseAbbr: 'EE', courseTitle: 'Electricidad y Electrónica', botId: 'electrobot', isSimi: false };
 }
 
+
 export default function SaberLabAiChat() {
     const location = useLocation();
-    const { user, isStaff, isStaffUser, enrolledCourses } = useAuth();
+    const { user, isStaff, isImpersonating, enrolledCourses } = useAuth();
     const userId = user?.id || 'guest';
-    const isStaffOrAdmin = isStaff || isStaffUser;
+    const isStaffOrAdmin = Boolean(isStaff && !isImpersonating);
 
     const [courseTick, setCourseTick] = useState(0);
 
@@ -560,8 +561,16 @@ export default function SaberLabAiChat() {
         }
     }, [isOpen, activeBot, showHistory]);
 
+    // Asegurar que estudiantes o modo vista de alumno nunca queden en la pestaña de auditoría
+    useEffect(() => {
+        if (!isStaffOrAdmin && historyTab !== 'mine') {
+            setHistoryTab('mine');
+        }
+    }, [isStaffOrAdmin, historyTab]);
+
     // Cargar sesiones de auditoría para docentes/admin
     const loadAuditSessions = async () => {
+        if (!isStaffOrAdmin) return;
         setIsLoadingAudit(true);
         try {
             const res = await api('/ai/chat?mode=audit');
@@ -632,22 +641,33 @@ export default function SaberLabAiChat() {
         }
     };
 
-    const handleDeleteSession = async (sessId, e) => {
-        e?.stopPropagation();
-        if (window.confirm('¿Deseas eliminar esta conversación de tu historial?')) {
-            // Intentar eliminar de Cloudflare D1 si está sincronizada
-            try {
-                await api(`/ai/chat?session_id=${sessId}`, { method: 'DELETE' });
-            } catch {}
+    const [sessionToDelete, setSessionToDelete] = useState(null);
+    const [isDeletingSession, setIsDeletingSession] = useState(false);
 
-            setSessions(prev => {
-                const updatedList = (prev[activeBot] || []).filter(s => s.id !== sessId);
-                return { ...prev, [activeBot]: updatedList };
-            });
-            if (activeSessionId === sessId) {
-                setActiveSessionId(null);
-            }
+    const promptDeleteSession = (sess, e) => {
+        e?.stopPropagation();
+        setSessionToDelete(sess);
+    };
+
+    const handleConfirmDeleteSession = async () => {
+        if (!sessionToDelete) return;
+        const sessId = sessionToDelete.id;
+        setIsDeletingSession(true);
+        try {
+            await api(`/ai/chat?session_id=${sessId}`, { method: 'DELETE' });
+        } catch (err) {
+            console.warn('[AI Chat Delete Error]', err);
         }
+
+        setSessions(prev => {
+            const updatedList = (prev[activeBot] || []).filter(s => s.id !== sessId);
+            return { ...prev, [activeBot]: updatedList };
+        });
+        if (activeSessionId === sessId) {
+            setActiveSessionId(null);
+        }
+        setIsDeletingSession(false);
+        setSessionToDelete(null);
     };
 
     const handleSendMessage = async (textToSend = inputText) => {
@@ -1156,10 +1176,10 @@ export default function SaberLabAiChat() {
                                 <div className="saberlab-history-title">
                                     <Clock size={16} color={currentBot.color} />
                                     <span>
-                                        {historyTab === 'audit' ? 'Historial Global de Alumnos' : `Chats con ${currentBot.name}`}
+                                        {historyTab === 'audit' && isStaffOrAdmin ? 'Historial Global de Alumnos' : `Chats con ${currentBot.name}`}
                                     </span>
                                     <span className="saberlab-history-count-badge" style={{ background: `${currentBot.color}20`, color: currentBot.color }}>
-                                        {historyTab === 'audit' ? auditSessions.length : botSessions.length}
+                                        {historyTab === 'audit' && isStaffOrAdmin ? auditSessions.length : botSessions.length}
                                     </span>
                                 </div>
                                 <button 
@@ -1173,7 +1193,7 @@ export default function SaberLabAiChat() {
                             </div>
 
                             <div className="saberlab-history-list">
-                                {historyTab === 'audit' ? (
+                                {historyTab === 'audit' && isStaffOrAdmin ? (
                                     isLoadingAudit ? (
                                         <div className="saberlab-history-empty">
                                             <p>Cargando registros de auditoría pedagógica...</p>
@@ -1400,6 +1420,57 @@ export default function SaberLabAiChat() {
                         </div>
                     </div>
                     </>
+                    )}
+
+                    {/* MODAL MODERNO DE CONFIRMACIÓN DE ELIMINACIÓN */}
+                    {sessionToDelete && (
+                        <div className="saberlab-ai-confirm-overlay" onClick={() => !isDeletingSession && setSessionToDelete(null)}>
+                            <div className="saberlab-ai-confirm-modal" onClick={e => e.stopPropagation()}>
+                                <div className="saberlab-ai-confirm-icon-wrap">
+                                    <div className="saberlab-ai-confirm-icon-bg">
+                                        <Trash2 size={24} className="saberlab-ai-confirm-icon" />
+                                    </div>
+                                </div>
+                                <h4 className="saberlab-ai-confirm-title">¿Eliminar conversación?</h4>
+                                <p className="saberlab-ai-confirm-desc">
+                                    Esta conversación se borrará permanentemente de tu historial y de la nube.
+                                </p>
+                                {sessionToDelete.title && (
+                                    <div className="saberlab-ai-confirm-preview">
+                                        <MessageSquare size={13} className="saberlab-ai-confirm-preview-icon" />
+                                        <span className="saberlab-ai-confirm-preview-text">"{sessionToDelete.title}"</span>
+                                    </div>
+                                )}
+                                <div className="saberlab-ai-confirm-actions">
+                                    <button
+                                        type="button"
+                                        className="saberlab-ai-confirm-btn cancel"
+                                        onClick={() => setSessionToDelete(null)}
+                                        disabled={isDeletingSession}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="saberlab-ai-confirm-btn delete"
+                                        onClick={handleConfirmDeleteSession}
+                                        disabled={isDeletingSession}
+                                    >
+                                        {isDeletingSession ? (
+                                            <>
+                                                <RotateCcw size={14} className="saberlab-ai-spin" />
+                                                <span>Eliminando...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Trash2 size={14} />
+                                                <span>Eliminar</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             )}

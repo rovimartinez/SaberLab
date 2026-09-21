@@ -4,7 +4,7 @@ const PUBLIC_PATHS = ['/api/auth/start', '/api/auth/callback'];
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  if (PUBLIC_PATHS.includes(url.pathname)) {
+  if (PUBLIC_PATHS.includes(url.pathname) || (url.pathname === '/api/enrollments/code' && context.request.method === 'GET')) {
     return context.next();
   }
 

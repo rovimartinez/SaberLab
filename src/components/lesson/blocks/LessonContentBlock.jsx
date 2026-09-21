@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Code, PlayCircle, X } from 'lucide-react';
+import { Code, PlayCircle, X, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
 import {
     completeLearningSession,
     createLearningSession,
@@ -436,10 +436,212 @@ const LessonContentBlock = ({
     }, [activeChallenge, block?.id, challenges, lessonKey, showSimulator, user?.id]);
 
     const htmlToRender = block?.content !== undefined ? block.content : (lesson?.content || '');
+    const [zoomedImage, setZoomedImage] = useState(null); // { src, alt }
+    const [zoomScale, setZoomScale] = useState(1);
+    const contentContainerRef = useRef(null);
+
+    // Escuchar clics sobre cualquier imagen dentro del contenido de la lección
+    useEffect(() => {
+        const container = contentContainerRef.current;
+        if (!container) return;
+
+        const handleImageClick = (e) => {
+            const img = e.target.closest('img');
+            if (img && img.src) {
+                e.preventDefault();
+                e.stopPropagation();
+                setZoomedImage({
+                    src: img.currentSrc || img.src,
+                    alt: img.alt || 'Imagen de la lección'
+                });
+                setZoomScale(1);
+            }
+        };
+
+        container.addEventListener('click', handleImageClick);
+        return () => {
+            container.removeEventListener('click', handleImageClick);
+        };
+    }, [htmlToRender]);
+
+    // Cerrar con Escape
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && zoomedImage) {
+                setZoomedImage(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [zoomedImage]);
 
     return (
-        <div className="lesson-content-container">
+        <div className="lesson-content-container" ref={contentContainerRef}>
             <div key={block?.id || 'content-block'} dangerouslySetInnerHTML={{ __html: htmlToRender }} />
+
+            {/* Modal Lightbox de Imagen Ampliada al Frente */}
+            {zoomedImage && (
+                <div
+                    className="lesson-image-lightbox-overlay animate-fade-in"
+                    onClick={() => setZoomedImage(null)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        zIndex: 999999,
+                        background: 'rgba(5, 8, 18, 0.88)',
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1.5rem',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    {/* Barra de Controles Superiores */}
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            position: 'absolute',
+                            top: '1.25rem',
+                            right: '1.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            zIndex: 10
+                        }}
+                    >
+                        <button
+                            onClick={() => setZoomScale((prev) => Math.max(0.6, prev - 0.25))}
+                            title="Reducir zoom"
+                            style={{
+                                background: 'rgba(30, 41, 59, 0.8)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                color: '#e2e8f0',
+                                padding: '10px',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backdropFilter: 'blur(8px)',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <ZoomOut size={20} />
+                        </button>
+                        <button
+                            onClick={() => setZoomScale((prev) => Math.min(3, prev + 0.25))}
+                            title="Aumentar zoom"
+                            style={{
+                                background: 'rgba(30, 41, 59, 0.8)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                color: '#e2e8f0',
+                                padding: '10px',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backdropFilter: 'blur(8px)',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <ZoomIn size={20} />
+                        </button>
+                        <button
+                            onClick={() => setZoomScale(1)}
+                            title="Restablecer tamaño"
+                            style={{
+                                background: 'rgba(30, 41, 59, 0.8)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                color: '#e2e8f0',
+                                padding: '10px 14px',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                                backdropFilter: 'blur(8px)',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {Math.round(zoomScale * 100)}%
+                        </button>
+                        <button
+                            onClick={() => setZoomedImage(null)}
+                            title="Cerrar (Esc)"
+                            style={{
+                                background: 'rgba(239, 68, 68, 0.85)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#ffffff',
+                                padding: '10px',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backdropFilter: 'blur(8px)',
+                                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    {/* Contenedor Central de la Imagen */}
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            maxWidth: '92vw',
+                            maxHeight: '85vh',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'auto',
+                            padding: '1rem'
+                        }}
+                    >
+                        <img
+                            src={zoomedImage.src}
+                            alt={zoomedImage.alt}
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '78vh',
+                                objectFit: 'contain',
+                                borderRadius: '16px',
+                                transform: `scale(${zoomScale})`,
+                                transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+                                background: '#ffffff',
+                                padding: '8px'
+                            }}
+                        />
+                        {zoomedImage.alt && (
+                            <p
+                                style={{
+                                    color: '#94a3b8',
+                                    fontSize: '0.9rem',
+                                    marginTop: '1rem',
+                                    textAlign: 'center',
+                                    maxWidth: '650px',
+                                    background: 'rgba(15, 23, 42, 0.75)',
+                                    padding: '6px 16px',
+                                    borderRadius: '20px',
+                                    border: '1px solid rgba(255, 255, 255, 0.08)'
+                                }}
+                            >
+                                {zoomedImage.alt}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {challenges.length > 0 && (
                 <div className="challenges-tabs-section" style={{ marginTop: '3rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem' }}>

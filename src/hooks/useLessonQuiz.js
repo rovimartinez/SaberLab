@@ -197,7 +197,7 @@ export const useLessonQuiz = ({
         const responseRecord = {
             question_index: currentQ,
             question_id: currentQuestion.id || `${lessonKey}-q${currentQ + 1}`,
-            prompt: currentQuestion.q,
+            prompt: currentQuestion.question || currentQuestion.q,
             selected_option_index: optionIndex,
             selected_option_label: optionIndex >= 0 ? currentQuestion.options?.[optionIndex] ?? null : null,
             correct_option_index: currentQuestion.correct,

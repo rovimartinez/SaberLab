@@ -39,19 +39,31 @@ export async function onRequestGet({ env, data }) {
           p.avatar_url, 
           p.role, 
           p.created_at,
-          COALESCE(g.name, CASE WHEN LOWER(p.email) = LOWER(?) OR p.role IN ('admin', 'docente', 'profesor') THEN 'Dirección I+D' WHEN p.role IN ('leader', 'lider') THEN 'Líder Semillero' ELSE 'SIMI 2026II' END) AS group_name
+          COALESCE(g.name, CASE WHEN LOWER(p.email) = LOWER(?) THEN 'Dirección I+D' WHEN p.role IN ('leader', 'lider') THEN 'Líder Semillero' ELSE 'Semillero SIMI3D' END) AS group_name
         FROM perfiles p
-        LEFT JOIN grupos_usuario gu ON (gu.user_id = p.id OR LOWER(gu.user_id) = LOWER(p.email))
-        LEFT JOIN grupos g ON g.id = gu.group_id AND (g.course_id = 6 OR g.name LIKE '%SIMI%' OR g.name LIKE '%Semillero%')
-        WHERE p.role IN ('leader', 'lider')
-           OR LOWER(p.email) = LOWER(?)
-           OR (gu.group_id IS NOT NULL AND g.id IS NOT NULL)
+        INNER JOIN (
+          SELECT user_id, group_id FROM grupos_usuario WHERE group_id IN (SELECT id FROM grupos WHERE course_id = 6 OR LOWER(name) LIKE '%simi%' OR LOWER(name) LIKE '%semillero%')
+          UNION
+          SELECT user_id, group_id FROM inscripciones WHERE course_id = 6 OR group_id IN (SELECT id FROM grupos WHERE course_id = 6 OR LOWER(name) LIKE '%simi%' OR LOWER(name) LIKE '%semillero%')
+        ) gu ON (gu.user_id = p.id OR LOWER(gu.user_id) = LOWER(p.email))
+        LEFT JOIN grupos g ON g.id = gu.group_id
+        UNION
+        SELECT DISTINCT 
+          p.id, 
+          p.email, 
+          p.full_name, 
+          p.avatar_url, 
+          p.role, 
+          p.created_at,
+          'Dirección I+D' AS group_name
+        FROM perfiles p
+        WHERE LOWER(p.email) = LOWER(?)
         ORDER BY 
           CASE 
-            WHEN LOWER(p.email) = LOWER(?) OR p.role IN ('admin', 'docente', 'profesor') THEN 1
-            WHEN p.role IN ('leader', 'lider') THEN 2
+            WHEN LOWER(email) = LOWER(?) THEN 1
+            WHEN role IN ('leader', 'lider') THEN 2
             ELSE 3
-          END, p.full_name ASC
+          END, full_name ASC
       `).bind(directorEmail, directorEmail, directorEmail).all(),
       env.DB.prepare('SELECT * FROM simi_web_recursos ORDER BY created_at ASC').all(),
       env.DB.prepare('SELECT pin_id, badge_image_url FROM simi_catalogo_insignias').all()
@@ -77,12 +89,28 @@ export async function onRequestGet({ env, data }) {
       } catch {}
     }
 
-    // Mapear asistencias dentro de cada evento
+    // Mapear asistencias dentro de cada evento y normalizar propiedades camelCase/snake_case
     const eventsWithAttendees = (events || []).map(evt => {
       const evtAttendees = (attendances || []).filter(a => a.event_id === evt.id);
+      let parsedEquipment = [];
+      if (evt.equipment) {
+        try {
+          parsedEquipment = typeof evt.equipment === 'string' ? JSON.parse(evt.equipment) : evt.equipment;
+        } catch {
+          parsedEquipment = String(evt.equipment).split(',').map(s => s.trim()).filter(Boolean);
+        }
+      }
       return {
         ...evt,
-        equipment: evt.equipment ? JSON.parse(evt.equipment) : [],
+        schoolName: evt.school_name || evt.schoolName || 'Institución Educativa STEAM',
+        school_name: evt.school_name || evt.schoolName || 'Institución Educativa STEAM',
+        eventType: evt.event_type || evt.eventType || 'visita_escolar',
+        event_type: evt.event_type || evt.eventType || 'visita_escolar',
+        badgeTier: evt.badge_tier || evt.badgeTier || 'Misión Escolar II',
+        badge_tier: evt.badge_tier || evt.badgeTier || 'Misión Escolar II',
+        studentsCount: evt.students_count !== undefined ? Number(evt.students_count) : (evt.studentsCount !== undefined ? Number(evt.studentsCount) : 40),
+        students_count: evt.students_count !== undefined ? Number(evt.students_count) : (evt.studentsCount !== undefined ? Number(evt.studentsCount) : 40),
+        equipment: parsedEquipment,
         attendees: evtAttendees.map(a => ({
           userId: a.user_id,
           name: a.user_name,
@@ -133,10 +161,29 @@ export async function onRequestGet({ env, data }) {
       }
     });
 
+    const parsedProjects = (projects || []).map(p => {
+      let assignedMembers = [];
+      if (p.assigned_members) {
+        try {
+          assignedMembers = typeof p.assigned_members === 'string' ? JSON.parse(p.assigned_members) : p.assigned_members;
+        } catch {
+          assignedMembers = [];
+        }
+      }
+      const isPrivate = p.is_private === 1 || p.isPrivate === true || p.is_private === true;
+      return {
+        ...p,
+        isPrivate,
+        is_private: isPrivate ? 1 : 0,
+        assignedMembers,
+        assigned_members: assignedMembers
+      };
+    });
+
     return Response.json({
       success: true,
       events: eventsWithAttendees,
-      projects: projects || [],
+      projects: parsedProjects,
       resources: resources || [],
       webResources: webResources || [],
       badgeMap,
@@ -164,9 +211,11 @@ export async function onRequestPost({ request, env, data }) {
   await ensureSimiSchema(env);
 
   const userId = data?.user?.id || data?.user?.email || 'guest';
+  const userEmail = (data?.user?.email || '').toLowerCase();
+  const directorEmail = (env.ADMIN_EMAIL || 'rovimartinez@gmail.com').toLowerCase();
   const userName = data?.user?.full_name || data?.user?.name || data?.user?.displayName || 'Semillerista';
   const role = (data?.user?.role || '').toLowerCase();
-  const isLeaderOrStaff = ['admin', 'docente', 'profesor', 'teacher', 'leader', 'lider'].includes(role);
+  const isLeaderOrStaff = ['admin', 'docente', 'profesor', 'teacher', 'leader', 'lider', 'semillero_leader'].includes(role) || (userEmail && userEmail === directorEmail);
 
   let body;
   try {
@@ -267,17 +316,44 @@ export async function onRequestPost({ request, env, data }) {
     if (action === 'save-project') {
       if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
       const {
-        id, title, author, status = 'En Prototipado', cadTool, material,
-        printTime, weightGrams = 100, description
+        id, title, author, status = 'Prototipado', cadTool, material,
+        printTime, weightGrams = 100, description,
+        cadUrl = '', repoUrl = '', videoUrl = '',
+        isPrivate = false, is_private = false,
+        assignedMembers = [], assigned_members = []
       } = body;
 
-      const projId = id || `proj-${Date.now()}`;
+      let projId = id;
+      if (!projId || projId.startsWith('proj-')) {
+        try {
+          const { results } = await env.DB.prepare('SELECT id FROM simi_proyectos').all();
+          let maxHex = 0;
+          (results || []).forEach(p => {
+            const m = (p.id || '').match(/^SIMI([0-9A-Fa-f]+)$/i);
+            if (m) {
+              const val = parseInt(m[1], 16);
+              if (!isNaN(val) && val > maxHex) maxHex = val;
+            }
+          });
+          const next = maxHex + 1;
+          projId = `SIMI${next.toString(16).toUpperCase().padStart(4, '0')}`;
+        } catch {
+          projId = projId || 'SIMI0001';
+        }
+      }
+
+      const isPrivVal = (isPrivate || is_private) ? 1 : 0;
+      const membersArr = Array.isArray(assignedMembers) && assignedMembers.length > 0 
+        ? assignedMembers 
+        : (Array.isArray(assigned_members) ? assigned_members : []);
+      const membersJson = JSON.stringify(membersArr);
 
       await env.DB.prepare(`
         INSERT INTO simi_proyectos (
-          id, title, author, status, cad_tool, material, print_time, weight_grams, description, updated_at
+          id, title, author, status, cad_tool, material, print_time, weight_grams, description,
+          cad_url, repo_url, video_url, is_private, assigned_members, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         ON CONFLICT(id) DO UPDATE SET
           title = excluded.title,
           author = excluded.author,
@@ -287,8 +363,97 @@ export async function onRequestPost({ request, env, data }) {
           print_time = excluded.print_time,
           weight_grams = excluded.weight_grams,
           description = excluded.description,
+          cad_url = excluded.cad_url,
+          repo_url = excluded.repo_url,
+          video_url = excluded.video_url,
+          is_private = excluded.is_private,
+          assigned_members = excluded.assigned_members,
           updated_at = datetime('now')
-      `).bind(projId, title, author, status, cadTool, material, printTime, Number(weightGrams), description).run();
+      `).bind(
+        projId, title, author, status, cadTool, material, printTime, 
+        Number(weightGrams), description, cadUrl, repoUrl, videoUrl,
+        isPrivVal, membersJson
+      ).run();
+
+      // ── ENVIAR NOTIFICACIÓN AUTOMÁTICA A LOS INTEGRANTES ASIGNADOS ──
+      try {
+        await env.DB.prepare(`
+          CREATE TABLE IF NOT EXISTS notificaciones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT,
+            sender_id TEXT,
+            title TEXT,
+            message TEXT,
+            read INTEGER NOT NULL DEFAULT 0,
+            sender_name TEXT,
+            is_popup INTEGER DEFAULT 1,
+            is_temporary INTEGER DEFAULT 0,
+            duration INTEGER DEFAULT 8,
+            created_at TEXT DEFAULT (datetime('now'))
+          )
+        `).run();
+
+        try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN sender_id TEXT').run(); } catch {}
+        try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN is_temporary INTEGER DEFAULT 0').run(); } catch {}
+
+        const notifTitle = `🚀 Asignación de Proyecto SIMI3D: ${title || projId}`;
+        const notifMsg = `Has sido asignado como integrante responsable del proyecto "${title || projId}". Puedes revisar los detalles, etapa de desarrollo y especificaciones CAD en el Banco de Proyectos.`;
+
+        for (const member of membersArr) {
+          const mUserId = member.id || member.email;
+          const mEmail = (member.email || '').toLowerCase();
+          if (!mUserId && !mEmail) continue;
+
+          // Buscar ID real en perfiles si viene solo email o viceversa
+          let targetUserId = mUserId;
+          try {
+            const foundUser = await env.DB.prepare(
+              'SELECT id FROM perfiles WHERE id = ? OR LOWER(email) = LOWER(?) LIMIT 1'
+            ).bind(mUserId, mEmail).first();
+            if (foundUser?.id) targetUserId = foundUser.id;
+          } catch {}
+
+          // Evitar notificaciones duplicadas idénticas en los últimos 1 minuto
+          const existingNotif = await env.DB.prepare(`
+            SELECT id FROM notificaciones 
+            WHERE (user_id = ? OR LOWER(user_id) = LOWER(?) OR user_id = ?) 
+              AND title = ? 
+              AND datetime(created_at) >= datetime('now', '-1 minute')
+            LIMIT 1
+          `).bind(targetUserId, mEmail, mUserId, notifTitle).first();
+
+          if (!existingNotif) {
+            await env.DB.prepare(`
+              INSERT INTO notificaciones (user_id, sender_id, title, message, read, sender_name, is_popup, created_at)
+              VALUES (?, ?, ?, ?, 0, 'Semillero SIMI3D', 1, datetime('now'))
+            `).bind(targetUserId, userId, notifTitle, notifMsg).run();
+          }
+        }
+
+        // Registrar copia en 'Enviadas' para el administrador / líder que realizó la asignación
+        if (userId && membersArr.length > 0) {
+          const memberNames = membersArr.map(m => m.name || m.full_name || m.email).filter(Boolean).join(', ');
+          const adminSentTitle = `📤 Asignación Enviada: ${title || projId}`;
+          const adminSentMsg = `Has asignado el proyecto "${title || projId}" a: ${memberNames || `${membersArr.length} integrantes`}.`;
+
+          const existingAdminNotif = await env.DB.prepare(`
+            SELECT id FROM notificaciones 
+            WHERE (user_id = ? OR sender_id = ? OR LOWER(user_id) = LOWER(?)) 
+              AND title = ? 
+              AND datetime(created_at) >= datetime('now', '-1 minute')
+            LIMIT 1
+          `).bind(userId, userId, userEmail, adminSentTitle).first();
+
+          if (!existingAdminNotif) {
+            await env.DB.prepare(`
+              INSERT INTO notificaciones (user_id, sender_id, title, message, read, sender_name, is_popup, created_at)
+              VALUES (?, ?, ?, ?, 0, 'Semillero SIMI3D', 0, datetime('now'))
+            `).bind(userId, userId, adminSentTitle, adminSentMsg).run();
+          }
+        }
+      } catch (notifErr) {
+        console.warn('[SIMI Project Assignment Notification Error]', notifErr);
+      }
 
       return Response.json({ success: true, projId });
     }
@@ -377,7 +542,29 @@ export async function onRequestPost({ request, env, data }) {
         return Response.json({ success: true, pinId, badgeImageUrl: null, deleted: true });
       }
 
-      const cleanUrl = badgeImageUrl.trim();
+      let cleanUrl = badgeImageUrl.trim();
+      // Normalizar PostImages visor: https://postimg.cc/xxxx -> https://i.postimg.cc/xxxx/image.png
+      const postimgMatch = cleanUrl.match(/https?:\/\/(?:www\.)?postimg\.cc\/(?:image\/)?([a-zA-Z0-9_-]+)/i);
+      if (postimgMatch && !cleanUrl.includes('i.postimg.cc')) {
+        cleanUrl = `https://i.postimg.cc/${postimgMatch[1]}/image.png`;
+      }
+      // Normalizar Google Drive
+      if (cleanUrl.includes('drive.google.com/file/d/')) {
+        const match = cleanUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          cleanUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+      }
+      // Normalizar Dropbox
+      if (cleanUrl.includes('dropbox.com') && cleanUrl.includes('dl=0')) {
+        cleanUrl = cleanUrl.replace('dl=0', 'raw=1');
+      }
+      // Normalizar Imgur
+      const imgurMatch = cleanUrl.match(/https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9_-]+)(?!\.)/i);
+      if (imgurMatch && !cleanUrl.includes('i.imgur.com')) {
+        cleanUrl = `https://i.imgur.com/${imgurMatch[1]}.png`;
+      }
+
       await env.DB.prepare(`
         INSERT INTO simi_catalogo_insignias (pin_id, badge_image_url, updated_at)
         VALUES (?, ?, datetime('now'))
@@ -487,6 +674,30 @@ export async function onRequestPost({ request, env, data }) {
       return Response.json({ success: true, count: items.length });
     }
 
+    // ── 13. BORRAR NOTIFICACIONES SIMI (DIRECTO DESDE SIMI API) ──
+    if (action === 'delete-notifications') {
+      const { ids, all } = body;
+      if (all) {
+        await env.DB.prepare(`
+          DELETE FROM notificaciones 
+          WHERE user_id = ? OR LOWER(user_id) = LOWER(?) OR sender_id = ? OR LOWER(sender_id) = LOWER(?)
+        `).bind(userId, userEmail, userId, userEmail).run();
+        return Response.json({ success: true, allDeleted: true });
+      }
+
+      if (Array.isArray(ids) && ids.length > 0) {
+        const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
+        if (numericIds.length > 0) {
+          const placeholders = numericIds.map(() => '?').join(',');
+          await env.DB.prepare(
+            `DELETE FROM notificaciones WHERE id IN (${placeholders})`
+          ).bind(...numericIds).run();
+          return Response.json({ success: true, deleted: numericIds.length });
+        }
+      }
+      return Response.json({ success: true });
+    }
+
     return Response.json({ error: 'Acción no reconocida' }, { status: 400 });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
@@ -538,10 +749,21 @@ async function ensureSimiSchema(env) {
       print_time TEXT DEFAULT '4h',
       weight_grams REAL DEFAULT 100,
       description TEXT,
+      cad_url TEXT,
+      repo_url TEXT,
+      video_url TEXT,
+      is_private INTEGER DEFAULT 0,
+      assigned_members TEXT DEFAULT '[]',
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
+
+  try { await env.DB.prepare('ALTER TABLE simi_proyectos ADD COLUMN cad_url TEXT').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_proyectos ADD COLUMN repo_url TEXT').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_proyectos ADD COLUMN video_url TEXT').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_proyectos ADD COLUMN is_private INTEGER DEFAULT 0').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_proyectos ADD COLUMN assigned_members TEXT DEFAULT "[]"').run(); } catch (_) { }
 
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS simi_recursos (

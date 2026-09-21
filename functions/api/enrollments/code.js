@@ -189,3 +189,95 @@ export async function onRequestPost({ request, env, data }) {
     grupo: group
   });
 }
+
+export async function onRequestGet({ request, env }) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+
+  if (!code || typeof code !== 'string') {
+    return Response.json({ valid: false, error: 'missing_code', message: 'Falta el código de invitación' }, { status: 400 });
+  }
+
+  const cleanCode = code.trim().toUpperCase().replace(/\s+/g, '');
+
+  try {
+    let codeRow = await env.DB.prepare(`
+      SELECT 
+        c.id, c.code, c.group_id, c.course_id, c.expires_at, c.created_at,
+        g.name as group_name, g.course_id as group_course_id,
+        cur.name as course_name, cur.abbr as course_abbr, cur.slug as course_slug
+      FROM codigos_grupo c
+      LEFT JOIN grupos g ON c.group_id = g.id
+      LEFT JOIN cursos cur ON cur.id = COALESCE(c.course_id, g.course_id)
+      WHERE UPPER(c.code) = ? OR REPLACE(UPPER(c.code), "-", "") = REPLACE(?, "-", "")
+      ORDER BY c.id DESC LIMIT 1
+    `).bind(cleanCode, cleanCode).first();
+
+    if (!codeRow) {
+      return Response.json({ 
+        valid: false, 
+        error: 'not_found', 
+        message: 'Código o enlace de invitación no encontrado. Verifica con tu docente.' 
+      });
+    }
+
+    let isExpired = false;
+    if (codeRow.expires_at) {
+      const exp = new Date(codeRow.expires_at);
+      if (!isNaN(exp.getTime()) && exp < new Date()) {
+        isExpired = true;
+      }
+    }
+
+    let resolvedCourseName = codeRow.course_name;
+    let resolvedCourseAbbr = codeRow.course_abbr;
+    let resolvedCourseId = codeRow.course_id || codeRow.group_course_id;
+
+    if (!resolvedCourseName) {
+      const upperCode = (codeRow.code || '').toUpperCase();
+      if (upperCode.startsWith('RE-') || upperCode.startsWith('RE')) {
+        resolvedCourseName = 'Robótica Educativa';
+        resolvedCourseAbbr = 'RE';
+        resolvedCourseId = 5;
+      } else if (upperCode.startsWith('SIMI-') || upperCode.startsWith('SIMI')) {
+        resolvedCourseName = 'Semillero SIMI3D';
+        resolvedCourseAbbr = 'SIMI';
+        resolvedCourseId = 6;
+      } else if (upperCode.startsWith('EE-') || upperCode.startsWith('EE')) {
+        resolvedCourseName = 'Electricidad y Electrónica Básica';
+        resolvedCourseAbbr = 'EE';
+        resolvedCourseId = 1;
+      } else {
+        resolvedCourseName = codeRow.group_name || 'Curso Asignado';
+        resolvedCourseAbbr = 'STEAM';
+      }
+    }
+
+    if (isExpired) {
+      return Response.json({
+        valid: false,
+        error: 'expired',
+        message: 'Este enlace de invitación ha expirado. Pídele a tu docente que amplíe la vigencia.',
+        code: codeRow.code,
+        group_name: codeRow.group_name || 'Grupo Oficial',
+        course_name: resolvedCourseName,
+        course_abbr: resolvedCourseAbbr,
+        expires_at: codeRow.expires_at
+      });
+    }
+
+    return Response.json({
+      valid: true,
+      code: codeRow.code,
+      group_id: codeRow.group_id,
+      group_name: codeRow.group_name || 'Grupo Oficial',
+      course_id: resolvedCourseId,
+      course_name: resolvedCourseName,
+      course_abbr: resolvedCourseAbbr,
+      expires_at: codeRow.expires_at
+    });
+  } catch (err) {
+    return Response.json({ valid: false, error: 'server_error', message: err.message || 'Error al validar código' }, { status: 500 });
+  }
+}
+

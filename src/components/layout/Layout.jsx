@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Eye, Shield, X, User } from 'lucide-react';
+import { Eye, Shield, X, User, Edit3 } from 'lucide-react';
 const PanelPerfil = lazy(() => import('../../pages/PanelPerfil'));
 import { useAuth } from '../../context/useAuth';
 import { WhiteboardProvider } from '../../context/WhiteboardContext';
@@ -13,7 +13,7 @@ import SaberLabAiChat from '../ai/SaberLabAiChat';
 import '../../styles/Layout.css';
 
 const LayoutContent = () => {
-    const { isImpersonating, setViewMode, toggleViewMode, isStaffUser, realRole, profile } = useAuth();
+    const { isImpersonating, setViewMode, toggleViewMode, isStaffUser, realRole, profile, isManageModeActive, toggleManageMode } = useAuth();
     const hasTeacherPrivileges = isStaffUser || ['admin', 'teacher', 'docente', 'profesor', 'leader', 'lider'].includes(realRole || profile?.real_role || profile?.role);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const location = useLocation();
@@ -109,17 +109,31 @@ const LayoutContent = () => {
             {/* Tutor Inteligente SaberLab IA Flotante */}
             <SaberLabAiChat />
 
-            {/* FAB Flotante: Vista de Estudiante (Para Docentes / Admin) */}
-            {hasTeacherPrivileges && (
-                <button
-                    type="button"
-                    onClick={() => setViewMode(isImpersonating ? 'admin' : 'student')}
-                    className={`global-viewmode-fab ${isImpersonating ? 'is-active' : ''}`}
-                    title={isImpersonating ? 'Modo Alumno Activo - Toca para volver a Modo Docente' : 'Ver como Alumno - Simular experiencia de estudiante'}
-                    aria-label="Alternar Vista de Estudiante"
-                >
-                    {isImpersonating ? <User size={20} /> : <Eye size={20} />}
-                </button>
+            {/* FABs Flotantes de Control Docente / Admin (Ocultos en lecciones/evaluaciones para no estorbar el contenido) */}
+            {hasTeacherPrivileges && !location.pathname.includes('/my-courses/') && !location.pathname.includes('/evaluations/') && (
+                <>
+                    {/* FAB 1: Gestionar Módulos (Visibilidad y Bloqueo 3 Estados) */}
+                    <button
+                        type="button"
+                        onClick={toggleManageMode}
+                        className={`global-managemode-fab ${isManageModeActive ? 'is-active' : ''}`}
+                        title={isManageModeActive ? 'Modo Gestión Activo: Haz clic para salir' : 'Gestionar Módulos: Configurar visibilidad y bloqueo de herramientas'}
+                        aria-label="Gestionar Módulos"
+                    >
+                        <Edit3 size={19} />
+                    </button>
+
+                    {/* FAB 2: Vista de Estudiante (Simular experiencia) */}
+                    <button
+                        type="button"
+                        onClick={() => setViewMode(isImpersonating ? 'admin' : 'student')}
+                        className={`global-viewmode-fab ${isImpersonating ? 'is-active' : ''}`}
+                        title={isImpersonating ? 'Modo Alumno Activo - Toca para volver a Modo Docente' : 'Ver como Alumno - Simular experiencia de estudiante'}
+                        aria-label="Alternar Vista de Estudiante"
+                    >
+                        {isImpersonating ? <User size={20} /> : <Eye size={20} />}
+                    </button>
+                </>
             )}
         </div>
     );

@@ -140,8 +140,9 @@
 ---
 
 ## 📍 ¿Por dónde quedamos? (Punto de Parada Actual)
-* **Estado:** **Página obsoleta de evaluaciones desacoplada, rutas redirigidas y compilación limpia con `npm run build` (0 errores)**.
+* **Estado:** **Banco de Proyectos SIMI3D con IDs hexadecimales `SIMI####`, normalización de etapas, cierre inmediato de modal y compilación limpia con `npm run build` (0 errores)**.
 * **Siguiente Paso Inmediato (Pendientes Prioritarios):**
+  - 📲 **Integración de Notificaciones a Grupos de WhatsApp:** Implementar backend serverless (`/functions/api/notify.js`) con proveedor UltraMsg / Evolution API (soporte para `INSTANCE_ID`, `API_TOKEN` y `GROUP_ID`), formateo automático de plantillas para convocatorias a salidas pedagógicas, nuevos proyectos CAD e insignias, switch interactivo en formularios y fallback de 1 clic vía WhatsApp Web.
   - 🔍 **Auditoría de páginas obsoletas:** Buscar y depurar páginas/rutas que ya no deberían existir por haber sido reemplazadas por modales en el Dashboard (ej. `PanelMisCursos`, `PanelEvaluaciones`, vistas legacy, etc.).
   - 🧭 **Revisión y actualización de rutas de navegación:** Revisar integralmente las rutas de navegación de cada curso (`EE`, `RE`, `MA`, `SIMI`), asegurando consistencia entre sidebar, mapa de temas, botones de retorno y modales.
   - Continuar con la **Lección 3 (`ma-m1-l3`: Modo Edición y Topología Poligonal - Vértices, Aristas y Caras)** de Modelado 3D o siguientes requerimientos del usuario.
@@ -264,3 +265,47 @@
   - Card destacada en el inicio con píldoras de acceso directo a las herramientas recomendadas y enlace con cambio automático de sub-pestaña a `web`.
 - **Estilos Semánticos (`SimiResources.css` & `SimiHome.css`):** 100% compatibles con tema claro y tema oscuro mediante variables semánticas puras.
 - **Compilación:** Verificado con `npm run build` (0 errores en 14.90s). Cumplida regla de no ejecutar `git push` sin orden explícita.
+
+### 21. Blindaje Integral de Invitaciones y Asignación Estricta de Cursos
+- **Diagnóstico y Causa Raíz:**
+  - Enlaces de invitación compartidos días atrás expiraban (`expires_at`), pero la página `/join?code=XYZ` mostraba el botón de Google habilitado sin verificar la vigencia del código.
+  - Al autenticar con Google, el callback (`functions/api/auth/callback.js`) insertaba al estudiante en `perfiles` y en `solicitudes_acceso` como `pending`. Al aprobarlo el docente, el alumno quedaba en la base de datos sin grupo ni matrícula.
+  - En `PanelInicio.jsx`, la ausencia de cursos matriculados activaba un fallback forzado a `COURSES_DEFINITION[0]` (Electricidad y Electrónica Básica), haciendo creer al estudiante huérfano que pertenecía a esa materia.
+- **Validación Previa Pública (`functions/api/enrollments/code.js`):**
+  - Implementado `onRequestGet({ request, env })` público (habilitado en `functions/api/_middleware.js`).
+  - Valida el código contra `codigos_grupo`, coteja contra `expires_at` y devuelve si está vigente o expirado con los datos del curso y grupo.
+- **Guardia Anti-Huérfanos en Backend (`functions/api/auth/callback.js`):**
+  - Si un usuario nuevo intenta registrarse con Google y no tiene un código de invitación verificado y vigente: **NO se crea perfil y NO se crea solicitud en `solicitudes_acceso`**, redirigiendo inmediatamente a `/join?error=expired&code=...`.
+  - Si el código es válido y vigente, se crea el perfil, se inscribe atómicamente en `grupos_usuario` e `inscripciones`, y se auto-aprueba de inmediato en `solicitudes_acceso`.
+- **Bloqueo y Feedback en Frontend (`JoinCourse.jsx`):**
+  - Al ingresar con un enlace o escribir un código, se valida en tiempo real.
+  - Si el código expiró o no existe: se muestra la advertencia `⛔ Enlace de Invitación Expirado` y **el botón de Google queda 100% bloqueado/oculto**, impidiendo cualquier registro inválido.
+  - Se detallan instrucciones para que el docente renueve el enlace con "Dar más tiempo" desde el panel.
+  - Si el código es válido, se muestra el nombre del curso y grupo oficial, y se habilita el inicio de sesión.
+- **Eliminación de Cursos por Defecto (`PanelInicio.jsx`):**
+  - Eliminado el fallback a Electricidad para estudiantes sin cursos matriculados.
+  - Si un estudiante no tiene cursos, el Dashboard muestra una tarjeta limpia de bienvenida con un campo para ingresar su código de clase y unirse directamente.
+- **Asignación Rápida de Huérfanos (`CourseInviteManager.jsx`):**
+  - Selector `[ ➕ Asignar a Grupo... ▾ ]` en el panel docente de "Grupos y Enlaces" para matricular con 1 solo clic a estudiantes no asignados (`pedroangel199909@gmail.com`, `carlosmmartinezo17@gmail.com`, etc.) a su grupo oficial (`EE-2026II`, `RE-2026II`, `SIMI 2026II`).
+- **Verificación:** Probado exhaustivamente con el subagente de navegador (`browser_subagent`) validando el bloqueo de Google ante enlaces expirados, y compilación limpia con `npm run build` (0 errores). Prohibido `git push` sin autorización previa.
+
+---
+
+### 22. Nueva Portada Principal V2 ("The Living STEAM Campus") y Respaldo V1
+- **Respaldo Íntegro de la Versión 1 (`src/pages/v1/`):**
+  - Componente respaldado: [`src/pages/v1/Landing.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/v1/Landing.jsx).
+  - Hoja de estilos respaldada y desacoplada: [`src/pages/v1/Landing.css`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/v1/Landing.css).
+  - Componente 100% autocontenido e independiente para consulta o restablecimiento futuro.
+- **Arquitectura de la Nueva Portada V2 ([`src/pages/Landing.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/Landing.jsx) & [`src/styles/Landing.css`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/styles/Landing.css)):**
+  - **Header Institucional:** Logo con glow, branding *Campus STEAM*, navegación a secciones clave y botones directos `Tengo un Código 🔑` (a `/join`) e `Ingresar ➔` (a `/login`).
+  - **Hero Section:** Titular en degradé cyber-elegante (*"Revoluciona tu forma de aprender creando y experimentando en vivo"*), subtítulo de alto impacto, CTAs dobles y barra de estadísticas flotante (+4 Cursos, 100% Simuladores en vivo, 4 Bots IA, 0 ms Instalación).
+  - **Showcase Interactivo Central ("El Laboratorio Vivo"):**
+    - **⚡ Electricidad:** Circuito SVG reactivo con animación de electrones, halo dinámico en lámpara y botón/hitbox interactivo para abrir/cerrar el lazo con telemetría en vivo ($V_T$, $I_T$, $P_T$, estado de conducción).
+    - **🤖 Robótica:** Consola de firmware Arduino C++ con simulación en tiempo real de salidas PWM/digitales en PIN 13, parpadeo de LED y monitor serial.
+    - **🧊 Modelado 3D:** Espacio cartesiano euclídeo Z-Up de Blender 4.x con cubo 3D isométrico rotando, cuadrícula de piso, toggles sólido/wireframe y badges de atajos `G`, `R`, `S`.
+    - **🖨️ Semillero SIMI3D:** Selector dinámico de materiales (PLA 210°C, PETG 240°C, TPU 225°C), telemetría de boquilla y cama caliente, y visor de rebanador con capas de impresión aditiva animadas.
+  - **Grid Bento de Carreras STEAM:** Tarjetas detalladas para Electricidad (`EE`), Robótica (`RE`), Modelado 3D (`MA`) y Semillero SIMI3D (`SIMI`).
+  - **Suite de 4 Tutores IA:** Presentación visual socrática de ElectroBot, RoboBot, TridiBot e ImpriBot.
+  - **Evaluaciones Seguras & Live Lobby:** Muestra gráfica del protocolo anti-copia y sala de supervisión docente en tiempo real.
+  - **Banner Final de Llamado a la Acción & Footer Institucional:** Enlaces directos a Google Auth, canje de códigos y pie de página completo con redes sociales.
+- **Verificación:** Probado y validado en navegador con `browser_subagent` y compilación limpia con `npm run build` (0 errores). Prohibido `git push` sin autorización previa.

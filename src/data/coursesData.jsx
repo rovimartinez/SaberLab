@@ -42,14 +42,15 @@ export const LESSONS_REGISTRY = {
         title: 'Evaluación 1: Fundamentos y Lógica Digital',
         load: () => import('../lessons/RE/m1/l6e').then(m => m.lessonData)
     },
-    're-m2-l1': { id: 're-m2-l1', title: 'Sensores de Distancia', load: null },
-    're-m2-l2': { id: 're-m2-l2', title: 'Sensores de Luz (LDR)', load: null },
-    're-m2-l3': { id: 're-m2-l3', title: 'Sensores de Temperatura', load: null },
-    're-m2-l4': { id: 're-m2-l4', title: 'Sensor de Humedad y Suelo', load: null },
+    're-m2-l1': { id: 're-m2-l1', title: 'Funciones Personalizadas en C++', load: () => import('../lessons/RE/m2/l1').then(m => m.lessonData) },
+    're-m2-l2': { id: 're-m2-l2', title: 'Motores DC y Puente H (L298N)', load: () => import('../lessons/RE/m2/l2').then(m => m.lessonData) },
+    're-m2-l3': { id: 're-m2-l3', title: 'Sensores Infrarrojos (IR) y PIR', load: () => import('../lessons/RE/m2/l3').then(m => m.lessonData) },
+    're-m2-l4': { id: 're-m2-l4', title: 'Sensor Ultrasónico (HC-SR04)', load: () => import('../lessons/RE/m2/l4').then(m => m.lessonData) },
+    're-m2-eval': { id: 're-m2-eval', title: 'Evaluación M2: Control, Actuadores y Sensores', load: null },
     're-m3-l1': { id: 're-m3-l1', title: 'Servomotores', load: null },
-    're-m3-l2': { id: 're-m3-l2', title: 'Motores DC (L298N)', load: null },
-    're-m3-l3': { id: 're-m3-l3', title: 'Pantallas LCD', load: null },
-    're-m3-l4': { id: 're-m3-l4', title: 'Joystick y Control', load: null },
+    're-m3-l2': { id: 're-m3-l2', title: 'Buzzers', load: null },
+    're-m3-l3': { id: 're-m3-l3', title: 'Programación Avanzada con Ciclos', load: null },
+    're-m3-l4': { id: 're-m3-l4', title: 'Sistemas de Alarma con Sensores y Actuadores', load: null },
     're-m4-l1': { id: 're-m4-l1', title: 'Robot seguidor de línea', load: null },
     're-m4-l2': { id: 're-m4-l2', title: 'Sistema domótico básico', load: null },
     're-m4-l3': { id: 're-m4-l3', title: 'Brazo Robótico Pro', load: null },
@@ -496,7 +497,15 @@ export const COURSES_DEFINITION = [
             },
             {
                 id: 'm2',
-                name: 'Módulo 2: El Mundo Físico (Sensores)',
+                name: 'Módulo 2: Funciones, Actuadores y Sensores Avanzados',
+                weeks: 'Semanas 5 a 8',
+                learningOutcome: 'Crear funciones modulares en C++, controlar motores DC mediante Puente H (L298N) y procesar lecturas de sensores IR, PIR y Ultrasónico.',
+                topics: [
+                    'Funciones personalizadas en C++ (parámetros, retorno y modularización de código)',
+                    'Motores DC y driver Puente H (L298N) con cambio de sentido y velocidad PWM',
+                    'Sensores Infrarrojos (IR TCRT5000) y detección de presencia/movimiento PIR',
+                    'Sensor Ultrasónico (HC-SR04) para cálculo de distancia por tiempo de pulso (pulseIn)'
+                ],
                 lessons: [
                     { id: 're-m2-l1', visible: true },
                     { id: 're-m2-l2', visible: true },
@@ -505,26 +514,26 @@ export const COURSES_DEFINITION = [
                 ],
                 evaluation: {
                     id: 're-m2-eval',
-                    title: 'Evaluación 2: Sensores y Mundo Físico',
+                    title: 'Evaluación Módulo 2: Funciones, Actuadores y Sensores',
                     date: '25 Sep 2026',
                     points: 150
                 }
             },
             {
                 id: 'm3',
-                name: 'Módulo 3: Movimiento y Actuadores',
+                name: 'Módulo 3: Servomotores, Buzzers y Sistemas de Alarma',
+                topics: [
+                    'Servomotores',
+                    'Buzzers',
+                    'Programación avanzada con ciclos',
+                    'Sistemas de alarma con sensores y actuadores'
+                ],
                 lessons: [
                     { id: 're-m3-l1', visible: true },
                     { id: 're-m3-l2', visible: true },
                     { id: 're-m3-l3', visible: true },
                     { id: 're-m3-l4', visible: true }
-                ],
-                evaluation: {
-                    id: 're-m3-eval',
-                    title: 'Evaluación 3: Movimiento y Actuadores',
-                    date: '27 Oct 2026',
-                    points: 150
-                }
+                ]
             },
             {
                 id: 'm4',

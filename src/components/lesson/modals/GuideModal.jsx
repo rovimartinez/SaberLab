@@ -24,7 +24,7 @@ const GuideModal = ({ open, onClose }) => {
             style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 1000,
+                zIndex: 10000100,
                 background: 'rgba(15, 23, 42, 0.8)',
                 backdropFilter: 'blur(8px)',
                 display: 'flex',

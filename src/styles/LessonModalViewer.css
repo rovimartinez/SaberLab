@@ -1,0 +1,511 @@
+/* ── Lesson Modal Viewer Styles (Visor de Lección en Modal) ── */
+
+.lesson-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000000;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    animation: lessonModalFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lessonModalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.lesson-modal-dialog {
+    width: 95vw;
+    max-width: 1180px;
+    height: 90vh;
+    max-height: 90vh;
+    background: var(--surface-card, #ffffff);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    border-radius: 20px;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+[data-theme='dark'] .lesson-modal-dialog {
+    background: var(--surface-card, #0f172a);
+    border-color: var(--border-subtle, #334155);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* ── Header del Modal ── */
+/* ── Cabecera Premium del Visor Modal ── */
+.lesson-modal-top-section {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-card, #ffffff);
+    border-bottom: 1.5px solid var(--border-subtle, #e2e8f0);
+    border-radius: 20px 20px 0 0;
+    flex-shrink: 0;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.04);
+    z-index: 10;
+}
+
+[data-theme='dark'] .lesson-modal-top-section {
+    background: var(--surface-card, #0f172a);
+    border-bottom-color: var(--border-subtle, #1e293b);
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.35);
+}
+
+.lesson-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.15rem 1.65rem 0.85rem 1.65rem;
+    gap: 1.25rem;
+}
+
+.lesson-modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.lesson-modal-icon-emblem {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    border: 1.5px solid var(--subject-color, #38bdf8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.lesson-modal-icon-emblem:hover {
+    transform: scale(1.06) rotate(-3deg);
+}
+
+.lesson-modal-title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.lesson-modal-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lesson-modal-course-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.22rem 0.7rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.badge-glow-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px currentColor;
+}
+
+.lesson-modal-mod-tag {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-secondary, #64748b);
+    letter-spacing: 0.2px;
+}
+
+.lesson-modal-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: var(--text-heading, #0f172a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+}
+
+.lesson-modal-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-shrink: 0;
+}
+
+.lesson-completed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 850;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1.2px solid rgba(16, 185, 129, 0.3);
+    padding: 0.32rem 0.85rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
+}
+
+[data-theme='dark'] .lesson-completed-badge {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(52, 211, 153, 0.35);
+}
+
+.badge-check-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+}
+
+.lesson-modal-close-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: var(--surface-card-subtle, #f1f5f9);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    color: var(--text-secondary, #64748b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme='dark'] .lesson-modal-close-btn {
+    background: var(--surface-card-subtle, #1e293b);
+    border-color: var(--border-subtle, #334155);
+}
+
+.lesson-modal-close-btn:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+    transform: scale(1.08) rotate(90deg);
+}
+
+/* ── Pestañas Segmentadas Tipo Cápsula (Pill Tabs) ── */
+.lesson-modal-tabs-wrapper {
+    padding: 0 1.65rem 0.95rem 1.65rem;
+}
+
+.lesson-modal-tabs-segment {
+    display: grid;
+    grid-template-columns: repeat(var(--total-tabs, 4), minmax(0, 1fr));
+    background: var(--surface-card-subtle, #f1f5f9);
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    padding: 4px;
+    border-radius: 14px;
+    gap: 4px;
+}
+
+[data-theme='dark'] .lesson-modal-tabs-segment {
+    background: var(--surface-card-subtle, #1e293b);
+    border-color: var(--border-subtle, #334155);
+}
+
+.lesson-modal-segmented-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    font-size: 0.88rem;
+    font-weight: 750;
+    color: var(--text-secondary, #64748b);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.lesson-modal-segmented-tab:hover:not(.active) {
+    color: var(--text-heading, #0f172a);
+    background: var(--surface-card-hover, rgba(0, 0, 0, 0.04));
+}
+
+[data-theme='dark'] .lesson-modal-segmented-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.lesson-modal-segmented-tab.active {
+    background: var(--surface-card, #ffffff);
+    color: var(--text-heading, #0f172a);
+    font-weight: 850;
+}
+
+[data-theme='dark'] .lesson-modal-segmented-tab.active {
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.lesson-modal-segmented-tab .tab-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tab-color, var(--text-secondary));
+}
+
+.lesson-modal-tab-btn:hover {
+    color: var(--text-heading, #0f172a);
+    background: var(--surface-card-hover, rgba(0, 0, 0, 0.02));
+}
+
+.lesson-modal-tab-btn.active {
+    color: var(--text-heading, #0f172a);
+    font-weight: 850;
+    background: var(--surface-card-subtle, rgba(0, 0, 0, 0.03));
+}
+
+.lesson-modal-tab-btn .tab-active-indicator {
+    position: absolute;
+    bottom: -1.5px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+}
+
+/* ── Cuerpo del Contenido (Scroll Independiente) ── */
+.lesson-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1.75rem 3rem 1.75rem;
+    background: var(--surface-card, #ffffff);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+.lesson-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.lesson-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.lesson-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 9999px;
+}
+
+.lesson-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.55);
+}
+
+[data-theme='dark'] .lesson-modal-body {
+    background: var(--surface-card, #0f172a);
+    scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.lesson-modal-loading-state,
+.lesson-modal-locked-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 1rem;
+    text-align: center;
+    color: var(--text-secondary, #64748b);
+}
+
+.lesson-modal-loading-state .loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Footer de Navegación Fijo en la Base del Modal ── */
+.lesson-modal-bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.6rem;
+    border-top: 1.5px solid var(--border-subtle, #e2e8f0);
+    background: var(--surface-card, #ffffff);
+    flex-shrink: 0;
+    gap: 1rem;
+    z-index: 10;
+}
+
+[data-theme='dark'] .lesson-modal-bottom-bar {
+    background: var(--surface-card, #0f172a);
+    border-top-color: var(--border-subtle, #334155);
+}
+
+.lesson-modal-bottom-left {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 1;
+}
+
+.lesson-modal-bottom-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+.lesson-modal-bottom-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.lesson-modal-bottom-bar .nav-btn-prev,
+.lesson-modal-bottom-bar .nav-btn-next,
+.lesson-modal-bottom-bar .nav-btn-complete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.86rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: none;
+}
+
+.lesson-modal-bottom-bar .nav-btn-prev {
+    background: var(--surface-card-subtle, #f1f5f9);
+    color: var(--text-secondary, #475569);
+    border: 1px solid var(--border-subtle, #cbd5e1);
+}
+
+.lesson-modal-bottom-bar .nav-btn-prev:hover {
+    background: var(--border-subtle, #e2e8f0);
+    color: var(--text-heading, #0f172a);
+    transform: translateX(-3px);
+}
+
+.lesson-modal-bottom-bar .nav-btn-next {
+    color: #ffffff;
+}
+
+.lesson-modal-bottom-bar .nav-btn-next:hover {
+    transform: translateX(3px);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+.lesson-modal-bottom-bar .nav-btn-complete {
+    color: #ffffff;
+}
+
+.lesson-modal-bottom-bar .nav-btn-complete:hover {
+    transform: scale(1.03);
+}
+
+.lesson-bottom-completed-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 9999px;
+    font-size: 0.84rem;
+    font-weight: 850;
+    color: #059669;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1.5px solid rgba(16, 185, 129, 0.35);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
+    user-select: none;
+}
+
+[data-theme='dark'] .lesson-bottom-completed-pill {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(52, 211, 153, 0.4);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+}
+
+.lesson-bottom-completed-pill .badge-check-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+}
+
+.lesson-modal-bottom-bar .nav-btn-exam-locked {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.65rem 1rem;
+    border-radius: 12px;
+    background: var(--surface-card-subtle, #f1f5f9);
+    color: var(--text-secondary, #64748b);
+    border: 1px solid var(--border-subtle, #cbd5e1);
+    font-size: 0.82rem;
+    font-weight: 700;
+    user-select: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .lesson-modal-backdrop {
+        padding: 0.5rem;
+    }
+    .lesson-modal-dialog {
+        width: 100vw;
+        max-width: 100vw;
+        height: 98vh;
+        max-height: 98vh;
+        border-radius: 14px;
+    }
+    .lesson-modal-header {
+        padding: 0.85rem 1rem;
+    }
+    .lesson-modal-title {
+        font-size: 1.05rem;
+    }
+    .lesson-modal-body {
+        padding: 1rem 1rem 2rem 1rem;
+    }
+}

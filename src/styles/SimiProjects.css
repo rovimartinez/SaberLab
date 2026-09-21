@@ -52,23 +52,35 @@
     white-space: nowrap;
 }
 
+.simi-projects-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    width: 100%;
+}
+
 .simi-project-card {
     background: #ffffff;
     border: 1.5px solid #e2e8f0;
     border-radius: 18px;
-    padding: 1.35rem;
+    padding: 1.25rem 1.4rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     gap: 0.85rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 16px -2px rgba(25, 37, 132, 0.05);
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .simi-project-card:hover {
     transform: translateY(-2px);
-    border-color: #B541FA;
-    box-shadow: 0 12px 28px -4px rgba(25, 37, 132, 0.14);
+    border-color: #06b6d4;
+    box-shadow: 0 12px 28px -4px rgba(25, 37, 132, 0.12);
+}
+
+.simi-project-main-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .simi-project-status-pill {
@@ -79,42 +91,104 @@
     border: 1.5px solid transparent;
 }
 
-.simi-project-status-pill.done {
-    background: #ecfdf5;
-    color: #059669;
-    border-color: #10b981;
+.simi-project-privacy-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.simi-project-status-pill.test {
-    background: #fefce8;
-    color: #d97706;
-    border-color: #f59e0b;
+.simi-project-privacy-badge.private {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
 }
 
-.simi-project-status-pill.dev {
-    background: #f5e8ff;
-    color: #9333ea;
-    border-color: #B541FA;
-}
-
-.simi-project-tech-box {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 0.75rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    font-size: 0.78rem;
-    color: #334155;
+.simi-project-privacy-badge.public {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
 }
 
 .simi-project-footer-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 0.65rem;
+    padding-top: 0.5rem;
     border-top: 1.5px solid #e2e8f0;
+}
+
+@media (max-width: 960px) {
+    .simi-project-card {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* ── Toggle Switch de Privacidad en Modal ── */
+.simi-privacy-toggle-card {
+    background: var(--surface-sunken, #f8fafc);
+    border: 1.5px solid var(--border-default, #e2e8f0);
+    border-radius: 12px;
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.simi-privacy-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.simi-privacy-label-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.simi-members-selector-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+}
+
+.simi-member-select-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    border-radius: 9px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.8rem;
+}
+
+.simi-member-select-item:hover {
+    border-color: #06b6d4;
+    background: #f0fdfa;
+}
+
+.simi-member-select-item.selected {
+    border-color: #06b6d4;
+    background: #ecfeff;
+    font-weight: 700;
+}
+
+.simi-member-select-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 @media (max-width: 960px) {

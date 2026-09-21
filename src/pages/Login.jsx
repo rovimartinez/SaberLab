@@ -90,9 +90,9 @@ const Login = () => {
                 <button 
                   type="button"
                   onClick={() => navigate('/')} 
-                  style={{ position: 'absolute', left: '-10px', top: '-10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '0.85rem' }}
+                  style={{ position: 'absolute', left: '-5px', top: '-5px', background: 'rgba(241, 245, 249, 0.8)', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '4px 10px', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.82rem', fontWeight: 600 }}
                 >
-                  <ChevronLeft size={18} /> Volver
+                  <ChevronLeft size={16} /> Volver
                 </button>
                 <img 
                     src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" 
@@ -106,7 +106,7 @@ const Login = () => {
                     {mode === 'forgotPassword' && 'Recuperar Clave'}
                 </h1>
                 <p className="auth-subtitle">
-                    {mode === 'login' && 'Ingresa tus credenciales para continuar.'}
+                    {mode === 'login' && 'Inicia sesión con tu cuenta institucional de Google.'}
                     {mode === 'register' && (isCodeValid ? '¡Código validado! Vincula tu perfil rápido y seguro.' : 'Ingresa el código proporcionado por tu profesor.')}
                     {mode === 'forgotPassword' && 'Te enviaremos instrucciones por correo.'}
                 </p>
@@ -226,53 +226,81 @@ const Login = () => {
                                     <GoogleIcon />
                                     {isLoading ? 'Conectando...' : 'Continuar con Google'}
                                 </button>
-                                <div className="auth-divider">o iniciar con credenciales</div>
-                            </>
-                        )}
-                        
-                        <form className="auth-form" onSubmit={handleSubmit}>
-                            {/* Email siempre visible para Login y Recuperar */}
-                            <div className="form-group" style={{ position: 'relative' }}>
-                                <label className="form-label">Correo Electrónico o Usuario</label>
-                                <div style={{ position: 'relative' }}>
-                                    <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-                                    <input 
-                                        type="text" 
-                                        className="form-input" 
-                                        placeholder="usuario o tu@email.com" 
-                                        style={{ paddingLeft: '36px' }} 
-                                        required 
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                </div>
-                            </div>
+                                <div className="auth-divider">o ingresar con credenciales</div>
 
-                            {/* Contraseña sólo para login */}
-                            {mode === 'login' && (
-                                <div className="form-group">
-                                    <div className="form-label">
-                                        Contraseña
-                                        <button type="button" className="forgot-password-link" onClick={() => handleSetMode('forgotPassword')}>
-                                            ¿Olvidaste tu clave?
+                                <div className="auth-credentials-disabled" title="El inicio con credenciales está inhabilitado temporalmente">
+                                    <div className="auth-form">
+                                        <div className="form-group" style={{ position: 'relative' }}>
+                                            <div className="form-label">
+                                                <span>Correo Electrónico o Usuario</span>
+                                                <span className="auth-badge-disabled">Inhabilitado</span>
+                                            </div>
+                                            <div style={{ position: 'relative' }}>
+                                                <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                                                <input 
+                                                    type="text" 
+                                                    className="form-input" 
+                                                    placeholder="usuario o tu@email.com" 
+                                                    style={{ paddingLeft: '36px' }} 
+                                                    disabled 
+                                                    readOnly
+                                                    value=""
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <div className="form-label">
+                                                <span>Contraseña</span>
+                                            </div>
+                                            <input 
+                                                type="password" 
+                                                className="form-input" 
+                                                placeholder="••••••••" 
+                                                disabled 
+                                                readOnly
+                                            />
+                                        </div>
+
+                                        <button type="button" className="auth-button" disabled>
+                                            Ingresar al Campus (Inhabilitado)
                                         </button>
                                     </div>
-                                    <input type="password" className="form-input" placeholder="••••••••" required />
                                 </div>
-                            )}
+                            </>
+                        )}
 
-                            <button type="submit" className="auth-button">
-                                {mode === 'login' && 'Ingresar al Campus'}
-                                {mode === 'forgotPassword' && 'Enviar Correo'}
-                            </button>
-                        </form>
+                        {mode === 'forgotPassword' && (
+                            <form className="auth-form" onSubmit={handleSubmit}>
+                                <div className="form-group" style={{ position: 'relative' }}>
+                                    <label className="form-label">Correo Electrónico</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            placeholder="tu@email.com" 
+                                            style={{ paddingLeft: '36px' }} 
+                                            required 
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <button type="submit" className="auth-button">
+                                    Enviar Correo
+                                </button>
+                            </form>
+                        )}
                     </>
                 )}
 
-                {/* Toggles (Ir a Login, Ir a Registro) */}
+                {/* Toggles (Ir a Login desde Registro) */}
                 <div className="auth-toggle">
                     {mode === 'login' && (
-                        <>¿Tienes un código Institucional? <button onClick={() => handleSetMode('register')}>Actívalo aquí</button></>
+                        <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                            Acceso oficial para estudiantes y docentes SaberLab
+                        </span>
                     )}
                     {(mode === 'register' || mode === 'forgotPassword') && (
                         <>¿Ya perteneces a una clase? <button onClick={() => handleSetMode('login')}>Inicia Sesión</button></>

@@ -3,6 +3,7 @@ export async function onRequestGet({ env, data }) {
     CREATE TABLE IF NOT EXISTS notificaciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT,
+      sender_id TEXT,
       title TEXT,
       message TEXT,
       read INTEGER NOT NULL DEFAULT 0,
@@ -14,8 +15,11 @@ export async function onRequestGet({ env, data }) {
     )
   `).run();
 
+  try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN sender_id TEXT').run(); } catch {}
   try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN is_temporary INTEGER DEFAULT 0').run(); } catch {}
   try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN duration INTEGER DEFAULT 8').run(); } catch {}
+  // Columna de soft-delete para evitar re-generación de recordatorios descartados
+  try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN is_dismissed INTEGER DEFAULT 0').run(); } catch {}
 
   const userId = data.user.id;
   const userEmail = (data.user.email || '').toLowerCase();
@@ -86,19 +90,15 @@ export async function onRequestGet({ env, data }) {
       }
     });
 
+    // ── Calcular qué exámenes tienen recordatorio HOY antes de tocar la BD ──
+    const examsNeedingReminder = [];
     for (const exam of allExams) {
       if (!exam.due_date) continue;
-
-      // ── FILTRO CRÍTICO: solo generar recordatorio si el usuario está inscrito en ese curso ──
       if (!userEnrolledInExam(exam.evaluation_key)) continue;
-
       const examDueDate = exam.due_date.includes('T') ? exam.due_date.split('T')[0] : exam.due_date;
-      const examMs = new Date(examDueDate).getTime();
-      const diffDays = Math.round((examMs - todayMs) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round((new Date(examDueDate).getTime() - todayMs) / (1000 * 60 * 60 * 24));
 
-      let reminderTitle = null;
-      let reminderMsg = null;
-
+      let reminderTitle = null, reminderMsg = null;
       if (diffDays === 10) {
         reminderTitle = `⏰ Faltan 10 días para: ${exam.title}`;
         reminderMsg = `Te recordamos que en 10 días se llevará a cabo la evaluación oficial. Te recomendamos repasar los conceptos y simuladores con anticipación.`;
@@ -112,33 +112,46 @@ export async function onRequestGet({ env, data }) {
         reminderTitle = `🚀 ¡Hoy es el día de tu examen!: ${exam.title}`;
         reminderMsg = `¡Hoy es la fecha oficial de tu evaluación! Ingresa al módulo de evaluaciones para realizar tu prueba con total concentración y éxito.`;
       }
+      if (reminderTitle) examsNeedingReminder.push({ reminderTitle, reminderMsg });
+    }
 
-      if (reminderTitle && reminderMsg) {
-        const existing = await env.DB.prepare(
-          'SELECT id FROM notificaciones WHERE (user_id = ? OR LOWER(user_id) = LOWER(?)) AND title = ? LIMIT 1'
-        ).bind(userId, userEmail, reminderTitle).first();
+    // ── Fast-path: si ningún examen requiere recordatorio hoy, cero queries extra ──
+    if (examsNeedingReminder.length > 0) {
+      // Verificar existencia en PARALELO (todas las queries al mismo tiempo)
+      const existingChecks = await Promise.all(
+        examsNeedingReminder.map(({ reminderTitle }) =>
+          env.DB.prepare(
+            'SELECT id FROM notificaciones WHERE (user_id = ? OR LOWER(user_id) = LOWER(?)) AND title = ? LIMIT 1'
+          ).bind(userId, userEmail, reminderTitle).first()
+        )
+      );
 
-        if (!existing) {
-          await env.DB.prepare(`
-            INSERT INTO notificaciones (user_id, title, message, read, sender_name, is_popup, created_at)
-            VALUES (?, ?, ?, 0, 'Sistema Académico', 1, datetime('now'))
-          `).bind(userId, reminderTitle, reminderMsg).run();
-        }
-      }
+      // Insertar solo los que no existen (en paralelo también)
+      const inserts = examsNeedingReminder
+        .filter((_, i) => !existingChecks[i])
+        .map(({ reminderTitle, reminderMsg }) =>
+          env.DB.prepare(
+            `INSERT INTO notificaciones (user_id, title, message, read, sender_name, is_popup, created_at)
+             VALUES (?, ?, ?, 0, 'Sistema Académico', 1, datetime('now'))`
+          ).bind(userId, reminderTitle, reminderMsg).run()
+        );
+      if (inserts.length > 0) await Promise.all(inserts);
     }
   } catch (notifErr) {
     console.warn('Aviso generador de notificaciones automáticas:', notifErr);
   }
 
 
-  // Devolver solo las notificaciones persistentes que NO sean temporales
+
+  // Devolver las notificaciones persistentes que NO sean temporales ni descartadas
   const { results } = await env.DB.prepare(`
-    SELECT id, title, message, read, sender_name, created_at 
+    SELECT id, user_id, sender_id, title, message, read, sender_name, created_at 
     FROM notificaciones 
-    WHERE (user_id = ? OR LOWER(user_id) = LOWER(?))
+    WHERE (user_id = ? OR LOWER(user_id) = LOWER(?) OR sender_id = ? OR LOWER(sender_id) = LOWER(?))
       AND (is_temporary = 0 OR is_temporary IS NULL)
+      AND (is_dismissed = 0 OR is_dismissed IS NULL)
     ORDER BY created_at DESC
-  `).bind(userId, userEmail).all();
+  `).bind(userId, userEmail, userId, userEmail).all();
 
   return Response.json(results || []);
 }
@@ -176,19 +189,29 @@ export async function onRequestDelete({ request, env, data }) {
     return Response.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
+  const userId = data.user.id;
+  const userEmail = (data.user.email || '').toLowerCase();
+
   if (body.all) {
-    await env.DB.prepare('DELETE FROM notificaciones WHERE user_id = ?').bind(data.user.id).run();
+    // Soft-delete: marcar como descartadas para evitar re-generación de recordatorios de examen
+    await env.DB.prepare(`
+      UPDATE notificaciones SET is_dismissed = 1
+      WHERE (user_id = ? OR LOWER(user_id) = LOWER(?) OR sender_id = ? OR LOWER(sender_id) = LOWER(?))
+        AND (is_dismissed = 0 OR is_dismissed IS NULL)
+    `).bind(userId, userEmail, userId, userEmail).run();
     return Response.json({ success: true });
   }
 
-  if (!Array.isArray(body.ids) || body.ids.length === 0) {
-    return Response.json({ error: 'Faltan ids' }, { status: 400 });
+  const numericIds = body.ids.map(id => Number(id)).filter(id => !isNaN(id));
+  if (numericIds.length === 0) {
+    return Response.json({ error: 'IDs inválidos' }, { status: 400 });
   }
 
-  const placeholders = body.ids.map(() => '?').join(',');
+  const placeholders = numericIds.map(() => '?').join(',');
+  // Soft-delete por ID: el generador automático encontrará el registro descartado y no lo re-creará
   await env.DB.prepare(
-    `DELETE FROM notificaciones WHERE user_id = ? AND id IN (${placeholders})`
-  ).bind(data.user.id, ...body.ids).run();
+    `UPDATE notificaciones SET is_dismissed = 1 WHERE id IN (${placeholders})`
+  ).bind(...numericIds).run();
 
-  return Response.json({ success: true });
+  return Response.json({ success: true, deleted: numericIds.length });
 }

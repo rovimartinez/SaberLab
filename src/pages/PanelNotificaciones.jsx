@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, Trash2, Filter, Users } from 'lucide-react';
+import { 
+    Bell, Check, X, Clock, BookOpen, MessageSquare, Award, AlertCircle, 
+    Trash2, Filter, Users, Send, Inbox, Rocket, Calendar, ArrowUpRight
+} from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
 import AdminAccessRequestsBubble from '../components/layout/AdminAccessRequestsBubble';
@@ -11,7 +14,7 @@ const PanelNotificaciones = ({ isModal = false }) => {
     const { user, profile, notifications: cachedNotifications, refreshNotifications, pendingAccessRequestsCount, isStaff } = useAuth();
     const [notifications, setNotifications] = useState(cachedNotifications || []);
     const [loading, setLoading] = useState(!cachedNotifications || (cachedNotifications.length === 0 && !user));
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState('all'); // 'all' | 'unread' | 'received' | 'sent' | 'evaluation' | 'achievement' | 'message'
 
     useEffect(() => {
         if (cachedNotifications && cachedNotifications.length > 0) {
@@ -22,9 +25,39 @@ const PanelNotificaciones = ({ isModal = false }) => {
         }
     }, [cachedNotifications, user]);
 
+    const myId = (user?.id || user?.email || '').toString().toLowerCase();
+    const myEmail = (user?.email || '').toString().toLowerCase();
+
+    const isSentNotif = (n) => {
+        const title = (n.title || '').trim();
+        if (title.startsWith('📤') || title.toLowerCase().includes('asignación enviada')) {
+            return true;
+        }
+
+        const sId = (n.sender_id || '').toString().toLowerCase();
+        const uId = (n.user_id || '').toString().toLowerCase();
+
+        if (title.startsWith('🚀') || title.toLowerCase().includes('asignación de proyecto')) {
+            return false;
+        }
+
+        if (sId && (sId === myId || (myEmail && sId === myEmail)) && uId && uId !== myId && uId !== myEmail) {
+            return true;
+        }
+
+        return false;
+    };
+
+    const sentCount = notifications.filter(n => isSentNotif(n)).length;
+    const receivedCount = notifications.filter(n => !isSentNotif(n)).length;
+
     const filteredNotifications = notifications.filter(n => {
+        const isSent = isSentNotif(n);
+
         if (filter === 'all') return true;
-        if (filter === 'unread') return !n.read;
+        if (filter === 'unread') return !n.read && !isSent;
+        if (filter === 'received') return !isSent;
+        if (filter === 'sent') return isSent;
         return n.type === filter;
     });
 
@@ -60,21 +93,35 @@ const PanelNotificaciones = ({ isModal = false }) => {
         }
     };
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notifications.filter(n => !n.read && !isSentNotif(n)).length;
 
-    const getIcon = (type) => {
-        switch(type) {
-            case 'evaluation': return <AlertCircle size={20} />;
-            case 'lesson': return <BookOpen size={20} />;
-            case 'achievement': return <Award size={20} />;
-            case 'message': return <MessageSquare size={20} />;
-            case 'reminder': return <Clock size={20} />;
-            default: return <Bell size={20} />;
+    const getIcon = (notification) => {
+        const isSent = isSentNotif(notification);
+        if (isSent) return <Send size={18} />;
+
+        const title = (notification.title || '').toLowerCase();
+        if (title.includes('proyecto') || title.includes('cad') || title.includes('simi')) return <Rocket size={18} />;
+        if (title.includes('visita') || title.includes('salida') || title.includes('evento')) return <Calendar size={18} />;
+
+        switch(notification.type) {
+            case 'evaluation': return <AlertCircle size={18} />;
+            case 'lesson': return <BookOpen size={18} />;
+            case 'achievement': return <Award size={18} />;
+            case 'message': return <MessageSquare size={18} />;
+            case 'reminder': return <Clock size={18} />;
+            default: return <Bell size={18} />;
         }
     };
 
-    const getColor = (type) => {
-        switch(type) {
+    const getColor = (notification) => {
+        const isSent = isSentNotif(notification);
+        if (isSent) return '#06b6d4';
+
+        const title = (notification.title || '').toLowerCase();
+        if (title.includes('proyecto') || title.includes('cad') || title.includes('simi')) return '#06b6d4';
+        if (title.includes('visita') || title.includes('salida') || title.includes('evento')) return '#10b981';
+
+        switch(notification.type) {
             case 'evaluation': return '#f43f5e';
             case 'lesson': return '#3b82f6';
             case 'achievement': return '#f59e0b';
@@ -211,6 +258,24 @@ const PanelNotificaciones = ({ isModal = false }) => {
                     No leídas ({unreadCount})
                 </button>
                 <button 
+                    className={`filter-tab ${filter === 'received' ? 'active' : ''}`}
+                    onClick={() => setFilter('received')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+                >
+                    <Inbox size={14} />
+                    Recibidas ({receivedCount})
+                </button>
+                {isStaff && (
+                    <button 
+                        className={`filter-tab ${filter === 'sent' ? 'active' : ''}`}
+                        onClick={() => setFilter('sent')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                        <Send size={14} />
+                        Enviadas ({sentCount})
+                    </button>
+                )}
+                <button 
                     className={`filter-tab ${filter === 'evaluation' ? 'active' : ''}`}
                     onClick={() => setFilter('evaluation')}
                 >
@@ -235,48 +300,96 @@ const PanelNotificaciones = ({ isModal = false }) => {
                     <div className="empty-state glass-panel">
                         <Bell size={48} color="#64748b" />
                         <h3>No hay notificaciones</h3>
-                        <p>No tienes notificaciones {filter === 'unread' ? 'sin leer' : 'de este tipo'}.</p>
+                        <p>
+                            {filter === 'sent' 
+                                ? 'No tienes notificaciones o asignaciones enviadas registradas.' 
+                                : `No tienes notificaciones ${filter === 'unread' ? 'sin leer' : 'de este tipo'}.`}
+                        </p>
                     </div>
                 ) : (
-                    filteredNotifications.map(notification => (
-                        <div 
-                            key={notification.id} 
-                            className={`notification-item glass-panel ${!notification.read ? 'unread' : ''}`}
-                        >
+                    filteredNotifications.map(notification => {
+                        const isSent = isSentNotif(notification);
+                        return (
                             <div 
-                                className="notification-icon"
-                                style={{ backgroundColor: `${getColor(notification.type)}20`, color: getColor(notification.type) }}
+                                key={notification.id} 
+                                className={`notification-item glass-panel ${!notification.read && !isSent ? 'unread' : ''}`}
+                                style={{
+                                    borderLeft: isSent ? '4px solid #06b6d4' : undefined
+                                }}
                             >
-                                {getIcon(notification.type)}
-                            </div>
-                            <div className="notification-content">
-                                <div className="notification-header">
-                                    <h3>{notification.title}</h3>
-                                    <span className="notification-time">{notification.time}</span>
-                                </div>
-                                <p>{notification.message}</p>
-                            </div>
-                            <div className="notification-actions">
-                                {!notification.read && (
-                                    <button 
-                                        className="action-btn mark-read"
-                                        onClick={() => markAsRead(notification.id)}
-                                        title="Marcar como leída"
-                                    >
-                                        <Check size={16} />
-                                    </button>
-                                )}
-                                <button 
-                                    className="action-btn delete"
-                                    onClick={() => deleteNotification(notification.id)}
-                                    title="Eliminar"
+                                <div 
+                                    className="notification-icon"
+                                    style={{ backgroundColor: `${getColor(notification)}20`, color: getColor(notification) }}
                                 >
-                                    <X size={16} />
-                                </button>
+                                    {getIcon(notification)}
+                                </div>
+                                <div className="notification-content">
+                                    <div className="notification-header">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                            <h3>{notification.title}</h3>
+                                            {isSent && (
+                                                <span style={{
+                                                    background: 'rgba(6, 182, 212, 0.15)',
+                                                    color: '#06b6d4',
+                                                    fontSize: '0.66rem',
+                                                    fontWeight: 800,
+                                                    padding: '2px 7px',
+                                                    borderRadius: '6px',
+                                                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '3px'
+                                                }}>
+                                                    <Send size={10} />
+                                                    ENVIADA
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="notification-time">
+                                            {(() => {
+                                                if (!notification.created_at) return notification.time || 'Reciente';
+                                                let raw = String(notification.created_at);
+                                                if (!raw.endsWith('Z') && !raw.includes('+') && !raw.includes('-05')) {
+                                                    raw = raw.replace(' ', 'T') + 'Z';
+                                                }
+                                                const dateObj = new Date(raw);
+                                                return isNaN(dateObj.getTime()) 
+                                                    ? (notification.time || 'Reciente') 
+                                                    : dateObj.toLocaleDateString('es-CO', { 
+                                                        timeZone: 'America/Bogota',
+                                                        month: 'short', 
+                                                        day: 'numeric', 
+                                                        hour: '2-digit', 
+                                                        minute: '2-digit',
+                                                        hour12: true 
+                                                    });
+                                            })()}
+                                        </span>
+                                    </div>
+                                    <p>{notification.message}</p>
+                                </div>
+                                <div className="notification-actions">
+                                    {!notification.read && !isSent && (
+                                        <button 
+                                            className="action-btn mark-read"
+                                            onClick={() => markAsRead(notification.id)}
+                                            title="Marcar como leída"
+                                        >
+                                            <Check size={16} />
+                                        </button>
+                                    )}
+                                    <button 
+                                        className="action-btn delete"
+                                        onClick={() => deleteNotification(notification.id)}
+                                        title="Eliminar"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                                {!notification.read && !isSent && <div className="unread-dot"></div>}
                             </div>
-                            {!notification.read && <div className="unread-dot"></div>}
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
             </>

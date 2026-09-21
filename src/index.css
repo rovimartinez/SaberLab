@@ -81,23 +81,24 @@ html[data-theme='light'] body {
   color: #0f172a;
 }
 
-/* Unified Global Overflow */
+/* Unified Global Scrollbar */
 @media (min-width: 1024px) {
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #a855f7, #4c1d95);
-    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #c084fc, #6d28d9);
+    background: rgba(148, 163, 184, 0.6);
   }
 }
 

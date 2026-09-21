@@ -34,14 +34,15 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
     }
 
     return (
-        <div className="quiz-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div className="quiz-container" style={{ maxWidth: '820px', margin: '0.5rem auto 2rem', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: 'auto' }}>
             {quizMode === 'intro' && (
                 <div style={{
                     textAlign: 'center',
-                    padding: '2rem',
-                    background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    padding: '3rem 2.5rem',
+                    background: 'var(--surface-card, #ffffff)',
+                    borderRadius: '28px',
+                    border: '1.5px solid var(--border-subtle, #e2e8f0)',
+                    boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -58,34 +59,112 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                             color: subject.color,
                             pointerEvents: 'none'
                         }}>
-                            {React.isValidElement(subject.icon) ? React.cloneElement(subject.icon, { size: 220 }) : null}
+                            {React.isValidElement(subject.icon) ? React.cloneElement(subject.icon, { size: 240 }) : null}
                         </div>
                     )}
 
-                    <h3 style={{ color: 'var(--text-primary)', fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.75rem', position: 'relative', zIndex: 1 }}>
-                        {block.quizConfig?.title || block.title || 'Prueba'}
+                    <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '0.35rem 0.95rem',
+                        borderRadius: '20px',
+                        background: `${subject.color}15`,
+                        color: subject.color,
+                        fontSize: '0.78rem',
+                        fontWeight: 850,
+                        letterSpacing: '0.5px',
+                        textTransform: 'uppercase',
+                        marginBottom: '1rem',
+                        position: 'relative',
+                        zIndex: 1
+                    }}>
+                        <span>🎯 Validación de Conocimientos</span>
+                    </div>
+
+                    <h3 style={{ color: 'var(--text-heading, #0f172a)', fontSize: '1.85rem', fontWeight: 900, letterSpacing: '-0.025em', marginBottom: '0.75rem', position: 'relative', zIndex: 1 }}>
+                        {block.quizConfig?.title || block.title || 'Prueba de la Lección'}
                     </h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.5, marginBottom: '1.75rem', maxWidth: '550px', position: 'relative', zIndex: 1 }}>
-                        Demuestra lo que has aprendido en esta leccion. Completa este reto para validar tus conocimientos y desbloquear el siguiente nivel.
+                    <p style={{ color: 'var(--text-secondary, #64748b)', fontSize: '1.02rem', lineHeight: 1.6, marginBottom: '2rem', maxWidth: '560px', position: 'relative', zIndex: 1 }}>
+                        Demuestra lo que has aprendido en esta lección. Supera este reto para validar tus conocimientos y desbloquear el siguiente nivel.
                     </p>
-                    <ul style={{ textAlign: 'left', color: 'var(--text-primary)', marginBottom: '2rem', display: 'inline-block', listStyle: 'none', padding: 0, position: 'relative', zIndex: 1 }}>
-                        <li style={{ marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                            {quizQuestions.length} preguntas de opcion multiple
-                        </li>
-                        <li style={{ marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: subject.color }}></div>
-                            {quizTimeLimit} segundos por pregunta
-                        </li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></div>
-                            Necesitas {requiredScorePercent}% de aciertos para avanzar
-                        </li>
-                    </ul>
+
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                        gap: '0.85rem',
+                        width: '100%',
+                        maxWidth: '640px',
+                        marginBottom: '2.5rem',
+                        position: 'relative',
+                        zIndex: 1
+                    }}>
+                        <div style={{
+                            background: 'var(--surface-card-subtle, #f8fafc)',
+                            border: '1px solid var(--border-subtle, #e2e8f0)',
+                            borderRadius: '16px',
+                            padding: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem'
+                        }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', flexShrink: 0, boxShadow: '0 0 8px #10b981' }} />
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary, #64748b)', textTransform: 'uppercase' }}>Reactivos</div>
+                                <div style={{ fontSize: '0.92rem', fontWeight: 850, color: 'var(--text-heading, #0f172a)' }}>{quizQuestions.length} Preguntas</div>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            background: 'var(--surface-card-subtle, #f8fafc)',
+                            border: '1px solid var(--border-subtle, #e2e8f0)',
+                            borderRadius: '16px',
+                            padding: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem'
+                        }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: subject.color, flexShrink: 0, boxShadow: `0 0 8px ${subject.color}` }} />
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary, #64748b)', textTransform: 'uppercase' }}>Tiempo Límite</div>
+                                <div style={{ fontSize: '0.92rem', fontWeight: 850, color: 'var(--text-heading, #0f172a)' }}>{quizTimeLimit}s por pregunta</div>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            background: 'var(--surface-card-subtle, #f8fafc)',
+                            border: '1px solid var(--border-subtle, #e2e8f0)',
+                            borderRadius: '16px',
+                            padding: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem'
+                        }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0, boxShadow: '0 0 8px #f59e0b' }} />
+                            <div style={{ textAlign: 'left' }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary, #64748b)', textTransform: 'uppercase' }}>Para Aprobar</div>
+                                <div style={{ fontSize: '0.92rem', fontWeight: 850, color: 'var(--text-heading, #0f172a)' }}>Mínimo {requiredScorePercent}%</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button
                         onClick={startQuiz}
-                        className="nav-btn nav-btn-complete"
-                        style={{ background: subject.color, border: 'none', color: 'white', padding: '0.85rem 2.5rem', fontSize: '1.1rem', fontWeight: 700, boxShadow: `0 8px 15px ${subject.color}30`, margin: '0', position: 'relative', zIndex: 1 }}
+                        className="nav-btn-start-quiz"
+                        style={{
+                            background: `linear-gradient(135deg, ${subject.color} 0%, ${subject.color}dd 100%)`,
+                            border: 'none',
+                            color: 'white',
+                            padding: '0.95rem 3rem',
+                            fontSize: '1.08rem',
+                            fontWeight: 850,
+                            borderRadius: '16px',
+                            boxShadow: `0 8px 25px ${subject.color}45`,
+                            cursor: 'pointer',
+                            position: 'relative',
+                            zIndex: 1,
+                            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                        }}
                     >
                         Iniciar Prueba
                     </button>
@@ -94,9 +173,9 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
 
             {quizMode === 'question' && currentQuestion && (
                 <div style={{
-                    animation: 'fadeIn 0.5s ease-out',
+                    animation: 'fadeIn 0.3s ease-out',
                     position: 'relative',
-                    padding: '1rem',
+                    padding: '0.5rem 0',
                     borderRadius: '24px',
                     overflow: 'hidden'
                 }}>
@@ -104,19 +183,43 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         <div className="animate-scale-in" style={{
                             position: 'absolute',
                             inset: 0,
-                            zIndex: 20,
-                            background: 'rgba(15, 23, 42, 0.9)',
-                            backdropFilter: 'blur(8px)',
+                            zIndex: 30,
+                            background: 'var(--surface-panel-glass, rgba(15, 23, 42, 0.92))',
+                            backdropFilter: 'blur(12px)',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            borderRadius: '24px',
+                            border: '2px solid rgba(239, 68, 68, 0.45)',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.35)'
                         }}>
-                            <div style={{ background: 'rgba(239, 68, 68, 0.2)', padding: '2rem', borderRadius: '50%', marginBottom: '1.5rem' }}>
-                                <X size={80} color="#ef4444" strokeWidth={3} />
+                            <div style={{
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                border: '2px solid rgba(239, 68, 68, 0.4)',
+                                padding: '1.25rem',
+                                borderRadius: '50%',
+                                marginBottom: '1rem',
+                                boxShadow: '0 0 25px rgba(239, 68, 68, 0.3)'
+                            }}>
+                                <Clock size={52} color="#ef4444" strokeWidth={2.5} />
                             </div>
-                            <span style={{ color: 'white', fontSize: '2rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px' }}>
-                                Tiempo agotado
+                            <span style={{
+                                color: 'var(--text-heading, #ffffff)',
+                                fontSize: '1.65rem',
+                                fontWeight: 900,
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                                marginBottom: '0.35rem'
+                            }}>
+                                ¡Tiempo Agotado!
+                            </span>
+                            <span style={{
+                                color: 'var(--text-secondary, #94a3b8)',
+                                fontSize: '0.92rem',
+                                fontWeight: 600
+                            }}>
+                                Pasando a la siguiente pregunta...
                             </span>
                         </div>
                     )}
@@ -135,45 +238,64 @@ const LessonQuizBlock = ({ block, user, lessonKey, moduleId, lessonId, subject, 
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', position: 'relative', zIndex: 1 }}>
-                        <span style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 600 }}>
-                            Pregunta {currentQ + 1} de {quizQuestions.length}
-                        </span>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            color: timeLeft > 20 ? '#10b981' : timeLeft > 10 ? '#f59e0b' : '#ef4444',
-                            fontWeight: 700,
-                            fontSize: '1.2rem',
-                            position: 'relative',
-                            zIndex: 2,
-                            transition: 'color 0.3s ease'
-                        }}>
-                            <Clock size={22} />
-                            {timeLeft}s
-                        </div>
-                    </div>
+                    {(() => {
+                        const timePercent = quizTimeLimit > 0 ? (timeLeft / quizTimeLimit) * 100 : 0;
+                        const timerColor = timePercent >= 50 ? '#10b981' : timePercent >= 30 ? '#f59e0b' : '#ef4444';
+                        return (
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', position: 'relative', zIndex: 1 }}>
+                                    <span style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.92rem', fontWeight: 700 }}>
+                                        Pregunta {currentQ + 1} de {quizQuestions.length}
+                                    </span>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        color: timerColor,
+                                        fontWeight: 850,
+                                        fontSize: '1.15rem',
+                                        background: 'var(--surface-card-subtle, rgba(255,255,255,0.05))',
+                                        border: `1px solid ${timerColor}40`,
+                                        padding: '4px 12px',
+                                        borderRadius: '12px',
+                                        position: 'relative',
+                                        zIndex: 2,
+                                        transition: 'all 0.3s ease'
+                                    }}>
+                                        <Clock size={18} />
+                                        {timeLeft}s
+                                    </div>
+                                </div>
 
-                    <div style={{ display: 'flex', gap: '3px', marginBottom: '2.5rem', position: 'relative', zIndex: 1 }}>
-                        {[...Array(questionTimeSegments)].map((_, index) => (
-                            <div
-                                key={`${block.id}-timer-${index}`}
-                                style={{
-                                    flex: 1,
-                                    height: '8px',
-                                    background: index < questionTimeFill
-                                        ? (timeLeft > 20 ? '#10b981' : timeLeft > 10 ? '#f59e0b' : '#ef4444')
-                                        : 'rgba(255,255,255,0.1)',
-                                    borderRadius: '2px',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            />
-                        ))}
-                    </div>
+                                <div style={{ display: 'flex', gap: '4px', marginBottom: '1.25rem', position: 'relative', zIndex: 1 }}>
+                                    {[...Array(questionTimeSegments)].map((_, index) => (
+                                        <div
+                                            key={`${block.id}-timer-${index}`}
+                                            style={{
+                                                flex: 1,
+                                                height: '6px',
+                                                background: index < questionTimeFill
+                                                    ? timerColor
+                                                    : 'var(--border-subtle, rgba(255,255,255,0.08))',
+                                                borderRadius: '3px',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </>
+                        );
+                    })()}
 
-                    <h3 style={{ color: 'var(--text-primary)', fontSize: '1.4rem', fontWeight: 700, marginBottom: '2rem', lineHeight: 1.5 }}>
-                        {currentQuestion.q}
+                    <h3 style={{
+                        color: 'var(--text-heading, #0f172a)',
+                        fontSize: '1.3rem',
+                        fontWeight: 800,
+                        marginBottom: '1.5rem',
+                        lineHeight: 1.4,
+                        letterSpacing: '-0.01em'
+                    }}>
+                        {currentQuestion.question || currentQuestion.q}
                     </h3>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

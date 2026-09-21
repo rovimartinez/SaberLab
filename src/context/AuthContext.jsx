@@ -48,6 +48,18 @@ export const AuthProvider = ({ children }) => {
     return localSum;
   });
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [isManageModeActive, setIsManageModeActive] = useState(() => {
+    return localStorage.getItem('saberlab_manage_mode') === 'true';
+  });
+
+  const toggleManageMode = useCallback(() => {
+    setIsManageModeActive(prev => {
+      const next = !prev;
+      localStorage.setItem('saberlab_manage_mode', String(next));
+      window.dispatchEvent(new Event('saberlab_managemode_changed'));
+      return next;
+    });
+  }, []);
 
   const setViewMode = (mode) => {
     setViewModeState(mode);
@@ -72,9 +84,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (user && profile) {
       const realRole = profile?.real_role || profile?.role;
-      const isStaffUser = ['admin', 'teacher', 'docente', 'profesor'].includes(realRole);
-      const effectiveRole = (isStaffUser && viewMode === 'student') ? 'student' : realRole;
-      loadEnrolledCourses(user.id, effectiveRole);
+      const isStaffUser = ['admin', 'teacher', 'docente', 'profesor', 'leader', 'lider'].includes(realRole);
+      // Para administradores o docentes que simulan vista de estudiante, mantenemos la lista de cursos disponibles
+      // para que puedan explorar cualquier curso sin perder su curso activo
+      loadEnrolledCourses(user.id, realRole);
     }
   }, [viewMode, user?.id]);
 
@@ -523,6 +536,9 @@ export const AuthProvider = ({ children }) => {
         isLeader,
         totalPoints,
         canAccessCertificate,
+        isManageModeActive,
+        setIsManageModeActive,
+        toggleManageMode,
         setViewMode,
         toggleViewMode,
         loading, 

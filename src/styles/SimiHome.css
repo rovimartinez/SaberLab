@@ -11,7 +11,143 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+    position: relative;
     transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.simi-home-admin-edit-btn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(248, 250, 252, 0.95);
+    border: 1.5px solid #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
+}
+
+.simi-home-admin-edit-btn:hover {
+    background: #ecfeff;
+    color: #0891b2;
+    border-color: #06b6d4;
+    transform: scale(1.1) rotate(6deg);
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+}
+
+.simi-home-admin-edit-btn.active-manage-mode {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #ffffff;
+    border-color: #0891b2;
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.55);
+}
+
+.simi-manage-badge-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 6px #ef4444;
+}
+
+.simi-home-admin-edit-btn:active {
+    transform: scale(0.95);
+}
+
+/* ── Badge Item Lock Overlays & Buttons (En la Esquina Superior Derecha, Compacto) ── */
+.simi-manage-center-toggle-btn.badge-center-toggle {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    transform: none;
+    z-index: 35;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), 0 0 0 2px #ffffff;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(6px);
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle.is-state-unlocked,
+.simi-manage-center-toggle-btn.badge-center-toggle.is-visible {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle.is-state-unlocked:hover,
+.simi-manage-center-toggle-btn.badge-center-toggle.is-visible:hover {
+    transform: scale(1.18);
+    box-shadow: 0 6px 14px rgba(16, 185, 129, 0.6), 0 0 0 2.5px #ffffff;
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle.is-state-locked,
+.simi-manage-center-toggle-btn.badge-center-toggle.is-locked {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle.is-state-locked:hover,
+.simi-manage-center-toggle-btn.badge-center-toggle.is-locked:hover {
+    transform: scale(1.18);
+    box-shadow: 0 6px 14px rgba(239, 68, 68, 0.6), 0 0 0 2.5px #ffffff;
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle.is-state-hidden {
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle.is-state-hidden:hover {
+    transform: scale(1.18);
+    box-shadow: 0 6px 14px rgba(100, 116, 139, 0.6), 0 0 0 2.5px #ffffff;
+}
+
+.simi-manage-center-toggle-btn.badge-center-toggle .simi-toggle-label {
+    display: none;
+}
+
+.simi-toggle-label {
+    font-size: 0.62rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.simi-badge-locked-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 25;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.85);
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
 }
 
 .simi-home-hero-clickable {

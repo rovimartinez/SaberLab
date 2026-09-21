@@ -131,12 +131,53 @@ export async function onRequestGet({ request, env }) {
       )
     `).run();
 
-    // 4. Buscar o crear el usuario en D1
+    // 4. Buscar si el usuario ya existe en D1
     const userId = googleUser.id || email;
     const isAdmin = email === (env.ADMIN_EMAIL || '').toLowerCase();
     let profile = await env.DB.prepare(
       'SELECT id, email, full_name, avatar_url, role FROM perfiles WHERE id = ? OR LOWER(email) = LOWER(?)'
     ).bind(userId, email).first();
+
+    // 4.1 Validar joinCode si fue proporcionado
+    let validatedCodeRow = null;
+    let codeError = null;
+
+    if (joinCode) {
+      const cleanJoinCode = joinCode.trim().toUpperCase().replace(/\s+/g, '');
+      try {
+        const found = await env.DB.prepare(`
+          SELECT c.*, g.course_id as group_course_id, g.name as group_name 
+          FROM codigos_grupo c 
+          LEFT JOIN grupos g ON c.group_id = g.id 
+          WHERE UPPER(c.code) = ? OR REPLACE(UPPER(c.code), "-", "") = REPLACE(?, "-", "")
+          ORDER BY c.id DESC LIMIT 1
+        `).bind(cleanJoinCode, cleanJoinCode).first();
+
+        if (!found) {
+          codeError = 'not_found';
+        } else if (found.expires_at) {
+          const exp = new Date(found.expires_at);
+          if (!isNaN(exp.getTime()) && exp < new Date()) {
+            codeError = 'expired';
+          } else {
+            validatedCodeRow = found;
+          }
+        } else {
+          validatedCodeRow = found;
+        }
+      } catch (errCode) {
+        console.error('Error validating joinCode in callback:', errCode);
+      }
+    }
+
+    // 4.2 Si es un usuario nuevo (no existe perfil previo) y no es admin:
+    // REGLA ESTRICTA: Nadie puede unirse a SaberLab sin un código de invitación válido y vigente.
+    if (!profile && !isAdmin) {
+      if (!joinCode || codeError || !validatedCodeRow) {
+        const errorType = codeError === 'expired' ? 'expired' : (codeError === 'not_found' ? 'not_found' : 'code_required');
+        return Response.redirect(`${appUrl}/join?error=${errorType}&code=${encodeURIComponent(joinCode || '')}`, 302);
+      }
+    }
 
     const avatarUrl = googleUser.picture || (profile ? profile.avatar_url : null);
     const fullName = googleUser.name || (profile ? profile.full_name : null);
@@ -162,9 +203,57 @@ export async function onRequestGet({ request, env }) {
       if (isAdmin) profile.role = 'admin';
     }
 
-    // 5. Gestionar solicitud de acceso para no administradores
+    // 5. Si entró con un código verificado y vigente, auto-aprobar e inscribir directamente en grupo y curso
     let isApproved = isAdmin || profile.role === 'admin';
-    if (!isApproved) {
+
+    if (validatedCodeRow) {
+      try {
+        const targetCourseId = validatedCodeRow.course_id || validatedCodeRow.group_course_id || 1;
+        const targetGroupId = validatedCodeRow.group_id;
+
+        // Inscribir en grupo
+        if (targetGroupId) {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS grupos_usuario (
+              user_id TEXT,
+              group_id INTEGER,
+              PRIMARY KEY (user_id, group_id)
+            )
+          `).run();
+
+          await env.DB.prepare(
+            'INSERT OR IGNORE INTO grupos_usuario (user_id, group_id) VALUES (?, ?)'
+          ).bind(userId, targetGroupId).run();
+        }
+
+        // Inscribir en curso
+        await env.DB.prepare(`
+          CREATE TABLE IF NOT EXISTS inscripciones (
+            user_id TEXT NOT NULL,
+            course_id INTEGER NOT NULL,
+            group_id INTEGER,
+            PRIMARY KEY (user_id, course_id)
+          )
+        `).run();
+
+        await env.DB.prepare(
+          'INSERT OR REPLACE INTO inscripciones (user_id, course_id, group_id) VALUES (?, ?, ?)'
+        ).bind(userId, targetCourseId, targetGroupId || null).run();
+
+        // Auto-aprobar en solicitudes_acceso
+        const existingReq = await env.DB.prepare('SELECT id FROM solicitudes_acceso WHERE lower(email) = ?').bind(email).first();
+        if (existingReq) {
+          await env.DB.prepare("UPDATE solicitudes_acceso SET status = 'approved', reviewed_at = datetime('now') WHERE id = ?").bind(existingReq.id).run();
+        } else {
+          await env.DB.prepare("INSERT INTO solicitudes_acceso (email, name, status, created_at, reviewed_at) VALUES (?, ?, 'approved', datetime('now'), datetime('now'))").bind(email, fullName || email).run();
+        }
+
+        isApproved = true;
+      } catch (enrollErr) {
+        console.error('Error auto-enrolling via validatedCodeRow in callback:', enrollErr);
+      }
+    } else if (!isApproved) {
+      // Si el usuario ya existía previamente pero no tenía invitación, revisar solicitud existente
       const existingReq = await env.DB.prepare(
         'SELECT id, status FROM solicitudes_acceso WHERE lower(email) = ? ORDER BY created_at DESC LIMIT 1'
       ).bind(email).first();
@@ -183,11 +272,8 @@ export async function onRequestGet({ request, env }) {
     // 6. Emitir nuestro token de sesión JWT
     const token = await createSessionToken(profile, env);
 
-    // 7. Redirigir al panel, solicitud de acceso o directamente a unirse al curso si viene de invitación
+    // 7. Redirigir al panel o solicitud de acceso
     let destination = isApproved ? '/dashboard' : '/request-access';
-    if (joinCode) {
-      destination = `/join?code=${encodeURIComponent(joinCode)}`;
-    }
     return Response.redirect(`${appUrl}${destination}#token=${encodeURIComponent(token)}`, 302);
   } catch (err) {
     return new Response(`Auth callback error: ${err.message || err}`, { status: 500 });

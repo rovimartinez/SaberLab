@@ -6,12 +6,13 @@ import { api } from '../lib/api';
 import '../styles/PanelPerfil.css';
 
 const getStoredTheme = () => {
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
     const stored = localStorage.getItem('saberlab-theme') || localStorage.getItem('theme');
-    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'dark';
+    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'light';
 };
 
-const getResolvedTheme = (t) => {
+const getResolvedTheme = (t, isAdmin) => {
+    if (!isAdmin) return 'light';
     if (t === 'system' && typeof window !== 'undefined' && window.matchMedia) {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
@@ -19,21 +20,25 @@ const getResolvedTheme = (t) => {
 };
 
 export default function PanelPerfil({ variant = 'page' }) {
-    const { user, profile, enrolledCourses, userProgress } = useAuth();
+    const { user, profile, enrolledCourses, userProgress, realRole } = useAuth();
+    const isAdmin = realRole === 'admin' || profile?.role === 'admin' || profile?.real_role === 'admin';
 
-    const [theme, setTheme] = useState(getStoredTheme);
+    const [theme, setTheme] = useState(() => {
+        const stored = getStoredTheme();
+        return isAdmin ? stored : 'light';
+    });
     const [editingName, setEditingName] = useState(false);
     const [fullNameInput, setFullNameInput] = useState('');
     const [saving, setSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
     useEffect(() => {
-        const resolved = getResolvedTheme(theme);
+        const resolved = getResolvedTheme(theme, isAdmin);
         document.documentElement.setAttribute('data-theme', resolved);
-        localStorage.setItem('saberlab-theme', theme);
-        localStorage.setItem('theme', theme);
+        localStorage.setItem('saberlab-theme', resolved);
+        localStorage.setItem('theme', resolved);
 
-        if (theme === 'system' && typeof window !== 'undefined' && window.matchMedia) {
+        if (isAdmin && theme === 'system' && typeof window !== 'undefined' && window.matchMedia) {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             const handleChange = (e) => {
                 document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
@@ -41,7 +46,7 @@ export default function PanelPerfil({ variant = 'page' }) {
             mediaQuery.addEventListener('change', handleChange);
             return () => mediaQuery.removeEventListener('change', handleChange);
         }
-    }, [theme]);
+    }, [theme, isAdmin]);
 
     const lessonsCompleted = userProgress?.lessons_completed || 0;
     const streakDays = userProgress?.streak_days || 0;
@@ -261,11 +266,14 @@ export default function PanelPerfil({ variant = 'page' }) {
                     <div className="perfil-theme-buttons">
                         <button
                             type="button"
-                            className={`perfil-theme-btn ${theme === 'dark' ? 'active' : ''}`}
-                            onClick={() => setTheme('dark')}
+                            className={`perfil-theme-btn ${theme === 'dark' ? 'active' : ''} ${!isAdmin ? 'theme-btn-disabled' : ''}`}
+                            onClick={() => isAdmin && setTheme('dark')}
+                            disabled={!isAdmin}
+                            title={!isAdmin ? 'Tema oscuro inhabilitado temporalmente hasta nueva orden' : 'Activar tema oscuro'}
                         >
                             <Moon size={18} />
                             <span>Oscuro</span>
+                            {!isAdmin && <span className="theme-disabled-badge">Inhabilitado</span>}
                         </button>
                         <button
                             type="button"
@@ -274,14 +282,18 @@ export default function PanelPerfil({ variant = 'page' }) {
                         >
                             <Sun size={18} />
                             <span>Claro</span>
+                            <span className="theme-default-badge">Predeterminado</span>
                         </button>
                         <button
                             type="button"
-                            className={`perfil-theme-btn ${theme === 'system' ? 'active' : ''}`}
-                            onClick={() => setTheme('system')}
+                            className={`perfil-theme-btn ${theme === 'system' ? 'active' : ''} ${!isAdmin ? 'theme-btn-disabled' : ''}`}
+                            onClick={() => isAdmin && setTheme('system')}
+                            disabled={!isAdmin}
+                            title={!isAdmin ? 'Inhabilitado temporalmente (predeterminado en Claro)' : 'Sincronizar con el sistema'}
                         >
                             <Smartphone size={18} />
                             <span>Sistema</span>
+                            {!isAdmin && <span className="theme-disabled-badge">Inhabilitado</span>}
                         </button>
                     </div>
                 </div>

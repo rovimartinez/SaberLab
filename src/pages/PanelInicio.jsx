@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { 
     Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight,
     Zap, Bot, GraduationCap, Gamepad2, Award, User, Activity, TrendingUp, 
-    Flame, CheckCircle2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, CheckCircle, Check, X, Lock, Gift, Wrench, Hash, FileCheck,
-    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList
+    Flame, CheckCircle2, AlertCircle, Loader2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, EyeOff, CheckCircle, Check, X, Lock, Gift, Wrench, Hash, FileCheck,
+    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList, Cpu, Edit3
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
@@ -46,7 +46,8 @@ const PanelInicio = () => {
     const { 
         user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress, 
         lessonVisibility, signOut, isImpersonating, setViewMode, toggleViewMode,
-        pendingAccessRequestsCount, unreadNotificationsCount, refreshEnrolledCourses 
+        pendingAccessRequestsCount, unreadNotificationsCount, refreshEnrolledCourses,
+        isManageModeActive, setIsManageModeActive
     } = useAuth();
     const { openLauncher } = useApps();
     const navigate = useNavigate();
@@ -80,6 +81,26 @@ const PanelInicio = () => {
     const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
     const userMenuRef = useRef(null);
     const dropdownRef = useRef(null);
+
+    // Mapa de visibilidad de Apps del Dashboard (3 estados: 'unlocked' | 'locked' | 'hidden')
+    const [appVisibilityMap, setAppVisibilityMap] = useState(() => {
+        const saved = localStorage.getItem('saberlab_app_visibility_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return {};
+    });
+
+    const cycleAppVisibility = (appId, e) => {
+        e?.stopPropagation();
+        setAppVisibilityMap(prev => {
+            const current = prev[appId] || 'unlocked';
+            const nextState = current === 'unlocked' ? 'locked' : current === 'locked' ? 'hidden' : 'unlocked';
+            const next = { ...prev, [appId]: nextState };
+            localStorage.setItem('saberlab_app_visibility_map', JSON.stringify(next));
+            return next;
+        });
+    };
 
     // Estados para unirse a grupo de curso
     const [joinGroupCode, setJoinGroupCode] = useState('');
@@ -123,6 +144,12 @@ const PanelInicio = () => {
     };
 
     const handleThemeSelect = (t) => {
+        const isUserAdminRole = profile?.role === 'admin' || profile?.real_role === 'admin';
+        if (!isUserAdminRole && (t === 'dark' || t === 'system')) {
+            setActiveTheme('light');
+            applyTheme('light');
+            return;
+        }
         setActiveTheme(t);
         applyTheme(t);
     };
@@ -249,14 +276,15 @@ const PanelInicio = () => {
     const rankProgress = getRankProgress(lessonsCompleted);
 
     // Mapeo del curso activo y cursos disponibles
-    const hasEnrolledCourses = (enrolledCourses && enrolledCourses.length > 0) || profile?.role === 'admin';
+    const hasEnrolledCourses = (enrolledCourses && enrolledCourses.length > 0) || profile?.real_role === 'admin' || profile?.role === 'admin';
     const availableCourses = (enrolledCourses && enrolledCourses.length > 0)
         ? enrolledCourses.map(c => COURSES_DEFINITION.find(d => d.id === c.id || d.abbr === c.abbr || d.id === c.slug) || c)
-        : (profile?.role === 'admin' ? COURSES_DEFINITION : [COURSES_DEFINITION[0]]);
+        : (profile?.real_role === 'admin' || profile?.role === 'admin' ? COURSES_DEFINITION : []);
 
-    const activeCourseDef = (selectedCourseId !== 'all'
-        ? availableCourses.find(c => String(c.id) === String(selectedCourseId) || c.abbr === selectedCourseId || c.slug === selectedCourseId)
-        : null) || availableCourses[0] || COURSES_DEFINITION[0];
+    const activeCourseDef = (selectedCourseId && selectedCourseId !== 'all'
+        ? (availableCourses.find(c => String(c.id) === String(selectedCourseId) || c.abbr === selectedCourseId || c.slug === selectedCourseId) ||
+           COURSES_DEFINITION.find(c => String(c.id) === String(selectedCourseId) || c.abbr === selectedCourseId || c.slug === selectedCourseId))
+        : null) || availableCourses[0] || (hasEnrolledCourses ? COURSES_DEFINITION[0] : null);
 
     const mainCourseDef = activeCourseDef;
 
@@ -423,14 +451,11 @@ const PanelInicio = () => {
         { 
             id: 'rewards', 
             name: 'Recompensas', 
-            badge: isStaff ? `${gadgets.length} gadgets` : 'Bloqueado', 
+            badge: `${gadgets.length} gadgets`, 
             icon: <Gift size={26} />, 
-            gradient: isStaff
-                ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
-                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)', 
-            shadow: isStaff ? 'rgba(139, 92, 246, 0.35)' : 'rgba(100, 116, 139, 0.25)',
-            desc: isStaff ? 'Instrumentos y simuladores desbloqueados' : 'Módulo de recompensas bloqueado para estudiantes',
-            isLocked: !isStaff
+            gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', 
+            shadow: 'rgba(139, 92, 246, 0.35)',
+            desc: 'Instrumentos y simuladores desbloqueados'
         },
     ];
 
@@ -439,28 +464,33 @@ const PanelInicio = () => {
         { 
             id: 'widgets', 
             name: 'Widgets', 
-            badge: isStaff ? '8 Herramientas' : 'Bloqueado', 
+            badge: '8 Herramientas', 
             icon: <Wrench size={26} />, 
-            gradient: isStaff
-                ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)', 
-            shadow: isStaff ? 'rgba(6, 182, 212, 0.35)' : 'rgba(100, 116, 139, 0.25)',
-            desc: isStaff ? 'Herramientas interactivas de apoyo en el aula' : 'Herramientas docentes bloqueadas para estudiantes',
-            isLocked: !isStaff
+            gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', 
+            shadow: 'rgba(6, 182, 212, 0.35)',
+            desc: 'Herramientas interactivas de apoyo en el aula'
         },
         { 
             id: 'analytics', 
             name: 'Analítica', 
-            badge: isStaff ? 'Docente' : 'Bloqueado', 
+            badge: 'Docente', 
             icon: <TrendingUp size={26} />, 
-            gradient: isStaff
-                ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)'
-                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)', 
-            shadow: isStaff ? 'rgba(16, 185, 129, 0.35)' : 'rgba(100, 116, 139, 0.25)',
-            desc: isStaff ? 'Cohorte docente, estadísticas y rendimiento' : 'Módulo de analítica docente bloqueado para estudiantes',
-            route: isStaff ? '/dashboard/analytics' : null,
-            onClick: isStaff ? () => navigate('/dashboard/analytics') : undefined,
-            isLocked: !isStaff
+            gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', 
+            shadow: 'rgba(16, 185, 129, 0.35)',
+            desc: 'Cohorte docente, estadísticas y rendimiento',
+            route: '/dashboard/analytics',
+            onClick: () => navigate('/dashboard/analytics')
+        },
+        {
+            id: 'notifications',
+            name: 'Notificaciones',
+            badge: (isStaff && (pendingAccessRequestsCount || 0) > 0) 
+                ? `${pendingAccessRequestsCount} pendientes` 
+                : ((unreadNotificationsCount || 0) > 0 ? `${unreadNotificationsCount} nuevas` : 'Avisos'),
+            icon: <Bell size={26} />,
+            gradient: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
+            shadow: 'rgba(6, 182, 212, 0.35)',
+            desc: 'Centro de avisos, alertas y novedades de clase'
         },
     ];
 
@@ -499,17 +529,14 @@ const PanelInicio = () => {
             shadow: 'rgba(236, 72, 153, 0.35)',
             desc: 'Libreta de notas y registro de evaluaciones'
         },
-
         {
-            id: 'notifications',
-            name: 'Notificaciones',
-            badge: (isStaff && (pendingAccessRequestsCount || 0) > 0) 
-                ? `${pendingAccessRequestsCount} pendientes` 
-                : ((unreadNotificationsCount || 0) > 0 ? `${unreadNotificationsCount} nuevas` : 'Avisos'),
-            icon: <Bell size={26} />,
-            gradient: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
-            shadow: 'rgba(6, 182, 212, 0.35)',
-            desc: 'Centro de avisos, alertas y novedades de clase'
+            id: 'components',
+            name: 'Componentes',
+            badge: '74 Modelos 3D',
+            icon: <Cpu size={26} />,
+            gradient: 'linear-gradient(135deg, #00979C 0%, #008184 100%)',
+            shadow: 'rgba(0, 151, 156, 0.35)',
+            desc: 'Showroom interactivo 3D de hardware, actuadores y robots'
         },
         {
             id: 'resources',
@@ -576,22 +603,6 @@ const PanelInicio = () => {
                 gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
                 shadow: 'rgba(244, 63, 94, 0.35)',
                 desc: 'Evaluaciones y resultados'
-            },
-            {
-                id: 'viewMode',
-                name: isImpersonating ? 'Volver a Admin' : 'Ver como Alumno',
-                badge: isImpersonating ? 'Vista Alumno 👁️' : 'Modo Docente',
-                icon: isImpersonating ? <Shield size={26} /> : <Eye size={26} />,
-                gradient: isImpersonating ? 'linear-gradient(135deg, #c084fc 0%, #9333ea 100%)' : 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
-                shadow: isImpersonating ? 'rgba(192, 132, 252, 0.35)' : 'rgba(56, 189, 248, 0.35)',
-                desc: 'Alternar entre la perspectiva de estudiante y el rol docente',
-                onClick: () => {
-                    if (toggleViewMode) {
-                        toggleViewMode();
-                    } else if (setViewMode) {
-                        setViewMode(isImpersonating ? 'admin' : 'student');
-                    }
-                }
             }
         ] : []),
         ...(isAdmin ? [{
@@ -608,44 +619,84 @@ const PanelInicio = () => {
 
     const allApps = [...progresoApps, ...herramientasApps, ...academicoApps, ...sistemaApps];
 
-    const renderAppTile = (app) => (
-        <button
-            key={app.id}
-            type="button"
-            className={`app-hub-tile ${app.isPrimary ? 'app-hub-tile-primary' : ''} ${app.isLocked ? 'app-hub-tile-locked' : ''}`}
-            onClick={() => {
-                if (app.isLocked) return;
-                if (app.onClick) {
-                    app.onClick();
-                } else {
-                    setActiveAppModal(app.id);
-                }
-            }}
-            title={app.desc}
-            disabled={app.isLocked}
-            style={app.isLocked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-        >
-            <div 
-                className="app-hub-icon-box"
-                style={{
-                    background: app.gradient,
-                    boxShadow: `0 8px 20px ${app.shadow}`,
-                    position: 'relative'
-                }}
-            >
-                {app.icon}
-                {app.isLocked && (
-                    <Lock size={14} style={{ 
-                        position: 'absolute', bottom: 2, right: 2, 
-                        color: '#fff', opacity: 0.9,
-                        background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '1px'
-                    }} />
+    const renderAppTile = (app) => {
+        const visState = appVisibilityMap[app.id] || (app.isLocked ? 'locked' : 'unlocked');
+        const isHidden = visState === 'hidden';
+        const isTileLocked = visState === 'locked';
+
+        // Si es estudiante y está oculta, no se muestra
+        if (isHidden && !isStaff) {
+            return null;
+        }
+
+        const effectiveLocked = !isStaff && isTileLocked;
+
+        return (
+            <div key={app.id} className="app-hub-tile-wrapper">
+                <button
+                    type="button"
+                    className={`app-hub-tile ${app.isPrimary ? 'app-hub-tile-primary' : ''} ${effectiveLocked ? 'app-hub-tile-locked' : ''} ${isHidden ? 'app-hub-tile-hidden-preview' : ''}`}
+                    onClick={() => {
+                        if (isStaff && isManageModeActive) {
+                            return;
+                        }
+                        if (effectiveLocked) return;
+                        if (app.onClick) {
+                            app.onClick();
+                        } else {
+                            setActiveAppModal(app.id);
+                        }
+                    }}
+                    title={isHidden ? `[Oculto para Alumnos] ${app.name}: ${app.desc}` : isTileLocked && !isStaff ? `[Bloqueado] ${app.name}` : app.desc}
+                    disabled={effectiveLocked}
+                    style={effectiveLocked ? { opacity: 0.5, cursor: 'not-allowed' } : isHidden ? { opacity: 0.45 } : {}}
+                >
+                    <div 
+                        className="app-hub-icon-box"
+                        style={{
+                            background: isTileLocked && !isStaff
+                                ? 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
+                                : app.gradient,
+                            boxShadow: `0 8px 20px ${isTileLocked && !isStaff ? 'rgba(100, 116, 139, 0.25)' : app.shadow}`,
+                            position: 'relative'
+                        }}
+                    >
+                        {app.icon}
+                        {effectiveLocked && (
+                            <Lock size={14} style={{ 
+                                position: 'absolute', bottom: 2, right: 2, 
+                                color: '#fff', opacity: 0.9,
+                                background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '1px'
+                            }} />
+                        )}
+                    </div>
+                    <span className="app-hub-name">{app.name}</span>
+                    {app.badge && (
+                        <span className="app-hub-badge">
+                            {effectiveLocked ? 'Bloqueado' : app.badge}
+                        </span>
+                    )}
+                </button>
+
+                {/* Botón Circular de 3 Estados (Visible / Bloqueado / Oculto) en Modo Gestión (Solo Staff/Admin) */}
+                {isStaff && isManageModeActive && (
+                    <button
+                        type="button"
+                        className={`app-tile-center-toggle-btn is-state-${visState}`}
+                        onClick={(e) => cycleAppVisibility(app.id, e)}
+                        title={`Estado: ${visState.toUpperCase()} — Clic para alternar (Visible / Bloqueado / Oculto)`}
+                    >
+                        {visState === 'unlocked' && <Eye size={14} />}
+                        {visState === 'locked' && <Lock size={14} />}
+                        {visState === 'hidden' && <EyeOff size={14} />}
+                        <span className="app-tile-toggle-label">
+                            {visState === 'unlocked' ? 'Visible' : visState === 'locked' ? 'Bloqueado' : 'Oculto'}
+                        </span>
+                    </button>
                 )}
             </div>
-            <span className="app-hub-name">{app.name}</span>
-            {app.badge && <span className="app-hub-badge">{app.badge}</span>}
-        </button>
-    );
+        );
+    };
 
     const renderHeaderUserPill = () => (
         <div className="hero-user-container" ref={userMenuRef}>
@@ -818,6 +869,139 @@ const PanelInicio = () => {
         </div>
     );
 
+    // ── VISTA PARA ESTUDIANTES SIN CURSO O GRUPO ASIGNADO ──
+    if (!hasEnrolledCourses && !isStaff) {
+        return (
+            <div className="dashboard-symmetric-root">
+                <div className="hero-symmetric glass-panel">
+                    <div className="hero-left">
+                        <h1 className="hero-greeting">
+                            ¡Hola, <span className="text-gradient">{fullName}</span>! 👋
+                        </h1>
+                        <p className="hero-subtitle">
+                            Bienvenido a <strong>SaberLab</strong>. Aún no tienes cursos asignados.
+                        </p>
+                    </div>
+                    <div className="hero-right">
+                        {renderHeaderUserPill()}
+                    </div>
+                </div>
+
+                <div className="glass-panel" style={{
+                    padding: '3rem 2rem',
+                    textAlign: 'center',
+                    maxWidth: '620px',
+                    margin: '2.5rem auto',
+                    borderRadius: '24px',
+                    border: '1px solid rgba(56, 189, 248, 0.25)',
+                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4)'
+                }}>
+                    <div style={{
+                        width: '76px',
+                        height: '76px',
+                        borderRadius: '22px',
+                        background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 1.5rem',
+                        boxShadow: '0 10px 25px rgba(56, 189, 248, 0.35)'
+                    }}>
+                        <GraduationCap size={40} color="#fff" />
+                    </div>
+
+                    <h2 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--text-heading)' }}>
+                        Únete a tu clase oficial
+                    </h2>
+
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '480px', margin: '0 auto 1.75rem' }}>
+                        Para acceder a tus lecciones interactivas, simuladores virtuales y exámenes, ingresa el <strong>código de invitación</strong> que te dio tu profesor.
+                    </p>
+
+                    <form onSubmit={handleJoinGroupSubmit} style={{ maxWidth: '420px', margin: '0 auto 1.5rem' }}>
+                        <div style={{ display: 'flex', gap: '0.75rem', flexDirection: 'column' }}>
+                            <input
+                                type="text"
+                                value={joinGroupCode}
+                                onChange={(e) => setJoinGroupCode(e.target.value.toUpperCase())}
+                                placeholder="Ej: RE-2026II, EE-2026II o SIMI-4889"
+                                disabled={isJoiningGroup}
+                                style={{
+                                    width: '100%',
+                                    background: 'var(--surface-input, rgba(15, 23, 42, 0.8))',
+                                    border: '1px solid var(--border-default, rgba(255, 255, 255, 0.15))',
+                                    borderRadius: '14px',
+                                    padding: '0.9rem 1.25rem',
+                                    color: 'var(--text-body)',
+                                    fontSize: '1.05rem',
+                                    textAlign: 'center',
+                                    textTransform: 'uppercase',
+                                    fontFamily: 'monospace',
+                                    letterSpacing: '1px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+
+                            <button
+                                type="submit"
+                                disabled={isJoiningGroup || !joinGroupCode.trim()}
+                                style={{
+                                    width: '100%',
+                                    background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                                    color: '#0f172a',
+                                    fontWeight: 800,
+                                    fontSize: '1rem',
+                                    padding: '0.9rem',
+                                    borderRadius: '14px',
+                                    border: 'none',
+                                    cursor: isJoiningGroup || !joinGroupCode.trim() ? 'not-allowed' : 'pointer',
+                                    boxShadow: '0 8px 20px rgba(56, 189, 248, 0.35)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '0.5rem',
+                                    opacity: isJoiningGroup || !joinGroupCode.trim() ? 0.6 : 1
+                                }}
+                            >
+                                {isJoiningGroup ? (
+                                    <>
+                                        <Loader2 size={18} className="animate-spin" />
+                                        <span>Inscribiendo...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Inscribirme en mi Grupo</span>
+                                        <ArrowRight size={18} />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        {joinGroupError && (
+                            <div style={{ marginTop: '1rem', color: '#f87171', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                                <AlertCircle size={16} />
+                                <span>{joinGroupError}</span>
+                            </div>
+                        )}
+
+                        {joinGroupSuccess && (
+                            <div style={{ marginTop: '1rem', color: '#34d399', fontSize: '0.88rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                                <CheckCircle2 size={16} />
+                                <span>{joinGroupSuccess}</span>
+                            </div>
+                        )}
+                    </form>
+
+                    <div style={{ borderTop: '1px solid var(--border-default, rgba(255,255,255,0.08))', paddingTop: '1.25rem' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: 0 }}>
+                            ¿No tienes un código? Solicítalo directamente a tu docente encargado de la asignatura.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // ── VISTA EXCLUSIVA PARA EL SEMILLERO SIMI3D ──
     if (mainCourseDef?.abbr === 'SIMI') {
         return (
@@ -894,7 +1078,6 @@ const PanelInicio = () => {
                             <h2 className="apps-category-title">Área Académica & Evaluaciones</h2>
                         </div>
                     </div>
-
                 </div>
                 <div className="apps-hub-grid bottom-row-grid">
                     {academicoApps.map(renderAppTile)}

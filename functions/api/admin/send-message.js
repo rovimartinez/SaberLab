@@ -58,11 +58,12 @@ export async function onRequestPost({ request, env, data }) {
       return Response.json({ success: true, count: 0, message: 'No hay estudiantes conectados o registrados' });
     }
 
+    const senderId = data.user.id || data.user.email;
     const stmts = results.map(row => {
       return env.DB.prepare(`
-        INSERT INTO notificaciones (user_id, title, message, sender_name, is_popup, is_temporary, duration, read, created_at)
-        VALUES (?, ?, ?, ?, 1, ?, ?, 0, datetime('now'))
-      `).bind(row.user_id, title.trim(), message.trim(), senderName, isTemp, dur);
+        INSERT INTO notificaciones (user_id, sender_id, title, message, sender_name, is_popup, is_temporary, duration, read, created_at)
+        VALUES (?, ?, ?, ?, ?, 1, ?, ?, 0, datetime('now'))
+      `).bind(row.user_id, senderId, title.trim(), message.trim(), senderName, isTemp, dur);
     });
 
     await env.DB.batch(stmts);
@@ -79,11 +80,12 @@ export async function onRequestPost({ request, env, data }) {
     ).bind(target_user_id, target_user_id).first();
 
     const targetId = profile?.id || target_user_id;
+    const senderId = data.user.id || data.user.email;
 
     await env.DB.prepare(`
-      INSERT INTO notificaciones (user_id, title, message, sender_name, is_popup, is_temporary, duration, read, created_at)
-      VALUES (?, ?, ?, ?, 1, ?, ?, 0, datetime('now'))
-    `).bind(targetId, title.trim(), message.trim(), senderName, isTemp, dur).run();
+      INSERT INTO notificaciones (user_id, sender_id, title, message, sender_name, is_popup, is_temporary, duration, read, created_at)
+      VALUES (?, ?, ?, ?, ?, 1, ?, ?, 0, datetime('now'))
+    `).bind(targetId, senderId, title.trim(), message.trim(), senderName, isTemp, dur).run();
 
     return Response.json({ success: true, mode: 'single', target_user_id: targetId, is_temporary: Boolean(isTemp) });
   }
@@ -94,6 +96,7 @@ async function ensureNotificationsSchema(env) {
     CREATE TABLE IF NOT EXISTS notificaciones (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT,
+      sender_id TEXT,
       title TEXT,
       message TEXT,
       read INTEGER NOT NULL DEFAULT 0,
@@ -105,6 +108,7 @@ async function ensureNotificationsSchema(env) {
     )
   `).run();
 
+  try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN sender_id TEXT').run(); } catch {}
   try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN sender_name TEXT').run(); } catch {}
   try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN is_popup INTEGER DEFAULT 1').run(); } catch {}
   try { await env.DB.prepare('ALTER TABLE notificaciones ADD COLUMN is_temporary INTEGER DEFAULT 0').run(); } catch {}

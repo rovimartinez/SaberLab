@@ -117,9 +117,9 @@ const getStoredCourseColors = () => {
 };
 
 const getStoredTheme = () => {
-    if (typeof window === 'undefined') return 'dark';
+    if (typeof window === 'undefined') return 'light';
     const stored = localStorage.getItem('saberlab-theme') || localStorage.getItem('theme');
-    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'dark';
+    return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'light';
 };
 
 const SettingsPage = () => {
@@ -203,16 +203,16 @@ const SettingsPage = () => {
     };
 
     const handleResetToDefaults = () => {
-        setSelectedTheme('dark');
+        setSelectedTheme('light');
         setTokens(DEFAULT_TOKENS);
         setCourseColors(DEFAULT_COURSE_COLORS);
         
         localStorage.removeItem('saberlab-theme-tokens');
         localStorage.removeItem('saberlab-course-colors');
         localStorage.removeItem('saberlab-accent-color');
-        localStorage.setItem('saberlab-theme', 'dark');
+        localStorage.setItem('saberlab-theme', 'light');
         
-        applyTokensToDOM('dark', DEFAULT_TOKENS, DEFAULT_COURSE_COLORS);
+        applyTokensToDOM('light', DEFAULT_TOKENS, DEFAULT_COURSE_COLORS);
         window.dispatchEvent(new Event('storage'));
         
         setSavedToast(true);

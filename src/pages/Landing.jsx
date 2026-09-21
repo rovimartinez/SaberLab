@@ -1,140 +1,153 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Rocket, Cpu, Gamepad2, ChevronRight, Code } from 'lucide-react';
+import { 
+    Rocket, Cpu, Gamepad2, ChevronRight, Key, ArrowRight, Sparkles, BookOpen, Instagram, Zap
+} from 'lucide-react';
 import '../styles/Landing.css';
 
-const Landing = () => {
-  const navigate = useNavigate();
+export default function Landing() {
+    const navigate = useNavigate();
 
-  return (
-    <div className="landing-container">
-      {/* Background Elements */}
-      <div className="landing-bg-glow"></div>
-      <div className="landing-grid-bg"></div>
+    return (
+        <div className="landing-container-light">
+            {/* Spline 3D Interactive Background Scene */}
+            <div className="landing-spline-bg-wrapper">
+                <iframe 
+                    src="https://my.spline.design/genkubgreetingrobot-KpUVWUhqRjQeYHGSNgH8UlNa/" 
+                    frameBorder="0" 
+                    width="100%" 
+                    height="100%"
+                    className="landing-spline-bg-iframe"
+                    title="SaberLab 3D Interactive Background Robot"
+                />
+            </div>
 
-      {/* Navigation Header */}
-      <header className="landing-header">
-        <nav className="landing-nav">
-          <div className="landing-nav-logo">
-             <img src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" alt="SaberLab" />
-             <span className="landing-nav-logo-text">SaberLab</span>
-          </div>
-          <div className="landing-nav-links">
-             <a href="#cursos">Cursos</a>
-             <a href="#metodologia">Metodología</a>
-             <a href="#comunidad">Comunidad</a>
-             <a href="#planes">Planes</a>
-          </div>
-          <div className="landing-nav-actions">
-            <button className="landing-btn-outline" onClick={() => navigate('/login')}>Ingresar</button>
-            <button className="landing-nav-login" onClick={() => navigate('/login')}>Únete Gratis</button>
-          </div>
-        </nav>
-      </header>
+            {/* Background Light Ambient Glows */}
+            <div className="landing-bg-glow-light"></div>
+            <div className="landing-grid-bg-light"></div>
 
-      {/* Hero Content */}
-      <main className="landing-hero">
-        <div className="landing-hero-content">
-          <div className="landing-badge">
-            <Rocket size={16} color="#a855f7" />
-            <span>Campus Virtual 2.0</span>
-          </div>
-          <h1 className="landing-title">
-            Revoluciona tu Forma de Aprender <br/>
-            <span className="landing-text-gradient-primary">Haciendo.</span>
-          </h1>
-          <p className="landing-subtitle">
-            SaberLab es el primer campus interactivo. Explora diferentes disciplinas, completa misiones dinámicas,  
-            acumula experiencia y domina las habilidades del futuro desde la práctica pura.
-          </p>
-          
-          <div className="landing-actions">
-            <button className="landing-btn-primary" onClick={() => navigate('/login')}>
-              Comenzar Aventura <ChevronRight size={20} />
-            </button>
-          </div>
-          
-          <div className="landing-features">
-            <div className="landing-feature-item">
-              <Gamepad2 size={24} className="landing-feature-icon" />
-              <span>Aprendizaje Gamificado</span>
+            {/* Navigation Header */}
+            <header className="landing-header-light">
+                <nav className="landing-nav-light">
+                    <div className="landing-brand-light" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                        <img src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" alt="SaberLab" />
+                        <div className="landing-brand-col-light">
+                            <span className="landing-brand-text-light">SaberLab</span>
+                            <span className="landing-brand-sub-light">Campus STEAM</span>
+                        </div>
+                    </div>
+
+                    <div className="landing-nav-actions-light">
+                        <button 
+                            type="button" 
+                            className="btn-join-code-light" 
+                            onClick={() => navigate('/join')}
+                        >
+                            <Key size={15} />
+                            <span>Tengo un Código</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            className="btn-login-light" 
+                            onClick={() => navigate('/login')}
+                        >
+                            <span>Ingresar</span>
+                            <ArrowRight size={15} />
+                        </button>
+                    </div>
+                </nav>
+            </header>
+
+            {/* Hero Section */}
+            <main className="landing-hero-light">
+                <div className="landing-hero-content-light">
+                    <div className="landing-badge-light">
+                        <Sparkles size={16} color="#6d28d9" />
+                        <span>Campus Virtual STEAM</span>
+                    </div>
+                    
+                    <h1 className="landing-title-light">
+                        Revoluciona tu Forma de Aprender <br/>
+                        <span className="landing-text-gradient-light">Haciendo.</span>
+                    </h1>
+                    
+                    <p className="landing-subtitle-light">
+                        SaberLab es el primer campus interactivo donde la teoría se convierte en práctica. Explora disciplinas, completa misiones dinámicas y domina la tecnología desde la práctica pura.
+                    </p>
+                    
+                    {/* Se removió el botón Comenzar Aventura por requerimiento */}
+                    
+                    <div className="landing-features-light">
+                        <div className="feature-item-light">
+                            <Gamepad2 size={24} color="#0284c7" />
+                            <span>Aprendizaje Gamificado</span>
+                        </div>
+                        <div className="feature-item-light">
+                            <Rocket size={24} color="#7c3aed" />
+                            <span>Misiones Interactivas</span>
+                        </div>
+                        <div className="feature-item-light">
+                            <Cpu size={24} color="#059669" />
+                            <span>Simuladores en Vivo</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            {/* Teleprompter Ticker Bar */}
+            <div className="landing-ticker-wrapper">
+                <div className="landing-ticker-glow"></div>
+                <div className="landing-ticker-content">
+                    <div className="ticker-item">
+                        <span className="ticker-badge"><Sparkles size={13} /> CAMPUS VIRTUAL</span>
+                        <span className="ticker-text">El campus <span className="ticker-word-emphasis">interactivo</span> y <span className="ticker-word-emphasis">gamificado</span> diseñado para los <strong className="ticker-highlight">pioneros tecnológicos del mañana</strong>.</span>
+                        <Zap size={16} className="ticker-star" />
+                    </div>
+                    <div className="ticker-item">
+                        <span className="ticker-badge"><Rocket size={13} /> INNOVACIÓN STEAM</span>
+                        <span className="ticker-text">El campus <span className="ticker-word-emphasis">interactivo</span> y <span className="ticker-word-emphasis">gamificado</span> diseñado para los <strong className="ticker-highlight">pioneros tecnológicos del mañana</strong>.</span>
+                        <Sparkles size={16} className="ticker-star" />
+                    </div>
+                    <div className="ticker-item">
+                        <span className="ticker-badge"><Cpu size={13} /> TECNOLOGÍA EDUCATIVA</span>
+                        <span className="ticker-text">El campus <span className="ticker-word-emphasis">interactivo</span> y <span className="ticker-word-emphasis">gamificado</span> diseñado para los <strong className="ticker-highlight">pioneros tecnológicos del mañana</strong>.</span>
+                        <Zap size={16} className="ticker-star" />
+                    </div>
+                    <div className="ticker-item">
+                        <span className="ticker-badge"><Sparkles size={13} /> CAMPUS VIRTUAL</span>
+                        <span className="ticker-text">El campus <span className="ticker-word-emphasis">interactivo</span> y <span className="ticker-word-emphasis">gamificado</span> diseñado para los <strong className="ticker-highlight">pioneros tecnológicos del mañana</strong>.</span>
+                        <Sparkles size={16} className="ticker-star" />
+                    </div>
+                </div>
             </div>
-            <div className="landing-feature-item">
-              <Rocket size={24} className="landing-feature-icon" />
-              <span>Misiones Interactivas</span>
-            </div>
-            <div className="landing-feature-item">
-              <Cpu size={24} className="landing-feature-icon" />
-              <span>Laboratorios y Simuladores</span>
-            </div>
-          </div>
+
+            {/* Footer */}
+            <footer className="landing-footer-light">
+                <div className="landing-footer-content-light">
+                    <div className="footer-brand-light">
+                        <div className="landing-brand-light">
+                            <img src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" alt="SaberLab" />
+                            <div className="landing-brand-col-light">
+                                <span className="landing-brand-text-light">SaberLab</span>
+                                <span className="landing-brand-sub-light">Campus STEAM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="footer-links-light">
+                        <div className="footer-col-light">
+                            <h4>Comunidad</h4>
+                            <a href="https://instagram.com/semillero_simi3d" target="_blank" rel="noopener noreferrer">
+                                <Instagram size={16} color="#e1306c" />
+                                <span>Instagram SIMI3D</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div className="landing-footer-bottom-light">
+                    <p>© {new Date().getFullYear()} SaberLab Edu. Todos los derechos reservados. | Creado por <a href="https://www.instagram.com/robot.steam/" target="_blank" rel="noopener noreferrer" style={{ color: '#7c3aed', fontWeight: 700, textDecoration: 'none' }}>Ronny Martinez</a></p>
+                </div>
+            </footer>
         </div>
-
-        {/* Floating Code Visual */}
-        <div className="landing-visual">
-          <div className="landing-floating-card">
-            <div className="landing-card-header">
-              <div className="landing-mac-dots">
-                <span className="landing-dot red"></span>
-                <span className="landing-dot yellow"></span>
-                <span className="landing-dot green"></span>
-              </div>
-              <span className="landing-card-title">mision_uno.cpp</span>
-            </div>
-            <div className="landing-card-body">
-              <pre>
-                <code>
-<span style={{color: '#c678dd'}}>void</span> <span style={{color: '#61afef'}}>setup</span>() {'{'}
-  <br/>&nbsp;&nbsp;<span style={{color: '#56b6c2'}}>pinMode</span>(13, <span style={{color: '#d19a66'}}>OUTPUT</span>);
-  <br/>{'}'}
-<br/><br/>
-<span style={{color: '#c678dd'}}>void</span> <span style={{color: '#61afef'}}>loop</span>() {'{'}
-  <br/>&nbsp;&nbsp;<span style={{color: '#56b6c2'}}>digitalWrite</span>(13, <span style={{color: '#d19a66'}}>HIGH</span>);
-  <br/>&nbsp;&nbsp;<span style={{color: '#56b6c2'}}>delay</span>(1000);
-  <br/>&nbsp;&nbsp;<span style={{color: '#56b6c2'}}>digitalWrite</span>(13, <span style={{color: '#d19a66'}}>LOW</span>);
-  <br/>&nbsp;&nbsp;<span style={{color: '#56b6c2'}}>delay</span>(1000);
-  <br/>{'}'}
-                </code>
-              </pre>
-            </div>
-          </div>
-          <div className="landing-glow-orb"></div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="landing-footer">
-        <div className="landing-footer-content">
-          <div className="footer-brand">
-            <img src="https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png" alt="SaberLab Logo" />
-            <p>El campus interactivo y gamificado diseñado para los pioneros tecnológicos del mañana.</p>
-          </div>
-          <div className="footer-links">
-             <div className="footer-col">
-               <h4>Plataforma</h4>
-               <a href="#catalogo">Catálogo de Cursos</a>
-               <a href="#simuladores">Simuladores 3D</a>
-               <a href="#misiones">Sistema de Misiones</a>
-             </div>
-             <div className="footer-col">
-               <h4>Comunidad</h4>
-               <a href="#discord">Servidor de Discord</a>
-               <a href="#foros">Foros de Apoyo</a>
-               <a href="#blog">Blog de Estudiantes</a>
-             </div>
-             <div className="footer-col">
-               <h4>Soporte</h4>
-               <a href="#terminos">Términos de Uso</a>
-               <a href="#privacidad">Privacidad</a>
-               <a href="#contacto">Contacto</a>
-             </div>
-          </div>
-        </div>
-        <div className="landing-footer-bottom">
-          <p>© {new Date().getFullYear()} SaberLab Edu. Todos los derechos reservados.</p>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-export default Landing;
+    );
+}

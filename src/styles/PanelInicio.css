@@ -17,12 +17,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.55rem 1.6rem;
+    padding: 1.2rem 1.5rem;
     background: var(--surface-panel);
     border: 1px solid var(--border-default);
     border-radius: 18px;
     gap: 1.2rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     box-shadow: var(--shadow-card);
     overflow: visible;
 }
@@ -30,7 +30,15 @@
 .hero-left {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.3rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.hero-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 .hero-greeting {
@@ -595,6 +603,28 @@
     color: #ffffff;
     border-color: var(--brand-primary);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.theme-option-btn.theme-option-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: var(--surface-card);
+    border-color: var(--border-subtle);
+    color: var(--text-muted, #94a3b8);
+    pointer-events: none;
+    transform: none !important;
+}
+
+.theme-opt-badge-disabled {
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
 }
 
 /* ── Caja de Inscripción a Grupos de Cursos (Modal Mi Perfil) ── */
@@ -2260,6 +2290,37 @@
     transform: scale(1.05);
 }
 
+.lesson-visibility-toggle-btn.hidden {
+    background: rgba(251, 146, 60, 0.12);
+    color: #fb923c;
+    border-color: rgba(251, 146, 60, 0.3);
+}
+
+.lesson-visibility-toggle-btn.hidden:hover {
+    background: rgba(251, 146, 60, 0.22);
+    border-color: rgba(251, 146, 60, 0.5);
+    transform: scale(1.05);
+}
+
+/* Fila de lección oculta (solo visible para staff) */
+.module-lesson-row.hidden-lesson {
+    border-style: dashed;
+    border-color: rgba(251, 146, 60, 0.25);
+    background: rgba(251, 146, 60, 0.04);
+}
+
+.module-lesson-row.hidden-lesson .module-lesson-title {
+    text-decoration: line-through;
+    text-decoration-color: rgba(251, 146, 60, 0.5);
+}
+
+/* Icono de estado 'hidden' en el bullet de lección */
+.lesson-status-icon.hidden {
+    background: rgba(251, 146, 60, 0.15);
+    border-color: rgba(251, 146, 60, 0.35);
+    color: #fb923c;
+}
+
 .course-plan-modal-footer {
     display: flex;
     align-items: center;
@@ -2278,9 +2339,229 @@
     min-width: 200px;
 }
 
-/* ── MODAL UNIVERSAL: ANCHO AMPLIADO PARA CURSOS ── */
+/* ── MODAL UNIVERSAL: ANCHO AMPLIADO PARA CURSOS Y COMPONENTES 3D ── */
 .app-modal-container.is-courses-modal {
     max-width: 780px;
+}
+
+.app-modal-container.is-components-modal {
+    max-width: 1440px;
+    width: 96vw;
+    max-height: 94vh;
+    height: auto;
+}
+
+.app-modal-container.is-components-modal .app-modal-header {
+    padding: 0.85rem 1.4rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.app-modal-container.is-components-modal .app-modal-icon-glow {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+}
+
+.app-modal-container.is-components-modal .app-modal-title {
+    font-size: 1.12rem;
+    letter-spacing: -0.2px;
+}
+
+.app-modal-container.is-components-modal .app-modal-subtitle {
+    font-size: 0.78rem;
+}
+
+.app-modal-container.is-components-modal .app-modal-body {
+    padding: 1rem 1.4rem 1.25rem 1.4rem;
+    gap: 0.85rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ── COMPONENTES 3D & ENCICLOPEDIA TÉCNICA (RESPONSIVE) ── */
+.components-modal-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.components-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    background: var(--surface-card);
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle);
+    padding: 0.45rem 0.65rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    position: relative;
+    z-index: 40;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.components-categories-track {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 0;
+}
+
+.components-categories-track::-webkit-scrollbar {
+    display: none;
+}
+
+.components-cat-pill-wrapper {
+    flex-shrink: 0;
+}
+
+.components-search-box {
+    position: relative;
+    width: 185px;
+    flex: 0 0 185px;
+    flex-shrink: 0;
+}
+
+.components-main-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 1.15rem;
+    align-items: stretch;
+    width: 100%;
+}
+
+.components-viewer-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-card);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+    min-height: 480px;
+}
+
+.components-iframe-wrap {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 420px;
+    background: #12161a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.components-info-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-height: 560px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+@media (max-width: 900px) {
+    .components-top-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        padding: 0.65rem;
+    }
+
+    .components-categories-track {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        overflow-x: visible;
+        padding-bottom: 2px;
+    }
+
+    .components-cat-pill-wrapper {
+        flex: 1 1 auto;
+        min-width: fit-content;
+    }
+
+    .components-cat-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 6px 10px !important;
+        font-size: 0.76rem !important;
+    }
+
+    .components-search-box {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .components-main-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .components-viewer-card {
+        min-height: 290px;
+        border-radius: 14px;
+    }
+
+    .components-iframe-wrap {
+        min-height: 270px;
+        height: 290px;
+    }
+
+    .components-info-card {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    .app-modal-container.is-components-modal {
+        width: 96vw;
+        max-height: 94vh;
+        border-radius: 18px;
+    }
+
+    .app-modal-container.is-components-modal .app-modal-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .app-modal-container.is-components-modal .app-modal-body {
+        padding: 0.75rem 0.85rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .components-categories-track {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.35rem;
+    }
+
+    .components-cat-pill-wrapper {
+        width: 100%;
+    }
+
+    .components-cat-btn {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: space-between !important;
+        padding: 6px 8px !important;
+        font-size: 0.74rem !important;
+    }
+
+    .components-iframe-wrap {
+        min-height: 240px;
+        height: 250px;
+    }
 }
 
 /* ── VISTA: TODOS MIS CURSOS (MODAL) ── */
@@ -2658,34 +2939,46 @@
         padding: 0.85rem 1rem;
         gap: 0.75rem;
         border-radius: 16px;
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: nowrap;
     }
 
     .hero-left {
-        gap: 0.2rem;
+        gap: 0.15rem;
+        flex: 1;
+        min-width: 0;
     }
 
     .hero-greeting {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .hero-subtitle {
-        font-size: 0.82rem;
-        line-height: 1.35;
+        font-size: 0.8rem;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .hero-right {
         display: flex;
-        justify-content: flex-end;
+        align-items: center;
+        flex-shrink: 0;
     }
 
     .hero-user-pill {
-        width: 100%;
-        justify-content: space-between;
-        padding: 0.4rem 0.65rem 0.4rem 0.85rem;
+        width: auto;
+        justify-content: flex-end;
+        padding: 0.35rem 0.5rem 0.35rem 0.75rem;
         border-radius: 12px;
+        gap: 0.6rem;
     }
 
     .hero-user-meta {
@@ -2759,5 +3052,111 @@
         max-width: 90%;
     }
 }
+
+/* ── Modo de Gestión de Visibilidad (Lápiz Admin / Botón 3 Estados) ── */
+.panel-admin-manage-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 99px;
+    background: var(--surface-card);
+    border: 1.5px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.panel-admin-manage-toggle-btn:hover {
+    background: var(--surface-card-hover);
+    border-color: var(--brand-primary);
+    color: var(--brand-primary);
+    transform: translateY(-1px);
+}
+
+.panel-admin-manage-toggle-btn.active-manage-mode {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.panel-manage-badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+    display: inline-block;
+}
+
+.app-hub-tile-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-tile-center-toggle-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    transform: none;
+    z-index: 35;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), 0 0 0 2px #ffffff;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(6px);
+}
+
+.app-tile-center-toggle-btn.is-state-unlocked {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+}
+
+.app-tile-center-toggle-btn.is-state-unlocked:hover {
+    transform: scale(1.18);
+    box-shadow: 0 6px 14px rgba(16, 185, 129, 0.6), 0 0 0 2.5px #ffffff;
+}
+
+.app-tile-center-toggle-btn.is-state-locked {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+}
+
+.app-tile-center-toggle-btn.is-state-locked:hover {
+    transform: scale(1.18);
+    box-shadow: 0 6px 14px rgba(239, 68, 68, 0.6), 0 0 0 2.5px #ffffff;
+}
+
+.app-tile-center-toggle-btn.is-state-hidden {
+    background: linear-gradient(135deg, rgba(100, 116, 139, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%);
+    border: 1.5px solid #ffffff;
+    color: #ffffff;
+}
+
+.app-tile-center-toggle-btn.is-state-hidden:hover {
+    transform: scale(1.18);
+    box-shadow: 0 6px 14px rgba(100, 116, 139, 0.6), 0 0 0 2.5px #ffffff;
+}
+
+.app-tile-toggle-label {
+    display: none;
+}
+
+.app-hub-tile-hidden-preview {
+    opacity: 0.4 !important;
+    filter: grayscale(0.85);
+}
+
 
 

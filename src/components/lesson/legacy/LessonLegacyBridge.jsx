@@ -2,6 +2,11 @@ import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import ArduinoSimulatorV2 from '../../simulators/RE/ArduinoSimulatorV2';
 import LedSimulator from '../../simulators/RE/LedSimulator';
+import FunctionControlSimulator from '../../simulators/RE/FunctionControlSimulator';
+import L298NMotorSimulator from '../../simulators/RE/L298NMotorSimulator';
+import L298NFixedSimulator from '../../simulators/RE/L298NFixedSimulator';
+import IrPirSensorSimulator from '../../simulators/RE/IrPirSensorSimulator';
+import UltrasonicSensorSimulator from '../../simulators/RE/UltrasonicSensorSimulator';
 import ConductorAnimation from '../../simulators/electricity/ConductorAnimation';
 import InteractiveOhmLaw from '../../simulators/electricity/InteractiveOhmLaw';
 import ResistorCalculator from '../../simulators/electricity/ResistorCalculator';
@@ -70,6 +75,41 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
                 'arduino-simulator-container',
                 <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                     <ArduinoSimulatorV2 />
+                </div>
+            );
+
+            mountInto(
+                'function-control-simulator-container',
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <FunctionControlSimulator />
+                </div>
+            );
+
+            mountInto(
+                'l298n-motor-simulator-container',
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <L298NMotorSimulator />
+                </div>
+            );
+
+            mountInto(
+                'l298n-fixed-simulator-container',
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <L298NFixedSimulator />
+                </div>
+            );
+
+            mountInto(
+                'ir-pir-sensor-simulator-container',
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <IrPirSensorSimulator />
+                </div>
+            );
+
+            mountInto(
+                'ultrasonic-sensor-simulator-container',
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                    <UltrasonicSensorSimulator />
                 </div>
             );
 

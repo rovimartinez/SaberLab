@@ -9,12 +9,12 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_DEFAULT_KEY = '';
 
 
-// Pool balanceado de modelos en Groq (Ultra veloz con cuota protegida 8000 TPM)
+// Pool balanceado de modelos en Groq (Ultra veloz con cuota protegida)
 const GROQ_MODELS_POOL = [
-  'qwen/qwen3.8-27b',       // Primario: Ultra rápido (<1s), gran razonamiento en español y tablas técnicas
-  'openai/gpt-oss-20b',     // Secundario: Modelo ligero de bajísimo consumo de tokens, nunca satura la cuota
-  'openai/gpt-oss-120b',    // Tercero: 120B de OpenAI de alta capacidad de deducción
-  'qwen/qwen3.6-27b'        // Cuarto: Respaldo confiable
+  'qwen/qwen3.8-27b',       // Primario: Excelente razonamiento en español y capacidad técnica
+  'openai/gpt-oss-20b',     // Secundario: Modelo veloz y fluido
+  'openai/gpt-oss-120b',    // Tercero: Alta capacidad
+  'groq/compound'           // Cuarto: Multi-engine
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -625,8 +625,8 @@ export async function onRequestPost({ request, env, data }) {
       ...compactMessages
     ];
 
-    const maxTokensLimit = isBrief ? 350 : 1200;
-    const computedTemp = isBrief ? 0.35 : Math.min(Math.max(temperature, 0.2), 0.9);
+    const maxTokensLimit = isBrief ? 250 : 500;
+    const computedTemp = isBrief ? 0.35 : Math.min(Math.max(temperature, 0.2), 0.8);
 
     let assistantRawContent = null;
     let usedModel = 'SaberLab AI';
@@ -810,12 +810,83 @@ Lamento no poder ayudarte ahora mismo con esta respuesta. Para que no detengas t
 // ─────────────────────────────────────────────────────────────────────────────
 
 function generateOfflineFallbackReply(query, botType, isBrief = false) {
-  const q = (query || '').toLowerCase();
+  const q = (query || '').toLowerCase().trim();
 
+  // 1. Detección de saludos conversacionales
+  if (/^(hola|buenas|buenos d[ií]as|buenas tardes|buenas noches|hey|saludos|que tal|qu[eé] hubo)/i.test(q)) {
+    const greetings = {
+      electrobot: `[TITULO: Saludo y Asesoría en Electricidad]
+¡Hola! ⚡ Soy **ElectroBot**, tu tutor de Electricidad y Electrónica Básica.
+
+¿En qué circuito, cálculo (Ley de Ohm, Watt, Kirchhoff) o componente te puedo orientar hoy?`,
+      robobot: `[TITULO: Saludo y Asesoría en Robótica]
+¡Hola! 🤖 Soy **RoboBot**, tu tutor de Robótica Educativa y Arduino C++.
+
+¿Qué reto, código en Tinkercad o conexión de sensores estás desarrollando?`,
+      tridibot: `[TITULO: Saludo y Asesoría en Modelado 3D]
+¡Hola! 🧊 Soy **TridiBot**, tu tutor de Modelado 3D y Blender.
+
+¿Qué herramienta, atajo de teclado, modificador o geometría deseas consultar?`,
+      impribot: `[TITULO: Saludo y Asesoría en Impresión 3D]
+¡Hola! 🚀 Soy **ImpriBot**, especialista en manufactura aditiva y parámetros de impresión 3D en SIMI3D.
+
+¿Qué duda tienes sobre filamentos (PLA, PETG, TPU), slicers o calibración de tu impresora?`
+    };
+    return greetings[botType] || greetings.impribot;
+  }
+
+  // 2. Detección de expresiones de duda corta o aclaración ("y eso q es", "que que?", "¿cómo?", "¿de qué?", "no entendí")
+  if (/^(que|qu[eé] que\??|c[oó]mo\??|c[oó]mo as[ií]\??|y eso q(?:ue)? es\??|qu[eé] es eso\??|de qu[eé] es eso\??|no entend[ií]|no entiendo|a qu[eé] te refieres|expl[ií]came|por qu[eé]\??)$/i.test(q)) {
+    const botClarifications = {
+      electrobot: `[TITULO: Aclaración Técnica - Electricidad]
+⚡ Me refiero a que podemos calcular juntos cualquier valor de tu circuito:
+* **Voltaje (V)**, **Corriente (I)** o **Resistencia (R)** con Ley de Ohm.
+* **Potencia disipada (P)** para saber si una resistencia de 1/4W se recalienta.
+* Reducción de resistencias en serie, paralelo o mixtas.
+
+¿Cuál es el ejercicio o valor con el que tienes dudas?`,
+      robobot: `[TITULO: Aclaración Técnica - Robótica]
+🤖 Me refiero a que puedo ayudarte paso a paso con:
+* El código C++ en \`void setup()\` o \`void loop()\`.
+* Conectar sensores como el ultrasónico HC-SR04, LDR o seguidores de línea.
+* Controlar servomotores SG90 o motores DC con puente H L298N en Tinkercad.
+
+¿Qué parte de tu programa o circuito deseas revisar?`,
+      tridibot: `[TITULO: Aclaración Técnica - Modelado 3D]
+🧊 Me refiero a que puedo orientarte en:
+* Atajos de teclado en Blender (**G**, **R**, **S**, **Ctrl+R**, **Tab**).
+* Selección de Vértices, Aristas y Caras (**1, 2, 3**).
+* Asegurar que tus mallas sean *manifold* (estancas) para exportar a 3D.
+
+¿En qué objeto o atajo te encuentras trabajando?`,
+      impribot: `[TITULO: Aclaración Técnica - Impresión 3D]
+🚀 Esta tabla muestra las temperaturas recomendadas de extrusor y cama caliente para los filamentos más usados en impresión 3D:
+
+* **PLA**: El material estándar más fácil de imprimir (no se deforma ni despega).
+* **PETG**: Más resistente al impacto y a la temperatura exterior.
+* **ABS**: Muy resistente pero requiere cabina cerrada para evitar que se despegue (*warping*).
+* **TPU**: Filamento elástico flexible (tipo goma).
+
+¿Tienes alguna pieza en mente para imprimir o qué impresora estás usando?`
+    };
+    return botClarifications[botType] || botClarifications.impribot;
+  }
+
+  // 3. Respuestas temáticas de ElectroBot (EE)
   if (botType === 'electrobot') {
+    if (q.includes('ohm') || q.includes('v =') || q.includes('formula')) {
+      return `[TITULO: Cálculo con Ley de Ohm]
+La **Ley de Ohm** establece la relación fundamental entre Tensión ($V$), Corriente ($I$) y Resistencia ($R$):
+
+* **$V = I \\times R$** (Tensión en Voltios)
+* **$I = V / R$** (Corriente en Amperios)
+* **$R = V / I$** (Resistencia en Ohmios $\\Omega$)
+
+> 💡 **Ejemplo práctico:** Con una fuente de **9V** y un resistor de **220 $\\Omega$**, la corriente circulante es:  
+> $I = 9\\text{V} / 220\\,\\Omega = 0.0409\\,\\text{A} = 40.9\\,\\text{mA}$.`;
+    }
     if (isBrief) {
       return `[TITULO: Leyes Eléctricas Fundamentales]
-
 La Ley de Ohm (**V = I × R**) vincula tensión, corriente y resistencia; la Ley de Watt (**P = V × I**) determina la potencia disipada. En circuitos serie la corriente es idéntica en toda la malla, mientras que en paralelo el voltaje se conserva constante en cada rama.`;
     }
     return `[TITULO: Leyes Fundamentales de Circuitos]
@@ -825,18 +896,18 @@ En el curso de **Electricidad y Electrónica Básica**, las dos relaciones cuant
 
 | Ley / Principio | Ecuación | Variables | Aplicación |
 |---|---|---|---|
-| **Ley de Ohm** | $V = I \\cdot R$ | $V$: Voltios, $I$: Amperios, $R$: Ohmios | Relación tensión-corriente en resistores |
-| **Ley de Watt** | $P = V \\cdot I$ | $P$: Vatios (W), $V$: Voltios, $I$: Amperios | Potencia y calor disipado por efecto Joule |
-| **Resistencias Serie** | $R_{eq} = R_1 + R_2$ | $I$ es idéntica en toda la malla | Divisor de tensión |
-| **Resistencias Paralelo** | $1/R_{eq} = 1/R_1 + 1/R_2$ | $V$ es idéntico en cada rama | Divisor de corriente (LCK) |
+| **Ley de Ohm** | V = I × R | V: Voltios, I: Amperios, R: Ohmios | Relación tensión-corriente en resistores |
+| **Ley de Watt** | P = V × I | P: Vatios (W), V: Voltios, I: Amperios | Potencia y calor disipado por efecto Joule |
+| **Resistencias Serie** | Req = R1 + R2 | I es idéntica en toda la malla | Divisor de tensión |
+| **Resistencias Paralelo** | 1/Req = 1/R1 + 1/R2 | V es idéntico en cada rama | Divisor de corriente (LCK) |
 
 ¿Qué circuito o componente deseas que analicemos paso a paso?`;
   }
 
+  // 4. Respuestas temáticas de RoboBot (RE)
   if (botType === 'robobot') {
     if (isBrief) {
       return `[TITULO: Programación en Arduino C++]
-
 Todo programa en Arduino se estructura en **void setup()** (inicialización de pines y comunicación Serial) y **void loop()** (bucle cíclico donde se leen sensores como el HC-SR04 y se comandan motores o servos).`;
     }
     return `[TITULO: Control y Programación en Arduino]
@@ -858,10 +929,10 @@ En el curso de **Robótica Educativa**, la arquitectura de control en Arduino C+
 ¿En qué reto o código estás trabajando en Tinkercad?`;
   }
 
+  // 5. Respuestas temáticas de TridiBot (MA)
   if (botType === 'tridibot') {
     if (isBrief) {
       return `[TITULO: Atajos Básicos de Blender]
-
 Los atajos primarios son: **Tab** (alternar Modo Objeto y Modo Edición), **1 / 2 / 3** (selección por Vértice, Arista y Cara), **G** (Mover), **R** (Rotar), **S** (Escalar) y **Ctrl + R** (añadir Loop Cut).`;
     }
     return `[TITULO: Atajos y Modos de Trabajo en Blender]
@@ -880,10 +951,9 @@ Los atajos primarios son: **Tab** (alternar Modo Objeto y Modo Edición), **1 / 
 ¿En qué pieza o modelo 3D estás trabajando?`;
   }
 
-  // ImpriBot por defecto
+  // 6. Respuestas temáticas de ImpriBot (SIMI)
   if (isBrief) {
     return `[TITULO: Parámetros Térmicos PLA y PETG]
-
 Para **PLA**: boquilla a 200-210 °C y cama a 55-60 °C. Para **PETG**: boquilla a 230-240 °C y cama a 75-80 °C. Mantén la primera capa a baja velocidad (20 mm/s) para máxima adherencia y evitar warping.`;
   }
   return `[TITULO: Parámetros Térmicos de Filamentos]
@@ -898,3 +968,4 @@ Para **PLA**: boquilla a 200-210 °C y cama a 55-60 °C. Para **PETG**: boquilla
 
 ¿Qué parámetro o calibración necesitas en tu Slicer?`;
 }
+

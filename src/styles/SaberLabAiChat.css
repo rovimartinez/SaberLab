@@ -8,15 +8,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     background: linear-gradient(135deg, #0284c7 0%, #06b6d4 50%, #6366f1 100%);
     color: #ffffff;
     border: 1.5px solid rgba(255, 255, 255, 0.5);
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 8px 24px rgba(6, 182, 212, 0.45), 0 2px 8px rgba(25, 37, 132, 0.2);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     animation: saberlabAiPulse 2.8s infinite ease-in-out;
 }
 
@@ -31,10 +31,10 @@
 }
 
 .saberlab-ai-fab-logo {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .saberlab-ai-fab-icon {
@@ -50,12 +50,12 @@
 
 @keyframes saberlabAiPulse {
     0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7);
+        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.45), 0 0 0 0 rgba(6, 182, 212, 0.7);
     }
     50% {
-        transform: scale(1.08);
-        box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
+        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.45), 0 0 0 6px rgba(6, 182, 212, 0);
+    }
+}dow: 0 0 0 8px rgba(6, 182, 212, 0);
     }
 }
 
@@ -1286,13 +1286,231 @@
     margin-left: 6px;
 }
 
+/* ── MODAL MODERNO DE CONFIRMACIÓN DE ELIMINACIÓN ── */
+.saberlab-ai-confirm-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 200;
+    background: rgba(15, 23, 42, 0.68);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: saberlabConfirmFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes saberlabConfirmFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.saberlab-ai-confirm-modal {
+    width: 100%;
+    max-width: 320px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 24px 20px 20px;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22), 0 8px 18px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: saberlabConfirmZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes saberlabConfirmZoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.saberlab-ai-confirm-icon-wrap {
+    margin-bottom: 14px;
+}
+
+.saberlab-ai-confirm-icon-bg {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: #fee2e2;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.22);
+}
+
+.saberlab-ai-confirm-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.2px;
+}
+
+.saberlab-ai-confirm-desc {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.45;
+    margin: 0 0 14px 0;
+}
+
+.saberlab-ai-confirm-preview {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    padding: 8px 12px;
+    margin-bottom: 18px;
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: left;
+    overflow: hidden;
+}
+
+.saberlab-ai-confirm-preview-icon {
+    flex-shrink: 0;
+    color: #64748b;
+}
+
+.saberlab-ai-confirm-preview-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.saberlab-ai-confirm-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.saberlab-ai-confirm-btn {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 750;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1.5px solid transparent;
+}
+
+.saberlab-ai-confirm-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.saberlab-ai-confirm-btn.cancel {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.saberlab-ai-confirm-btn.cancel:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.saberlab-ai-confirm-btn.delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    border-color: #dc2626;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.saberlab-ai-confirm-btn.delete:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
+}
+
+.saberlab-ai-confirm-btn.delete:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.saberlab-ai-spin {
+    animation: saberlabAiSpin 1s linear infinite;
+}
+
+@keyframes saberlabAiSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Modo oscuro para confirmación */
+[data-theme='dark'] .saberlab-ai-confirm-modal {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55);
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-icon-bg {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.38);
+    color: #f87171;
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-title {
+    color: #f8fafc;
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-desc {
+    color: #94a3b8;
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-preview {
+    background: #0f172a;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-preview-icon {
+    color: #94a3b8;
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-btn.cancel {
+    background: #334155;
+    border-color: #475569;
+    color: #f1f5f9;
+}
+
+[data-theme='dark'] .saberlab-ai-confirm-btn.cancel:hover:not(:disabled) {
+    background: #475569;
+    color: #ffffff;
+    border-color: #64748b;
+}
+
 /* Responsividad móvil */
 @media (max-width: 640px) {
     .saberlab-ai-fab {
-        bottom: 80px;
+        bottom: 20px;
         right: 16px;
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
     }
 
     .saberlab-ai-window {
@@ -1305,3 +1523,4 @@
         border-radius: 0;
     }
 }
+

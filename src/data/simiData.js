@@ -12,7 +12,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Modelado 3D',
         color: '#f97316',
         icon: 'Box',
-        badgeImageUrl: 'https://i.postimg.cc/8sN93n9T/Insignia-Tinkercad.png',
+        badgeImageUrl: '/badges/tinkercad.webp',
         description: 'Diseño geométrico rápido, sólidos, huecos y ensamblajes didácticos para colegios.',
         tiers: [
             { level: 'I', title: 'Tinkercad I', expReq: 100, reqDesc: 'Crear primer sólido agrupado manifold y exportar .STL' },
@@ -29,7 +29,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Modelado 3D',
         color: '#ec4899',
         icon: 'Sparkles',
-        badgeImageUrl: 'https://i.postimg.cc/8JZ52Xdp/Insignia-Blender.png',
+        badgeImageUrl: '/badges/blender.webp',
         description: 'Topología poligonal, modificadores, esculpido y optimización de mallas manifold.',
         tiers: [
             { level: 'I', title: 'Blender I', expReq: 100, reqDesc: 'Navegación espacial, transformaciones de precisión y extrusión' },
@@ -46,7 +46,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Modelado 3D',
         color: '#06b6d4',
         icon: 'Cpu',
-        badgeImageUrl: 'https://i.postimg.cc/nXNq5rVc/Insignia-Fusion-360.png',
+        badgeImageUrl: '/badges/fusion.webp',
         description: 'Diseño mecánico paramétrico, bocetos acotados, restricciones y tolerancia de ensamble.',
         tiers: [
             { level: 'I', title: 'Fusion CAD I', expReq: 100, reqDesc: 'Boceto 2D restringido con cotas dimensionales exactas' },
@@ -63,6 +63,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Laminación',
         color: '#10b981',
         icon: 'Layers',
+        badgeImageUrl: '/badges/laminadores.webp',
         description: 'Estrategias de código G, soportes de árbol, patrones de relleno y optimización.',
         tiers: [
             { level: 'I', title: 'Slicer I', expReq: 100, reqDesc: 'Laminar primer modelo con Cura / OrcaSlicer y previsualizar capas' },
@@ -79,6 +80,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Hardware',
         color: '#eab308',
         icon: 'Flame',
+        badgeImageUrl: '/badges/impresion-fmd.webp',
         description: 'Operación de impresoras de filamento (PLA/PETG/TPU), calibración y mantenimiento.',
         tiers: [
             { level: 'I', title: 'FDM I', expReq: 100, reqDesc: 'Calibración de cama (Mesh Bed) y primera capa uniforme' },
@@ -95,6 +97,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Hardware',
         color: '#8b5cf6',
         icon: 'FlaskConical',
+        badgeImageUrl: '/badges/impresion-sla.webp',
         description: 'Impresión en resina fotosensible, lavado IPA, curado UV y bioseguridad.',
         tiers: [
             { level: 'I', title: 'SLA I', expReq: 100, reqDesc: 'Protocolo de bioseguridad, guantes, mascarilla y filtrado de resina' },
@@ -111,6 +114,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Proyectos',
         color: '#38bdf8',
         icon: 'Rocket',
+        badgeImageUrl: '/badges/proyectos.webp',
         description: 'Desarrollo de prototipos funcionales integrados con electrónica y robótica.',
         tiers: [
             { level: 'I', title: 'Proyectos I', expReq: 100, reqDesc: 'Fabricar un ensamble mecánico funcional con rodamientos/tornillería' },
@@ -127,6 +131,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Extensión',
         color: '#14b8a6',
         icon: 'School',
+        badgeImageUrl: '/badges/visitas-escolares.webp',
         description: 'Divulgación escolar, salidas de campo y talleres interactivos para bachillerato.',
         tiers: [
             { level: 'I', title: 'Misión Escolar I', expReq: 100, reqDesc: 'Participar como asistente en una visita a institución educativa' },
@@ -143,6 +148,7 @@ export const SIMI_PINS_CATALOG = [
         category: 'Investigación',
         color: '#f43f5e',
         icon: 'FileText',
+        badgeImageUrl: '/badges/investigacion.webp',
         description: 'Redacción científica, formulación de artículos IEEE y ensayos mecánicos.',
         tiers: [
             { level: 'I', title: 'Investigación I', expReq: 100, reqDesc: 'Llevar bitácora de investigación y registro de fallos/parámetros' },
@@ -358,10 +364,10 @@ export const SIMI_SCHOOL_EVENTS = [
 // 4. Repositorio de Proyectos I+D+i del Semillero
 export const SIMI_PROJECTS = [
     {
-        id: 'proj-1',
+        id: 'SIMI0001',
         title: 'Brazo Robótico Articulado 4-DOF SaberLab',
         author: 'Semillero SIMI3D',
-        status: 'En Prototipado',
+        status: 'Prototipado',
         material: 'PETG Negro & PLA Cian',
         printTime: '18h 45m',
         weightGrams: 340,
@@ -369,10 +375,10 @@ export const SIMI_PROJECTS = [
         description: 'Estructura mecánica impresa con tolerancias de 0.25mm para servomotores MG996R y rodamientos 608ZZ.'
     },
     {
-        id: 'proj-2',
+        id: 'SIMI0002',
         title: 'Carcasa Modular para Multímetro Digital SaberLab',
         author: 'Línea de Prototipado',
-        status: 'Completado / Validado',
+        status: 'Completado y Validado',
         material: 'PLA+ Alta Resistencia',
         printTime: '4h 10m',
         weightGrams: 95,
@@ -380,10 +386,10 @@ export const SIMI_PROJECTS = [
         description: 'Chasis ergonómico con inserciones roscadas de latón M3 para fijación de pantalla OLED y tarjeta ESP32.'
     },
     {
-        id: 'proj-3',
+        id: 'SIMI0003',
         title: 'Biomodelo Anatómico Cardíaco para Docencia',
         author: 'Línea Biomodelado SLA',
-        status: 'Ensayos Mecánicos',
+        status: 'Pruebas y Validación',
         material: 'Resina Fotopolimérica Flexible',
         printTime: '7h 30m',
         weightGrams: 120,
