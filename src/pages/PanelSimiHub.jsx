@@ -383,9 +383,22 @@ export default function PanelSimiHub({
                 ]);
 
                 if (res?.data?.success && isMounted) {
-                    if (res.data.events && res.data.events.length > 0) {
-                        setSimiEvents(res.data.events);
-                        localStorage.setItem('simi_events_list', JSON.stringify(res.data.events));
+                    const dbEvents = Array.isArray(res.data.events) ? res.data.events : [];
+                    if (dbEvents.length > 0) {
+                        setSimiEvents(dbEvents);
+                        localStorage.setItem('simi_events_list', JSON.stringify(dbEvents));
+                    } else if (isLeader) {
+                        // Respaldo de seguridad: si D1 aún no tiene eventos pero el líder/docente tiene eventos en local,
+                        // auto-migrarlos a D1 para que queden disponibles para todos los estudiantes
+                        const localSaved = localStorage.getItem('simi_events_list');
+                        let localEvents = [];
+                        try { if (localSaved) localEvents = JSON.parse(localSaved); } catch (e) {}
+                        if (Array.isArray(localEvents) && localEvents.length > 0) {
+                            api('/simi', {
+                                method: 'POST',
+                                body: { action: 'sync-all-events', items: localEvents }
+                            }).catch(err => console.warn('[SIMI] Auto-sync local events error:', err));
+                        }
                     }
                     if (res.data.projects && res.data.projects.length > 0) {
                         const uniqueProjectsMap = new Map();

@@ -692,6 +692,62 @@ export async function onRequestPost({ request, env, data }) {
       return Response.json({ success: true, count: items.length });
     }
 
+    // ── 12.B. SINCRONIZAR / MIGRAR TODOS LOS EVENTOS A D1 (AUTO-RESPALDO SEGURO) ──
+    if (action === 'sync-all-events') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      const { items } = body;
+      if (!Array.isArray(items)) return Response.json({ error: 'items debe ser un array' }, { status: 400 });
+
+      for (const item of items) {
+        if (!item || !item.id) continue;
+        const eventType = item.eventType || item.event_type || 'visita_escolar';
+        const schoolName = item.schoolName || item.school_name || 'Institución Educativa STEAM';
+        const date = item.date || '';
+        const time = item.time || '8:30 AM – 12:00 PM';
+        const location = item.location || 'Aula Múltiple STEAM';
+        const status = item.status || 'Programada';
+        const leader = item.leader || 'Ing. Ronny Martinez Reyes';
+        const objective = item.objective || '';
+        const equipmentStr = typeof item.equipment === 'string' ? item.equipment : JSON.stringify(item.equipment || []);
+        const badgeTier = item.badgeTier || item.badge_tier || 'Misión Escolar II';
+        const studentsCount = Number(item.studentsCount || item.students_count || 0);
+        const visState = item.visibilityState || item.visibility_state || (item.isLocked || item.is_locked ? 'locked' : (item.isHidden || item.is_hidden ? 'hidden' : 'unlocked'));
+        const lockedVal = visState === 'locked' ? 1 : 0;
+        const hiddenVal = visState === 'hidden' ? 1 : 0;
+
+        await env.DB.prepare(`
+          INSERT INTO simi_eventos (
+            id, event_type, school_name, date, time, location,
+            status, leader, objective, equipment, badge_tier, students_count,
+            visibility_state, is_locked, is_hidden, updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          ON CONFLICT(id) DO UPDATE SET
+            event_type = excluded.event_type,
+            school_name = excluded.school_name,
+            date = excluded.date,
+            time = excluded.time,
+            location = excluded.location,
+            status = excluded.status,
+            leader = excluded.leader,
+            objective = excluded.objective,
+            equipment = excluded.equipment,
+            badge_tier = excluded.badge_tier,
+            students_count = excluded.students_count,
+            visibility_state = excluded.visibility_state,
+            is_locked = excluded.is_locked,
+            is_hidden = excluded.is_hidden,
+            updated_at = datetime('now')
+        `).bind(
+          item.id, eventType, schoolName, date, time, location,
+          status, leader, objective, equipmentStr, badgeTier, studentsCount,
+          visState, lockedVal, hiddenVal
+        ).run();
+      }
+
+      return Response.json({ success: true, count: items.length });
+    }
+
     // ── 13. BORRAR NOTIFICACIONES SIMI (DIRECTO DESDE SIMI API) ──
     if (action === 'delete-notifications') {
       const { ids, all } = body;

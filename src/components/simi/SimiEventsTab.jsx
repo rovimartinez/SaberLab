@@ -67,7 +67,8 @@ export default function SimiEventsTab({
             });
             if (Object.keys(mapFromEvents).length > 0) {
                 setEventVisibilityMap(prev => {
-                    const merged = { ...mapFromEvents, ...prev };
+                    // La BD (mapFromEvents) es la fuente de verdad y tiene precedencia sobre el caché local (prev)
+                    const merged = { ...prev, ...mapFromEvents };
                     localStorage.setItem('simi_event_visibility_map', JSON.stringify(merged));
                     return merged;
                 });
