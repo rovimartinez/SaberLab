@@ -600,25 +600,20 @@ export default function SimiEventsTab({
                             }}
                             title={effectiveLocked ? `Actividad Bloqueada: ${evt.schoolName || evt.school_name || evt.title}` : isHidden ? `[Oculta para alumnos] ${evt.schoolName || evt.school_name || evt.title}` : 'Ver detalles y lista de asistencia'}
                         >
-                            {/* Botón Central de 3 Estados (Visible / Bloqueado / Oculto) en Modo Gestión (Solo Admin/Líder) */}
+                            {/* Botón Circular Superior Derecho de 3 Estados (Visible / Bloqueado / Oculto) en Modo Gestión (Solo Admin/Líder) */}
                             {isLeader && isManageModeActive && (
                                 <button
                                     type="button"
-                                    className={`simi-manage-center-toggle-btn event-center-toggle is-state-${visState}`}
+                                    className={`simi-event-corner-toggle-btn is-state-${visState}`}
                                     onClick={(e) => cycleEventVisibility(evt.id, e)}
-                                    title={`Estado actual: ${visState.toUpperCase()} — Haz clic para alternar (Visible / Bloqueado / Oculto)`}
+                                    title={`Estado: ${visState === 'unlocked' ? 'Visible' : visState === 'locked' ? 'Bloqueado' : 'Oculto'} (Toca para alternar)`}
                                 >
-                                    <div className="simi-manage-center-icon-wrap">
-                                        {visState === 'unlocked' && <Eye size={30} />}
-                                        {visState === 'locked' && <Lock size={30} />}
-                                        {visState === 'hidden' && <EyeOff size={30} />}
-                                    </div>
-                                    <span className="simi-manage-center-text">
+                                    {visState === 'unlocked' && <Eye size={17} />}
+                                    {visState === 'locked' && <Lock size={17} />}
+                                    {visState === 'hidden' && <EyeOff size={17} />}
+                                    <span className="simi-event-corner-toggle-pill">
                                         {visState === 'unlocked' ? 'Visible' : visState === 'locked' ? 'Bloqueado' : 'Oculto'}
                                     </span>
-                                    <small className="simi-manage-center-sub">
-                                        {visState === 'unlocked' ? 'Toca para Bloquear' : visState === 'locked' ? 'Toca para Ocultar' : 'Toca para Habilitar'}
-                                    </small>
                                 </button>
                             )}
 
