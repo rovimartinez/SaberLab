@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npm run dev:build && concurrently -k -n \"Vite,D1-API\" -c \"cyan.bold,magenta.bold\" \"vite\" \"wrangler dev .wrangler/dist/index.js --port 8788\"",
+    "dev": "node scripts/dev-runner.js",
+    "dev:raw": "npm run dev:build && concurrently -k -n \"Vite,D1-API\" -c \"cyan.bold,magenta.bold\" \"vite\" \"wrangler dev .wrangler/dist/index.js --port 8788\"",
     "dev:build": "wrangler pages functions build functions --outdir .wrangler/dist",
     "dev:frontend": "vite",
     "dev:functions": "wrangler dev .wrangler/dist/index.js --port 8788",

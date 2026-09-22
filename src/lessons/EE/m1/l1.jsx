@@ -447,26 +447,26 @@ const lessonDefinition = {
                         <tbody style="color: #cbd5e1;">
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 8px 10px; font-weight: bold; color: #38bdf8;">110V / 120V</td>
-                                <td style="padding: 8px 10px;">Seca y con Calzado ($\approx 50.000\,\Omega$)</td>
-                                <td style="padding: 8px 10px; color: #34d399; font-weight: bold;">$\approx 2.2\text{ mA}$</td>
+                                <td style="padding: 8px 10px;">Seca y con Calzado (≈ 50.000 Ω)</td>
+                                <td style="padding: 8px 10px; color: #34d399; font-weight: bold;">≈ 2.2 mA</td>
                                 <td style="padding: 8px 10px;">Hormigueo leve, molesto pero inofensivo.</td>
                             </tr>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 8px 10px; font-weight: bold; color: #38bdf8;">110V / 120V</td>
-                                <td style="padding: 8px 10px;">Ligeramente húmeda / sudor ($\approx 10.000\,\Omega$)</td>
-                                <td style="padding: 8px 10px; color: #fbbf24; font-weight: bold;">$\approx 11\text{ mA}$</td>
+                                <td style="padding: 8px 10px;">Ligeramente húmeda / sudor (≈ 10.000 Ω)</td>
+                                <td style="padding: 8px 10px; color: #fbbf24; font-weight: bold;">≈ 11 mA</td>
                                 <td style="padding: 8px 10px;">Espasmos musculares y principio de "no poder soltar".</td>
                             </tr>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(239,68,68,0.1);">
                                 <td style="padding: 8px 10px; font-weight: bold; color: #f87171;">110V / 120V</td>
-                                <td style="padding: 8px 10px; color: #fca5a5; font-weight: bold;">Mojada o con pies DESCALZOS ($\approx 1.000\,\Omega$)</td>
-                                <td style="padding: 8px 10px; color: #ef4444; font-weight: bold;">$\approx 110\text{ mA}$</td>
+                                <td style="padding: 8px 10px; color: #fca5a5; font-weight: bold;">Mojada o con pies DESCALZOS (≈ 1.000 Ω)</td>
+                                <td style="padding: 8px 10px; color: #ef4444; font-weight: bold;">≈ 110 mA</td>
                                 <td style="padding: 8px 10px; color: #fca5a5;"><strong>Fibrilación ventricular (Potencialmente mortal).</strong></td>
                             </tr>
                             <tr style="background: rgba(220,38,38,0.15);">
                                 <td style="padding: 8px 10px; font-weight: bold; color: #dc2626;">220V / 230V</td>
-                                <td style="padding: 8px 10px; color: #fca5a5; font-weight: bold;">Mojada o Descalzo ($\approx 1.000\,\Omega$)</td>
-                                <td style="padding: 8px 10px; color: #dc2626; font-weight: bold;">$\approx 220\text{ mA}$</td>
+                                <td style="padding: 8px 10px; color: #fca5a5; font-weight: bold;">Mojada o Descalzo (≈ 1.000 Ω)</td>
+                                <td style="padding: 8px 10px; color: #dc2626; font-weight: bold;">≈ 220 mA</td>
                                 <td style="padding: 8px 10px; color: #fca5a5;"><strong>Fibrilación ventricular asegurada y quemaduras graves.</strong></td>
                             </tr>
                         </tbody>

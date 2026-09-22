@@ -907,3 +907,211 @@ export const SIMI_WEB_RESOURCES = [
         description: 'Laminador visual con detección automática de islas flotantes, optimización de tiempo de exposición por resina en base de datos comunitaria y soporte para impresoras FDM y SLA.'
     }
 ];
+
+// 5. Catálogo Maestro de Servicios SIMI3D (Capacitaciones STEAM, Fabricación Aditiva y Mantenimiento Técnico)
+export const SIMI_SERVICES_CATALOG = [
+    // 🎓 Capacitaciones & Talleres STEAM
+    {
+        id: 'serv-cap-junior',
+        category: 'capacitacion',
+        categoryLabel: 'Capacitación STEAM',
+        title: 'Taller Semillero Junior (Primaria · 7 a 11 años)',
+        targetAudience: 'Estudiantes de Primaria (7 - 11 años)',
+        description: 'Introducción lúdica a la geometría espacial, pensamiento tridimensional y modelado de figuras y juguetes didácticos en Tinkercad.',
+        features: [
+            'Software didáctico: Tinkercad 3D',
+            'Enfoque: Sólidos básicos, huecos y agrupaciones',
+            'Creación de llaveros y figuras personalizadas',
+            'Demostración de impresión 3D en vivo en el aula',
+            'Certificado de participación digital'
+        ],
+        pricingInfo: 'Modalidad Escolar / Institucional',
+        status: 'active', // 'active' | 'hidden' | 'locked'
+        iconKey: 'Box',
+        color: '#f97316',
+        badge: 'Junior Makers'
+    },
+    {
+        id: 'serv-cap-secundaria',
+        category: 'capacitacion',
+        categoryLabel: 'Capacitación STEAM',
+        title: 'Taller Creativos STEAM (Secundaria · 12 a 17 años)',
+        targetAudience: 'Estudiantes de Bachillerato (12 - 17 años)',
+        description: 'Iniciación al modelado poligonal con Blender, preparación de archivos en laminadores (Cura/Orca) y principios físicos de manufactura aditiva FDM.',
+        features: [
+            'Software: Blender 3D + Cura / OrcaSlicer',
+            'Técnicas: Transformaciones de precisión, extrusión y Bevel',
+            'Diseño de props, personajes o piezas para robótica',
+            'Generación de código G y calibración de primera capa',
+            'Metodología práctica orientada a proyectos'
+        ],
+        pricingInfo: 'Modalidad Escolar / Grupal',
+        status: 'active',
+        iconKey: 'Sparkles',
+        color: '#ec4899',
+        badge: 'STEAM Bachillerato'
+    },
+    {
+        id: 'serv-cap-universitaria',
+        category: 'capacitacion',
+        categoryLabel: 'Capacitación STEAM',
+        title: 'Formación Técnica & Universitaria (Pregrado / Egresados)',
+        targetAudience: 'Estudiantes Universitarios, Ingenierías y Diseñadores',
+        description: 'Modelado paramétrico avanzado con Autodesk Fusion 360, tolerancias mecánicas de ensamble y diseño para manufactura aditiva (DFAM).',
+        features: [
+            'Software: Fusion 360 + Laminadores Industriales',
+            'Bocetos acotados 2D, operaciones 3D y ensambles con Joints',
+            'Tolerancias mecánicas de 0.2mm para piezas funcionales',
+            'Estrategias de impresión en filamentos técnicos (PETG, ABS, TPU)',
+            'Inspección de mallas manifold y control de calidad'
+        ],
+        pricingInfo: 'Por Módulos / Cupos Limitados',
+        status: 'active',
+        iconKey: 'Cpu',
+        color: '#06b6d4',
+        badge: 'CAD Paramétrico'
+    },
+    {
+        id: 'serv-cap-docente',
+        category: 'capacitacion',
+        categoryLabel: 'Capacitación STEAM',
+        title: 'Formación Docente (Train the Trainers)',
+        targetAudience: 'Docentes de Tecnología, Ciencias e Instituciones Educativas',
+        description: 'Metodología pedagógica para integrar el diseño e impresión 3D en el currículo escolar, gestión segura de Aulas Maker y resolución de fallas comunes.',
+        features: [
+            'Integración curricular en áreas STEM',
+            'Protocolos de seguridad y ergonomía en aula maker',
+            'Mantenimiento preventivo básico y cambio de insumos',
+            'Diseño de guías didácticas y rúbricas de evaluación',
+            'Acompañamiento pedagógico continuo'
+        ],
+        pricingInfo: 'Convenios Institucionales',
+        status: 'active',
+        iconKey: 'Award',
+        color: '#10b981',
+        badge: 'Acreditación Docente'
+    },
+
+    // 🖨️ Fabricación Digital & Prototipado
+    {
+        id: 'serv-fab-fdm',
+        category: 'fabricacion',
+        categoryLabel: 'Fabricación Digital',
+        title: 'Impresión 3D FDM (Filamentos Termoplásticos)',
+        targetAudience: 'Proyectos Académicos, Makers, Emprendedores y Empresas',
+        description: 'Fabricación rápida y económica de piezas mecánicas, carcasas electrónicas, maquetas y prototipos funcionales en múltiples polímeros.',
+        features: [
+            'Materiales: PLA+, PETG, ABS, TPU Flexible, PLA-CF (Carbono)',
+            'Volumen de construcción hasta 300 × 300 × 400 mm',
+            'Resolución de capa de 0.12mm a 0.28mm',
+            'Diversidad de colores y acabados de superficie',
+            'Optimización estructural con patrones Gyroid / Hexagonal'
+        ],
+        pricingInfo: 'Cotización por gramo / tiempo',
+        status: 'active',
+        iconKey: 'Flame',
+        color: '#eab308',
+        badge: 'Alta Demanda'
+    },
+    {
+        id: 'serv-fab-sla',
+        category: 'fabricacion',
+        categoryLabel: 'Fabricación Digital',
+        title: 'Impresión 3D SLA (Resina Fotosensible UV)',
+        targetAudience: 'Joyería, Modelistas, Área Odontológica y Prototipos de Ultra Detalle',
+        description: 'Impresión de alta precisión óptica con superficies lisas e imperceptibles líneas de capa, ideal para miniaturas, joyería y piezas de tolerancia milimétrica.',
+        features: [
+            'Tecnología: Estereolitografía MSLA 4K / 8K',
+            'Materiales: Resina Estándar, Lavable en Agua y Resina Rígida',
+            'Resolución de capa de 0.025mm a 0.05mm (Ultra detalle)',
+            'Proceso de curado y lavado post-impresión incluido',
+            'Acabado superficial impecable'
+        ],
+        pricingInfo: 'Cotización según volumen ml / detalle',
+        status: 'active',
+        iconKey: 'FlaskConical',
+        color: '#8b5cf6',
+        badge: 'Ultra Precisión'
+    },
+    {
+        id: 'serv-fab-scan',
+        category: 'fabricacion',
+        categoryLabel: 'Fabricación Digital',
+        title: 'Ingeniería Inversa & Escaneo 3D',
+        targetAudience: 'Reconstrucción de Repuestos, Piezas Descontinuadas e Industria',
+        description: 'Digitalización óptica de piezas físicas, reconstrucción paramétrica de modelos CAD dañados y optimización geométrica para manufactura aditiva.',
+        features: [
+            'Digitalización mediante escáner 3D de alta resolución',
+            'Reconstrucción de planos técnicos y archivos STEP/STL',
+            'Corrección de tolerancias de desgaste mecánico',
+            'Adaptación y aligeramiento de estructuras (Generative Design)'
+        ],
+        pricingInfo: 'Cotización por complejidad de geometría',
+        status: 'hidden', // Oculto por defecto, visible solo para Docente/Líder
+        iconKey: 'Layers',
+        color: '#3b82f6',
+        badge: 'I+D Avanzado'
+    },
+
+    // 🔧 Servicio Técnico & Mantenimiento
+    {
+        id: 'serv-mnt-preventivo',
+        category: 'mantenimiento',
+        categoryLabel: 'Servicio Técnico',
+        title: 'Mantenimiento Preventivo & Puesta a Punto',
+        targetAudience: 'Colegios, Universidades, Laboratorios y Usuarios Particulares',
+        description: 'Inspección técnica completa, calibración de cinemática, alineación de ejes, lubricación especializada y optimización térmica de la impresora 3D.',
+        features: [
+            'Calibración de cama mecánica y offset Z milimétrico',
+            'Ajuste y tensión de correas X/Y, verificación de poleas',
+            'Lubricación con grasa sintética en husillos y guías lineales',
+            'Limpieza profunda y purga química del bloque calefactor',
+            'Ajuste de PID térmico en boquilla y cama caliente'
+        ],
+        pricingInfo: 'Póliza o Servicio por Equipo',
+        status: 'active',
+        iconKey: 'Wrench',
+        color: '#059669',
+        badge: 'Recomendado'
+    },
+    {
+        id: 'serv-mnt-correctivo',
+        category: 'mantenimiento',
+        categoryLabel: 'Servicio Técnico',
+        title: 'Mantenimiento Correctivo & Reparación de Fallas',
+        targetAudience: 'Equipos con atascos severos, fallas electrónicas o rotura de piezas',
+        description: 'Diagnóstico y sustitución de componentes dañados: desobstrucción de hotends, reemplazo de sensores térmicos, extrusores y calibración electrónica.',
+        features: [
+            'Desatasco y sustitución de nozzles o gargantas All-Metal',
+            'Cambio de termistores, cartuchos calefactores y ventiladores',
+            'Sustitución de tubos PTFE por teflón Capricorn de alta resistencia',
+            'Reparación o cambio de extrusores desgastados',
+            'Prueba de impresión de 1 hora para validar estabilidad'
+        ],
+        pricingInfo: 'Diagnóstico + Repuestos requeridos',
+        status: 'active',
+        iconKey: 'AlertCircle',
+        color: '#dc2626',
+        badge: 'Servicio Técnico'
+    },
+    {
+        id: 'serv-mnt-upgrades',
+        category: 'mantenimiento',
+        categoryLabel: 'Servicio Técnico',
+        title: 'Actualizaciones & Optimización (Upgrades)',
+        targetAudience: 'Impresoras 3D que buscan mayor velocidad y fiabilidad',
+        description: 'Modernización de hardware y firmware: instalación de sensores de nivelación automática (CR-Touch/BL-Touch), extrusión directa y sistemas de alta velocidad.',
+        features: [
+            'Instalación y compilación de firmware optimizado (Klipper / Marlin)',
+            'Instalación de sensores de auto-nivelación BLTouch / CR-Touch',
+            'Conversión a extrusión directa (Direct Drive)',
+            'Instalación de bases magnéticas de acero flexible PEI'
+        ],
+        pricingInfo: 'Cotización según paquete de mejoras',
+        status: 'hidden', // Oculto por defecto, visible solo para Docente/Líder
+        iconKey: 'Rocket',
+        color: '#B541FA',
+        badge: 'High Performance'
+    }
+];
+

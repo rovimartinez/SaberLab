@@ -27,6 +27,16 @@ const LessonRenderer = ({ blocks = [], renderers = {}, context = {} }) => {
                     );
                 }
 
+                // Soporte nativo para bloques tipo 'custom': renderiza block.component directamente
+                if (block.type === 'custom' && block.component) {
+                    const CustomComponent = block.component;
+                    return (
+                        <React.Fragment key={block.id}>
+                            <CustomComponent block={block} {...context} />
+                        </React.Fragment>
+                    );
+                }
+
                 const Renderer = DEFAULT_RENDERERS[block.type];
                 if (!Renderer) return null;
 
@@ -37,3 +47,4 @@ const LessonRenderer = ({ blocks = [], renderers = {}, context = {} }) => {
 };
 
 export default LessonRenderer;
+

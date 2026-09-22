@@ -15,6 +15,7 @@ export async function onRequestGet({ env, data }) {
       projects: [],
       resources: [],
       webResources: [],
+      services: [],
       badgeMap: {},
       members: [],
       isLeaderOrStaff
@@ -24,7 +25,7 @@ export async function onRequestGet({ env, data }) {
   try {
     await ensureSimiSchema(env);
     // Ejecutar todas las consultas en paralelo con Promise.all (velocidad < 30ms)
-    const [eventsRes, attendancesRes, projectsRes, resourcesRes, userBadgesRes, allBadgesRes, membersRes, webResourcesRes, catalogImagesRes] = await Promise.all([
+    const [eventsRes, attendancesRes, projectsRes, resourcesRes, userBadgesRes, allBadgesRes, membersRes, webResourcesRes, catalogImagesRes, servicesRes] = await Promise.all([
       env.DB.prepare('SELECT * FROM simi_eventos ORDER BY date ASC, created_at DESC').all(),
       env.DB.prepare('SELECT * FROM simi_asistencias').all(),
       env.DB.prepare('SELECT * FROM simi_proyectos ORDER BY created_at DESC').all(),
@@ -66,7 +67,8 @@ export async function onRequestGet({ env, data }) {
           END, full_name ASC
       `).bind(directorEmail, directorEmail, directorEmail).all(),
       env.DB.prepare('SELECT * FROM simi_web_recursos ORDER BY created_at ASC').all(),
-      env.DB.prepare('SELECT pin_id, badge_image_url FROM simi_catalogo_insignias').all()
+      env.DB.prepare('SELECT pin_id, badge_image_url FROM simi_catalogo_insignias').all(),
+      env.DB.prepare('SELECT * FROM simi_servicios ORDER BY created_at ASC').all().catch(() => ({ results: [] }))
     ]);
 
     const events = eventsRes?.results || [];
@@ -75,6 +77,7 @@ export async function onRequestGet({ env, data }) {
     const resources = resourcesRes?.results || [];
     const userBadges = userBadgesRes?.results || [];
     const allBadges = allBadgesRes?.results || [];
+    const rawServices = servicesRes?.results || [];
     let members = membersRes?.results || [];
 
     // Fallback ultra-rápido si aún no hay miembros
@@ -188,12 +191,30 @@ export async function onRequestGet({ env, data }) {
       };
     });
 
+    const parsedServices = (rawServices || []).map(s => {
+      let features = [];
+      if (s.features) {
+        try {
+          features = typeof s.features === 'string' ? JSON.parse(s.features) : s.features;
+        } catch {
+          features = [];
+        }
+      }
+      return {
+        ...s,
+        features: Array.isArray(features) ? features : [],
+        isLocked: s.status === 'locked' || s.is_locked === 1,
+        isHidden: s.status === 'hidden' || s.is_hidden === 1
+      };
+    });
+
     return Response.json({
       success: true,
       events: eventsWithAttendees,
       projects: parsedProjects,
       resources: resources || [],
       webResources: webResources || [],
+      services: parsedServices,
       badgeMap,
       memberBadgesMap,
       catalogImageUrlsMap,
@@ -208,6 +229,7 @@ export async function onRequestGet({ env, data }) {
       projects: [],
       resources: [],
       webResources: [],
+      services: [],
       badgeMap: {},
       members: [],
       isLeaderOrStaff
@@ -772,6 +794,128 @@ export async function onRequestPost({ request, env, data }) {
       return Response.json({ success: true });
     }
 
+    // ── 14. GUARDAR / EDITAR SERVICIO O CAPACITACIÓN SIMI3D ──
+    if (action === 'save-service') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      const {
+        id, category = 'capacitacion', categoryLabel = 'Capacitación STEAM',
+        title, targetAudience = '', description = '', features = [],
+        pricingInfo = 'Cotización a convenir', status = 'active',
+        iconKey = 'Box', color = '#06b6d4', badge = '', imageUrl = null
+      } = body;
+
+      if (!title || !title.trim()) return Response.json({ error: 'El título del servicio es obligatorio' }, { status: 400 });
+
+      const serviceId = id || `serv-${Date.now()}`;
+      const featuresStr = typeof features === 'string' ? features : JSON.stringify(Array.isArray(features) ? features : []);
+      const isLockedVal = status === 'locked' ? 1 : 0;
+      const isHiddenVal = status === 'hidden' ? 1 : 0;
+
+      await env.DB.prepare(`
+        INSERT INTO simi_servicios (
+          id, category, category_label, title, target_audience, description,
+          features, pricing_info, status, is_locked, is_hidden, icon_key, color, badge, image_url, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(id) DO UPDATE SET
+          category = excluded.category,
+          category_label = excluded.category_label,
+          title = excluded.title,
+          target_audience = excluded.target_audience,
+          description = excluded.description,
+          features = excluded.features,
+          pricing_info = excluded.pricing_info,
+          status = excluded.status,
+          is_locked = excluded.is_locked,
+          is_hidden = excluded.is_hidden,
+          icon_key = excluded.icon_key,
+          color = excluded.color,
+          badge = excluded.badge,
+          image_url = excluded.image_url,
+          updated_at = datetime('now')
+      `).bind(
+        serviceId, category, categoryLabel, title.trim(), targetAudience,
+        description, featuresStr, pricingInfo, status, isLockedVal, isHiddenVal,
+        iconKey, color, badge, imageUrl
+      ).run();
+
+      return Response.json({ success: true, serviceId });
+    }
+
+    // ── 15. ALTERNAR VISIBILIDAD / BLOQUEO DE SERVICIO (TOGGLE RÁPIDO) ──
+    if (action === 'toggle-service-status') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      const { id, nextStatus } = body; // 'active' | 'hidden' | 'locked'
+      if (!id || !nextStatus) return Response.json({ error: 'Faltan parámetros' }, { status: 400 });
+
+      const isLockedVal = nextStatus === 'locked' ? 1 : 0;
+      const isHiddenVal = nextStatus === 'hidden' ? 1 : 0;
+
+      await env.DB.prepare(`
+        UPDATE simi_servicios 
+        SET status = ?, is_locked = ?, is_hidden = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(nextStatus, isLockedVal, isHiddenVal, id).run();
+
+      return Response.json({ success: true, id, status: nextStatus });
+    }
+
+    // ── 16. ELIMINAR SERVICIO ──
+    if (action === 'delete-service') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      const { id } = body;
+      if (!id) return Response.json({ error: 'Falta id' }, { status: 400 });
+
+      await env.DB.prepare('DELETE FROM simi_servicios WHERE id = ?').bind(id).run();
+      return Response.json({ success: true, deletedId: id });
+    }
+
+    // ── 17. SINCRONIZAR TODOS LOS SERVICIOS (SEMILLA O MIGRACIÓN MASIVA) ──
+    if (action === 'sync-all-services') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      const { items } = body;
+      if (!Array.isArray(items)) return Response.json({ error: 'items debe ser un array' }, { status: 400 });
+
+      for (const item of items) {
+        if (!item || !item.id) continue;
+        const featuresStr = typeof item.features === 'string' ? item.features : JSON.stringify(item.features || []);
+        const stat = item.status || 'active';
+        const isLockedVal = stat === 'locked' || item.isLocked ? 1 : 0;
+        const isHiddenVal = stat === 'hidden' || item.isHidden ? 1 : 0;
+
+        await env.DB.prepare(`
+          INSERT INTO simi_servicios (
+            id, category, category_label, title, target_audience, description,
+            features, pricing_info, status, is_locked, is_hidden, icon_key, color, badge, image_url, updated_at
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          ON CONFLICT(id) DO UPDATE SET
+            category = excluded.category,
+            category_label = excluded.category_label,
+            title = excluded.title,
+            target_audience = excluded.target_audience,
+            description = excluded.description,
+            features = excluded.features,
+            pricing_info = excluded.pricing_info,
+            status = excluded.status,
+            is_locked = excluded.is_locked,
+            is_hidden = excluded.is_hidden,
+            icon_key = excluded.icon_key,
+            color = excluded.color,
+            badge = excluded.badge,
+            image_url = excluded.image_url,
+            updated_at = datetime('now')
+        `).bind(
+          item.id, item.category || 'capacitacion', item.categoryLabel || 'Capacitación STEAM',
+          item.title || 'Servicio SIMI3D', item.targetAudience || '', item.description || '',
+          featuresStr, item.pricingInfo || 'Cotización a convenir', stat, isLockedVal, isHiddenVal,
+          item.iconKey || 'Box', item.color || '#06b6d4', item.badge || '', item.imageUrl || null
+        ).run();
+      }
+
+      return Response.json({ success: true, count: items.length });
+    }
+
     return Response.json({ error: 'Acción no reconocida' }, { status: 400 });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
@@ -900,6 +1044,31 @@ async function ensureSimiSchema(env) {
     )
   `).run();
 
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS simi_servicios (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL DEFAULT 'capacitacion',
+      category_label TEXT DEFAULT 'Capacitación STEAM',
+      title TEXT NOT NULL,
+      target_audience TEXT,
+      description TEXT,
+      features TEXT DEFAULT '[]',
+      pricing_info TEXT DEFAULT 'Cotización a convenir',
+      status TEXT NOT NULL DEFAULT 'active',
+      is_locked INTEGER DEFAULT 0,
+      is_hidden INTEGER DEFAULT 0,
+      icon_key TEXT DEFAULT 'Box',
+      color TEXT DEFAULT '#06b6d4',
+      badge TEXT,
+      image_url TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    )
+  `).run();
+
+  try { await env.DB.prepare('ALTER TABLE simi_servicios ADD COLUMN is_locked INTEGER DEFAULT 0').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_servicios ADD COLUMN is_hidden INTEGER DEFAULT 0').run(); } catch (_) { }
+
   // Asegurar registro de SIMI3D en la tabla de cursos (ID 6) y grupo base
   try {
     await env.DB.prepare(`
@@ -919,3 +1088,4 @@ async function ensureSimiSchema(env) {
     `).run();
   } catch {}
 }
+

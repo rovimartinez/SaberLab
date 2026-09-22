@@ -17,11 +17,12 @@ Este mapa resume la arquitectura integral del **Semillero de Investigación en M
 | **Pestaña Eventos / Visitas** | `src/components/simi/SimiEventsTab.jsx` | Cronograma de visitas colegiales y capacitaciones técnicas (asistencias RSVP). |
 | **Pestaña Proyectos** | `src/components/simi/SimiProjectsTab.jsx` | Banco de proyectos CAD/3D, prototipos, galería y modales de edición. |
 | **Pestaña Recursos** | `src/components/simi/SimiResourcesTab.jsx` | Inventario de impresoras 3D, filamentos, resinas y herramientas web. |
+| **Pestaña Servicios & Portafolio** | `src/components/simi/SimiServicesTab.jsx` | Catálogo de Capacitaciones STEAM, Fabricación Aditiva (FDM/SLA) y Mantenimiento Técnico con cotizador. |
 | **Pestaña Miembros (80/80)** | `src/components/simi/SimiMembersTab.jsx` | Directorio de miembros, cálculo de permanencia (80/80) y condecoración de insignias. |
-| **Catálogo Estático & Datos** | `src/data/simiData.js` | `SIMI_PINS_CATALOG`, `SIMI_TRACKS`, eventos semilla y recursos iniciales. |
+| **Catálogo Estático & Datos** | `src/data/simiData.js` | `SIMI_PINS_CATALOG`, `SIMI_TRACKS`, `SIMI_SERVICES_CATALOG`, eventos semilla y recursos. |
 | **Contenido de Rutas / Lecciones** | `src/data/simiTracksLessonsData.js` | Temarios, unidades, callouts y autoevaluaciones (quizzes) de las 8 rutas 3D. |
 | **Estilos CSS SIMI** | `src/styles/PanelSimiHub.css` | Diseño cian/morado neón (`#06b6d4`, `#B541FA`), sidebar nav y responsive. |
-| **Estilos Componentes Hijos** | `src/styles/SimiEvents.css`, `SimiProjects.css`, `SimiResources.css`, `SimiMembers.css` | Estilos modulares para cada pestaña del semillero. |
+| **Estilos Componentes Hijos** | `src/styles/SimiEvents.css`, `SimiProjects.css`, `SimiResources.css`, `SimiMembers.css`, `SimiServices.css` | Estilos modulares para cada pestaña del semillero. |
 | **Backend & Base de Datos D1** | `functions/api/simi.js` | Endpoints GET/POST con auto-aprovisionamiento y operaciones CRUD. |
 
 ---
@@ -40,6 +41,8 @@ Tablas gestionadas en `functions/api/simi.js`:
    - `id TEXT PRIMARY KEY`, `name TEXT`, `category TEXT`, `status TEXT`, `quantity INTEGER`, `specs TEXT`, `location TEXT`, `image_url TEXT`, `updated_at TEXT`.
 5. **`simi_insignias`**:
    - `id TEXT PRIMARY KEY` (`${user_id}_${pin_id}`), `user_id TEXT`, `pin_id TEXT`, `tier TEXT` (`I` a `V`), `exp_earned INTEGER` (100 a 500), `unlocked_at TEXT`, `updated_at TEXT`.
+6. **`simi_servicios`**:
+   - `id TEXT PRIMARY KEY`, `category TEXT`, `category_label TEXT`, `title TEXT`, `target_audience TEXT`, `description TEXT`, `features TEXT` (JSON), `pricing_info TEXT`, `status TEXT` (`'active'`, `'hidden'`, `'locked'`), `is_locked INTEGER`, `is_hidden INTEGER`, `icon_key TEXT`, `color TEXT`, `badge TEXT`, `image_url TEXT`, `updated_at TEXT`.
 
 ---
 
@@ -55,6 +58,10 @@ Tablas gestionadas en `functions/api/simi.js`:
 | `'delete-project'` | `id` | Líder / Docente / Admin |
 | `'save-resource'` | `id` (opcional), datos de equipo/filamento | Líder / Docente / Admin |
 | `'delete-resource'` | `id` | Líder / Docente / Admin |
+| `'save-service'` | `id` (opcional), datos de capacitación/servicio | Líder / Docente / Admin |
+| `'toggle-service-status'` | `id`, `nextStatus` (`'active'`, `'hidden'`, `'locked'`) | Líder / Docente / Admin |
+| `'delete-service'` | `id` | Líder / Docente / Admin |
+| `'sync-all-services'` | `items` (array) | Líder / Docente / Admin |
 | `'save-badge'` | `targetUserId`, `pinId`, `tier` (`'none'`, `'I'..'V'`), `exp` | Auto: Todos / Otros: Líder/Docente |
 | `'save-web-resource'` | `id` (opcional), `name`, `url`, `logoUrl`, etc. | Líder / Docente / Admin |
 | `'delete-web-resource'`| `id` | Líder / Docente / Admin |

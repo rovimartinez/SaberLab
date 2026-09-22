@@ -1,36 +1,18 @@
 @echo off
-:: Cambia la codificación a UTF-8 para mostrar tildes y signos correctamente
 chcp 65001 >nul
-title Actualizador Plataforma Escolar
-color 0b
+title SaberLab — Cockpit de Despliegue GitHub
+cd /d "C:\Users\Elizabeth\Desktop\SaberLab"
 
-set "REPO_PATH=C:\Users\Elizabeth\Desktop\SaberLab"
+:: Liberar puertos por si el servidor dev estaba corriendo
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Process -Id (Get-NetTCPConnection -LocalPort 5173,8788 -State Listen -ErrorAction SilentlyContinue).OwningProcess -ErrorAction SilentlyContinue | Stop-Process -Force" >nul 2>&1
 
-echo Accediendo al repositorio...
-cd /d "%REPO_PATH%"
+:: Lanzar el cockpit visual de push
+node scripts/push-runner.js
 
-if not exist ".git" (
-    color 0c
-    echo =====================================================
-    echo ERROR: No se encontró la carpeta .git en:
-    echo %REPO_PATH%
-    echo =====================================================
-    pause
-    exit
+if %errorlevel% neq 0 (
+  echo.
+  echo  ========================================================================
+  echo   [!] El proceso de despliegue se detuvo con codigo %errorlevel%
+  echo  ========================================================================
+  pause
 )
-
-echo.
-echo === Preparando archivos para GitHub ===
-git add .
-
-:: Ahora el signo de apertura ¿ se verá bien
-set /p msg="¿Qué cambios hiciste hoy?: "
-
-git commit -m "%msg%"
-git push origin main
-
-echo.
-echo ===================================
-echo   ¡Actualización completada!
-echo ===================================
-pause

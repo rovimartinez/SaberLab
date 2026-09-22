@@ -37,6 +37,11 @@ export const LESSONS_REGISTRY = {
         title: 'Evaluación 1: Fundamentos y Lógica Digital',
         load: () => import('../lessons/RE/m1/l6e').then(m => m.lessonData)
     },
+    're-m1-l6e': {
+        id: 're-m1-l6e',
+        title: 'Evaluación 1: Fundamentos y Lógica Digital',
+        load: () => import('../lessons/RE/m1/l6e').then(m => m.lessonData)
+    },
     're-m1-eval': {
         id: 're-m1-eval',
         title: 'Evaluación 1: Fundamentos y Lógica Digital',
@@ -47,10 +52,26 @@ export const LESSONS_REGISTRY = {
     're-m2-l3': { id: 're-m2-l3', title: 'Sensores Infrarrojos (IR) y PIR', load: () => import('../lessons/RE/m2/l3').then(m => m.lessonData) },
     're-m2-l4': { id: 're-m2-l4', title: 'Sensor Ultrasónico (HC-SR04)', load: () => import('../lessons/RE/m2/l4').then(m => m.lessonData) },
     're-m2-eval': { id: 're-m2-eval', title: 'Evaluación M2: Control, Actuadores y Sensores', load: null },
-    're-m3-l1': { id: 're-m3-l1', title: 'Servomotores', load: null },
-    're-m3-l2': { id: 're-m3-l2', title: 'Buzzers', load: null },
-    're-m3-l3': { id: 're-m3-l3', title: 'Programación Avanzada con Ciclos', load: null },
-    're-m3-l4': { id: 're-m3-l4', title: 'Sistemas de Alarma con Sensores y Actuadores', load: null },
+    're-m3-l1': { 
+        id: 're-m3-l1', 
+        title: 'Servomotores SG90 y MG995: Control Angular y PWM', 
+        load: () => import('../lessons/RE/m3/l1').then(m => m.lessonData) 
+    },
+    're-m3-l2': { 
+        id: 're-m3-l2', 
+        title: 'Buzzers Activos vs Pasivos: Frecuencias y Melodías', 
+        load: () => import('../lessons/RE/m3/l2').then(m => m.lessonData) 
+    },
+    're-m3-l3': { 
+        id: 're-m3-l3', 
+        title: 'Programación Avanzada: Bucles, millis() y Máquinas de Estado', 
+        load: () => import('../lessons/RE/m3/l3').then(m => m.lessonData) 
+    },
+    're-m3-l4': { 
+        id: 're-m3-l4', 
+        title: 'Proyecto Integrador: Radar de Vigilancia y Alarma Inteligente', 
+        load: () => import('../lessons/RE/m3/l4').then(m => m.lessonData) 
+    },
     're-m4-l1': { id: 're-m4-l1', title: 'Robot seguidor de línea', load: null },
     're-m4-l2': { id: 're-m4-l2', title: 'Sistema domótico básico', load: null },
     're-m4-l3': { id: 're-m4-l3', title: 'Brazo Robótico Pro', load: null },
@@ -71,7 +92,8 @@ export const LESSONS_REGISTRY = {
     'ee-m3-l11': { id: 'ee-m3-l11', title: 'Temporizador CI NE555 (Modo Astable y Monoestable)', load: () => import('../lessons/EE/m3/l11').then(m => m.lessonData) },
     'ee-m3-l12': { id: 'ee-m3-l12', title: 'Contadores Binarios y Divisores de Frecuencia (CI 74LS93)', load: () => import('../lessons/EE/m3/l12').then(m => m.lessonData) },
     'ee-m3-l13': { id: 'ee-m3-l13', title: 'Decodificadores BCD y Visualización en Displays de 7 Segmentos (CD4511)', load: () => import('../lessons/EE/m3/l13').then(m => m.lessonData) },
-    'ee-m3-l14': { id: 'ee-m3-l14', title: 'Evaluación 3 - Aplicaciones Avanzadas y Circuitos Integrados', load: () => import('../lessons/EE/m3/l14').then(m => m.lessonData) },
+    'ee-m3-l14': { id: 'ee-m3-l14', title: 'Proyecto Integrador: Reloj / Contador Digital 0 a 9', load: () => import('../lessons/EE/m3/l14').then(m => m.lessonData) },
+    'ee-m3-eval': { id: 'ee-m3-eval', title: 'Examen 3 - Implementación de Circuitos Integrados', load: null },
     'ee-m4-l15': { id: 'ee-m4-l15', title: 'Lectura de Planos Esquemáticos, Ensamble y Optimización de Prototipos', load: () => import('../lessons/EE/m4/l15').then(m => m.lessonData) },
     'ee-m4-l16': { id: 'ee-m4-l16', title: 'Evaluación 4 - Sustentación y Presentación del Proyecto Final', load: () => import('../lessons/EE/m4/l16').then(m => m.lessonData) },
 
@@ -226,7 +248,7 @@ export const COURSES_DEFINITION = [
                     { id: 'ee-m3-l14', visible: true }
                 ],
                 evaluation: {
-                    id: 'ee-m3-l14',
+                    id: 'ee-m3-eval',
                     title: 'Examen 3 - Implementación de Circuitos Integrados',
                     date: '21 Oct 2026',
                     points: 125
@@ -485,8 +507,7 @@ export const COURSES_DEFINITION = [
                     { id: 're-m1-l2', visible: true },
                     { id: 're-m1-l3', visible: true },
                     { id: 're-m1-l4', visible: true },
-                    { id: 're-m1-l5', visible: true },
-                    { id: 're-m1-l6', visible: true }
+                    { id: 're-m1-l5', visible: true }
                 ],
                 evaluation: {
                     id: 're-m1-eval',
@@ -522,18 +543,26 @@ export const COURSES_DEFINITION = [
             {
                 id: 'm3',
                 name: 'Módulo 3: Servomotores, Buzzers y Sistemas de Alarma',
+                weeks: 'Semanas 9 a 12',
+                learningOutcome: 'Controlar servomotores con precisión angular PWM, generar frecuencias acústicas con buzzers y diseñar sistemas de seguridad concurrentes mediante Máquinas de Estado y temporización no bloqueante.',
                 topics: [
-                    'Servomotores',
-                    'Buzzers',
-                    'Programación avanzada con ciclos',
-                    'Sistemas de alarma con sensores y actuadores'
+                    'Servomotores SG90 y MG995 con control angular PWM y barrido suave',
+                    'Buzzers Activos vs Pasivos y generación de tonos/melodías con tone()',
+                    'Programación avanzada: bucles for/while, temporización con millis() y Máquinas de Estado',
+                    'Proyecto Integrador: Radar de vigilancia y alarma antirrobo inteligente'
                 ],
                 lessons: [
                     { id: 're-m3-l1', visible: true },
                     { id: 're-m3-l2', visible: true },
                     { id: 're-m3-l3', visible: true },
                     { id: 're-m3-l4', visible: true }
-                ]
+                ],
+                evaluation: {
+                    id: 're-m3-eval',
+                    title: 'Evaluación Módulo 3: Servomotores, Acústica y Sistemas de Control',
+                    date: '21 Oct 2026',
+                    points: 150
+                }
             },
             {
                 id: 'm4',

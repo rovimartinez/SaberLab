@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { 
     Home, Layers, Box, Sparkles, Cpu, Flame, FlaskConical, Rocket, 
-    School, FileText, Award, Calendar, CheckCircle2, 
+    School, FileText, Award, Calendar, CheckCircle2, Briefcase,
     Calculator, ArrowRight, Shield, Download, Users, Plus, ExternalLink, X,
     Edit3, Trash2, MapPin, Clock, BookOpen, Check, AlertCircle, HelpCircle, ChevronRight, ChevronLeft, ChevronDown,
     UserCheck, Zap, Trophy, TrendingUp, Target, Play, Menu, MoreHorizontal, MoreVertical, Compass, Eye, EyeOff, User,
@@ -11,13 +11,15 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
-import { SIMI_PINS_CATALOG, SIMI_TRACKS, SIMI_SCHOOL_EVENTS, SIMI_PROJECTS, INITIAL_SIMI_RESOURCES, SIMI_WEB_RESOURCES } from '../data/simiData';
+import { SIMI_PINS_CATALOG, SIMI_TRACKS, SIMI_SCHOOL_EVENTS, SIMI_PROJECTS, INITIAL_SIMI_RESOURCES, SIMI_WEB_RESOURCES, SIMI_SERVICES_CATALOG } from '../data/simiData';
 import { SIMI_TRACKS_LESSONS_DATA } from '../data/simiTracksLessonsData';
 import AccessRequests from './AccessRequests';
 import SimiEventsTab from '../components/simi/SimiEventsTab';
 import SimiProjectsTab from '../components/simi/SimiProjectsTab';
 import SimiResourcesTab from '../components/simi/SimiResourcesTab';
 import SimiMembersTab from '../components/simi/SimiMembersTab';
+import SimiServicesTab from '../components/simi/SimiServicesTab';
+import SimiQuoteModal from '../components/simi/SimiQuoteModal';
 import '../styles/PanelSimiHub.css';
 
 const ICON_MAP = {
@@ -224,6 +226,10 @@ export default function PanelSimiHub({
     // Modal de Solicitudes de Acceso
     const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
 
+    // Modal de Cotización Integral (Impresión 3D & Capacitaciones STEAM)
+    const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+    const [defaultQuoteTab, setDefaultQuoteTab] = useState('fabricacion'); // 'fabricacion' | 'capacitacion'
+
     // Calculadora de Costos de Filamento
     const [calcGrams, setCalcGrams] = useState(85);
     const [calcPricePerKg, setCalcPricePerKg] = useState(65000);
@@ -272,6 +278,17 @@ export default function PanelSimiHub({
             } catch (e) { }
         }
         return SIMI_WEB_RESOURCES;
+    });
+
+    const [simiServices, setSimiServices] = useState(() => {
+        const saved = localStorage.getItem('simi_services_list');
+        if (saved) {
+            try { 
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            } catch (e) { }
+        }
+        return SIMI_SERVICES_CATALOG;
     });
 
     const [memberBadgesMap, setMemberBadgesMap] = useState(() => {
@@ -418,6 +435,10 @@ export default function PanelSimiHub({
                     if (res.data.webResources && res.data.webResources.length > 0) {
                         setSimiWebResources(res.data.webResources);
                         localStorage.setItem('simi_web_resources_list', JSON.stringify(res.data.webResources));
+                    }
+                    if (res.data.services && res.data.services.length > 0) {
+                        setSimiServices(res.data.services);
+                        localStorage.setItem('simi_services_list', JSON.stringify(res.data.services));
                     }
                     if (res.data.badgeMap && Object.keys(res.data.badgeMap).length > 0) {
                         setSelectedPinTiers(prev => {
@@ -797,6 +818,19 @@ export default function PanelSimiHub({
                         </button>
 
                         <button 
+                            className={`simi-sidebar-item ${activeTab === 'services' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('services')}
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Briefcase size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Servicios & Portafolio</span>
+                                <span className="simi-sidebar-desc">Capacitaciones, FDM & Mant.</span>
+                            </div>
+                        </button>
+
+                        <button 
                             className={`simi-sidebar-item ${activeTab === 'members' ? 'active' : ''}`}
                             onClick={() => setActiveTab('members')}
                         >
@@ -835,6 +869,23 @@ export default function PanelSimiHub({
                                 </div>
                             </button>
                         )}
+
+                        <button 
+                            className="simi-sidebar-item simi-sidebar-quote-btn"
+                            onClick={() => {
+                                setDefaultQuoteTab('fabricacion');
+                                setIsQuoteModalOpen(true);
+                            }}
+                            title="Cotizador orientativo para Impresión 3D y Capacitaciones STEAM"
+                        >
+                            <div className="simi-sidebar-icon quote-icon">
+                                <Calculator size={18} />
+                            </div>
+                            <div className="simi-sidebar-text">
+                                <span className="simi-sidebar-title">Cotizador Orientativo</span>
+                                <span className="simi-sidebar-desc">Impresión 3D & Talleres</span>
+                            </div>
+                        </button>
 
                         <button 
                             className="simi-sidebar-item simi-sidebar-rules-btn"
@@ -956,6 +1007,20 @@ export default function PanelSimiHub({
 
                                 <button 
                                     className="simi-mobile-more-item"
+                                    onClick={() => { setActiveTab('services'); setIsMobileMoreMenuOpen(false); }}
+                                >
+                                    <div className="simi-mobile-more-icon" style={{ background: '#fdf4ff', color: '#ec4899', border: '1px solid #fae8ff' }}>
+                                        <Briefcase size={20} />
+                                    </div>
+                                    <div className="simi-mobile-more-text" style={{ flex: 1 }}>
+                                        <strong>Servicios & Portafolio</strong>
+                                        <small>Capacitaciones, FDM & Mantenimiento</small>
+                                    </div>
+                                    <ChevronRight size={16} color="#94a3b8" />
+                                </button>
+
+                                <button 
+                                    className="simi-mobile-more-item"
                                     onClick={() => { setActiveTab('members'); setIsMobileMoreMenuOpen(false); }}
                                 >
                                     <div className="simi-mobile-more-icon" style={{ background: '#ecfeff', color: '#06b6d4', border: '1px solid #cffafe' }}>
@@ -964,6 +1029,24 @@ export default function PanelSimiHub({
                                     <div className="simi-mobile-more-text" style={{ flex: 1 }}>
                                         <strong>Miembros Activos</strong>
                                         <small>Directorio y Regla 80/80</small>
+                                    </div>
+                                    <ChevronRight size={16} color="#94a3b8" />
+                                </button>
+
+                                <button 
+                                    className="simi-mobile-more-item"
+                                    onClick={() => {
+                                        setDefaultQuoteTab('fabricacion');
+                                        setIsQuoteModalOpen(true);
+                                        setIsMobileMoreMenuOpen(false);
+                                    }}
+                                >
+                                    <div className="simi-mobile-more-icon" style={{ background: '#ecfeff', color: '#0891b2', border: '1px solid #cffafe' }}>
+                                        <Calculator size={20} />
+                                    </div>
+                                    <div className="simi-mobile-more-text" style={{ flex: 1 }}>
+                                        <strong>Cotizador Orientativo</strong>
+                                        <small>Impresión 3D & Talleres STEAM</small>
                                     </div>
                                     <ChevronRight size={16} color="#94a3b8" />
                                 </button>
@@ -2118,6 +2201,18 @@ export default function PanelSimiHub({
                 />
             )}
 
+            {/* PESTAÑA 4B: CATÁLOGO DE SERVICIOS & PORTAFOLIO STEAM */}
+            {activeTab === 'services' && (
+                <SimiServicesTab 
+                    isLeader={isLeader}
+                    profile={profile}
+                    initialServices={simiServices}
+                    onServicesChange={(updated) => setSimiServices(updated)}
+                    isManageModeActive={isManageModeActive}
+                    onToggleManageMode={() => setIsManageModeActive(!isManageModeActive)}
+                />
+            )}
+
             {/* PESTAÑA 5: DIRECTORIO DE MIEMBROS ACTIVOS & REGLA 80/80 */}
             {activeTab === 'members' && (
                 <SimiMembersTab 
@@ -2659,6 +2754,14 @@ export default function PanelSimiHub({
                     </div>
                 </div>
             )}
+
+            {/* MODAL GLOBAL DE COTIZACIÓN ORIENTATIVA (FABRICACIÓN + CAPACITACIONES) */}
+            <SimiQuoteModal 
+                isOpen={isQuoteModalOpen}
+                onClose={() => setIsQuoteModalOpen(false)}
+                profile={profile}
+                defaultTab={defaultQuoteTab}
+            />
 
         </div>
     );

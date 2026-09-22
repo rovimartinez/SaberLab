@@ -309,3 +309,29 @@
   - **Evaluaciones Seguras & Live Lobby:** Muestra gráfica del protocolo anti-copia y sala de supervisión docente en tiempo real.
   - **Banner Final de Llamado a la Acción & Footer Institucional:** Enlaces directos a Google Auth, canje de códigos y pie de página completo con redes sociales.
 - **Verificación:** Probado y validado en navegador con `browser_subagent` y compilación limpia con `npm run build` (0 errores). Prohibido `git push` sin autorización previa.
+
+### 23. Catálogo de Servicios, Portafolio STEAM y Cotizador en SIMI3D
+- **3 Ejes de Servicios Implementados ([`SimiServicesTab.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simi/SimiServicesTab.jsx) & [`simiData.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/data/simiData.js)):**
+  - **🎓 Capacitaciones STEAM por Edades:**
+    - *Semillero Junior (Primaria · 7 a 11 años):* Tinkercad 3D, figuras didácticas y geometría espacial.
+    - *Creativos STEAM (Secundaria · 12 a 17 años):* Blender 3D, laminadores Cura/Orca y prototipado FDM.
+    - *Formación Técnica & Universitaria (Pregrado / Egresados):* Fusion 360 paramétrico, ensambles mecánicos y tolerancias DFAM.
+    - *Formación Docente (Train the Trainers):* Integración curricular STEAM y gestión de Aula Maker.
+  - **🖨️ Fabricación Digital & Prototipado:**
+    - *Impresión FDM:* Termoplásticos PLA+, PETG, ABS, TPU y Fibra de Carbono.
+    - *Impresión SLA Resina UV:* Ultra precisión 4K/8K para miniaturas, joyería y odontología.
+    - *Ingeniería Inversa & Escaneo 3D:* Digitalización y reconstrucción de piezas CAD (configurado en estado `hidden` / oculto por defecto).
+  - **🔧 Servicio Técnico & Mantenimiento:**
+    - *Mantenimiento Preventivo:* Calibración de cama, lubricación de guías lineales y ajuste térmico PID.
+    - *Mantenimiento Correctivo & Reparación:* Desatascos, cambio de termistores, boquillas y extrusores.
+    - *Actualizaciones & Optimización (Upgrades):* Firmware Klipper/Marlin, extrusión directa y bases PEI (configurado en estado `hidden` / oculto por defecto).
+- **Control de Visibilidad en Vivo (Docente / Líder):**
+  - Botones de 1 clic en cada tarjeta para alternar entre: `Visible` (`active`), `Ocultar` (`hidden`) y `Bloquear` (`locked` con candado y badge "Próximamente").
+  - Los servicios ocultos no son visibles para estudiantes ni en vista previa de estudiante.
+- **Cotizador Orientativo de Impresión 3D:**
+  - Calculadora interactiva con selección de tecnología/material (PLA+, PETG, TPU, Resina SLA), control deslizante de peso (10g a 500g) e infill (15% a 100%).
+  - Botón directo que genera una solicitud preformateada en WhatsApp con el presupuesto estimado y opción para enviar el archivo `.STL`/`.STEP`.
+- **Persistencia Cloudflare D1 ([`functions/api/simi.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/simi.js)):**
+  - Tabla `simi_servicios` auto-creada con soporte para campos de audiencia, especificaciones JSON, estados y precios.
+  - Endpoints CRUD (`save-service`, `toggle-service-status`, `delete-service`, `sync-all-services`).
+- **Compilación:** Verificado con `npm run build` (0 errores en 9.22s). Cumplida regla de no ejecutar `git push` sin orden explícita.

@@ -19,17 +19,19 @@ const lessonDefinition = {
                     style="width: 100%; max-height: 240px; object-fit: contain; border-radius: 10px; background: #0f172a;"
                 />
                 <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 0.6rem; font-weight: 600;">
-                    Principio de Ecolocalización: Emisión de sonido de alta frecuencia $\rightarrow$ Choque $\rightarrow$ Detección del Eco de retorno
+                    Principio de Ecolocalización: Emisión de sonido de alta frecuencia ➔ Choque ➔ Detección del Eco de retorno
                 </div>
             </div>
 
             <div style="background: rgba(56, 189, 248, 0.08); border-left: 4px solid #38bdf8; border-radius: 12px; padding: 1.25rem; margin: 1.25rem 0;">
                 <h4 style="color: #38bdf8; margin-top: 0;">Física Clave: La Velocidad del Sonido en el Aire</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6; margin: 0;">
-                    El sonido viaja por el aire a una velocidad constante aproximada de <strong>$343\,\text{m/s}$</strong> (a $20\,^\circ\text{C}$).<br>
-                    Si convertimos esta velocidad a centímetros y microsegundos ($\mu\text{s}$):<br>
-                    $$\text{Velocidad} = 343\,\text{m/s} = 0.0343\,\text{cm}/\mu\text{s} = \frac{1}{29.15}\,\text{cm}/\mu\text{s}$$
-                    Esto significa que el sonido tarda exactamente <strong>$29.15\,\mu\text{s}$</strong> en recorrer $1\,\text{cm}$.
+                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.7; margin: 0;">
+                    El sonido viaja por el aire a una velocidad constante aproximada de <strong style="color: #38bdf8;">343 m/s</strong> (a 20 °C).<br>
+                    Si convertimos esta velocidad a centímetros y microsegundos (µs):<br>
+                    <div style="background: rgba(15, 23, 42, 0.6); padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.25); margin: 0.6rem 0; font-family: monospace; font-size: 1rem; color: #38bdf8; text-align: center; font-weight: 700;">
+                        Velocidad = 343 m/s = 0.0343 cm/µs = (1 / 29.15) cm/µs
+                    </div>
+                    Esto significa que el sonido tarda exactamente <strong style="color: #fbbf24;">29.15 µs</strong> en recorrer <strong>1 cm</strong>.
                 </p>
             </div>
         </div>
@@ -37,7 +39,7 @@ const lessonDefinition = {
         <!-- 2. ANATOMÍA Y PINES DEL MÓDULO HC-SR04 -->
         <div class="theory-section">
             <h3 id="re-m2-4-2">2. Anatomía y Pines del Módulo HC-SR04</h3>
-            <p>El sensor HC-SR04 es un módulo compacto que opera a 5V y puede medir distancias entre <strong>$2\,\text{cm}$</strong> y <strong>$400\,\text{cm}$</strong> con una precisión de hasta $3\,\text{mm}$.</p>
+            <p>El sensor HC-SR04 es un módulo compacto que opera a 5V y puede medir distancias entre <strong style="color: #38bdf8;">2 cm</strong> y <strong style="color: #38bdf8;">400 cm</strong> (hasta 4 metros) con una precisión de hasta <strong>3 mm</strong>.</p>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin: 1.5rem 0;">
                 <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 1rem; text-align: center;">
@@ -61,7 +63,7 @@ const lessonDefinition = {
                             </tr>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 0.45rem; font-weight: bold; color: #38bdf8;">TRIG (Trigger)</td>
-                                <td style="padding: 0.45rem;">Entrada de disparo: Recibe un pulso de $10\,\mu\text{s}$ para iniciar la ráfaga.</td>
+                                <td style="padding: 0.45rem;">Entrada de disparo: Recibe un pulso de <strong>10 µs</strong> para iniciar la ráfaga.</td>
                             </tr>
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 0.45rem; font-weight: bold; color: #10b981;">ECHO (Eco)</td>
@@ -89,17 +91,19 @@ const lessonDefinition = {
                     style="width: 100%; max-height: 250px; object-fit: contain; border-radius: 10px; background: #0f172a;"
                 />
                 <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.6rem; font-weight: 600;">
-                    Secuencia: Pulso Trigger $10\,\mu\text{s}$ $\rightarrow$ Ráfaga de 8 ciclos a 40 kHz $\rightarrow$ Pulso Echo proporcional al tiempo de vuelo
+                    Secuencia: Pulso Trigger 10 µs ➔ Ráfaga de 8 ciclos a 40 kHz ➔ Pulso Echo proporcional al tiempo de vuelo
                 </div>
             </div>
 
             <!-- Deducción de la Fórmula -->
             <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; border-radius: 12px; padding: 1.25rem; margin: 1.25rem 0;">
                 <h4 style="color: #10b981; margin-top: 0;">¿Por qué dividimos entre 2 en la fórmula?</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.7; margin: 0;">
                     El tiempo registrado por el pin <code>ECHO</code> corresponde al viaje de <strong>ida</strong> (desde el sensor hasta el obstáculo) más el viaje de <strong>vuelta</strong> (desde el obstáculo hasta el receptor).<br><br>
                     Para conocer la distancia real hasta el objeto, debemos calcular solo la mitad del trayecto:<br>
-                    $$\text{Distancia (cm)} = \frac{\text{Tiempo de Echo } (\mu\text{s}) \times 0.0343}{2} = \frac{\text{Tiempo de Echo } (\mu\text{s})}{58.2}$$
+                    <div style="background: rgba(15, 23, 42, 0.7); padding: 0.9rem 1.2rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); margin: 0.8rem 0; font-family: monospace; font-size: 1.05rem; color: #34d399; text-align: center; font-weight: 700;">
+                        Distancia (cm) = [Tiempo Echo (µs) × 0.0343] / 2 = Tiempo Echo (µs) / 58.2
+                    </div>
                 </p>
             </div>
         </div>
