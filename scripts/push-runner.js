@@ -239,6 +239,13 @@ async function main() {
 
     // 9. Panel final
     printSummary(summary, commitMsg, branch);
+
+    // 10. Cuenta regresiva antes de cerrar
+    for (let i = 5; i >= 1; i--) {
+        process.stdout.write(`\r  ${C.dim}Cerrando en ${i} segundo${i !== 1 ? 's' : ''}...   ${C.reset}`);
+        await new Promise(r => setTimeout(r, 1000));
+    }
+    console.log(`\r  ${C.dim}Cerrando...                  ${C.reset}\n`);
 }
 
 main().catch(err => {
