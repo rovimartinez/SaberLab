@@ -428,6 +428,8 @@
     - `appVisibilityMap` ahora inicializa desde la caché y el payload de D1 (`lessonVisibility[0]`), con fallback a `localStorage` y valores por defecto seguros (*Exámenes*, *Calificaciones* y *Componentes* bloqueados; *Recompensas* oculta).
     - `useEffect` sincroniza reactivamente cualquier cambio del servidor en tiempo real. Si la base de datos está vacía, migra automáticamente la configuración del docente a D1.
     - `cycleAppVisibility` actualiza de forma instantánea la UI (optimistic UI) y envía `POST /api/visibility` con `course_id: 0` para que el cambio aplique inmediatamente a todos los alumnos conectados.
-  - **Blindaje de Analítica Docente:**
-    - Se condicionó la presencia de la app `analytics` con `...(isStaff ? [{ id: 'analytics', ... }] : [])`, garantizando que ningún estudiante pueda visualizar la tarjeta de analítica docente en su panel de inicio.
-- **Compilación:** Verificado con `npm run build` (0 errores en 11.31s). Prohibido `git push` sin autorización explícita.
+  - **Ocultamiento por Defecto de Certificados:**
+    - Se incorporó `certificates: 'hidden'` en la configuración inicial y sincronización de Cloudflare D1, asegurando que para los estudiantes la tarjeta de Certificados quede 100% omitida en el DOM en vez de figurar bloqueada.
+  - **Diseño Minimalista Icon-Only:**
+    - El botón de activación en la cabecera de la sección 4 se ajustó a formato cuadrado minimalista de solo icono (`32x32px`), alternando entre el lápiz (`✏️`) y el check de guardado (`✓`) con pulso esmeralda, sin textos invasivos.
+- **Compilación:** Verificado con `npm run build` (0 errores en 12.06s). Prohibido `git push` sin autorización explícita.

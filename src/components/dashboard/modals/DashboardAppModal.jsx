@@ -9,6 +9,7 @@ const ActivitiesModalContent = React.lazy(() => import('./ActivitiesModalContent
 const GradesModalContent = React.lazy(() => import('./GradesModalContent'));
 const PanelNotificaciones = React.lazy(() => import('../../../pages/PanelNotificaciones'));
 const ComponentsModalContent = React.lazy(() => import('./ComponentsModalContent'));
+const PanelRecursos = React.lazy(() => import('../../../pages/PanelRecursos'));
 
 // Componentes de Gestión Independientes (Categoría 4)
 const LiveMonitorModalContent = React.lazy(() => import('./LiveMonitorModalContent'));
@@ -83,12 +84,13 @@ export const DashboardAppModal = ({
 
     const isCoursesModal = activeAppModal === 'courses';
     const isComponentsModal = activeAppModal === 'components';
+    const isResourcesModal = activeAppModal === 'resources';
     const isAdminLargeModal = ['liveMonitor', 'inviteLinks', 'coursesManagement', 'platformAdmin', 'examsManagement'].includes(activeAppModal);
 
     return createPortal(
         <div className="app-modal-backdrop animate-fade-in" onClick={onClose}>
             <div 
-                className={`app-modal-container glass-panel ${isCoursesModal ? 'is-courses-modal' : ''} ${isComponentsModal ? 'is-components-modal' : ''} ${isAdminLargeModal ? 'is-admin-large-modal' : ''}`} 
+                className={`app-modal-container glass-panel ${isCoursesModal ? 'is-courses-modal' : ''} ${isComponentsModal ? 'is-components-modal' : ''} ${isResourcesModal ? 'is-resources-modal' : ''} ${isAdminLargeModal ? 'is-admin-large-modal' : ''}`} 
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Cabecera del Modal */}
@@ -339,6 +341,14 @@ export const DashboardAppModal = ({
                             <ComponentsModalContent
                                 mainCourseDef={mainCourseDef}
                                 isStaff={isStaff}
+                            />
+                        )}
+
+                        {/* APP: RECURSOS EDUCATIVOS */}
+                        {activeAppModal === 'resources' && (
+                            <PanelRecursos 
+                                isModal={true} 
+                                initialCourse={mainCourseDef?.abbr || selectedModalCourse?.abbr || 'all'}
                             />
                         )}
 

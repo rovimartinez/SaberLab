@@ -355,6 +355,15 @@ export default function PanelSimiHub({
         return {};
     });
 
+    // Estado de visibilidad de Eventos / Visitas (3 estados: 'unlocked' | 'locked' | 'hidden')
+    const [eventVisibilityMap, setEventVisibilityMap] = useState(() => {
+        const saved = localStorage.getItem('simi_event_visibility_map');
+        if (saved) {
+            try { return JSON.parse(saved); } catch (e) { }
+        }
+        return {};
+    });
+
     // Ciclo de 3 estados: Desbloqueado (unlocked) -> Bloqueado (locked) -> Oculto (hidden) -> Desbloqueado (unlocked)
     const cycleTrackVisibility = (trackId, e) => {
         e?.stopPropagation();
@@ -417,6 +426,20 @@ export default function PanelSimiHub({
                     if (dbEvents.length > 0) {
                         setSimiEvents(dbEvents);
                         localStorage.setItem('simi_events_list', JSON.stringify(dbEvents));
+                        const mapFromEvents = {};
+                        dbEvents.forEach(evt => {
+                            if (evt && evt.id) {
+                                const st = evt.visibility_state || evt.visibilityState || (evt.is_locked || evt.isLocked ? 'locked' : (evt.is_hidden || evt.isHidden ? 'hidden' : 'unlocked'));
+                                mapFromEvents[evt.id] = st;
+                            }
+                        });
+                        if (Object.keys(mapFromEvents).length > 0) {
+                            setEventVisibilityMap(prev => {
+                                const merged = { ...prev, ...mapFromEvents };
+                                localStorage.setItem('simi_event_visibility_map', JSON.stringify(merged));
+                                return merged;
+                            });
+                        }
                     } else if (isLeader) {
                         // Respaldo de seguridad: si D1 aún no tiene eventos pero el líder/docente tiene eventos en local,
                         // auto-migrarlos a D1 para que queden disponibles para todos los estudiantes
@@ -1432,8 +1455,15 @@ export default function PanelSimiHub({
                                         const nextEvt = (simiEvents || [])
                                             .filter(e => {
                                                 const st = (e.status || '').toLowerCase();
-                                                return (st === 'programada' || st === 'en preparación' || st === 'en preparacion')
+                                                const isValidStatus = (st === 'programada' || st === 'en preparación' || st === 'en preparacion')
                                                     && e.date >= today;
+                                                if (!isValidStatus) return false;
+
+                                                const visState = eventVisibilityMap[e.id] || e.visibilityState || e.visibility_state || (e.isLocked || e.is_locked ? 'locked' : (e.isHidden || e.is_hidden ? 'hidden' : 'unlocked'));
+                                                // Los alumnos nunca ven los eventos ocultos
+                                                if (!isLeader && visState === 'hidden') return false;
+
+                                                return true;
                                             })
                                             .sort((a, b) => a.date.localeCompare(b.date))[0];
 
@@ -1462,12 +1492,26 @@ export default function PanelSimiHub({
                                         }
 
                                         const isCapacitacion = (nextEvt.event_type || nextEvt.eventType || '') === 'capacitacion_tecnica';
+                                        const nextEvtVisState = eventVisibilityMap[nextEvt.id] || nextEvt.visibilityState || nextEvt.visibility_state || (nextEvt.isLocked || nextEvt.is_locked ? 'locked' : (nextEvt.isHidden || nextEvt.is_hidden ? 'hidden' : 'unlocked'));
+
                                         return (
                                             <div className="simi-home-event-highlight">
                                                 <div className="simi-home-event-top">
-                                                    <span className="simi-home-event-badge">
-                                                        {isCapacitacion ? '🎓 Capacitación Técnica' : '🏫 Visita Pedagógica'}
-                                                    </span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                        <span className="simi-home-event-badge">
+                                                            {isCapacitacion ? '🎓 Capacitación Técnica' : '🏫 Visita Pedagógica'}
+                                                        </span>
+                                                        {isLeader && nextEvtVisState === 'hidden' && (
+                                                            <span style={{ fontSize: '0.72rem', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', padding: '2px 8px', borderRadius: '6px', fontWeight: 800, border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                                                                👁️ Oculto para alumnos
+                                                            </span>
+                                                        )}
+                                                        {isLeader && nextEvtVisState === 'locked' && (
+                                                            <span style={{ fontSize: '0.72rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '2px 8px', borderRadius: '6px', fontWeight: 800, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                                                                🔒 Bloqueado
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <span className="simi-home-event-date">📅 {nextEvt.date}</span>
                                                 </div>
                                                 <h4 className="simi-home-event-title">{nextEvt.schoolName || nextEvt.school_name}</h4>
@@ -1510,18 +1554,6 @@ export default function PanelSimiHub({
                                         </p>
                                     </div>
                                 </div>
-
-                                {isLeader && (
-                                    <button 
-                                        className={`simi-home-admin-edit-btn ${isManageModeActive ? 'active-manage-mode' : ''}`}
-                                        onClick={() => setIsManageModeActive(!isManageModeActive)}
-                                        title={isManageModeActive ? "Modo Gestión Activo: Haz clic para finalizar" : "Activar Gestión de Visibilidad / Bloqueo (Solo Docente/Líder)"}
-                                        style={{ position: 'static' }}
-                                    >
-                                        <Edit3 size={18} />
-                                        {isManageModeActive && <span className="simi-manage-badge-dot" />}
-                                    </button>
-                                )}
                             </div>
 
                             {/* Grid Directo con Todas las Rutas / Cursos Ordenados: Desbloqueados -> Bloqueados -> Ocultos */}
@@ -2190,7 +2222,17 @@ export default function PanelSimiHub({
                     isLeader={isLeader} 
                     profile={profile} 
                     initialEvents={simiEvents} 
-                    onEventsChange={(updated) => setSimiEvents(updated)} 
+                    onEventsChange={(updated) => {
+                        setSimiEvents(updated);
+                        const mapFromEvents = {};
+                        updated.forEach(evt => {
+                            if (evt && evt.id) {
+                                const st = evt.visibility_state || evt.visibilityState || (evt.is_locked || evt.isLocked ? 'locked' : (evt.is_hidden || evt.isHidden ? 'hidden' : 'unlocked'));
+                                mapFromEvents[evt.id] = st;
+                            }
+                        });
+                        setEventVisibilityMap(prev => ({ ...prev, ...mapFromEvents }));
+                    }} 
                     isManageModeActive={isManageModeActive}
                     onToggleManageMode={() => setIsManageModeActive(!isManageModeActive)}
                 />

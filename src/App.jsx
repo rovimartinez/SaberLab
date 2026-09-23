@@ -145,7 +145,7 @@ function AppRoutes() {
                         <Route path="exam-lobby/:evaluationKey" element={<AdminRoute><ExamLiveLobby /></AdminRoute>} />
                         <Route path="grades" element={<PanelCalificaciones />} />
                         <Route path="progress" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="resources" element={<PanelRecursos />} />
+                        <Route path="resources" element={<Navigate to="/dashboard?app=resources" replace />} />
                         <Route path="myapps" element={<PanelWidgets />} />
                         <Route path="settings" element={<AdminRoute><SettingsPage /></AdminRoute>} />
                         {/* 🎉 Nuevas rutas */}

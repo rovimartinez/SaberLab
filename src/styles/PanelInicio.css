@@ -2351,6 +2351,18 @@
     height: auto;
 }
 
+.app-modal-container.is-resources-modal {
+    max-width: 1260px;
+    width: 95vw;
+    max-height: 92vh;
+    height: auto;
+}
+
+.app-modal-container.is-resources-modal .app-modal-body {
+    padding: 0.85rem 1.4rem 1.25rem 1.4rem;
+    overflow-y: auto;
+}
+
 .app-modal-container.is-components-modal .app-modal-header {
     padding: 0.85rem 1.4rem;
     border-bottom: 1px solid var(--border-subtle);

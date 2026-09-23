@@ -443,27 +443,6 @@ export default function SimiResourcesTab({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {/* Selector Superior de Sub-Pestañas: Inventario vs Fuentes Web */}
-            <div className="simi-resources-nav-tabs">
-                <button
-                    type="button"
-                    className={`simi-resources-nav-tab ${activeSubTab === 'inventory' ? 'active' : ''}`}
-                    onClick={() => setActiveSubTab('inventory')}
-                >
-                    <Package size={17} />
-                    <span>Inventario Físico & Taller ({resources.length})</span>
-                </button>
-                <button
-                    type="button"
-                    className={`simi-resources-nav-tab ${activeSubTab === 'web' ? 'active' : ''}`}
-                    onClick={() => setActiveSubTab('web')}
-                >
-                    <Compass size={17} />
-                    <span>Fuentes & Herramientas Web ({webResources.length})</span>
-                    <span className="simi-resources-nav-badge">Hub Maker & IA</span>
-                </button>
-            </div>
-
             {activeSubTab === 'web' ? (
                 /* ── VISTA DE FUENTES & HERRAMIENTAS WEB ── */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -532,6 +511,27 @@ export default function SimiResourcesTab({
                                 </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Selector de Sub-Pestañas: Inventario vs Fuentes Web (debajo del encabezado) */}
+                    <div className="simi-resources-nav-tabs">
+                        <button
+                            type="button"
+                            className={`simi-resources-nav-tab ${activeSubTab === 'inventory' ? 'active' : ''}`}
+                            onClick={() => setActiveSubTab('inventory')}
+                        >
+                            <Package size={17} />
+                            <span>Inventario Físico & Taller ({resources.length})</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={`simi-resources-nav-tab ${activeSubTab === 'web' ? 'active' : ''}`}
+                            onClick={() => setActiveSubTab('web')}
+                        >
+                            <Compass size={17} />
+                            <span>Fuentes & Herramientas Web ({webResources.length})</span>
+                            <span className="simi-resources-nav-badge">Hub Maker & IA</span>
+                        </button>
                     </div>
 
                     {/* Píldoras de Filtro por Categoría */}
@@ -684,6 +684,27 @@ export default function SimiResourcesTab({
                             <Plus size={16} /> Registrar Recurso / Máquina
                         </button>
                     )}
+                </div>
+
+                {/* Selector de Sub-Pestañas: Inventario vs Fuentes Web (debajo del encabezado) */}
+                <div className="simi-resources-nav-tabs">
+                    <button
+                        type="button"
+                        className={`simi-resources-nav-tab ${activeSubTab === 'inventory' ? 'active' : ''}`}
+                        onClick={() => setActiveSubTab('inventory')}
+                    >
+                        <Package size={17} />
+                        <span>Inventario Físico & Taller ({resources.length})</span>
+                    </button>
+                    <button
+                        type="button"
+                        className={`simi-resources-nav-tab ${activeSubTab === 'web' ? 'active' : ''}`}
+                        onClick={() => setActiveSubTab('web')}
+                    >
+                        <Compass size={17} />
+                        <span>Fuentes & Herramientas Web ({webResources.length})</span>
+                        <span className="simi-resources-nav-badge">Hub Maker & IA</span>
+                    </button>
                 </div>
 
             {/* 4 Tarjetas de Telemetría — 4 en la misma fila con icono en marca de agua de fondo */}

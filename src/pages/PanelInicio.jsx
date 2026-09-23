@@ -6,7 +6,7 @@ import {
     Flame, CheckCircle2, AlertCircle, Loader2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, EyeOff, CheckCircle, Check, X, Lock, Gift, Wrench, Hash, FileCheck,
     Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList, Cpu, Edit3, UserCheck
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { useApps } from '../context/useApps';
 import { api } from '../lib/api';
@@ -68,6 +68,19 @@ const PanelInicio = () => {
     const [activeAppModal, setActiveAppModal] = useState(null);
     const [selectedModalCourse, setSelectedModalCourse] = useState(null);
     const [modalCourseFilter, setModalCourseFilter] = useState('all');
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    useEffect(() => {
+        const appParam = searchParams.get('app');
+        if (appParam) {
+            setActiveAppModal(appParam);
+            setSearchParams(prev => {
+                const n = new URLSearchParams(prev);
+                n.delete('app');
+                return n;
+            }, { replace: true });
+        }
+    }, [searchParams]);
     const [selectedCourseId, setSelectedCourseId] = useState(() => {
         return localStorage.getItem('saberlab_active_course') || 'all';
     });
@@ -647,8 +660,7 @@ const PanelInicio = () => {
             icon: <Folder size={26} />,
             gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
             shadow: 'rgba(245, 158, 11, 0.35)',
-            desc: 'Guías de laboratorio, videos, datasheets y código',
-            onClick: () => navigate('/dashboard/resources')
+            desc: 'Guías de laboratorio, videos, datasheets y código'
         },
         {
             id: 'certificates',

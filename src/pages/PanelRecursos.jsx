@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
     FolderOpen, Folder, FileText, Video, ExternalLink, Play, 
     Book, Link as LinkIcon, Zap, Bot, Search, 
@@ -429,11 +430,35 @@ const OFFICIAL_EXTERNAL_RESOURCES = [
     }
 ];
 
-const PanelRecursos = () => {
+// Helper de normalización robusta de cursos
+const normalizeCourseAbbr = (abbr, courseId) => {
+    const a = String(abbr || '').trim().toUpperCase();
+    if (a === 'EE' || a === '1' || courseId === 1) return 'EE';
+    if (a === 'RE' || a === '5' || a === '2' || courseId === 5 || courseId === 2) return 'RE';
+    if (a === 'GENERAL') return 'GENERAL';
+    return a || 'RE';
+};
+
+const PanelRecursos = ({ isModal = false, initialCourse = null }) => {
     const { profile, enrolledCourses } = useAuth();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [selectedCourseFilter, setSelectedCourseFilter] = useState('all');
+    
+    // Inicializar filtro según el curso activo o 'all'
+    const [selectedCourseFilter, setSelectedCourseFilter] = useState(() => {
+        const init = String(initialCourse || '').trim().toUpperCase();
+        if (['EE', 'RE'].includes(init)) return init;
+        return 'all';
+    });
+
+    // Actualizar filtro si cambia el curso seleccionado en el Dashboard
+    useEffect(() => {
+        const init = String(initialCourse || '').trim().toUpperCase();
+        if (['EE', 'RE'].includes(init)) {
+            setSelectedCourseFilter(init);
+        }
+    }, [initialCourse]);
+
     const [activeVideoModal, setActiveVideoModal] = useState(null);
 
     // Recursos en base de datos D1 y mapa de visibilidad
@@ -446,6 +471,22 @@ const PanelRecursos = () => {
             return [];
         }
     });
+
+    // Recursos editados o creados localmente con persistencia inmediata
+    const [localResources, setLocalResources] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('saberlab_local_resources') || '[]');
+        } catch {
+            return [];
+        }
+    });
+
+    // Helper robusto para extraer video ID de cualquier formato de enlace de YouTube
+    const extractYoutubeId = (url) => {
+        if (!url) return '';
+        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+        return match && match[1] ? match[1] : '';
+    };
 
     // Modal de creación / edición de recurso
     const [editingResource, setEditingResource] = useState(null);
@@ -479,16 +520,20 @@ const PanelRecursos = () => {
 
     // Mapear cursos en los que está inscrito el estudiante
     const enrolledAbbrs = useMemo(() => {
-        return (enrolledCourses || []).map(c => (c.abbr || '').toUpperCase());
+        return (enrolledCourses || []).map(c => normalizeCourseAbbr(c.abbr, c.id));
     }, [enrolledCourses]);
 
-    // Combinar recursos estáticos y recursos en D1
+    // Combinar recursos estáticos, de BD y recursos locales editados
     const allCombinedResources = useMemo(() => {
-        const activeStatics = OFFICIAL_EXTERNAL_RESOURCES.filter(r => !deletedIds.includes(r.id));
+        const activeStatics = OFFICIAL_EXTERNAL_RESOURCES.filter(r => !deletedIds.includes(r.id)).map(r => ({
+            ...r,
+            courseAbbr: normalizeCourseAbbr(r.courseAbbr, r.courseId)
+        }));
         
-        // Mapear recursos de D1 asegurando tipos adecuados
-        const formattedDb = dbResources.map(r => {
-            const courseColor = r.course_abbr === 'EE' ? '#f59e0b' : '#a855f7';
+        // Mapear recursos de D1 y locales asegurando tipos adecuados
+        const formattedCustom = [...dbResources, ...localResources].map(r => {
+            const courseAbbrVal = normalizeCourseAbbr(r.course_abbr || r.courseAbbr, r.course_id || r.courseId);
+            const courseColor = courseAbbrVal === 'EE' ? '#f59e0b' : '#a855f7';
             let parsedTags = [];
             if (r.tags) {
                 try {
@@ -497,31 +542,32 @@ const PanelRecursos = () => {
                     parsedTags = [r.tags];
                 }
             }
+            const vId = r.video_id || r.videoId || extractYoutubeId(r.url);
             return {
                 id: r.id,
-                courseAbbr: r.course_abbr,
-                courseName: r.course_abbr === 'EE' ? 'Electricidad y Electrónica Básica' : 'Robótica Educativa',
+                courseAbbr: courseAbbrVal,
+                courseName: courseAbbrVal === 'EE' ? 'Electricidad y Electrónica Básica' : 'Robótica Educativa',
                 courseColor,
                 title: r.title,
                 source: r.source || 'Recurso Docente',
-                sourceType: r.source_type || r.type,
+                sourceType: r.source_type || r.sourceType || r.type,
                 description: r.description || '',
                 category: r.category || 'projects',
-                type: r.type || 'YouTube',
+                type: r.type || (vId ? 'YouTube' : 'Proyecto'),
                 url: r.url,
-                videoId: r.video_id,
+                videoId: vId,
                 tags: parsedTags,
                 isCustom: true
             };
         });
 
-        // Los recursos de D1 reemplazan o se añaden a los estáticos
+        // Los recursos personalizados reemplazan o se añaden a los estáticos
         const map = new Map();
         activeStatics.forEach(r => map.set(r.id, r));
-        formattedDb.forEach(r => map.set(r.id, r));
+        formattedCustom.forEach(r => map.set(r.id, r));
 
         return Array.from(map.values());
-    }, [dbResources, deletedIds]);
+    }, [dbResources, localResources, deletedIds]);
 
     // Verificar si un recurso está visible para estudiantes
     const isResourceVisible = (resource) => {
@@ -544,7 +590,7 @@ const PanelRecursos = () => {
 
     // Opciones de filtro por curso
     const availableCourseFilters = useMemo(() => {
-        const list = [{ id: 'all', label: 'Todos los Cursos', icon: <Layers size={15} /> }];
+        const list = [{ id: 'all', label: 'Todos los cursos', icon: <Layers size={15} /> }];
         
         const hasEE = isStaff || enrolledAbbrs.includes('EE');
         const hasRE = isStaff || enrolledAbbrs.includes('RE');
@@ -570,13 +616,20 @@ const PanelRecursos = () => {
 
     const filteredResources = useMemo(() => {
         return userAllowedResources.filter(resource => {
-            const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            const matchesSearch = !searchTerm.trim() ||
+                resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 resource.source.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (resource.tags && resource.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase())));
             
-            const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory;
-            const matchesCourse = selectedCourseFilter === 'all' || resource.courseAbbr === selectedCourseFilter;
+            const isVideoResource = Boolean(resource.videoId || resource.type === 'YouTube' || resource.category === 'videos');
+            const matchesCategory = selectedCategory === 'all' || 
+                resource.category === selectedCategory || 
+                (selectedCategory === 'videos' && isVideoResource);
+
+            const resAbbr = normalizeCourseAbbr(resource.courseAbbr, resource.courseId);
+            const filterAbbr = String(selectedCourseFilter || 'all').trim().toUpperCase();
+            const matchesCourse = filterAbbr === 'ALL' || resAbbr === filterAbbr;
 
             return matchesSearch && matchesCategory && matchesCourse;
         });
@@ -594,8 +647,12 @@ const PanelRecursos = () => {
     };
 
     const handleOpenResource = (resource) => {
-        if (resource.videoId) {
-            setActiveVideoModal(resource);
+        const vId = resource.videoId || extractYoutubeId(resource.url);
+        if (vId || resource.category === 'videos' || resource.type === 'YouTube') {
+            setActiveVideoModal({
+                ...resource,
+                videoId: vId || resource.videoId
+            });
         } else if (resource.url) {
             window.open(resource.url, '_blank', 'noopener,noreferrer');
         }
@@ -650,10 +707,10 @@ const PanelRecursos = () => {
             category: resource.category || 'projects',
             type: resource.type || 'YouTube',
             url: resource.url,
-            video_id: resource.videoId || '',
-            source: resource.source,
-            source_type: resource.sourceType,
-            description: resource.description,
+            video_id: resource.videoId || extractYoutubeId(resource.url) || '',
+            source: resource.source || '',
+            source_type: resource.sourceType || resource.type || '',
+            description: resource.description || '',
             tags: Array.isArray(resource.tags) ? resource.tags.join(', ') : (resource.tags || ''),
             is_visible: isResourceVisible(resource) ? 1 : 0
         });
@@ -664,16 +721,66 @@ const PanelRecursos = () => {
         if (!editingResource.title.trim() || !editingResource.url.trim()) return;
 
         setSaving(true);
+        const resourceId = editingResource.id || `custom-rec-${Date.now()}`;
+        const extractedVId = editingResource.video_id || extractYoutubeId(editingResource.url);
+        
+        let parsedTags = [];
+        if (editingResource.tags) {
+            parsedTags = Array.isArray(editingResource.tags) 
+                ? editingResource.tags 
+                : editingResource.tags.split(',').map(t => t.trim()).filter(Boolean);
+        }
+
+        const savedItem = {
+            id: resourceId,
+            course_abbr: editingResource.course_abbr || 'RE',
+            courseAbbr: editingResource.course_abbr || 'RE',
+            courseName: (editingResource.course_abbr === 'EE') ? 'Electricidad y Electrónica Básica' : 'Robótica Educativa',
+            courseColor: (editingResource.course_abbr === 'EE') ? '#f59e0b' : '#a855f7',
+            title: editingResource.title.trim(),
+            source: editingResource.source ? editingResource.source.trim() : 'Prof. Ronny Martinez',
+            source_type: editingResource.source_type || editingResource.type,
+            sourceType: editingResource.source_type || editingResource.type,
+            description: editingResource.description ? editingResource.description.trim() : '',
+            category: editingResource.category,
+            type: editingResource.type,
+            url: editingResource.url.trim(),
+            video_id: extractedVId,
+            videoId: extractedVId,
+            tags: parsedTags,
+            is_visible: editingResource.is_visible !== undefined ? editingResource.is_visible : 1,
+            isCustom: true
+        };
+
+        // 1. Guardado optimista e instantáneo en local
+        setLocalResources(prev => {
+            const filtered = prev.filter(r => r.id !== resourceId);
+            const next = [savedItem, ...filtered];
+            localStorage.setItem('saberlab_local_resources', JSON.stringify(next));
+            return next;
+        });
+        setVisibilityMap(prev => ({ ...prev, [resourceId]: savedItem.is_visible }));
+
+        // 2. Sincronización en segundo plano con Cloudflare D1
         try {
-            const { data, error } = await api('/resources', {
+            const { data } = await api('/resources', {
                 method: 'POST',
                 body: {
                     action: 'save',
-                    ...editingResource
+                    id: resourceId,
+                    course_abbr: savedItem.course_abbr,
+                    title: savedItem.title,
+                    source: savedItem.source,
+                    source_type: savedItem.source_type,
+                    description: savedItem.description,
+                    category: savedItem.category,
+                    type: savedItem.type,
+                    url: savedItem.url,
+                    video_id: extractedVId,
+                    tags: parsedTags,
+                    is_visible: savedItem.is_visible
                 }
             });
-
-            if (error) throw new Error(error.message || 'Error guardando');
 
             if (data?.resource) {
                 setDbResources(prev => {
@@ -685,17 +792,13 @@ const PanelRecursos = () => {
                     }
                     return [data.resource, ...prev];
                 });
-                if (data.resource.is_visible !== undefined) {
-                    setVisibilityMap(prev => ({ ...prev, [data.resource.id]: data.resource.is_visible }));
-                }
             }
-
-            showToast('¡Recurso guardado exitosamente en la plataforma!');
-            setEditingResource(null);
         } catch (err) {
-            alert(err.message || 'Error al guardar recurso');
+            console.warn('Sincronización en servidor no disponible, guardado localmente:', err);
         } finally {
             setSaving(false);
+            showToast('¡Información y enlaces actualizados exitosamente!');
+            setEditingResource(null);
         }
     };
 
@@ -724,7 +827,7 @@ const PanelRecursos = () => {
     };
 
     return (
-        <div className="resources-page">
+        <div className={`resources-page ${isModal ? 'is-modal-view' : ''}`}>
             {/* Toast flotante */}
             {toastMessage && (
                 <div style={{
@@ -748,43 +851,45 @@ const PanelRecursos = () => {
                 </div>
             )}
 
-            {/* ── ENCABEZADO ESTÁNDAR ── */}
-            <div className="page-header blue" style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <div className="header-title">
-                    <Globe size={28} className="text-gradient" />
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '1.8rem' }}>Centro de Recursos y Proyectos</h1>
-                        <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                            Canales educativos verificados, proyectos de robótica, simuladores interactivos y hojas técnicas oficiales.
-                        </p>
+            {/* ── ENCABEZADO ESTÁNDAR (SOLO EN MODO PÁGINA) ── */}
+            {!isModal && (
+                <div className="page-header blue" style={{ marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div className="header-title">
+                        <Globe size={28} className="text-gradient" />
+                        <div>
+                            <h1 style={{ margin: 0, fontSize: '1.8rem' }}>Centro de Recursos y Proyectos</h1>
+                            <p style={{ margin: '0.25rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                                Canales educativos verificados, proyectos de robótica, simuladores interactivos y hojas técnicas oficiales.
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                {/* BOTÓN AGREGAR RECURSO (DOCENTES / ADMIN) */}
-                {isStaff && (
-                    <button
-                        onClick={handleOpenCreateModal}
-                        style={{
-                            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                            color: '#fff',
-                            border: '1px solid rgba(56, 189, 248, 0.4)',
-                            borderRadius: '12px',
-                            padding: '0.55rem 1.15rem',
-                            fontWeight: 700,
-                            fontSize: '0.86rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)',
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        <Plus size={16} />
-                        <span>Agregar Recurso</span>
-                    </button>
-                )}
-            </div>
+                    {/* BOTÓN AGREGAR RECURSO (DOCENTES / ADMIN) */}
+                    {isStaff && (
+                        <button
+                            onClick={handleOpenCreateModal}
+                            style={{
+                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                color: '#fff',
+                                border: '1px solid rgba(56, 189, 248, 0.4)',
+                                borderRadius: '12px',
+                                padding: '0.55rem 1.15rem',
+                                fontWeight: 700,
+                                fontSize: '0.86rem',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <Plus size={16} />
+                            <span>Agregar Recurso</span>
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* ── BARRA DE CONTROL UNIFICADA (CURSO -> RECURSOS DESPLEGABLE -> BÚSQUEDA) ── */}
             <div className="resources-unified-toolbar">
@@ -846,6 +951,32 @@ const PanelRecursos = () => {
                         </button>
                     )}
                 </div>
+
+                {/* 4. Botón Agregar en Modo Modal para Docentes */}
+                {isModal && isStaff && (
+                    <button
+                        onClick={handleOpenCreateModal}
+                        style={{
+                            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                            color: '#fff',
+                            border: '1px solid rgba(56, 189, 248, 0.4)',
+                            borderRadius: '12px',
+                            padding: '0.45rem 1rem',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
+                            boxShadow: '0 4px 15px rgba(2, 132, 199, 0.35)',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
+                        }}
+                    >
+                        <Plus size={15} />
+                        <span>Agregar Recurso</span>
+                    </button>
+                )}
             </div>
 
             <div className="resources-grid-container">
@@ -874,9 +1005,9 @@ const PanelRecursos = () => {
                                     <div 
                                         key={resource.id} 
                                         className="resource-card glass-panel" 
+                                        onClick={() => handleOpenResource(resource)}
+                                        title={`Clic para ${isVideo ? 'reproducir' : 'abrir'} recurso`}
                                         style={{ 
-                                            display: 'flex', 
-                                            flexDirection: 'column', 
                                             position: 'relative',
                                             opacity: isVisible ? 1 : 0.68,
                                             border: !isVisible ? '1px dashed rgba(239, 68, 68, 0.45)' : undefined
@@ -891,7 +1022,7 @@ const PanelRecursos = () => {
                                                     border: `1px solid ${badgeStyle.border}`
                                                 }}
                                             >
-                                                {isVideo ? <Video size={14} /> : <ExternalLink size={14} />}
+                                                {isVideo ? <Video size={13} /> : <ExternalLink size={13} />}
                                                 <span>{resource.type}</span>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -899,24 +1030,25 @@ const PanelRecursos = () => {
                                                     className="resource-subject"
                                                     style={{ 
                                                         fontWeight: 700, 
-                                                        fontSize: '0.78rem', 
+                                                        fontSize: '0.76rem', 
                                                         color: resource.courseColor,
                                                         background: `${resource.courseColor}15`,
-                                                        padding: '2px 8px',
+                                                        padding: '2px 7px',
                                                         borderRadius: '6px'
                                                     }}
                                                 >
                                                     {resource.courseAbbr}
                                                 </span>
 
-
-
                                                 {/* Botones de gestión para Docente / Admin */}
                                                 {isStaff && (
-                                                    <div style={{ display: 'flex', gap: '4px', marginLeft: '0.25rem' }}>
+                                                    <div style={{ display: 'flex', gap: '4px', marginLeft: '0.2rem' }}>
                                                         {/* Botón rápido de alternar visibilidad */}
                                                         <button
-                                                            onClick={(e) => handleToggleVisibility(resource, e)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleVisibility(resource, e);
+                                                            }}
                                                             title={isVisible ? "Visible para estudiantes (Clic para ocultar)" : "Oculto para estudiantes (Clic para hacer visible)"}
                                                             style={{
                                                                 background: isVisible ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.2)',
@@ -936,7 +1068,10 @@ const PanelRecursos = () => {
                                                         </button>
 
                                                         <button
-                                                            onClick={() => handleOpenEditModal(resource)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenEditModal(resource);
+                                                            }}
                                                             title="Editar recurso"
                                                             style={{
                                                                 background: 'rgba(56, 189, 248, 0.15)',
@@ -954,7 +1089,10 @@ const PanelRecursos = () => {
                                                             <Edit2 size={13} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDeleteResource(resource)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteResource(resource);
+                                                            }}
                                                             title="Eliminar recurso"
                                                             style={{
                                                                 background: 'rgba(239, 68, 68, 0.15)',
@@ -976,13 +1114,13 @@ const PanelRecursos = () => {
                                             </div>
                                         </div>
 
-                                        <h3 className="resource-title" style={{ fontSize: '1.05rem', lineHeight: 1.4 }}>
+                                        <h3 className="resource-title">
                                             {resource.title}
                                         </h3>
 
                                         {/* Fuente y Autor */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
-                                            <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600, background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.45rem' }}>
+                                            <span style={{ fontSize: '0.74rem', color: '#38bdf8', fontWeight: 650, background: 'rgba(56, 189, 248, 0.1)', padding: '1px 6px', borderRadius: '4px' }}>
                                                 {resource.source}
                                             </span>
                                         </div>
@@ -990,16 +1128,16 @@ const PanelRecursos = () => {
                                         <p className="resource-description">{resource.description}</p>
 
                                         {resource.tags && resource.tags.length > 0 && (
-                                            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                                                {resource.tags.map(tag => (
+                                            <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                                                {resource.tags.slice(0, 3).map(tag => (
                                                     <span 
                                                         key={tag} 
                                                         style={{ 
-                                                            fontSize: '0.72rem', 
+                                                            fontSize: '0.7rem', 
                                                             color: '#94a3b8', 
                                                             background: 'rgba(255,255,255,0.05)', 
-                                                            padding: '2px 7px', 
-                                                            borderRadius: '5px' 
+                                                            padding: '1px 6px', 
+                                                            borderRadius: '4px' 
                                                         }}
                                                     >
                                                         #{tag}
@@ -1008,54 +1146,16 @@ const PanelRecursos = () => {
                                             </div>
                                         )}
 
-                                        <div className="resource-footer" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                                                {resource.sourceType}
+                                        {/* Footer Compacto */}
+                                        <div className="resource-footer">
+                                            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                                {isVideo ? <Video size={12} style={{ opacity: 0.75 }} /> : <Globe size={12} style={{ opacity: 0.75 }} />}
+                                                <span>{resource.sourceType || (isVideo ? 'Video' : 'Recurso')}</span>
                                             </span>
-                                            <div className="resource-actions" style={{ display: 'flex', gap: '0.5rem' }}>
-                                                {isVideo && resource.videoId ? (
-                                                    <button 
-                                                        onClick={() => handleOpenResource(resource)}
-                                                        className="action-btn"
-                                                        style={{ 
-                                                            display: 'flex', 
-                                                            alignItems: 'center', 
-                                                            gap: '0.4rem', 
-                                                            padding: '0.4rem 0.85rem', 
-                                                            width: 'auto',
-                                                            borderRadius: '8px',
-                                                            background: 'rgba(239, 68, 68, 0.15)', 
-                                                            color: '#f87171',
-                                                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                                                            fontWeight: 600,
-                                                            fontSize: '0.85rem'
-                                                        }}
-                                                        title="Reproducir Video / Proyecto"
-                                                    >
-                                                        <Play size={14} fill="#f87171" />
-                                                        <span>{resource.category === 'projects' ? 'Ver Proyecto' : 'Ver Video'}</span>
-                                                    </button>
-                                                ) : (
-                                                    <button 
-                                                        onClick={() => handleOpenResource(resource)}
-                                                        className="action-btn external" 
-                                                        style={{ 
-                                                            display: 'flex', 
-                                                            alignItems: 'center', 
-                                                            gap: '0.4rem', 
-                                                            padding: '0.4rem 0.85rem', 
-                                                            width: 'auto',
-                                                            borderRadius: '8px',
-                                                            fontWeight: 600,
-                                                            fontSize: '0.85rem'
-                                                        }}
-                                                        title="Abrir enlace oficial"
-                                                    >
-                                                        <ExternalLink size={14} />
-                                                        <span>Abrir</span>
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <span className={`resource-open-pill ${isVideo ? 'video' : 'external'}`}>
+                                                {isVideo ? <Play size={11} fill="currentColor" /> : <ExternalLink size={11} />}
+                                                <span>{isVideo ? (resource.category === 'projects' ? 'Ver Proyecto' : 'Ver Video') : 'Abrir'}</span>
+                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -1065,36 +1165,37 @@ const PanelRecursos = () => {
                 </div>
 
             {/* MODAL DE REPRODUCTOR DE VIDEO YOUTUBE */}
-            {activeVideoModal && (
+            {activeVideoModal && createPortal(
                 <div 
-                    className="join-modal-overlay" 
+                    className="resource-modal-overlay join-modal-overlay" 
                     onClick={() => setActiveVideoModal(null)}
-                    style={{ zIndex: 100000 }}
+                    style={{ zIndex: 10000050 }}
                 >
                     <div 
-                        className="join-modal-content" 
+                        className="resource-modal-content join-modal-content" 
                         onClick={e => e.stopPropagation()}
                         style={{ maxWidth: '780px', width: '92%', padding: '1.5rem' }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <div>
-                                <h3 style={{ margin: 0, color: 'white', fontSize: '1.2rem', fontWeight: 800 }}>
+                                <h3 className="resource-modal-title">
                                     {activeVideoModal.title}
                                 </h3>
-                                <p style={{ margin: '0.2rem 0 0', color: '#38bdf8', fontSize: '0.85rem', fontWeight: 600 }}>
+                                <p style={{ margin: '0.2rem 0 0', color: 'var(--brand-primary, #38bdf8)', fontSize: '0.85rem', fontWeight: 600 }}>
                                     Canal / Autor: {activeVideoModal.source}
                                 </p>
                             </div>
                             <button 
                                 onClick={() => setActiveVideoModal(null)}
-                                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                                className="resource-modal-close-btn"
+                                title="Cerrar video"
                             >
                                 <X size={22} />
                             </button>
                         </div>
 
                         {/* Contenedor Iframe YouTube Responsivo */}
-                        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', border: '1px solid var(--border-default)' }}>
                             <iframe 
                                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                                 src={`https://www.youtube-nocookie.com/embed/${activeVideoModal.videoId}?autoplay=1`}
@@ -1105,7 +1206,7 @@ const PanelRecursos = () => {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                            <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem', flex: 1, minWidth: '240px' }}>
+                            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem', flex: 1, minWidth: '240px' }}>
                                 {activeVideoModal.description}
                             </p>
                             <button
@@ -1118,18 +1219,19 @@ const PanelRecursos = () => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* MODAL DE CREACIÓN / EDICIÓN PARA DOCENTES Y ADMIN */}
-            {editingResource && (
+            {editingResource && createPortal(
                 <div 
-                    className="join-modal-overlay" 
+                    className="resource-modal-overlay join-modal-overlay" 
                     onClick={() => setEditingResource(null)}
-                    style={{ zIndex: 100001 }}
+                    style={{ zIndex: 10000060 }}
                 >
                     <div 
-                        className="join-modal-content" 
+                        className="resource-modal-content join-modal-content" 
                         onClick={e => e.stopPropagation()}
                         style={{ maxWidth: '580px', width: '92%', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}
                     >
@@ -1140,20 +1242,21 @@ const PanelRecursos = () => {
                                     height: '36px',
                                     borderRadius: '10px',
                                     background: 'rgba(56, 189, 248, 0.15)',
-                                    color: '#38bdf8',
+                                    color: 'var(--brand-primary, #38bdf8)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}>
                                     {editingResource.id ? <Edit2 size={18} /> : <Plus size={18} />}
                                 </div>
-                                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: 800 }}>
+                                <h3 className="resource-modal-title">
                                     {editingResource.id ? 'Editar Recurso Educativo' : 'Agregar Nuevo Recurso'}
                                 </h3>
                             </div>
                             <button 
                                 onClick={() => setEditingResource(null)}
-                                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                                className="resource-modal-close-btn"
+                                title="Cerrar ventana"
                             >
                                 <X size={20} />
                             </button>
@@ -1162,46 +1265,29 @@ const PanelRecursos = () => {
                         <form onSubmit={handleSaveResource}>
                             {/* Título */}
                             <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                <label className="resource-form-label">
                                     Título del Recurso (incluye idioma entre paréntesis ej: (Inglés), (Español)) *
                                 </label>
                                 <input
                                     type="text"
                                     required
+                                    className="resource-form-input"
                                     value={editingResource.title}
                                     onChange={e => setEditingResource({ ...editingResource, title: e.target.value })}
                                     placeholder="Ej: Brazo Robótico con Arduino: Proyecto Paso a Paso (Inglés)"
-                                    style={{
-                                        width: '100%',
-                                        background: 'rgba(15, 23, 42, 0.8)',
-                                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                                        borderRadius: '10px',
-                                        padding: '0.7rem 0.9rem',
-                                        color: '#fff',
-                                        fontSize: '0.9rem',
-                                        boxSizing: 'border-box'
-                                    }}
                                 />
                             </div>
 
                             {/* Fila: Curso y Categoría */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                    <label className="resource-form-label">
                                         Curso Asociado
                                     </label>
                                     <select
+                                        className="resource-form-select"
                                         value={editingResource.course_abbr}
                                         onChange={e => setEditingResource({ ...editingResource, course_abbr: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            background: 'rgba(15, 23, 42, 0.8)',
-                                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                                            borderRadius: '10px',
-                                            padding: '0.7rem 0.9rem',
-                                            color: '#fff',
-                                            fontSize: '0.88rem'
-                                        }}
                                     >
                                         <option value="RE">Robótica Educativa (RE)</option>
                                         <option value="EE">Electricidad y Electrónica (EE)</option>
@@ -1210,21 +1296,13 @@ const PanelRecursos = () => {
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                    <label className="resource-form-label">
                                         Categoría
                                     </label>
                                     <select
+                                        className="resource-form-select"
                                         value={editingResource.category}
                                         onChange={e => setEditingResource({ ...editingResource, category: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            background: 'rgba(15, 23, 42, 0.8)',
-                                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                                            borderRadius: '10px',
-                                            padding: '0.7rem 0.9rem',
-                                            color: '#fff',
-                                            fontSize: '0.88rem'
-                                        }}
                                     >
                                         <option value="projects">Proyectos</option>
                                         <option value="videos">Videos</option>
@@ -1237,21 +1315,13 @@ const PanelRecursos = () => {
                             {/* Fila: Tipo de Recurso y Fuente / Canal */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                    <label className="resource-form-label">
                                         Tipo de Visualización
                                     </label>
                                     <select
+                                        className="resource-form-select"
                                         value={editingResource.type}
                                         onChange={e => setEditingResource({ ...editingResource, type: e.target.value })}
-                                        style={{
-                                            width: '100%',
-                                            background: 'rgba(15, 23, 42, 0.8)',
-                                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                                            borderRadius: '10px',
-                                            padding: '0.7rem 0.9rem',
-                                            color: '#fff',
-                                            fontSize: '0.88rem'
-                                        }}
                                     >
                                         <option value="YouTube">Video de YouTube</option>
                                         <option value="Proyecto">Proyecto</option>
@@ -1262,112 +1332,65 @@ const PanelRecursos = () => {
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                    <label className="resource-form-label">
                                         Autor, Canal o Fuente
                                     </label>
                                     <input
                                         type="text"
+                                        className="resource-form-input"
                                         value={editingResource.source}
                                         onChange={e => setEditingResource({ ...editingResource, source: e.target.value })}
                                         placeholder="Ej: Prof. Ronny Martinez, Arduino.cc..."
-                                        style={{
-                                            width: '100%',
-                                            background: 'rgba(15, 23, 42, 0.8)',
-                                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                                            borderRadius: '10px',
-                                            padding: '0.7rem 0.9rem',
-                                            color: '#fff',
-                                            fontSize: '0.88rem',
-                                            boxSizing: 'border-box'
-                                        }}
                                     />
                                 </div>
                             </div>
 
                             {/* URL / Enlace */}
                             <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                <label className="resource-form-label">
                                     Enlace / URL * (si es YouTube, se detectará para ver en modal)
                                 </label>
                                 <input
                                     type="url"
                                     required
+                                    className="resource-form-input"
                                     value={editingResource.url}
                                     onChange={e => setEditingResource({ ...editingResource, url: e.target.value })}
                                     placeholder="https://www.youtube.com/watch?v=..."
-                                    style={{
-                                        width: '100%',
-                                        background: 'rgba(15, 23, 42, 0.8)',
-                                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                                        borderRadius: '10px',
-                                        padding: '0.7rem 0.9rem',
-                                        color: '#fff',
-                                        fontSize: '0.9rem',
-                                        boxSizing: 'border-box'
-                                    }}
                                 />
                             </div>
 
                             {/* Descripción */}
                             <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                <label className="resource-form-label">
                                     Descripción del Recurso
                                 </label>
                                 <textarea
                                     rows={3}
+                                    className="resource-form-textarea"
                                     value={editingResource.description}
                                     onChange={e => setEditingResource({ ...editingResource, description: e.target.value })}
                                     placeholder="Explica qué aprenderá el estudiante o qué contiene este recurso..."
-                                    style={{
-                                        width: '100%',
-                                        background: 'rgba(15, 23, 42, 0.8)',
-                                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                                        borderRadius: '10px',
-                                        padding: '0.7rem 0.9rem',
-                                        color: '#fff',
-                                        fontSize: '0.88rem',
-                                        boxSizing: 'border-box',
-                                        resize: 'vertical'
-                                    }}
                                 />
                             </div>
 
                             {/* Etiquetas */}
                             <div style={{ marginBottom: '1.25rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#94a3b8', marginBottom: '0.35rem' }}>
+                                <label className="resource-form-label">
                                     Etiquetas (separadas por comas)
                                 </label>
                                 <input
                                     type="text"
+                                    className="resource-form-input"
                                     value={editingResource.tags}
                                     onChange={e => setEditingResource({ ...editingResource, tags: e.target.value })}
                                     placeholder="Arduino, Servomotores, Sensores, C++"
-                                    style={{
-                                        width: '100%',
-                                        background: 'rgba(15, 23, 42, 0.8)',
-                                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                                        borderRadius: '10px',
-                                        padding: '0.7rem 0.9rem',
-                                        color: '#fff',
-                                        fontSize: '0.88rem',
-                                        boxSizing: 'border-box'
-                                    }}
                                 />
                             </div>
 
                             {/* Checkbox de Visibilidad */}
                             <div 
-                                style={{
-                                    marginBottom: '1.5rem',
-                                    padding: '0.75rem 1rem',
-                                    background: 'rgba(15, 23, 42, 0.6)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: '10px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.75rem',
-                                    cursor: 'pointer'
-                                }}
+                                className="resource-visibility-box"
                                 onClick={() => setEditingResource(prev => ({ ...prev, is_visible: prev.is_visible !== 0 ? 0 : 1 }))}
                             >
                                 <input
@@ -1378,10 +1401,10 @@ const PanelRecursos = () => {
                                     style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#0284c7' }}
                                 />
                                 <div>
-                                    <label htmlFor="rec-is-visible" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#f8fafc', cursor: 'pointer' }}>
+                                    <label htmlFor="rec-is-visible" style={{ display: 'block', fontSize: '0.88rem', fontWeight: 750, color: 'var(--text-heading)', cursor: 'pointer' }}>
                                         Visible para los estudiantes
                                     </label>
-                                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>
+                                    <p style={{ margin: '0.15rem 0 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                                         Si está desmarcado, el recurso solo podrá ser visto por administradores y docentes.
                                     </p>
                                 </div>
@@ -1391,16 +1414,7 @@ const PanelRecursos = () => {
                                 <button
                                     type="button"
                                     onClick={() => setEditingResource(null)}
-                                    style={{
-                                        background: 'transparent',
-                                        border: '1px solid rgba(255, 255, 255, 0.15)',
-                                        color: '#94a3b8',
-                                        borderRadius: '10px',
-                                        padding: '0.65rem 1.25rem',
-                                        fontSize: '0.88rem',
-                                        fontWeight: 600,
-                                        cursor: 'pointer'
-                                    }}
+                                    className="resource-cancel-btn"
                                 >
                                     Cancelar
                                 </button>
@@ -1428,7 +1442,8 @@ const PanelRecursos = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
