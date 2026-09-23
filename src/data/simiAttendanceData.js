@@ -92,7 +92,7 @@ export const SIMI_WORD_FAMILIES = {
     }
 };
 
-export const FLASH_DURATION_OPTIONS = [5, 6, 7, 8, 9, 10];
+export const FLASH_DURATION_OPTIONS = [10, 15, 20, 30, 45, 60];
 
 /**
  * Baraja aleatoriamente un array (Fisher-Yates)

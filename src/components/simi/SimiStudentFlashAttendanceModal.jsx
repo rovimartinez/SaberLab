@@ -13,7 +13,14 @@ export default function SimiStudentFlashAttendanceModal({
     if (!session || !session.eventId) return null;
 
     const [shuffledOptions, setShuffledOptions] = useState([]);
-    const [timeLeft, setTimeLeft] = useState(() => session.remainingSeconds || session.durationSeconds || 8);
+    // Calcular el tiempo restante usando expiresAt si está disponible (más preciso)
+    const calcInitialTime = () => {
+        if (session.expiresAt) {
+            return Math.max(0, Math.ceil((session.expiresAt - Date.now()) / 1000));
+        }
+        return session.remainingSeconds || session.durationSeconds || 8;
+    };
+    const [timeLeft, setTimeLeft] = useState(calcInitialTime);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [result, setResult] = useState(null); // null | 'success' | 'error' | 'timeout'
     const [resultMessage, setResultMessage] = useState('');
@@ -29,31 +36,47 @@ export default function SimiStudentFlashAttendanceModal({
         }
     }, [session.options]);
 
-    // Reloj regresivo
+    // Reloj regresivo — deriva tiempo desde expiresAt del servidor para máxima precisión
     useEffect(() => {
-        let current = session.remainingSeconds || totalDuration;
-        setTimeLeft(current);
+        if (timerRef.current) clearInterval(timerRef.current);
 
-        timerRef.current = setInterval(() => {
-            current -= 1;
+        const tick = () => {
+            let current;
+            if (session.expiresAt) {
+                current = Math.max(0, Math.ceil((session.expiresAt - Date.now()) / 1000));
+            } else {
+                // Fallback conteo manual si no hay expiresAt
+                current = timeLeft - 1;
+            }
             setTimeLeft(current);
 
             if (current <= 0) {
                 clearInterval(timerRef.current);
-                if (!result) {
-                    setResult('timeout');
-                    setResultMessage('Tiempo agotado. La asistencia no pudo ser confirmada.');
-                    setTimeout(() => {
-                        if (onClose) onClose();
-                    }, 2800);
-                }
+                setResult(prev => {
+                    if (!prev) {
+                        setResultMessage('Tiempo agotado. La asistencia no pudo ser confirmada.');
+                        setTimeout(() => { if (onClose) onClose(); }, 2800);
+                        return 'timeout';
+                    }
+                    return prev;
+                });
             }
-        }, 1000);
+        };
 
+        // Establece el tiempo inicial correctamente
+        const initialTime = session.expiresAt
+            ? Math.max(0, Math.ceil((session.expiresAt - Date.now()) / 1000))
+            : (session.remainingSeconds || totalDuration);
+        setTimeLeft(initialTime);
+
+        if (initialTime <= 0) return; // Ya expiró, no iniciar timer
+
+        timerRef.current = setInterval(tick, 1000);
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [session.remainingSeconds, totalDuration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [session.eventId, session.expiresAt]);
 
     // Manejar selección de opción
     const handleSelectOption = async (word) => {

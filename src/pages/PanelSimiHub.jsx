@@ -167,7 +167,7 @@ export default function PanelSimiHub({
         fetchSimiUnreadCount();
     }, []);
 
-    // Polling ligero cada 15 segundos para detectar asistencia relámpago en vivo
+    // Polling ligero cada 5 segundos para detectar asistencia relámpago en vivo
     useEffect(() => {
         const checkActiveSession = async () => {
             try {
@@ -179,7 +179,9 @@ export default function PanelSimiHub({
                 }
             } catch {}
         };
-        const interval = setInterval(checkActiveSession, 15000);
+        // Ejecutar inmediatamente al montar (no esperar el primer intervalo)
+        checkActiveSession();
+        const interval = setInterval(checkActiveSession, 5000);
         return () => clearInterval(interval);
     }, []);
     

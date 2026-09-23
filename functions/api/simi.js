@@ -396,7 +396,7 @@ export async function onRequestPost({ request, env, data }) {
 
       if (!eventId || !targetWord) return Response.json({ error: 'Falta eventId o targetWord' }, { status: 400 });
 
-      const parsedDuration = Math.min(10, Math.max(5, Number(durationSeconds) || 8));
+      const parsedDuration = Math.min(120, Math.max(5, Number(durationSeconds) || 8));
       const now = Date.now();
       const expiresAt = now + (parsedDuration * 1000);
       const optionsJson = JSON.stringify(options);

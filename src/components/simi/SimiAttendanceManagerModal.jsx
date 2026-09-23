@@ -35,7 +35,7 @@ export default function SimiAttendanceManagerModal({
     const isSchoolVisit = eventType !== 'capacitacion_tecnica';
 
     // ── ESTADO MODO FLASH (DINÁMICO 2FA) ──
-    const [durationSeconds, setDurationSeconds] = useState(8);
+    const [durationSeconds, setDurationSeconds] = useState(20);
     const [selectedFamilyKey, setSelectedFamilyKey] = useState('filamentos');
     const [challenge, setChallenge] = useState(() => generateFlashChallenge('filamentos'));
     const [isSessionActive, setIsSessionActive] = useState(false);
