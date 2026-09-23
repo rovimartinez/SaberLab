@@ -1,3 +1,5 @@
+import { notifyStudentDecision } from '../_lib/access-notifications.js';
+
 export async function onRequestPost({ request, env, data }) {
   const userId = data.user?.id;
   if (!userId) {
@@ -78,6 +80,14 @@ export async function onRequestPost({ request, env, data }) {
   // Asegurar columna course_id si falta
   try {
     await env.DB.prepare('ALTER TABLE codigos_grupo ADD COLUMN course_id INTEGER').run();
+  } catch {}
+
+  // Blindaje de schema: columnas usadas en la auto-aprobación que pueden faltar por migraciones parciales
+  try {
+    await env.DB.prepare('ALTER TABLE solicitudes_acceso ADD COLUMN reviewed_at TEXT').run();
+  } catch {}
+  try {
+    await env.DB.prepare('ALTER TABLE perfiles ADD COLUMN access_status TEXT').run();
   } catch {}
 
   // 1. Buscar código en codigos_grupo (insensible a mayúsculas y guiones)
@@ -179,6 +189,13 @@ export async function onRequestPost({ request, env, data }) {
     try {
       await env.DB.prepare("UPDATE perfiles SET access_status = 'approved' WHERE id = ?").bind(userId).run();
     } catch {}
+
+    // Notificar de bienvenida al estudiante auto-aprobado con código
+    try {
+      await notifyStudentDecision(env, { email: userEmail, name: userRow?.full_name, status: 'approved' });
+    } catch (notifErr) {
+      console.error('Error notificando acceso aprobado (code.js):', notifErr);
+    }
   } catch (approvalErr) {
     console.error('Error auto-approving profile on code redeem:', approvalErr);
   }

@@ -38,6 +38,7 @@ import HorsepowerSimulator from '../../simulators/electricity/HorsepowerSimulato
 import CoordinateSpaceDemo from '../../simulators/3d/CoordinateSpaceDemo';
 import PracticalLabMA1 from '../../simulators/3d/PracticalLabMA1';
 import PrimitivesTransformLab from '../../simulators/3d/PrimitivesTransformLab';
+import ChessPieceLab from '../../simulators/3d/ChessPieceLab';
 
 const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) => {
     const rootsRef = useRef(new Map());
@@ -329,6 +330,13 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
                 'primitives-transform-lab-container',
                 <div style={{ width: '100%' }}>
                     <PrimitivesTransformLab />
+                </div>
+            );
+
+            mountInto(
+                'chess-piece-lab-container',
+                <div style={{ width: '100%' }}>
+                    <ChessPieceLab />
                 </div>
             );
         };

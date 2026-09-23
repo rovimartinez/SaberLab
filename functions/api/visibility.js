@@ -23,8 +23,10 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env, data }) {
-  if (data.user.role !== 'admin') {
-    return Response.json({ error: 'Solo administradores' }, { status: 403 });
+  const userRole = (data?.user?.role || '').toLowerCase();
+  const isStaff = ['admin', 'teacher', 'docente', 'profesor', 'leader', 'semillero_leader'].includes(userRole);
+  if (!isStaff) {
+    return Response.json({ error: 'Solo personal docente o administradores' }, { status: 403 });
   }
 
   let body;
@@ -35,7 +37,7 @@ export async function onRequestPost({ request, env, data }) {
   }
 
   const { course_id, lecciones } = body;
-  if (!course_id) {
+  if (course_id === undefined || course_id === null) {
     return Response.json({ error: 'Falta course_id' }, { status: 400 });
   }
 

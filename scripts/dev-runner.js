@@ -145,7 +145,7 @@ function buildFunctions() {
     });
 }
 
-// 4. Iniciar Wrangler Dev (Backend API D1)
+// 4. Iniciar Wrangler Dev (Backend API D1 con remote bindings en vivo)
 function startWrangler() {
     return crossSpawn('npx', ['wrangler', 'dev', '.wrangler/dist/index.js', '--port', '8788'], {
         stdio: ['ignore', 'pipe', 'pipe']

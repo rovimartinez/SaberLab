@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS perfiles (
   full_name     TEXT,
   avatar_url    TEXT,
   role          TEXT NOT NULL DEFAULT 'student',
+  access_status TEXT DEFAULT 'approved',
   created_at    TEXT DEFAULT (datetime('now'))
 );
 
@@ -28,7 +29,8 @@ CREATE TABLE IF NOT EXISTS grupos (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   course_id INTEGER REFERENCES cursos(id),
   name      TEXT NOT NULL,
-  teacher   TEXT
+  teacher   TEXT,
+  is_active INTEGER DEFAULT 1
 );
 
 CREATE TABLE IF NOT EXISTS grupos_usuario (
@@ -64,6 +66,7 @@ CREATE TABLE IF NOT EXISTS solicitudes_acceso (
   email       TEXT NOT NULL,
   name        TEXT,
   status      TEXT NOT NULL DEFAULT 'pending',
+  reviewed_at TEXT,
   created_at  TEXT DEFAULT (datetime('now'))
 );
 

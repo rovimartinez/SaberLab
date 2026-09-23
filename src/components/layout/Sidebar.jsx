@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye, Activity, ArrowLeft, BookOpen, FileCheck, ClipboardList } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye, Activity, ArrowLeft, BookOpen, FileCheck, ClipboardList, UserCheck } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 import { api } from '../../lib/api';
@@ -33,7 +33,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar, isCompact = false, toggl
     }, [isInsideLesson, activeCourse, moduleIdParam, lessonIdParam]);
 
     const isStaff = isStaffUser && !isImpersonating;
-    const isAdmin = profile?.role === 'admin' && !isImpersonating;
+    const isAdmin = profile?.role === 'admin' || profile?.real_role === 'admin';
     const userMetadata = user?.user_metadata || {};
     const avatarUrl = profile?.avatar_url || userMetadata.avatar_url;
     const googleName = userMetadata.name || userMetadata.full_name || '';
@@ -53,22 +53,32 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar, isCompact = false, toggl
 
     useEffect(() => {
         const fetchPublishedEvaluationsCount = async () => {
-            if (!isStaff && (!user || enrolledCourses.length === 0)) {
-                setPublishedEvaluationsCount(0);
-                return;
-            }
-
             try {
-                const { data } = await api('/evaluations');
-                const published = (data || []).filter(e => e.is_published === 1 || e.is_published === true);
-                setPublishedEvaluationsCount(published.length);
-            } catch (error) {
-                console.error('Error fetching published evaluations count:', error);
+                const res = await api('/evaluations');
+                const evaluations = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+                
+                // Si es docente/staff, contar las que están activas o publicadas
+                if (isStaffUser) {
+                    const activeCount = evaluations.filter(e => e.status === 'active' || e.is_published).length;
+                    setPublishedEvaluationsCount(activeCount);
+                } else {
+                    // Para estudiantes, contar solo las disponibles para sus cursos inscritos
+                    const userCourseIds = (enrolledCourses || []).map(c => String(c.id || c.course_id).toLowerCase());
+                    const availableForStudent = evaluations.filter(e => {
+                        const isPub = e.is_published || e.status === 'active';
+                        if (!isPub) return false;
+                        if (!e.course_id) return true;
+                        return userCourseIds.some(cid => cid === String(e.course_id).toLowerCase());
+                    }).length;
+                    setPublishedEvaluationsCount(availableForStudent);
+                }
+            } catch (err) {
+                console.warn('Error fetching evaluations for sidebar badge:', err);
             }
         };
 
         fetchPublishedEvaluationsCount();
-    }, [isStaff, user, enrolledCourses]);
+    }, [isStaffUser, user, enrolledCourses]);
 
     const navCategories = [
         {
@@ -78,7 +88,7 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar, isCompact = false, toggl
                 { name: 'Mis Cursos', path: '/dashboard/my-courses', icon: <Layers size={18} /> },
                 { name: 'Evaluaciones', path: '/dashboard/evaluations', icon: <FileCheck size={18} />, badge: publishedEvaluationsCount },
                 { name: 'Calificaciones', path: '/dashboard/grades', icon: <Award size={18} /> },
-                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: pendingAccessRequestsCount }
+                { name: 'Notificaciones', path: '/dashboard/notifications', icon: <Bell size={18} />, badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined }
             ]
         },
         {
@@ -91,12 +101,13 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar, isCompact = false, toggl
             title: 'RECURSOS',
             items: [
                 { name: 'Recursos', path: '/dashboard/resources', icon: <Folder size={18} /> },
-                ...(isStaff ? [{ name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }] : [])
+                ...(isStaffUser ? [{ name: 'Widgets', action: openLauncher, icon: <Wrench size={18} /> }] : [])
             ]
         },
-        ...(isStaff ? [{
+        ...(isStaffUser ? [{
             title: isAdmin ? 'ADMIN' : ['leader', 'lider', 'semillero_leader'].includes(profile?.role) ? 'LÍDER' : 'DOCENTE',
             items: [
+                { name: 'Solicitudes', path: '/dashboard/requests', icon: <UserCheck size={18} />, badge: pendingAccessRequestsCount > 0 ? pendingAccessRequestsCount : undefined },
                 { name: 'Analítica', path: '/dashboard/analytics', icon: <Activity size={18} /> },
                 { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
             ]

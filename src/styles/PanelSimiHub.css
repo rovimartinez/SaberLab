@@ -190,78 +190,6 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* ── Floating Action Buttons (FAB) Redes Sociales SIMI3D (WhatsApp & Instagram) ── */
-.simi-social-fabs-container {
-    position: fixed;
-    bottom: 24px;
-    right: 80px; /* Al lado del Tutor IA (right: 24px) */
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    z-index: 9997;
-}
-
-.simi-social-fabs-container.with-viewmode-fab {
-    right: 188px; /* Al lado de Ver como Alumno (78px) y Gestión (132px) */
-}
-
-.simi-social-fab {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-}
-
-.simi-whatsapp-fab {
-    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-    box-shadow: 0 8px 24px -3px rgba(37, 211, 102, 0.45);
-}
-
-.simi-whatsapp-fab:hover {
-    transform: translateY(-3px) scale(1.1);
-    box-shadow: 0 12px 28px -2px rgba(37, 211, 102, 0.65);
-    border-color: #ffffff;
-    color: #ffffff;
-}
-
-.simi-instagram-fab {
-    background: linear-gradient(135deg, #B541FA, #ec4899, #4FD2E9);
-    box-shadow: 0 8px 24px -3px rgba(181, 65, 250, 0.45);
-}
-
-.simi-instagram-fab:hover {
-    transform: translateY(-3px) scale(1.1);
-    box-shadow: 0 12px 28px -2px rgba(181, 65, 250, 0.65);
-    border-color: #ffffff;
-    color: #ffffff;
-}
-
-@media (max-width: 640px) {
-    .simi-social-fabs-container {
-        bottom: 20px;
-        right: 70px;
-        gap: 6px;
-    }
-    .simi-social-fabs-container.with-viewmode-fab {
-        right: 165px;
-    }
-    .simi-social-fab {
-        width: 42px;
-        height: 42px;
-    }
-}
-
-
-.simi-social-fab:active {
-    transform: scale(0.95);
-}
-
 /* ── Workspace con Panel Lateral Izquierdo SIMI3D ── */
 .simi-workspace-layout {
     display: grid;
@@ -335,8 +263,9 @@
 .simi-sidebar-brand-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: 10px;
+    object-fit: contain;
+    border-radius: 9px;
+    padding: 2px;
 }
 
 .simi-sidebar-brand-fallback {
@@ -745,9 +674,6 @@ select.simi-form-input {
         padding-bottom: 78px;
     }
 
-    .simi-social-fabs-container {
-        display: none !important;
-    }
 
     .simi-desktop-add-btn {
         display: none !important;

@@ -110,8 +110,8 @@ export const LESSONS_REGISTRY = {
     // Módulo 1: Introducción y Modelado Básico
     'ma-m1-l1': { id: 'ma-m1-l1', title: 'Espacio 3D, Interfaz de Blender y Navegación', load: () => import('../lessons/MA/m1/l1').then(m => m.lessonData) },
     'ma-m1-l2': { id: 'ma-m1-l2', title: 'Primitivas 3D y Transformaciones Fundamentales', load: () => import('../lessons/MA/m1/l2').then(m => m.lessonData) },
-    'ma-m1-l3': { id: 'ma-m1-l3', title: 'Modo Edición y Topología Poligonal', load: null },
-    'ma-m1-l4': { id: 'ma-m1-l4', title: 'Herramientas de Modelado Esenciales', load: null },
+    'ma-m1-l3': { id: 'ma-m1-l3', title: 'Modo Edición y Topología Poligonal — Proyecto: El Peón', load: () => import('../lessons/MA/m1/l3').then(m => m.lessonData) },
+    'ma-m1-l4': { id: 'ma-m1-l4', title: 'Herramientas de Modelado Esenciales — Proyecto: Torre y Alfil', load: () => import('../lessons/MA/m1/l4').then(m => m.lessonData) },
     'ma-m1-l5': { id: 'ma-m1-l5', title: 'Examen 1 - Fundamentos de Modelado 3D', load: null },
     // Módulo 2: Continuación Modelado Básico y Hard-Surface
     'ma-m2-l6': { id: 'ma-m2-l6', title: 'Modificadores No Destructivos Clave', load: null },
@@ -388,8 +388,8 @@ export const COURSES_DEFINITION = [
                 topics: [
                     'Introducción al espacio 3D, interfaz de Blender y navegación cartesiana',
                     'Uso de primitivas 3D y transformaciones de precisión (G, R, S)',
-                    'Modo Edición y topología poligonal (vértices, aristas y caras)',
-                    'Herramientas esenciales: Extrusión, Inset, Bevel y Loop Cut orientados a proyecto'
+                    'Modo Edición y topología poligonal (vértices, aristas y caras) — Proyecto: El Peón',
+                    'Herramientas esenciales: Extrusión, Inset, Bevel y Loop Cut orientados a proyecto — Torre y Alfil'
                 ],
                 lessons: [
                     { id: 'ma-m1-l1', visible: true },
@@ -603,6 +603,8 @@ export const COURSES_DEFINITION = [
         slug: 'semillero-modelado-impresion-3d',
         name: 'Semillero de Investigación en Modelado e Impresión 3D',
         icon: <Layers size={28} />,
+        logo: '/badges/Logo_SIMI.webp',
+        badgeImageUrl: '/badges/Logo_SIMI.webp',
         color: '#06b6d4',
         duration: 'Semillero Permanente I+D+i (2026-2)',
         period: '2026-2',

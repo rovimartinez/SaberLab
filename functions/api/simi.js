@@ -464,8 +464,8 @@ export async function onRequestPost({ request, env, data }) {
 
           if (!existingNotif) {
             await env.DB.prepare(`
-              INSERT INTO notificaciones (user_id, sender_id, title, message, read, sender_name, is_popup, created_at)
-              VALUES (?, ?, ?, ?, 0, 'Semillero SIMI3D', 1, datetime('now'))
+              INSERT INTO notificaciones (user_id, sender_id, title, message, read, sender_name, is_popup, channel, created_at)
+              VALUES (?, ?, ?, ?, 0, 'Semillero SIMI3D', 1, 'simi', datetime('now'))
             `).bind(targetUserId, userId, notifTitle, notifMsg).run();
           }
         }
@@ -486,8 +486,8 @@ export async function onRequestPost({ request, env, data }) {
 
           if (!existingAdminNotif) {
             await env.DB.prepare(`
-              INSERT INTO notificaciones (user_id, sender_id, title, message, read, sender_name, is_popup, created_at)
-              VALUES (?, ?, ?, ?, 0, 'Semillero SIMI3D', 0, datetime('now'))
+              INSERT INTO notificaciones (user_id, sender_id, title, message, read, sender_name, is_popup, channel, created_at)
+              VALUES (?, ?, ?, ?, 0, 'Semillero SIMI3D', 0, 'simi', datetime('now'))
             `).bind(userId, userId, adminSentTitle, adminSentMsg).run();
           }
         }
@@ -775,8 +775,9 @@ export async function onRequestPost({ request, env, data }) {
       const { ids, all } = body;
       if (all) {
         await env.DB.prepare(`
-          DELETE FROM notificaciones 
-          WHERE user_id = ? OR LOWER(user_id) = LOWER(?) OR sender_id = ? OR LOWER(sender_id) = LOWER(?)
+          UPDATE notificaciones SET is_dismissed = 1
+          WHERE (user_id = ? OR LOWER(user_id) = LOWER(?) OR sender_id = ? OR LOWER(sender_id) = LOWER(?))
+            AND (channel = 'simi' OR LOWER(title) LIKE '%simi%' OR LOWER(title) LIKE '%semillero%')
         `).bind(userId, userEmail, userId, userEmail).run();
         return Response.json({ success: true, allDeleted: true });
       }
@@ -786,7 +787,7 @@ export async function onRequestPost({ request, env, data }) {
         if (numericIds.length > 0) {
           const placeholders = numericIds.map(() => '?').join(',');
           await env.DB.prepare(
-            `DELETE FROM notificaciones WHERE id IN (${placeholders})`
+            `UPDATE notificaciones SET is_dismissed = 1 WHERE id IN (${placeholders})`
           ).bind(...numericIds).run();
           return Response.json({ success: true, deleted: numericIds.length });
         }

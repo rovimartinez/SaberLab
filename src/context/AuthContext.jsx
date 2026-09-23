@@ -236,7 +236,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadNotifications = async (userId) => {
     try {
-        const { data } = await api('/notifications');
+        const { data } = await api('/notifications?channel=academic');
 
         if (data) {
             setNotifications(data);
@@ -249,7 +249,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadNotificationsCount = async (userId) => {
     try {
-      const { data } = await api('/notifications');
+      const { data } = await api('/notifications?channel=academic');
       setUnreadNotificationsCount((data || []).filter(n => !n.read).length);
     } catch (err) {
       console.error('Error loading notifications count:', err);
@@ -477,6 +477,46 @@ export const AuthProvider = ({ children }) => {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id, profile?.role]);
+
+  // ── Polling ligero de notificaciones (campana en vivo sin recargar) ──
+  // Mantiene el contador de no leídas y la bandeja al día: nuevas solicitudes
+  // de acceso, aprobaciones, mensajes del docente y recordatorios de examen.
+  useEffect(() => {
+    const uid = user?.id || user?.email;
+    if (!uid) return undefined;
+
+    let cancelled = false;
+
+    const idsEqual = (a, b) => a.length === b.length && a.every((id, i) => id === b[i]);
+
+    const doRefresh = async () => {
+      if (cancelled || document.hidden) return;
+      try {
+        const { data } = await api('/notifications');
+        if (!cancelled && Array.isArray(data)) {
+          setUnreadNotificationsCount(data.filter(n => !n.read).length);
+          setNotifications((prev) => {
+            const prevIds = (prev || []).map(n => n.id);
+            const nextIds = data.map(n => n.id);
+            return idsEqual(prevIds, nextIds) ? prev : data;
+          });
+        }
+      } catch { /* silencioso para no saturar consola */ }
+    };
+
+    const interval = setInterval(doRefresh, 30000);
+    const onVisible = () => { if (!document.hidden) doRefresh(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.email]);
 
   const signInWithGoogle = async () => {
     window.location.assign('/api/auth/start');

@@ -4,7 +4,7 @@ import {
     Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight,
     Zap, Bot, GraduationCap, Gamepad2, Award, User, Activity, TrendingUp, 
     Flame, CheckCircle2, AlertCircle, Loader2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, EyeOff, CheckCircle, Check, X, Lock, Gift, Wrench, Hash, FileCheck,
-    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList, Cpu, Edit3
+    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList, Cpu, Edit3, UserCheck
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
@@ -47,7 +47,7 @@ const PanelInicio = () => {
         user, profile, enrolledCourses, userProgress: cachedProgress, refreshUserProgress, 
         lessonVisibility, signOut, isImpersonating, setViewMode, toggleViewMode,
         pendingAccessRequestsCount, unreadNotificationsCount, refreshEnrolledCourses,
-        isManageModeActive, setIsManageModeActive
+        isManageModeActive, setIsManageModeActive, isStaff, refreshLessonVisibility
     } = useAuth();
     const { openLauncher } = useApps();
     const navigate = useNavigate();
@@ -83,23 +83,81 @@ const PanelInicio = () => {
     const dropdownRef = useRef(null);
 
     // Mapa de visibilidad de Apps del Dashboard (3 estados: 'unlocked' | 'locked' | 'hidden')
+    // Persistido centralmente en Cloudflare D1 (tabla visibilidad_curso, fila course_id = 0)
+    const serverAppVis = (lessonVisibility && (lessonVisibility[0] || lessonVisibility['0'])) || null;
+
     const [appVisibilityMap, setAppVisibilityMap] = useState(() => {
+        const cachedVis = getCachedStorage('saberlab_cached_visibility', {});
+        const cachedServerAppVis = cachedVis[0] || cachedVis['0'];
+        if (cachedServerAppVis && Object.keys(cachedServerAppVis).length > 0) {
+            return cachedServerAppVis;
+        }
         const saved = localStorage.getItem('saberlab_app_visibility_map');
         if (saved) {
             try { return JSON.parse(saved); } catch (e) { }
         }
-        return {};
+        return {
+            activities: 'locked',
+            grades: 'locked',
+            components: 'locked',
+            rewards: 'hidden'
+        };
     });
 
-    const cycleAppVisibility = (appId, e) => {
+    // Sincronización en vivo con Cloudflare D1 y migración automática
+    useEffect(() => {
+        if (serverAppVis && Object.keys(serverAppVis).length > 0) {
+            setAppVisibilityMap(serverAppVis);
+            localStorage.setItem('saberlab_app_visibility_map', JSON.stringify(serverAppVis));
+        } else if (isStaff) {
+            // Si D1 aún no tiene fila 0 pero el docente tiene una configuración en local o por defecto,
+            // persistirla de inmediato en la base de datos para que todos los alumnos la hereden
+            const localSaved = localStorage.getItem('saberlab_app_visibility_map');
+            let toSync = null;
+            if (localSaved) {
+                try { toSync = JSON.parse(localSaved); } catch (e) {}
+            }
+            if (!toSync || Object.keys(toSync).length === 0) {
+                toSync = {
+                    activities: 'locked',
+                    grades: 'locked',
+                    components: 'locked',
+                    rewards: 'hidden'
+                };
+            }
+            api('/visibility', {
+                method: 'POST',
+                body: { course_id: 0, lecciones: toSync }
+            }).then(() => {
+                if (refreshLessonVisibility) refreshLessonVisibility();
+            }).catch(err => {
+                console.error('Error auto-sincronizando visibilidad de apps en D1:', err);
+            });
+        }
+    }, [serverAppVis, isStaff, refreshLessonVisibility]);
+
+    const cycleAppVisibility = async (appId, e) => {
         e?.stopPropagation();
-        setAppVisibilityMap(prev => {
-            const current = prev[appId] || 'unlocked';
-            const nextState = current === 'unlocked' ? 'locked' : current === 'locked' ? 'hidden' : 'unlocked';
-            const next = { ...prev, [appId]: nextState };
-            localStorage.setItem('saberlab_app_visibility_map', JSON.stringify(next));
-            return next;
-        });
+        const current = appVisibilityMap[appId] || (appId === 'rewards' ? 'hidden' : ['activities', 'grades', 'components'].includes(appId) ? 'locked' : 'unlocked');
+        const nextState = current === 'unlocked' ? 'locked' : current === 'locked' ? 'hidden' : 'unlocked';
+        const next = { ...appVisibilityMap, [appId]: nextState };
+        
+        // 1. Optimistic UI inmediato
+        setAppVisibilityMap(next);
+        localStorage.setItem('saberlab_app_visibility_map', JSON.stringify(next));
+
+        // 2. Persistencia en Cloudflare D1 para toda la plataforma
+        try {
+            await api('/visibility', {
+                method: 'POST',
+                body: { course_id: 0, lecciones: next }
+            });
+            if (refreshLessonVisibility) {
+                refreshLessonVisibility();
+            }
+        } catch (err) {
+            console.error('Error sincronizando visibilidad de app con el servidor D1:', err);
+        }
     };
 
     // Estados para unirse a grupo de curso
@@ -428,8 +486,7 @@ const PanelInicio = () => {
         ? courseGroups
         : courseGroups.filter(g => String(g.courseId) === String(modalCourseFilter) || g.courseAbbr === modalCourseFilter);
 
-    const isStaff = ['admin', 'teacher', 'docente', 'profesor'].includes(profile?.role);
-    const isAdmin = profile?.role === 'admin';
+    const isAdmin = profile?.role === 'admin' && !isImpersonating;
 
     // ── CATEGORÍA 2: MI PROGRESO & GAMIFICACIÓN ──
     const progresoApps = [
@@ -474,7 +531,7 @@ const PanelInicio = () => {
             shadow: 'rgba(6, 182, 212, 0.35)',
             desc: 'Herramientas interactivas de apoyo en el aula'
         },
-        { 
+        ...(isStaff ? [{ 
             id: 'analytics', 
             name: 'Analítica', 
             badge: 'Docente', 
@@ -484,18 +541,27 @@ const PanelInicio = () => {
             desc: 'Cohorte docente, estadísticas y rendimiento',
             route: '/dashboard/analytics',
             onClick: () => navigate('/dashboard/analytics')
-        },
+        }] : []),
         {
             id: 'notifications',
             name: 'Notificaciones',
-            badge: (isStaff && (pendingAccessRequestsCount || 0) > 0) 
-                ? `${pendingAccessRequestsCount} pendientes` 
-                : ((unreadNotificationsCount || 0) > 0 ? `${unreadNotificationsCount} nuevas` : 'Avisos'),
+            badge: ((unreadNotificationsCount || 0) > 0 ? `${unreadNotificationsCount} nuevas` : 'Al día'),
             icon: <Bell size={26} />,
             gradient: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)',
             shadow: 'rgba(6, 182, 212, 0.35)',
-            desc: 'Centro de avisos, alertas y novedades de clase'
+            desc: 'Centro de avisos, alertas y novedades académicas'
         },
+        ...(isStaff ? [{
+            id: 'access-requests',
+            name: 'Solicitudes',
+            badge: (pendingAccessRequestsCount || 0) > 0 ? `${pendingAccessRequestsCount} pendientes` : 'Al día',
+            icon: <UserCheck size={26} />,
+            gradient: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+            shadow: 'rgba(168, 85, 247, 0.35)',
+            desc: 'Gestión y aprobación de nuevos accesos a SaberLab',
+            route: '/dashboard/requests',
+            onClick: () => navigate('/dashboard/requests')
+        }] : []),
     ];
 
     // ── CATEGORÍA 1: ÁREA ACADÉMICA Y EVALUACIONES (ABAJO) ──
@@ -1098,6 +1164,27 @@ const PanelInicio = () => {
                             <h2 className="apps-category-title">Gestión & Sistema</h2>
                         </div>
                     </div>
+
+                    {/* Botón de Gestión de Visibilidad para Docentes/Admin */}
+                    <button
+                        type="button"
+                        className={`category-manage-toggle-btn ${isManageModeActive ? 'active' : ''}`}
+                        onClick={() => setIsManageModeActive(!isManageModeActive)}
+                        title={isManageModeActive ? "Haz clic para finalizar y guardar la visibilidad" : "Gestionar visibilidad (Mostrar / Bloquear / Ocultar) en todas las tarjetas del Dashboard"}
+                    >
+                        {isManageModeActive ? (
+                            <>
+                                <Check size={14} className="manage-toggle-icon" />
+                                <span>Finalizar Edición</span>
+                                <span className="manage-toggle-pulse-dot" />
+                            </>
+                        ) : (
+                            <>
+                                <Edit3 size={14} className="manage-toggle-icon" />
+                                <span>Gestionar Visibilidad</span>
+                            </>
+                        )}
+                    </button>
                 </div>
                 <div className="apps-hub-grid bottom-row-grid">
                     {sistemaApps.map(renderAppTile)}

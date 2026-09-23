@@ -32,30 +32,12 @@ export default function SimiNotificationsModal({ isOpen, onClose, onNavigateTab 
     const fetchSimiNotifications = async () => {
         setLoading(true);
         try {
-            const res = await api('/notifications');
+            const res = await api('/notifications?channel=simi');
             const data = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
             
-            // Filtrar estrictamente notificaciones relacionadas con SIMI3D
-            const simiOnly = data.filter(n => {
-                const title = (n.title || '').toLowerCase();
-                const msg = (n.message || '').toLowerCase();
-                const sender = (n.sender_name || '').toLowerCase();
-                return title.includes('simi') || 
-                       title.includes('semillero') || 
-                       title.includes('3d') || 
-                       title.includes('asignación') || 
-                       title.includes('proyecto') || 
-                       msg.includes('simi') || 
-                       msg.includes('semillero') || 
-                       msg.includes('impresión') ||
-                       msg.includes('proyecto') ||
-                       sender.includes('simi') || 
-                       sender.includes('semillero');
-            });
-
             // ── Filtro local de descartados: elimina los que ya borró el usuario ──
             const dismissed = getDismissedIds();
-            const withoutDismissed = simiOnly.filter(n => !dismissed.has(n.id));
+            const withoutDismissed = data.filter(n => !dismissed.has(n.id));
             setNotifications(withoutDismissed);
         } catch (err) {
             console.warn('[SIMI Notifs Fetch Error]', err);
@@ -121,7 +103,7 @@ export default function SimiNotificationsModal({ isOpen, onClose, onNavigateTab 
 
     const markAsRead = async (id) => {
         try {
-            await api('/notifications', { method: 'POST', body: { ids: [id] } });
+            await api('/notifications?channel=simi', { method: 'POST', body: { ids: [id] } });
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
             if (refreshNotifications) refreshNotifications();
         } catch (err) {
@@ -133,7 +115,7 @@ export default function SimiNotificationsModal({ isOpen, onClose, onNavigateTab 
         const unreadIds = notifications.filter(n => !n.read && !isSentNotif(n)).map(n => n.id);
         if (unreadIds.length > 0) {
             try {
-                await api('/notifications', { method: 'POST', body: { ids: unreadIds } });
+                await api('/notifications?channel=simi', { method: 'POST', body: { ids: unreadIds } });
                 setNotifications(prev => prev.map(n => ({ ...n, read: true })));
                 if (refreshNotifications) refreshNotifications();
             } catch (err) {
@@ -149,7 +131,7 @@ export default function SimiNotificationsModal({ isOpen, onClose, onNavigateTab 
         setNotifications(prev => prev.filter(n => n.id !== id));
         try {
             // 3. Soft-delete en backend
-            await api('/notifications', { method: 'DELETE', body: { ids: [id] } });
+            await api('/notifications?channel=simi', { method: 'DELETE', body: { ids: [id] } });
         } catch (err) {
             console.warn('Error deleting notification:', err);
         }
@@ -165,7 +147,7 @@ export default function SimiNotificationsModal({ isOpen, onClose, onNavigateTab 
         setNotifications(prev => prev.filter(n => !targetIds.includes(n.id)));
         try {
             // 3. Soft-delete masivo en backend
-            await api('/notifications', { method: 'DELETE', body: { ids: targetIds } });
+            await api('/notifications?channel=simi', { method: 'DELETE', body: { ids: targetIds } });
         } catch (err) {
             console.warn('Error clearing notifications:', err);
         }

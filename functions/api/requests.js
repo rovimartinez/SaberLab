@@ -1,3 +1,5 @@
+import { notifyAdminsNewRequest, notifyStudentDecision, notifyAdminDecisionMade } from './_lib/access-notifications.js';
+
 export async function onRequestGet({ request, env, data }) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS solicitudes_acceso (
@@ -53,6 +55,13 @@ export async function onRequestPost({ request, env, data }) {
      VALUES (?, ?, ?, datetime('now'))`
   ).bind(name || null, email.trim().toLowerCase(), status).run();
 
+  // Notificar a todos los administradores sobre la nueva solicitud pendiente
+  try {
+    await notifyAdminsNewRequest(env, { name, email });
+  } catch (notifErr) {
+    console.error('Error notificando a admins por nueva solicitud:', notifErr);
+  }
+
   return Response.json({ success: true });
 }
 
@@ -91,6 +100,11 @@ export async function onRequestPatch({ request, env, data }) {
   if (status === 'approved') {
     const targetEmail = (normalizedEmail || row.email).toLowerCase();
     try {
+      // Blindaje de schema: perfiles.access_status puede faltar por migraciones parciales
+      try {
+        await env.DB.prepare('ALTER TABLE perfiles ADD COLUMN access_status TEXT').run();
+      } catch {}
+
       await env.DB.prepare(
         "UPDATE perfiles SET access_status = 'approved' WHERE LOWER(email) = LOWER(?)"
       ).bind(targetEmail).run();
@@ -115,6 +129,16 @@ export async function onRequestPatch({ request, env, data }) {
     } catch (profileSyncErr) {
       console.error('Error synchronizing approved status to perfiles:', profileSyncErr);
     }
+  }
+
+  // Notificar al estudiante la decisión (aprobado/rechazado) y confirmar al admin
+  try {
+    const targetEmailForNotif = (normalizedEmail || row.email || '').toLowerCase();
+    const targetName = name || row.name || null;
+    await notifyStudentDecision(env, { email: targetEmailForNotif, name: targetName, status });
+    await notifyAdminDecisionMade(env, { adminEmail: data.user.email, name: targetName, email: targetEmailForNotif, status });
+  } catch (notifErr) {
+    console.error('Error notificando decisión de solicitud:', notifErr);
   }
 
   return Response.json({ success: true });

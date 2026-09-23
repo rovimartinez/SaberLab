@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { 
     Users, Link2, Plus, Clock, Copy, Check, Share2, CalendarPlus, 
     Trash2, Edit2, AlertCircle, Sparkles, Filter, CheckCircle2, XCircle, Search, Layers, UserCheck, GraduationCap,
@@ -15,6 +16,38 @@ const normalizeText = (text) => {
         .replace(/[\u0300-\u036f]/g, '')
         .trim();
 };
+
+/** Por encima del modal del Dashboard (z-index 999999) y fuera de su overflow/transform. */
+const FLOATING_OVERLAY_Z = 10000050;
+
+function FloatingOverlay({ children, onClose, overlayStyle = {} }) {
+    if (typeof document === 'undefined') return null;
+    return createPortal(
+        <div
+            role="presentation"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+                if (onClose && e.target === e.currentTarget) onClose();
+            }}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: FLOATING_OVERLAY_Z,
+                background: 'rgba(10, 15, 30, 0.82)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+                ...overlayStyle
+            }}
+        >
+            {children}
+        </div>,
+        document.body
+    );
+}
 
 export default function CourseInviteManager({ courseId = null }) {
     // ── ESTADOS PRINCIPALES ──
@@ -56,6 +89,7 @@ export default function CourseInviteManager({ courseId = null }) {
     const [showCreateLinkModal, setShowCreateLinkModal] = useState(false);
     const [linkForm, setLinkForm] = useState({ course_id: 1, group_id: '', durationHours: 24 });
     const [creatingLink, setCreatingLink] = useState(false);
+    const [createdLink, setCreatedLink] = useState(null);
 
     // ── MODAL EXTENDER TIEMPO ──
     const [extendTarget, setExtendTarget] = useState(null);
@@ -441,7 +475,14 @@ export default function CourseInviteManager({ courseId = null }) {
     };
 
     // ── ENLACES TEMPORALES (CREAR / EXTENDER / COPIAR) ──
+    const closeCreateLinkModal = () => {
+        setShowCreateLinkModal(false);
+        setCreatedLink(null);
+        setCreatingLink(false);
+    };
+
     const openCreateLinkForGroup = (group) => {
+        setCreatedLink(null);
         setLinkForm({
             course_id: group.course_id,
             group_id: group.id,
@@ -452,6 +493,7 @@ export default function CourseInviteManager({ courseId = null }) {
 
     const handleCreateLinkSubmit = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
         setCreatingLink(true);
 
         try {
@@ -467,10 +509,14 @@ export default function CourseInviteManager({ courseId = null }) {
                 expiresAt = date.toISOString();
             }
 
+            const groupIdValue = linkForm.group_id === '' || linkForm.group_id === null
+                ? null
+                : Number(linkForm.group_id);
+
             const { data, error } = await api('/codes', {
                 method: 'POST',
                 body: {
-                    group_id: Number(linkForm.group_id),
+                    group_id: groupIdValue,
                     course_id: Number(linkForm.course_id),
                     code: generatedCode,
                     expires_at: expiresAt
@@ -479,9 +525,16 @@ export default function CourseInviteManager({ courseId = null }) {
 
             if (error) throw new Error(error.message || 'Error al generar enlace');
 
+            const finalCode = (data && data.code) ? data.code : generatedCode;
+            setCreatedLink({
+                code: finalCode,
+                expires_at: (data && data.expires_at) || expiresAt,
+                group_id: (data && data.group_id) || groupIdValue,
+                course_id: (data && data.course_id) || Number(linkForm.course_id)
+            });
+            await handleCopy(finalCode);
             await loadData();
-            setShowCreateLinkModal(false);
-            setActiveTab('links'); // Cambiar a pestaña de enlaces para ver el nuevo código
+            setActiveTab('links');
         } catch (err) {
             alert(err.message || 'Error al generar enlace temporal');
         } finally {
@@ -539,9 +592,29 @@ export default function CourseInviteManager({ courseId = null }) {
 
     const getFullJoinUrl = (code) => `https://saberlab.pages.dev/join?code=${code}`;
 
-    const handleCopy = (code) => {
+    const handleCopy = async (code) => {
         const url = getFullJoinUrl(code);
-        navigator.clipboard.writeText(url);
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(url);
+            } else {
+                throw new Error('clipboard unavailable');
+            }
+        } catch {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch {
+                /* el usuario puede copiar desde el campo visible */
+            }
+        }
         setCopiedCode(code);
         setTimeout(() => setCopiedCode(null), 2500);
     };
@@ -645,6 +718,49 @@ export default function CourseInviteManager({ courseId = null }) {
         return allStudents.length > 0 ? allStudents.length : 48; // fallback to active student count
     }, [allStudents]);
 
+    // ── FILTRADO DE ENLACES / CÓDIGOS TEMPORALES ──
+    const filteredCodes = useMemo(() => {
+        const q = normalizeText(searchQuery);
+        return (codes || []).filter(c => {
+            if (!c) return false;
+
+            // Filtro por curso seleccionado
+            if (selectedCourseFilter !== 'all' && String(c.course_id) !== String(selectedCourseFilter)) {
+                return false;
+            }
+
+            // Filtro por estado activo/inactivo (expirado)
+            const status = getCodeStatus(c.expires_at);
+            if (statusFilter === 'active' && !status.active) return false;
+            if (statusFilter === 'inactive' && status.active) return false;
+
+            // Búsqueda por texto (código o nombre del grupo vinculado o curso)
+            if (q) {
+                const codeMatch = normalizeText(c.code).includes(q);
+                const linkedGroup = (groups || []).find(g => g.id === c.group_id || String(g.id) === String(c.group_id));
+                const groupMatch = linkedGroup ? normalizeText(linkedGroup.name).includes(q) : false;
+                const course = COURSES_DEFINITION.find(cd => cd.id === c.course_id || String(cd.id) === String(c.course_id));
+                const courseMatch = course ? normalizeText(course.name).includes(q) || normalizeText(course.abbr).includes(q) : false;
+                if (!codeMatch && !groupMatch && !courseMatch) return false;
+            }
+
+            return true;
+        });
+    }, [codes, searchQuery, selectedCourseFilter, statusFilter, groups]);
+
+    // ── APERTURA DE MODAL PROYECTOR QR ──
+    const openProjectorModal = (codeObj, courseName, groupName) => {
+        if (!codeObj) return;
+        const course = COURSES_DEFINITION.find(c => c.id === codeObj.course_id || String(c.id) === String(codeObj.course_id));
+        setProjectorCode({
+            code: codeObj.code,
+            course_name: courseName || course?.name || 'Curso General',
+            group_name: groupName || 'General',
+            expires_at: codeObj.expires_at,
+            course_color: course?.color || '#38bdf8'
+        });
+    };
+
     // Formateador de tiempo estilo 13:20 min o Vence en X
     const getCompactTimeLeft = (expiresAt) => {
         if (!expiresAt) return 'Permanente';
@@ -704,6 +820,7 @@ export default function CourseInviteManager({ courseId = null }) {
                     <button
                         type="button"
                         onClick={() => {
+                            setCreatedLink(null);
                             setLinkForm({ course_id: selectedCourseFilter !== 'all' ? Number(selectedCourseFilter) : 1, group_id: '', durationHours: 24 });
                             setShowCreateLinkModal(true);
                         }}
@@ -2308,7 +2425,10 @@ export default function CourseInviteManager({ courseId = null }) {
                                 type="button"
                                 onClick={() => {
                                     if (searchQuery) setSearchQuery('');
-                                    else setShowCreateLinkModal(true);
+                                    else {
+                                        setCreatedLink(null);
+                                        setShowCreateLinkModal(true);
+                                    }
                                 }}
                                 style={{
                                     background: 'var(--brand-primary)',
@@ -2545,17 +2665,10 @@ export default function CourseInviteManager({ courseId = null }) {
 
             {/* ── 9. MODAL PROYECTOR DE AULA (CÓDIGO QR GIGANTE) ── */}
             {projectorCode && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 99999,
-                    background: 'rgba(5, 10, 24, 0.94)',
-                    backdropFilter: 'blur(12px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1.5rem'
-                }}>
+                <FloatingOverlay
+                    onClose={() => setProjectorCode(null)}
+                    overlayStyle={{ background: 'rgba(5, 10, 24, 0.94)', backdropFilter: 'blur(12px)', padding: '1.5rem' }}
+                >
                     <div style={{
                         background: 'var(--surface-card)',
                         border: `2px solid ${projectorCode.course_color || 'var(--brand-primary)'}`,
@@ -2662,22 +2775,12 @@ export default function CourseInviteManager({ courseId = null }) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </FloatingOverlay>
             )}
 
             {/* ── 5. MODAL CREAR / EDITAR GRUPO CON ESTADO ACTIVO/INACTIVO ── */}
             {showGroupModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 99999,
-                    background: 'rgba(10, 15, 30, 0.82)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1rem'
-                }}>
+                <FloatingOverlay onClose={() => setShowGroupModal(false)}>
                     <div style={{
                         background: 'var(--surface-card)',
                         border: '1px solid var(--border-subtle)',
@@ -2866,22 +2969,12 @@ export default function CourseInviteManager({ courseId = null }) {
                             </div>
                         </form>
                     </div>
-                </div>
+                </FloatingOverlay>
             )}
 
             {/* ── 6. MODAL GENERAR ENLACE TEMPORAL ── */}
             {showCreateLinkModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 99999,
-                    background: 'rgba(10, 15, 30, 0.82)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1rem'
-                }}>
+                <FloatingOverlay onClose={closeCreateLinkModal}>
                     <div style={{
                         background: 'var(--surface-card)',
                         border: '1px solid var(--border-subtle)',
@@ -2896,18 +2989,92 @@ export default function CourseInviteManager({ courseId = null }) {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                                 <Sparkles size={20} color="var(--brand-primary)" />
                                 <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
-                                    Generar Enlace Temporal
+                                    {createdLink ? 'Enlace listo para compartir' : 'Generar Enlace Temporal'}
                                 </h3>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setShowCreateLinkModal(false)}
+                                onClick={closeCreateLinkModal}
                                 style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.2rem' }}
                             >
                                 ✕
                             </button>
                         </div>
 
+                        {createdLink ? (
+                            <div>
+                                <p style={{ margin: '0 0 0.85rem', fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
+                                    El enlace se copió al portapapeles. Compártelo con tus estudiantes o copia de nuevo si lo necesitas.
+                                </p>
+                                <div style={{
+                                    background: 'var(--surface-card-subtle)',
+                                    border: '1px solid var(--border-subtle)',
+                                    borderRadius: '12px',
+                                    padding: '0.85rem 1rem',
+                                    marginBottom: '0.75rem'
+                                }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                                        CÓDIGO
+                                    </div>
+                                    <div style={{ fontSize: '1.35rem', fontWeight: 900, letterSpacing: '2px', fontFamily: 'monospace', color: 'var(--brand-primary)' }}>
+                                        {createdLink.code}
+                                    </div>
+                                </div>
+                                <input
+                                    readOnly
+                                    value={getFullJoinUrl(createdLink.code)}
+                                    onFocus={(e) => e.target.select()}
+                                    style={{
+                                        width: '100%',
+                                        boxSizing: 'border-box',
+                                        background: 'var(--surface-card-subtle)',
+                                        border: '1px solid var(--border-subtle)',
+                                        borderRadius: '10px',
+                                        padding: '0.7rem',
+                                        color: 'var(--text-heading)',
+                                        fontSize: '0.8rem',
+                                        marginBottom: '1rem'
+                                    }}
+                                />
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.65rem', flexWrap: 'wrap' }}>
+                                    <button
+                                        type="button"
+                                        onClick={closeCreateLinkModal}
+                                        style={{
+                                            background: 'transparent',
+                                            border: '1px solid var(--border-subtle)',
+                                            color: 'var(--text-secondary)',
+                                            borderRadius: '9px',
+                                            padding: '0.6rem 1.15rem',
+                                            fontSize: '0.85rem',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cerrar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopy(createdLink.code)}
+                                        style={{
+                                            background: copiedCode === createdLink.code ? '#10b981' : 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                                            color: copiedCode === createdLink.code ? '#fff' : '#0f172a',
+                                            border: 'none',
+                                            borderRadius: '9px',
+                                            padding: '0.6rem 1.4rem',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 800,
+                                            cursor: 'pointer',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.4rem'
+                                        }}
+                                    >
+                                        {copiedCode === createdLink.code ? <Check size={16} /> : <Copy size={16} />}
+                                        <span>{copiedCode === createdLink.code ? '¡Copiado!' : 'Copiar URL'}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
                         <form onSubmit={handleCreateLinkSubmit}>
                             {/* Curso */}
                             <div style={{ marginBottom: '1rem' }}>
@@ -3008,7 +3175,7 @@ export default function CourseInviteManager({ courseId = null }) {
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.65rem' }}>
                                 <button
                                     type="button"
-                                    onClick={() => setShowCreateLinkModal(false)}
+                                    onClick={closeCreateLinkModal}
                                     style={{
                                         background: 'transparent',
                                         border: '1px solid var(--border-subtle)',
@@ -3039,23 +3206,14 @@ export default function CourseInviteManager({ courseId = null }) {
                                 </button>
                             </div>
                         </form>
+                        )}
                     </div>
-                </div>
+                </FloatingOverlay>
             )}
 
             {/* ── 7. MODAL EXTENDER VIGENCIA ── */}
             {extendTarget && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 99999,
-                    background: 'rgba(10, 15, 30, 0.82)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1rem'
-                }}>
+                <FloatingOverlay onClose={() => setExtendTarget(null)}>
                     <div style={{
                         background: 'var(--surface-card)',
                         border: '1px solid rgba(245, 158, 11, 0.4)',
@@ -3151,22 +3309,12 @@ export default function CourseInviteManager({ courseId = null }) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </FloatingOverlay>
             )}
 
             {/* ── 8. MODAL VER LISTA DE ESTUDIANTES DEL GRUPO ── */}
             {showStudentsModal && selectedGroupStudents && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 99999,
-                    background: 'rgba(10, 15, 30, 0.82)',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '1rem'
-                }}>
+                <FloatingOverlay onClose={() => setShowStudentsModal(false)}>
                     <div style={{
                         background: 'var(--surface-card)',
                         border: '1px solid var(--border-subtle)',
@@ -3306,7 +3454,7 @@ export default function CourseInviteManager({ courseId = null }) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </FloatingOverlay>
             )}
         </div>
     );

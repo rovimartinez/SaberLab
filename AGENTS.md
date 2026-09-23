@@ -140,18 +140,21 @@
 ---
 
 ## 📍 ¿Por dónde quedamos? (Punto de Parada Actual)
-* **Estado:** **Banco de Proyectos SIMI3D con IDs hexadecimales `SIMI####`, normalización de etapas, cierre inmediato de modal y compilación limpia con `npm run build` (0 errores)**.
+* **Estado:** **Proyecto Integrador de Ajedrez 3D en curso (L3 y L4 de MA-M1 construidas): `ma-m1-l3` (Modo Edición → Peón) y `ma-m1-l4` (Herramientas E/I/Bevel/Loop Cut → Torre y Alfil) con el laboratorio `ChessPieceLab.jsx`. Compilación limpia con `npm run build` (0 errores)**.
 * **Siguiente Paso Inmediato (Pendientes Prioritarios):**
+  - 🔧 **Continuar el Proyecto Ajedrez en M2:** Construir `ma-m2-l6` (Rey + Reina con Mirror/Subsurf/Array), `ma-m2-l7` (Caballo Hard-Surface), `ma-m2-l8` (Tablero con materiales PBR) y `ma-m2-l9` (examen 2 - entrega del set completo), según el roadmap aprobado por el usuario.
   - 📲 **Integración de Notificaciones a Grupos de WhatsApp:** Implementar backend serverless (`/functions/api/notify.js`) con proveedor UltraMsg / Evolution API (soporte para `INSTANCE_ID`, `API_TOKEN` y `GROUP_ID`), formateo automático de plantillas para convocatorias a salidas pedagógicas, nuevos proyectos CAD e insignias, switch interactivo en formularios y fallback de 1 clic vía WhatsApp Web.
   - 🔍 **Auditoría de páginas obsoletas:** Buscar y depurar páginas/rutas que ya no deberían existir por haber sido reemplazadas por modales en el Dashboard (ej. `PanelMisCursos`, `PanelEvaluaciones`, vistas legacy, etc.).
   - 🧭 **Revisión y actualización de rutas de navegación:** Revisar integralmente las rutas de navegación de cada curso (`EE`, `RE`, `MA`, `SIMI`), asegurando consistencia entre sidebar, mapa de temas, botones de retorno y modales.
-  - Continuar con la **Lección 3 (`ma-m1-l3`: Modo Edición y Topología Poligonal - Vértices, Aristas y Caras)** de Modelado 3D o siguientes requerimientos del usuario.
   - **Subir cambios a GitHub (`git push`):** Solo cuando el usuario lo autorice explícitamente.
 
 ---
 
 ## 📁 Arquitectura y Rutas de Referencia Rápida
 - **Lección 1 3D:** [`src/lessons/MA/m1/l1.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/MA/m1/l1.jsx)
+- **Lección 3 3D (Peón):** [`src/lessons/MA/m1/l3.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/MA/m1/l3.jsx)
+- **Lección 4 3D (Torre y Alfil):** [`src/lessons/MA/m1/l4.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/MA/m1/l4.jsx)
+- **Laboratorio Ajedrez 3D:** [`src/components/simulators/3d/ChessPieceLab.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/ChessPieceLab.jsx)
 - **Viewport 3D Blender:** [`src/components/simulators/3d/BlenderViewport.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/BlenderViewport.jsx)
 - **Demostrador Coordenadas:** [`src/components/simulators/3d/CoordinateSpaceDemo.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/CoordinateSpaceDemo.jsx)
 - **Laboratorio Práctico 3D:** [`src/components/simulators/3d/PracticalLabMA1.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/PracticalLabMA1.jsx)
@@ -335,3 +338,96 @@
   - Tabla `simi_servicios` auto-creada con soporte para campos de audiencia, especificaciones JSON, estados y precios.
   - Endpoints CRUD (`save-service`, `toggle-service-status`, `delete-service`, `sync-all-services`).
 - **Compilación:** Verificado con `npm run build` (0 errores en 9.22s). Cumplida regla de no ejecutar `git push` sin orden explícita.
+
+### 24. Proyecto Integrador de Ajedrez 3D (Módulos 1 y 2 del Curso MA)
+- **Roadmap Aprobado por el Usuario (sin eliminar lo existente):**
+  - **M1:** `ma-m1-l3` → **El Peón** (Modo Edición, terna V-E-F, topología, revolución de perfil) · `ma-m1-l4` → **La Torre 🏰 y el Alfil 🛕** (Extrude E, Inset I, Bevel Ctrl+B, Loop Cut Ctrl+R). M1·l5 = Examen 1.
+  - **M2:** `ma-m2-l6` → **Rey + Reina** (Mirror, Subdivision Surface, Array) · `ma-m2-l7` → **Caballo** (Hard-Surface) · `ma-m2-l8` → **Tablero** (escaques ×64 con materiales PBR) · `ma-m2-l9` = Examen 2 (entrega del set completo).
+  - **Retos extra por lección:** trencito de juguete 🚂, jarrones 🏺, cuencos y fichas personalizadas con las mismas técnicas.
+- **Lección 3 (`ma-m1-l3` - [`src/lessons/MA/m1/l3.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/MA/m1/l3.jsx)):** "Modo Edición y Topología Poligonal — Proyecto: El Peón". Contenido 3.0 Proyecto Integrador, 3.1 Modo Objeto vs Modo Edición (Tab), 3.2 Selección por componentes (1/2/3), 3.3 Revolución de perfil (modificador Screw), 3.4 Topología limpia (quads, evitando estrellas, flujo de aristas). 10 flashcards y quiz de 10 preguntas (`timePerQuestion: 20`, `requiredScorePercent: 80`).
+- **Lección 4 (`ma-m1-l4` - [`src/lessons/MA/m1/l4.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/lessons/MA/m1/l4.jsx)):** "Herramientas de Modelado Esenciales — Proyecto: Torre y Alfil". Extrusión (E + Z, E + S), Inset (I), Bevel (Ctrl + B + rueda), Loop Cut (Ctrl + R), flujo Loop Cut → Extrude para almenas y tabla maestra de atajos. 10 flashcards y quiz de 10 preguntas.
+- **Laboratorio Nuevo ([`ChessPieceLab.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/simulators/3d/ChessPieceLab.jsx)):** Constructor didáctico 3D sobre Three.js (react 0.185):
+  - **Revolución real de perfiles** con `LatheGeometry` (convención Z-Up tras `rotateX`), selector de pieza (Peón/Torre/Alfil), slider de segmentos radiales (Loop Cut 8–48), toggles de Sombreado Suave (Bevel), detalle extra por pieza y Almenas para la Torre.
+  - **Telemetría V-E-F en vivo** (vértices, aristas y caras exactos calculados del index buffer, con fallback para mallas no indexadas).
+  - **15 retos guiados** (5 por pieza) con auto-validación, confetti, persistencia en `localStorage` (`practical_progress_ma-m1-l3`) y **pestaña Sandbox Libre** con panel de exploración propio y acceso directo a la hoja de ruta.
+  - Registrado en [`LessonLegacyBridge.jsx`](file:///C:/Users/Elizabeth/Desktop/SaberLab/src/components/lesson/legacy/LessonLegacyBridge.jsx) bajo el contenedor `chess-piece-lab-container` (compartido por l3 y l4).
+- **Metadatos:** `coursesData.jsx` conectó `load` de `ma-m1-l3` y `ma-m1-l4` a sus archivos, y actualizó los `topics` del Módulo 1 con referencias aditivas al proyecto (sin eliminar los temas existentes).
+- **Compilación:** Verificado con `npm run build` (0 errores en ~9–12s). Cumplida regla de no ejecutar `git push` sin orden explícita.
+
+### 25. Separación Canónica de Canales: Aprobaciones de Acceso, Notificaciones Académicas y Avisos SIMI3D
+- **Diagnóstico y Requerimiento:**
+  - El sistema mezclaba en una sola bandeja las **Solicitudes de Acceso pendientes** de nuevos alumnos, las **Notificaciones Académicas** (exámenes, avisos docentes, logros) y las **Misiones/Proyectos de SIMI3D**.
+  - En la barra lateral (`Sidebar.jsx`) y el inicio (`PanelInicio.jsx`), la insignia de *Notificaciones* mostraba `pendingAccessRequestsCount`, haciendo que la campana académica reflejara solicitudes de seguridad en vez de avisos para el usuario.
+  - En `functions/api/simi.js`, la acción de borrado masivo eliminaba todas las notificaciones del usuario de forma indiscriminada (incluyendo recordatorios de exámenes).
+- **Arquitectura de 3 Canales Desacoplados:**
+  1. **Canal 1: Aprobaciones y Accesos (Security & Admissions):**
+     - Desacoplado 100% de la tabla `notificaciones`. `functions/api/_lib/access-notifications.js` dejó de insertar registros de correo/alerta para administradores, evitando spam en su bandeja de entrada.
+     - Gestión centralizada en [`AdminAccessRequestsBubble.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/layout/AdminAccessRequestsBubble.jsx), montado de forma global en [`Layout.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/layout/Layout.jsx) para administradores (burbuja flotante púrpura con contador y aprobación inmediata en 1 clic).
+     - Acceso dedicado en [`Sidebar.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/layout/Sidebar.jsx) bajo el menú DOCENTE/ADMIN: `Solicitudes` con icono `UserCheck` y badge de solicitudes pendientes.
+     - Tarjeta propia en [`PanelInicio.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelInicio.jsx) (`Solicitudes` con degradé púrpura/índigo) independiente de la campana.
+     - Removido el banner de solicitudes de [`PanelNotificaciones.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelNotificaciones.jsx).
+  2. **Canal 2: Notificaciones Académicas SaberLab (Cursos EE, RE, MA):**
+     - [`functions/api/notifications.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/notifications.js) soporta filtrado por canal (`?channel=academic`). Excluye de forma estricta proyectos CAD, eventos y misiones de SIMI, así como textos administrativos de solicitudes.
+     - El generador automático de exámenes (10, 5, 2 y 0 días) se ejecuta exclusivamente en el canal académico.
+     - Marcar como leídas y borrado (soft-delete `is_dismissed = 1`) opera exclusivamente sobre los avisos académicos del usuario.
+     - [`AuthContext.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/context/AuthContext.jsx) consulta `channel=academic`, alimentando `unreadNotificationsCount` con telemetría pura del aula.
+  3. **Canal 3: Centro de Misiones & Operaciones SIMI3D:**
+     - En [`functions/api/simi.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/simi.js), las asignaciones de proyectos CAD e insignias ahora se guardan con `channel = 'simi'`.
+     - El borrado de notificaciones en `simi.js` ahora es un soft-delete aislado a `channel = 'simi'`, blindando los recordatorios de examen de los estudiantes.
+     - En [`PanelSimiHub.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelSimiHub.jsx), se integró el botón **`Avisos & Misiones`** en el sidebar lateral cian y en el menú móvil con su propio contador de insignias no leídas (`simiUnreadCount`).
+     - [`SimiNotificationsModal.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/simi/SimiNotificationsModal.jsx) se conecta directamente a `/notifications?channel=simi` para una gestión autónoma dentro del Semillero.
+     - **Depuración UX:** Se retiró el botón secundario *"Cotizador Orientativo (Impresión 3D & Talleres)"* del panel lateral y del menú móvil de SIMI Hub a petición del usuario, dejando el espacio lateral limpio y enfocado exclusivamente en las misiones, estatutos y gestión del semillero.
+- **Compilación:** Verificado con `npm run build` (0 errores en 9.49s). Prohibido `git push` sin autorización explícita.
+
+### 26. Limpieza y Descongestión de FABs Flotantes en Esquina Inferior Derecha
+- **Diagnóstico:**
+  - La esquina inferior derecha acumulaba hasta 5 botones flotantes simultáneos (Burbuja flotante de Solicitudes de Acceso, WhatsApp SIMI, Instagram SIMI, FAB Lápiz de Modo Gestión, FAB Ojo de Ver como Alumno y el Tutor IA de SaberLab), generando colisiones visuales y solapamientos sobre el asistente de IA.
+- **Acciones Realizadas:**
+  - **Retiro de FAB Solicitudes de Acceso:** Se eliminó la burbuja flotante púrpura (`AdminAccessRequestsBubble.jsx`), centralizando la gestión de admisiones en la tarjeta dedicada de [`PanelInicio.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelInicio.jsx) y el elemento del menú en [`Sidebar.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/layout/Sidebar.jsx).
+  - **Retiro de Botones Sociales Flotantes:** Se eliminaron los FABs flotantes de **WhatsApp** (`.simi-whatsapp-fab`) e **Instagram** (`.simi-instagram-fab`) de [`PanelSimiHub.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelSimiHub.jsx) y su CSS asociado en [`PanelSimiHub.css`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/styles/PanelSimiHub.css).
+  - **Retiro de FAB Lápiz (Modo Gestión):** Se eliminó el botón flotante global `.global-managemode-fab` (`<Edit3 />`) de [`Layout.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/layout/Layout.jsx) y [`Layout.css`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/styles/Layout.css), manteniendo la activación del modo gestión en sus cabeceras contextuales específicas.
+  - **Resultado:** La interfaz queda limpia con solo el Tutor IA de SaberLab y el toggle de vista de estudiante (`global-viewmode-fab`) sin obstrucciones ni solapamientos.
+- **Compilación:** Verificado con `npm run build` (0 errores en 5.39s). Prohibido `git push` sin autorización explícita.
+
+### 27. Integración del Logo Oficial SIMI 3D (`/badges/Logo_SIMI.webp`)
+- **Diagnóstico y Requerimiento:**
+  - La identidad gráfica del Semillero SIMI3D utilizaba una imagen externa de hosting (`https://i.postimg.cc/6794HFnS/simi3d.jpg`) susceptible a latencia o caídas de servidor externo.
+  - Se solicitó emplear el activo local institucional ubicado en `public/badges/Logo_SIMI.webp`.
+- **Acciones Realizadas:**
+  - **Panel Lateral SIMI Hub ([`PanelSimiHub.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelSimiHub.jsx)):** Se actualizó el encabezado de marca `.simi-sidebar-brand-img` para consumir `/badges/Logo_SIMI.webp` con `object-fit: contain` y padding optimizado en [`PanelSimiHub.css`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/styles/PanelSimiHub.css).
+  - **Modal de Reglas y Estatutos:** Se integró el logo oficial en el encabezado del modal de estatutos SIMI3D.
+  - **Menú Móvil Desplegable:** Se incorporó el isotipo institucional en la cabecera del sheet de opciones móviles de SIMI Hub.
+  - **Definición Canónica de Cursos ([`coursesData.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/data/coursesData.jsx)):** Se asoció la propiedad `logo: '/badges/Logo_SIMI.webp'` y `badgeImageUrl` al curso ID 6 (SIMI).
+- **Compilación:** Verificado con `npm run build` (0 errores en 14.66s). Prohibido `git push` sin autorización explícita.
+
+### 28. Corrección de Pantalla en Blanco al Generar Enlaces de Invitación (`CourseInviteManager.jsx`)
+- **Diagnóstico:**
+  - Al generar un código o enlace temporal de auto-inscripción (`handleCreateLinkSubmit`), el sistema generaba el código, lo copiaba al portapapeles con `handleCopy`, y ejecutaba `setActiveTab('links')`.
+  - Al cambiar la pestaña a `'links'`, el componente intentaba renderizar la lista de códigos consultando `filteredCodes.length` y mapeando `filteredCodes.map(...)`.
+  - Sin embargo, `filteredCodes` nunca había sido declarado en el componente, provocando un error en tiempo de ejecución: `ReferenceError: filteredCodes is not defined`.
+  - React, al no tener un ErrorBoundary local en el modal, desmontaba completamente el componente, haciendo que el modal se cerrara y toda la interfaz quedara en blanco.
+  - Adicionalmente, el botón de proyección QR en la vista de tarjetas invocaba `openProjectorModal`, el cual tampoco estaba definido.
+- **Acciones Realizadas:**
+  - **Definición de `filteredCodes` ([`CourseInviteManager.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/admin/CourseInviteManager.jsx)):** Implementado con `useMemo` filtrando por curso (`selectedCourseFilter`), estado activo/expirado (`statusFilter`) y búsqueda de texto (`searchQuery` por código, grupo o nombre de curso).
+  - **Definición de `openProjectorModal`:** Función conectada a `setProjectorCode` con resolución segura de metadatos de curso y grupo para el proyector de videobeam.
+  - **Blindaje con ErrorBoundary ([`InviteLinksModalContent.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/components/dashboard/modals/InviteLinksModalContent.jsx)):** Se envolvió `CourseInviteManager` en un `InviteErrorBoundary` para capturar cualquier fallo de renderizado y mostrar un estado de recuperación amigable con botón "Reintentar" en lugar de pantalla en blanco.
+- **Compilación:** Verificado con `npm run build` (0 errores en 5.81s). Prohibido `git push` sin autorización explícita.
+
+### 29. Persistencia en Cloudflare D1 de Visibilidad de Apps del Dashboard y Corrección de Bloqueos para Estudiantes
+- **Diagnóstico:**
+  - Al comparar la pantalla del docente en *Modo Vista de Estudiante* frente a la de un estudiante real en su dispositivo móvil (*"I.E.D MOSQUITO"*), el estudiante veía **todos los módulos desbloqueados y visibles** (incluyendo *Exámenes*, *Calificaciones*, *Componentes*, *Recompensas* y la tarjeta de *Analítica Docente*), mientras que en la pantalla del docente aparecían bloqueados con candado u ocultos.
+  - **Causa Raíz:**
+    1. **Falta de persistencia en base de datos:** El estado de los botones de 3 estados (*Visible*, *Bloqueado*, *Oculto*) operaba únicamente sobre `localStorage.setItem('saberlab_app_visibility_map')` en el navegador del docente. El dispositivo del estudiante tenía su propio `localStorage` vacío (`{}`), provocando que todas las apps adoptaran el estado por defecto abierto (`'unlocked'`).
+    2. **Fuga de permisos en Analítica:** La tarjeta `Analítica` (*"Cohorte docente, estadísticas y rendimiento"*) figuraba incondicionalmente en `herramientasApps` de [`PanelInicio.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelInicio.jsx), expuesta a estudiantes aunque la ruta subyacente `/dashboard/analytics` estuviese protegida por `<AdminRoute>`.
+    3. **Limitación de API:** En [`functions/api/visibility.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/visibility.js), la validación `if (!course_id)` rechazaba el ID `0` (usado para la configuración global de apps del dashboard) y limitaba las modificaciones exclusivamente a usuarios con rol `admin` estricto en vez de todo el personal docente (`isStaff`).
+- **Acciones Realizadas:**
+  - **Ampliación de API D1 ([`functions/api/visibility.js`](file:///c:/Users/Elizabeth/Desktop/SaberLab/functions/api/visibility.js)):**
+    - Se permitió el acceso a todo el cuerpo docente (`isStaff`: `admin`, `teacher`, `docente`, `profesor`, `leader`, `semillero_leader`).
+    - Se adaptó la comprobación `if (course_id === undefined || course_id === null)` permitiendo registrar `course_id: 0` en la tabla `visibilidad_curso` de Cloudflare D1 para albergar la visibilidad global de las apps del Dashboard.
+  - **Sincronización Bidireccional en Vivo ([`PanelInicio.jsx`](file:///c:/Users/Elizabeth/Desktop/SaberLab/src/pages/PanelInicio.jsx)):**
+    - `appVisibilityMap` ahora inicializa desde la caché y el payload de D1 (`lessonVisibility[0]`), con fallback a `localStorage` y valores por defecto seguros (*Exámenes*, *Calificaciones* y *Componentes* bloqueados; *Recompensas* oculta).
+    - `useEffect` sincroniza reactivamente cualquier cambio del servidor en tiempo real. Si la base de datos está vacía, migra automáticamente la configuración del docente a D1.
+    - `cycleAppVisibility` actualiza de forma instantánea la UI (optimistic UI) y envía `POST /api/visibility` con `course_id: 0` para que el cambio aplique inmediatamente a todos los alumnos conectados.
+  - **Blindaje de Analítica Docente:**
+    - Se condicionó la presencia de la app `analytics` con `...(isStaff ? [{ id: 'analytics', ... }] : [])`, garantizando que ningún estudiante pueda visualizar la tarjeta de analítica docente en su panel de inicio.
+- **Compilación:** Verificado con `npm run build` (0 errores en 11.31s). Prohibido `git push` sin autorización explícita.

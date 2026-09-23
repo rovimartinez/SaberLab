@@ -1,4 +1,5 @@
 import { createSessionToken } from '../_lib/auth.js';
+import { notifyAdminsNewRequest, notifyStudentDecision } from '../_lib/access-notifications.js';
 
 function getBaseAppUrl(request, env) {
   const url = new URL(request.url);
@@ -131,6 +132,14 @@ export async function onRequestGet({ request, env }) {
       )
     `).run();
 
+    // Blindaje de schema: reviewed_at y access_status pueden faltar por migraciones parciales
+    try {
+      await env.DB.prepare('ALTER TABLE solicitudes_acceso ADD COLUMN reviewed_at TEXT').run();
+    } catch {}
+    try {
+      await env.DB.prepare('ALTER TABLE perfiles ADD COLUMN access_status TEXT').run();
+    } catch {}
+
     // 4. Buscar si el usuario ya existe en D1
     const userId = googleUser.id || email;
     const isAdmin = email === (env.ADMIN_EMAIL || '').toLowerCase();
@@ -248,6 +257,13 @@ export async function onRequestGet({ request, env }) {
           await env.DB.prepare("INSERT INTO solicitudes_acceso (email, name, status, created_at, reviewed_at) VALUES (?, ?, 'approved', datetime('now'), datetime('now'))").bind(email, fullName || email).run();
         }
 
+        // Notificar de bienvenida al estudiante auto-aprobado con código
+        try {
+          await notifyStudentDecision(env, { email, name: fullName, status: 'approved' });
+        } catch (notifErr) {
+          console.error('Error notificando acceso aprobado (callback):', notifErr);
+        }
+
         isApproved = true;
       } catch (enrollErr) {
         console.error('Error auto-enrolling via validatedCodeRow in callback:', enrollErr);
@@ -264,6 +280,13 @@ export async function onRequestGet({ request, env }) {
            VALUES (?, ?, 'pending', datetime('now'))`
         ).bind(email, googleUser.name || null).run();
         isApproved = false;
+
+        // Notificar a los administradores de que llegó una nueva solicitud pendiente
+        try {
+          await notifyAdminsNewRequest(env, { name: googleUser.name, email });
+        } catch (notifErr) {
+          console.error('Error notificando a admins por nueva solicitud (callback):', notifErr);
+        }
       } else {
         isApproved = existingReq.status === 'approved';
       }

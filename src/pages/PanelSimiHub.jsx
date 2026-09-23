@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
     Home, Layers, Box, Sparkles, Cpu, Flame, FlaskConical, Rocket, 
     School, FileText, Award, Calendar, CheckCircle2, Briefcase,
-    Calculator, ArrowRight, Shield, Download, Users, Plus, ExternalLink, X,
+    ArrowRight, Shield, Download, Users, Plus, ExternalLink, X,
     Edit3, Trash2, MapPin, Clock, BookOpen, Check, AlertCircle, HelpCircle, ChevronRight, ChevronLeft, ChevronDown,
     UserCheck, Zap, Trophy, TrendingUp, Target, Play, Menu, MoreHorizontal, MoreVertical, Compass, Eye, EyeOff, User,
-    Lock, Unlock
+    Lock, Unlock, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
@@ -19,7 +19,7 @@ import SimiProjectsTab from '../components/simi/SimiProjectsTab';
 import SimiResourcesTab from '../components/simi/SimiResourcesTab';
 import SimiMembersTab from '../components/simi/SimiMembersTab';
 import SimiServicesTab from '../components/simi/SimiServicesTab';
-import SimiQuoteModal from '../components/simi/SimiQuoteModal';
+import SimiNotificationsModal from '../components/simi/SimiNotificationsModal';
 import '../styles/PanelSimiHub.css';
 
 const ICON_MAP = {
@@ -140,6 +140,23 @@ export default function PanelSimiHub({
         pendingAccessRequestsCount = 0 
     } = useAuth();
     const [activeTab, setActiveTab] = useState('home');
+    const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
+    const [simiUnreadCount, setSimiUnreadCount] = useState(0);
+
+    const fetchSimiUnreadCount = async () => {
+        try {
+            const res = await api('/notifications?channel=simi');
+            const data = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+            const unread = data.filter(n => !n.read && !n.title?.startsWith('📤')).length;
+            setSimiUnreadCount(unread);
+        } catch {
+            setSimiUnreadCount(0);
+        }
+    };
+
+    useEffect(() => {
+        fetchSimiUnreadCount();
+    }, []);
     
     // Estado del visor interactivo de contenidos de Ruta / Lección
     const [activeLessonTrack, setActiveLessonTrack] = useState(null);
@@ -225,10 +242,6 @@ export default function PanelSimiHub({
 
     // Modal de Solicitudes de Acceso
     const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
-
-    // Modal de Cotización Integral (Impresión 3D & Capacitaciones STEAM)
-    const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
-    const [defaultQuoteTab, setDefaultQuoteTab] = useState('fabricacion'); // 'fabricacion' | 'capacitacion'
 
     // Calculadora de Costos de Filamento
     const [calcGrams, setCalcGrams] = useState(85);
@@ -614,8 +627,8 @@ export default function PanelSimiHub({
                     <div className="simi-modal-card" style={{ maxWidth: '620px', width: '95vw', maxHeight: '88vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                         <div className="simi-modal-header" style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
-                                    <Shield size={20} />
+                                <div style={{ width: '40px', height: '40px', borderRadius: '11px', background: '#ffffff', border: '1.5px solid #4FD2E9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '2px', boxShadow: '0 4px 12px rgba(79, 210, 233, 0.25)' }}>
+                                    <img src="/badges/Logo_SIMI.webp" alt="SIMI 3D Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                 </div>
                                 <div>
                                     <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 850, color: 'var(--text-heading)' }}>
@@ -730,7 +743,7 @@ export default function PanelSimiHub({
                     <div className="simi-sidebar-brand-header">
                         <div className="simi-sidebar-brand-logo-box">
                             <img 
-                                src="https://i.postimg.cc/6794HFnS/simi3d.jpg" 
+                                src="/badges/Logo_SIMI.webp" 
                                 alt="SIMI 3D Logo" 
                                 className="simi-sidebar-brand-img"
                                 onError={(e) => {
@@ -843,6 +856,27 @@ export default function PanelSimiHub({
                             </div>
                         </button>
 
+                        <button 
+                            className="simi-sidebar-item simi-sidebar-notifs-btn"
+                            onClick={() => setIsNotificationsModalOpen(true)}
+                            title="Avisos, proyectos asignados y misiones del semillero"
+                        >
+                            <div className="simi-sidebar-icon">
+                                <Bell size={18} />
+                            </div>
+                            <div className="simi-sidebar-text" style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                                    <span className="simi-sidebar-title">Avisos & Misiones</span>
+                                    {simiUnreadCount > 0 && (
+                                        <span className="simi-sidebar-badge-counter" style={{ background: '#06b6d4', color: '#042f2e' }}>
+                                            {simiUnreadCount}
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="simi-sidebar-desc">Centro de Alertas SIMI</span>
+                            </div>
+                        </button>
+
                     </nav>
 
                     {/* Acciones Secundarias y Gestión al fondo */}
@@ -869,23 +903,6 @@ export default function PanelSimiHub({
                                 </div>
                             </button>
                         )}
-
-                        <button 
-                            className="simi-sidebar-item simi-sidebar-quote-btn"
-                            onClick={() => {
-                                setDefaultQuoteTab('fabricacion');
-                                setIsQuoteModalOpen(true);
-                            }}
-                            title="Cotizador orientativo para Impresión 3D y Capacitaciones STEAM"
-                        >
-                            <div className="simi-sidebar-icon quote-icon">
-                                <Calculator size={18} />
-                            </div>
-                            <div className="simi-sidebar-text">
-                                <span className="simi-sidebar-title">Cotizador Orientativo</span>
-                                <span className="simi-sidebar-desc">Impresión 3D & Talleres</span>
-                            </div>
-                        </button>
 
                         <button 
                             className="simi-sidebar-item simi-sidebar-rules-btn"
@@ -970,8 +987,8 @@ export default function PanelSimiHub({
                             
                             <div className="simi-mobile-more-header">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(6, 182, 212, 0.12)', color: '#06b6d4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Sparkles size={16} />
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: '#ffffff', border: '1.5px solid #4FD2E9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '2px', boxShadow: '0 2px 8px rgba(79, 210, 233, 0.25)' }}>
+                                        <img src="/badges/Logo_SIMI.webp" alt="SIMI 3D" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                     </div>
                                     <span style={{ fontWeight: 900, color: '#192584', fontSize: '1rem' }}>
                                         Opciones & Herramientas SIMI3D
@@ -983,6 +1000,25 @@ export default function PanelSimiHub({
                             </div>
 
                             <div className="simi-mobile-more-grid">
+
+                                <button 
+                                    className="simi-mobile-more-item"
+                                    onClick={() => { setIsNotificationsModalOpen(true); setIsMobileMoreMenuOpen(false); }}
+                                >
+                                    <div className="simi-mobile-more-icon" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+                                        <Bell size={20} />
+                                    </div>
+                                    <div className="simi-mobile-more-text" style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <strong>Avisos & Misiones SIMI</strong>
+                                            {simiUnreadCount > 0 && (
+                                                <span className="simi-sidebar-badge-counter" style={{ background: '#06b6d4', color: '#042f2e' }}>{simiUnreadCount}</span>
+                                            )}
+                                        </div>
+                                        <small>Proyectos CAD, eventos y badges</small>
+                                    </div>
+                                    <ChevronRight size={16} color="#94a3b8" />
+                                </button>
 
                                 {isLeader && (
                                     <button 
@@ -1029,24 +1065,6 @@ export default function PanelSimiHub({
                                     <div className="simi-mobile-more-text" style={{ flex: 1 }}>
                                         <strong>Miembros Activos</strong>
                                         <small>Directorio y Regla 80/80</small>
-                                    </div>
-                                    <ChevronRight size={16} color="#94a3b8" />
-                                </button>
-
-                                <button 
-                                    className="simi-mobile-more-item"
-                                    onClick={() => {
-                                        setDefaultQuoteTab('fabricacion');
-                                        setIsQuoteModalOpen(true);
-                                        setIsMobileMoreMenuOpen(false);
-                                    }}
-                                >
-                                    <div className="simi-mobile-more-icon" style={{ background: '#ecfeff', color: '#0891b2', border: '1px solid #cffafe' }}>
-                                        <Calculator size={20} />
-                                    </div>
-                                    <div className="simi-mobile-more-text" style={{ flex: 1 }}>
-                                        <strong>Cotizador Orientativo</strong>
-                                        <small>Impresión 3D & Talleres STEAM</small>
                                     </div>
                                     <ChevronRight size={16} color="#94a3b8" />
                                 </button>
@@ -2267,33 +2285,7 @@ export default function PanelSimiHub({
                 </main>
             </div>
 
-            {/* BOTONES FLOTANTES SOCIALES SIMI3D (WHATSAPP + INSTAGRAM) */}
-            <div className={`simi-social-fabs-container ${hasLeaderPrivileges ? 'with-viewmode-fab' : ''}`}>
-                <a 
-                    href="https://chat.whatsapp.com/JUZSpEgGnd3LmtZy4aQYtE" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="simi-social-fab simi-whatsapp-fab"
-                    title="Grupo Oficial de WhatsApp - Semillero SIMI3D"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                </a>
-                <a 
-                    href="https://www.instagram.com/semillero_simi3d/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="simi-social-fab simi-instagram-fab"
-                    title="Instagram oficial: @semillero_simi3d"
-                >
-                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-                    </svg>
-                </a>
-            </div>
+
 
             {/* MODAL DE SOLICITUDES DE ACCESO */}
             {isRequestsModalOpen && (
@@ -2755,12 +2747,17 @@ export default function PanelSimiHub({
                 </div>
             )}
 
-            {/* MODAL GLOBAL DE COTIZACIÓN ORIENTATIVA (FABRICACIÓN + CAPACITACIONES) */}
-            <SimiQuoteModal 
-                isOpen={isQuoteModalOpen}
-                onClose={() => setIsQuoteModalOpen(false)}
-                profile={profile}
-                defaultTab={defaultQuoteTab}
+            {/* MODAL DEDICADO DE AVISOS Y MISIONES SIMI3D */}
+            <SimiNotificationsModal 
+                isOpen={isNotificationsModalOpen} 
+                onClose={() => {
+                    setIsNotificationsModalOpen(false);
+                    fetchSimiUnreadCount();
+                }}
+                onNavigateTab={(tab) => {
+                    setActiveTab(tab);
+                    setIsNotificationsModalOpen(false);
+                }}
             />
 
         </div>
