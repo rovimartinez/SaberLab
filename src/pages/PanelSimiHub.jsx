@@ -7,7 +7,7 @@ import {
     ArrowRight, Shield, Download, Users, Plus, ExternalLink, X,
     Edit3, Trash2, MapPin, Clock, BookOpen, Check, AlertCircle, HelpCircle, ChevronRight, ChevronLeft, ChevronDown,
     UserCheck, Zap, Trophy, TrendingUp, Target, Play, Menu, MoreHorizontal, MoreVertical, Compass, Eye, EyeOff, User,
-    Lock, Unlock, Bell
+    Lock, Unlock, Bell, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/useAuth';
 import { api } from '../lib/api';
@@ -20,7 +20,10 @@ import SimiResourcesTab from '../components/simi/SimiResourcesTab';
 import SimiMembersTab from '../components/simi/SimiMembersTab';
 import SimiServicesTab from '../components/simi/SimiServicesTab';
 import SimiNotificationsModal from '../components/simi/SimiNotificationsModal';
+import SimiStudentFlashAttendanceModal from '../components/simi/SimiStudentFlashAttendanceModal';
+import SimiAttendanceManagerModal from '../components/simi/SimiAttendanceManagerModal';
 import '../styles/PanelSimiHub.css';
+import '../styles/SimiAttendance.css';
 
 const ICON_MAP = {
     Box: Box,
@@ -143,6 +146,12 @@ export default function PanelSimiHub({
     const [isNotificationsModalOpen, setIsNotificationsModalOpen] = useState(false);
     const [simiUnreadCount, setSimiUnreadCount] = useState(0);
 
+    // Estado de sesión activa de asistencia relámpago (2FA)
+    const [activeAttendanceSession, setActiveAttendanceSession] = useState(null);
+    const [answeredSessionIds, setAnsweredSessionIds] = useState(() => {
+        try { return JSON.parse(sessionStorage.getItem('simi_answered_sessions') || '[]'); } catch { return []; }
+    });
+
     const fetchSimiUnreadCount = async () => {
         try {
             const res = await api('/notifications?channel=simi');
@@ -156,6 +165,22 @@ export default function PanelSimiHub({
 
     useEffect(() => {
         fetchSimiUnreadCount();
+    }, []);
+
+    // Polling ligero cada 15 segundos para detectar asistencia relámpago en vivo
+    useEffect(() => {
+        const checkActiveSession = async () => {
+            try {
+                const res = await api('/simi');
+                if (res?.data?.activeAttendanceSession) {
+                    setActiveAttendanceSession(res.data.activeAttendanceSession);
+                } else {
+                    setActiveAttendanceSession(null);
+                }
+            } catch {}
+        };
+        const interval = setInterval(checkActiveSession, 15000);
+        return () => clearInterval(interval);
     }, []);
     
     // Estado del visor interactivo de contenidos de Ruta / Lección
@@ -239,6 +264,9 @@ export default function PanelSimiHub({
 
     // Modal de Reglas del Semillero
     const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
+
+    // Modal de Gestión de Asistencia (Líder / Docente)
+    const [attendanceModalEvent, setAttendanceModalEvent] = useState(null);
 
     // Modal de Solicitudes de Acceso
     const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
@@ -390,15 +418,19 @@ export default function PanelSimiHub({
     const [simiMembers, setSimiMembers] = useState(() => {
         const saved = localStorage.getItem('simi_members_list');
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) { }
+            try { 
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 1) return parsed;
+            } catch (e) { }
         }
-        return [{
-            id: 'docente-simi',
-            email: 'rovimartinez@gmail.com',
-            full_name: 'Ronny Martinez',
-            role: 'docente',
-            group_name: 'Dirección I+D'
-        }];
+        return [
+            { id: 'usr-1', email: 'carlos.mendoza@unimagdalena.edu.co', full_name: 'Carlos Mendoza', role: 'student', group_name: 'Semillerista SIMI3D' },
+            { id: 'usr-2', email: 'laura.gomez@unimagdalena.edu.co', full_name: 'Laura Gómez', role: 'student', group_name: 'Semillerista SIMI3D' },
+            { id: 'usr-3', email: 'andres.perez@unimagdalena.edu.co', full_name: 'Andrés Pérez', role: 'student', group_name: 'Semillerista SIMI3D' },
+            { id: 'usr-4', email: 'valentina.rodriguez@unimagdalena.edu.co', full_name: 'Valentina Rodríguez', role: 'student', group_name: 'Semillerista SIMI3D' },
+            { id: 'usr-5', email: 'mateo.herrera@unimagdalena.edu.co', full_name: 'Mateo Herrera', role: 'student', group_name: 'Semillerista SIMI3D' },
+            { id: 'docente-simi', email: 'rovimartinez@gmail.com', full_name: 'Ronny Martinez', role: 'docente', group_name: 'Dirección I+D' }
+        ];
     });
     const [isLoadingSimiData, setIsLoadingSimiData] = useState(false);
 
@@ -491,6 +523,11 @@ export default function PanelSimiHub({
                         setCatalogImageUrlsMap(res.data.catalogImageUrlsMap);
                         localStorage.setItem('simi_catalog_image_urls_map', JSON.stringify(res.data.catalogImageUrlsMap));
                     }
+                    if (res.data.activeAttendanceSession) {
+                        setActiveAttendanceSession(res.data.activeAttendanceSession);
+                    } else {
+                        setActiveAttendanceSession(null);
+                    }
                 }
 
                 // Sincronizar miembros estrictamente de los grupos activos de SIMI3D en paralelo
@@ -560,19 +597,29 @@ export default function PanelSimiHub({
         return () => { isMounted = false; };
     }, [profile]);
 
-    // Cálculo en vivo de métricas de permanencia y regla del 80/80 para el usuario actual
+    // Cálculo en vivo de métricas de permanencia y regla del 80/80 para el usuario actual (ponderando 1.0 asistió, 0.5 incompleto, 0.0 no vino)
     const currentUserId = profile?.id || profile?.email || 'current-user';
     const schoolVisitsList = simiEvents.filter(e => (e.event_type || e.eventType) !== 'capacitacion_tecnica');
     const technicalTrainingsList = simiEvents.filter(e => (e.event_type || e.eventType) === 'capacitacion_tecnica');
 
     const myVisitsAttended = schoolVisitsList.reduce((acc, evt) => {
-        const attended = (evt.attendees || []).some(a => a.userId === currentUserId && (a.attended || a.status === 'Asistiré' || a.status === 'attending'));
-        return acc + (attended ? 1 : 0);
+        const att = (evt.attendees || []).find(a => a.userId === currentUserId);
+        if (!att) return acc;
+        if (att.attendedWeight !== undefined && att.attendedWeight !== null) return acc + Number(att.attendedWeight);
+        if (att.status === 'asistio') return acc + 1.0;
+        if (att.status === 'incompleto') return acc + 0.5;
+        if (att.status === 'no_vino') return acc + 0.0;
+        return acc + (att.attended || att.status === 'Asistiré' || att.status === 'attending' ? 1.0 : 0.0);
     }, 0);
 
     const myTrainingsAttended = technicalTrainingsList.reduce((acc, evt) => {
-        const attended = (evt.attendees || []).some(a => a.userId === currentUserId && (a.attended || a.status === 'Asistiré' || a.status === 'attending'));
-        return acc + (attended ? 1 : 0);
+        const att = (evt.attendees || []).find(a => a.userId === currentUserId);
+        if (!att) return acc;
+        if (att.attendedWeight !== undefined && att.attendedWeight !== null) return acc + Number(att.attendedWeight);
+        if (att.status === 'asistio') return acc + 1.0;
+        if (att.status === 'incompleto') return acc + 0.5;
+        if (att.status === 'no_vino') return acc + 0.0;
+        return acc + (att.attended || att.status === 'Asistiré' || att.status === 'attending' ? 1.0 : 0.0);
     }, 0);
 
     const visitsPercentage = schoolVisitsList.length > 0 ? Math.round((myVisitsAttended / schoolVisitsList.length) * 100) : 0;
@@ -1215,41 +1262,95 @@ export default function PanelSimiHub({
                                 <div 
                                     className="simi-home-metric-item simi-metric-interactive"
                                     onClick={() => setIsBadgesModalOpen(true)}
-                                    title="Ver todas mis insignias y logros tácticos"
+                                    title="Ver todas mis insignias y especialidades tácticas"
                                 >
-                                    <div className="simi-home-metric-val" style={{ color: '#06b6d4' }}>{SIMI_PINS_CATALOG.length}</div>
+                                    <div className="simi-home-metric-val simi-metric-cyan">{SIMI_PINS_CATALOG.length}</div>
                                     <div className="simi-home-metric-lbl">Insignias Tácticas</div>
+                                    <div className="simi-home-metric-sub">Especialidades</div>
+                                    <span className="simi-metric-pill-tag neutral">
+                                        🎖️ Vitrina 3D
+                                    </span>
                                 </div>
                                 <div className="simi-home-metric-divider" />
                                 <div 
                                     className="simi-home-metric-item simi-metric-interactive"
-                                    onClick={() => setIsRulesModalOpen(true)}
-                                    title="Asistencia a Capacitaciones Técnicas (Requisito mínimo 80%)"
+                                    onClick={() => {
+                                        if (isLeader) {
+                                            const target = technicalTrainingsList[0] || simiEvents.find(e => (e.event_type || e.eventType) === 'capacitacion_tecnica') || simiEvents[0];
+                                            if (target) setAttendanceModalEvent(target);
+                                            else setIsRulesModalOpen(true);
+                                        } else {
+                                            setIsRulesModalOpen(true);
+                                        }
+                                    }}
+                                    title={isLeader ? "Tomar o gestionar asistencia a capacitaciones técnicas" : "Asistencia a Capacitaciones Técnicas (Requisito mínimo 80%)"}
                                 >
-                                    <div className="simi-home-metric-val" style={{ color: trainingsPercentage >= 80 ? '#06b6d4' : '#f59e0b' }}>
+                                    <div className={`simi-home-metric-val ${trainingsPercentage >= 80 ? 'simi-metric-success' : 'simi-metric-blue'}`}>
                                         {trainingsPercentage}%
                                     </div>
                                     <div className="simi-home-metric-lbl">Capacitaciones</div>
+                                    <div className="simi-home-metric-sub">
+                                        {myTrainingsAttended} de {technicalTrainingsList.length} Lab
+                                    </div>
+                                    <div className="simi-metric-mini-bar">
+                                        <div 
+                                            className="simi-metric-mini-fill" 
+                                            style={{ 
+                                                width: `${Math.min(100, trainingsPercentage)}%`,
+                                                background: trainingsPercentage >= 80 ? 'var(--simi-success, #059669)' : '#0284c7'
+                                            }} 
+                                        />
+                                    </div>
+                                    <span className={`simi-metric-pill-tag ${trainingsPercentage >= 80 ? 'passed' : 'neutral'}`}>
+                                        {trainingsPercentage >= 80 ? '✓ 80% Cumplido' : (isLeader ? '📋 Tomar Lista' : 'Mín. 80%')}
+                                    </span>
                                 </div>
                                 <div className="simi-home-metric-divider" />
                                 <div 
                                     className="simi-home-metric-item simi-metric-interactive"
-                                    onClick={() => setIsRulesModalOpen(true)}
-                                    title="Acompañamiento a Visitas Escolares (Requisito mínimo 80%)"
+                                    onClick={() => {
+                                        if (isLeader) {
+                                            const target = schoolVisitsList[0] || simiEvents.find(e => (e.event_type || e.eventType) !== 'capacitacion_tecnica') || simiEvents[0];
+                                            if (target) setAttendanceModalEvent(target);
+                                            else setIsRulesModalOpen(true);
+                                        } else {
+                                            setIsRulesModalOpen(true);
+                                        }
+                                    }}
+                                    title={isLeader ? "Tomar o gestionar asistencia a visitas escolares STEAM" : "Acompañamiento a Visitas Escolares (Requisito mínimo 80%)"}
                                 >
-                                    <div className="simi-home-metric-val" style={{ color: visitsPercentage >= 80 ? '#10b981' : '#f59e0b' }}>
+                                    <div className={`simi-home-metric-val ${visitsPercentage >= 80 ? 'simi-metric-success' : 'simi-metric-indigo'}`}>
                                         {visitsPercentage}%
                                     </div>
                                     <div className="simi-home-metric-lbl">Visitas Escolares</div>
+                                    <div className="simi-home-metric-sub">
+                                        {myVisitsAttended} de {schoolVisitsList.length} Salidas
+                                    </div>
+                                    <div className="simi-metric-mini-bar">
+                                        <div 
+                                            className="simi-metric-mini-fill" 
+                                            style={{ 
+                                                width: `${Math.min(100, visitsPercentage)}%`,
+                                                background: visitsPercentage >= 80 ? 'var(--simi-success, #059669)' : '#2563eb'
+                                            }} 
+                                        />
+                                    </div>
+                                    <span className={`simi-metric-pill-tag ${visitsPercentage >= 80 ? 'passed' : 'neutral'}`}>
+                                        {visitsPercentage >= 80 ? '✓ 80% Cumplido' : (isLeader ? '📋 Tomar Lista' : 'Mín. 80%')}
+                                    </span>
                                 </div>
                                 <div className="simi-home-metric-divider" />
                                 <div 
                                     className="simi-home-metric-item simi-metric-interactive"
                                     onClick={() => setActiveTab('projects')}
-                                    title="Ir al Banco de Proyectos"
+                                    title="Ir al Banco de Proyectos STEAM"
                                 >
-                                    <div className="simi-home-metric-val" style={{ color: '#B541FA' }}>{simiProjects.length}</div>
+                                    <div className="simi-home-metric-val simi-metric-purple">{simiProjects.length}</div>
                                     <div className="simi-home-metric-lbl">Proyectos I+D</div>
+                                    <div className="simi-home-metric-sub">Banco STEAM</div>
+                                    <span className="simi-metric-pill-tag neutral" style={{ color: '#7c3aed', borderColor: 'rgba(147, 51, 234, 0.25)', background: 'rgba(147, 51, 234, 0.08)' }}>
+                                        🚀 Diseños CAD
+                                    </span>
                                 </div>
                             </div>
 
@@ -1430,6 +1531,7 @@ export default function PanelSimiHub({
                                     </div>
                                 </div>
                             </div>
+
 
                             {/* 2. FILA: PRÓXIMA VISITA ESCOLAR */}
                             <div className="simi-home-bottom-grid" style={{ gridTemplateColumns: '1fr' }}>
@@ -2221,6 +2323,7 @@ export default function PanelSimiHub({
                 <SimiEventsTab 
                     isLeader={isLeader} 
                     profile={profile} 
+                    members={simiMembers}
                     initialEvents={simiEvents} 
                     onEventsChange={(updated) => {
                         setSimiEvents(updated);
@@ -2801,6 +2904,63 @@ export default function PanelSimiHub({
                     setIsNotificationsModalOpen(false);
                 }}
             />
+
+            {/* MODAL FLASH DE ASISTENCIA 2FA PARA ESTUDIANTES */}
+            {activeAttendanceSession && !answeredSessionIds.includes(activeAttendanceSession.id || activeAttendanceSession.eventId) && (
+                <SimiStudentFlashAttendanceModal
+                    session={activeAttendanceSession}
+                    onClose={() => {
+                        const sId = activeAttendanceSession.id || activeAttendanceSession.eventId;
+                        const updated = [...answeredSessionIds, sId];
+                        setAnsweredSessionIds(updated);
+                        sessionStorage.setItem('simi_answered_sessions', JSON.stringify(updated));
+                        setActiveAttendanceSession(null);
+                    }}
+                    onSuccess={() => {
+                        const sId = activeAttendanceSession.id || activeAttendanceSession.eventId;
+                        const updated = [...answeredSessionIds, sId];
+                        setAnsweredSessionIds(updated);
+                        sessionStorage.setItem('simi_answered_sessions', JSON.stringify(updated));
+                        setActiveAttendanceSession(null);
+                    }}
+                />
+            )}
+
+            {/* MODAL DE GESTIÓN DE ASISTENCIA DUAL (LÍDER/DOCENTE) */}
+            {attendanceModalEvent && (
+                <SimiAttendanceManagerModal
+                    isOpen={Boolean(attendanceModalEvent)}
+                    onClose={() => setAttendanceModalEvent(null)}
+                    event={attendanceModalEvent}
+                    members={simiMembers}
+                    onAttendanceUpdated={(newAttendees, sessionMeta) => {
+                        const updatedSessions = sessionMeta?.sessions || attendanceModalEvent?.sessions || [];
+                        const updated = simiEvents.map(ev => {
+                            if (ev.id === attendanceModalEvent.id) {
+                                return { 
+                                    ...ev, 
+                                    attendees: newAttendees,
+                                    sessions: updatedSessions,
+                                    date: sessionMeta?.sessionDate || ev.date,
+                                    objective: sessionMeta?.sessionTopic || ev.objective,
+                                    session_topic: sessionMeta?.sessionTopic || ev.session_topic
+                                };
+                            }
+                            return ev;
+                        });
+                        setSimiEvents(updated);
+                        localStorage.setItem('simi_events_list', JSON.stringify(updated));
+                        setAttendanceModalEvent(prev => prev ? ({
+                            ...prev,
+                            attendees: newAttendees,
+                            sessions: updatedSessions,
+                            date: sessionMeta?.sessionDate || prev.date,
+                            objective: sessionMeta?.sessionTopic || prev.objective,
+                            session_topic: sessionMeta?.sessionTopic || prev.session_topic
+                        }) : null);
+                    }}
+                />
+            )}
 
         </div>
     );

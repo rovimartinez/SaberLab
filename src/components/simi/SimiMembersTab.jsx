@@ -33,15 +33,25 @@ export default function SimiMembersTab({
     const membersWithMetrics = simiOnlyMembers.map(m => {
         const memberId = m.id || m.email;
 
-        // Asistencias confirmadas y verificadas
+        // Asistencias ponderadas (asistió = 1.0, incompleto = 0.5, no_vino = 0.0)
         const visitCount = schoolVisits.reduce((acc, evt) => {
-            const hasAttended = (evt.attendees || []).some(a => a.userId === memberId && (a.attended || a.status === 'Asistiré'));
-            return acc + (hasAttended ? 1 : 0);
+            const att = (evt.attendees || []).find(a => a.userId === memberId);
+            if (!att) return acc;
+            if (att.attendedWeight !== undefined && att.attendedWeight !== null) return acc + Number(att.attendedWeight);
+            if (att.status === 'asistio') return acc + 1.0;
+            if (att.status === 'incompleto') return acc + 0.5;
+            if (att.status === 'no_vino') return acc + 0.0;
+            return acc + (att.attended || att.status === 'Asistiré' ? 1.0 : 0.0);
         }, 0);
 
         const trainingCount = technicalTrainings.reduce((acc, evt) => {
-            const hasAttended = (evt.attendees || []).some(a => a.userId === memberId && (a.attended || a.status === 'Asistiré'));
-            return acc + (hasAttended ? 1 : 0);
+            const att = (evt.attendees || []).find(a => a.userId === memberId);
+            if (!att) return acc;
+            if (att.attendedWeight !== undefined && att.attendedWeight !== null) return acc + Number(att.attendedWeight);
+            if (att.status === 'asistio') return acc + 1.0;
+            if (att.status === 'incompleto') return acc + 0.5;
+            if (att.status === 'no_vino') return acc + 0.0;
+            return acc + (att.attended || att.status === 'Asistiré' ? 1.0 : 0.0);
         }, 0);
 
         const visitPercent = schoolVisits.length > 0 ? Math.round((visitCount / schoolVisits.length) * 100) : 0;
@@ -71,6 +81,8 @@ export default function SimiMembersTab({
         if (filterRole === 'leader') return m.role === 'leader' || m.role === 'lider';
         if (filterRole === 'staff') return ['admin', 'docente', 'profesor'].includes(m.role);
         if (filterRole === 'student') return !['admin', 'docente', 'profesor', 'leader', 'lider'].includes(m.role);
+        if (filterRole === 'meets_8080') return m.meetsRule;
+        if (filterRole === 'alert_8080') return !m.meetsRule;
         return true;
     });
 
@@ -200,6 +212,20 @@ export default function SimiMembersTab({
                         onClick={() => setFilterRole('student')}
                     >
                         Semilleristas
+                    </button>
+                    <button 
+                        className={`simi-filter-btn ${filterRole === 'meets_8080' ? 'active' : ''}`}
+                        onClick={() => setFilterRole('meets_8080')}
+                        style={{ color: filterRole === 'meets_8080' ? '#10b981' : undefined }}
+                    >
+                        ✓ 80/80 al Día
+                    </button>
+                    <button 
+                        className={`simi-filter-btn ${filterRole === 'alert_8080' ? 'active' : ''}`}
+                        onClick={() => setFilterRole('alert_8080')}
+                        style={{ color: filterRole === 'alert_8080' ? '#f59e0b' : undefined }}
+                    >
+                        ⚠️ En Alerta
                     </button>
                 </div>
             </div>

@@ -796,6 +796,22 @@ select.simi-form-input {
         height: 18px;
     }
 
+    .simi-standalone-metrics-bar .simi-home-metric-sub {
+        font-size: 0.58rem;
+    }
+
+    .simi-standalone-metrics-bar .simi-metric-mini-bar {
+        width: 44px;
+        height: 3px;
+        margin-top: 3px;
+    }
+
+    .simi-standalone-metrics-bar .simi-metric-pill-tag {
+        font-size: 0.52rem;
+        padding: 1px 5px;
+        margin-top: 2px;
+    }
+
     /* ── Acordeón de Insignias en Móvil ── */
     .simi-badges-ribbon-card {
         padding: 0.65rem 0.85rem !important;

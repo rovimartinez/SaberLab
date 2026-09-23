@@ -25,7 +25,7 @@ export async function onRequestGet({ env, data }) {
   try {
     await ensureSimiSchema(env);
     // Ejecutar todas las consultas en paralelo con Promise.all (velocidad < 30ms)
-    const [eventsRes, attendancesRes, projectsRes, resourcesRes, userBadgesRes, allBadgesRes, membersRes, webResourcesRes, catalogImagesRes, servicesRes] = await Promise.all([
+    const [eventsRes, attendancesRes, projectsRes, resourcesRes, userBadgesRes, allBadgesRes, membersRes, webResourcesRes, catalogImagesRes, servicesRes, activeSessionRes] = await Promise.all([
       env.DB.prepare('SELECT * FROM simi_eventos ORDER BY date ASC, created_at DESC').all(),
       env.DB.prepare('SELECT * FROM simi_asistencias').all(),
       env.DB.prepare('SELECT * FROM simi_proyectos ORDER BY created_at DESC').all(),
@@ -68,7 +68,8 @@ export async function onRequestGet({ env, data }) {
       `).bind(directorEmail, directorEmail, directorEmail).all(),
       env.DB.prepare('SELECT * FROM simi_web_recursos ORDER BY created_at ASC').all(),
       env.DB.prepare('SELECT pin_id, badge_image_url FROM simi_catalogo_insignias').all(),
-      env.DB.prepare('SELECT * FROM simi_servicios ORDER BY created_at ASC').all().catch(() => ({ results: [] }))
+      env.DB.prepare('SELECT * FROM simi_servicios ORDER BY created_at ASC').all().catch(() => ({ results: [] })),
+      env.DB.prepare("SELECT * FROM simi_sesion_asistencia WHERE id = 'active_simi_session' AND is_active = 1").first().catch(() => null)
     ]);
 
     const events = eventsRes?.results || [];
@@ -80,21 +81,43 @@ export async function onRequestGet({ env, data }) {
     const rawServices = servicesRes?.results || [];
     let members = membersRes?.results || [];
 
-    // Fallback ultra-rápido si aún no hay miembros
-    if (!members || members.length === 0) {
+    // Fallback ultra-rápido si aún no hay miembros o solo está el director
+    if (!members || members.length <= 1) {
       try {
         const { results } = await env.DB.prepare(`
-          SELECT id, email, full_name, avatar_url, role, created_at, 'Dirección I+D' AS group_name
+          SELECT id, email, full_name, avatar_url, role, created_at, 
+                 CASE 
+                   WHEN LOWER(email) = LOWER(?) THEN 'Dirección I+D'
+                   WHEN role IN ('leader', 'lider') THEN 'Líder Semillero'
+                   ELSE 'Semillerista SIMI3D'
+                 END AS group_name
           FROM perfiles 
-          WHERE role IN ('leader', 'lider') OR LOWER(email) = LOWER(?)
-        `).bind(directorEmail).all();
-        members = results || [];
+          WHERE role NOT IN ('admin') OR LOWER(email) = LOWER(?)
+          ORDER BY 
+            CASE WHEN LOWER(email) = LOWER(?) THEN 1 WHEN role IN ('leader', 'lider') THEN 2 ELSE 3 END,
+            full_name ASC
+        `).bind(directorEmail, directorEmail, directorEmail).all();
+        if (results && results.length > 0) {
+          members = results;
+        }
       } catch {}
     }
 
     // Mapear asistencias dentro de cada evento y normalizar propiedades camelCase/snake_case
     const eventsWithAttendees = (events || []).map(evt => {
-      const evtAttendees = (attendances || []).filter(a => a.event_id === evt.id);
+      const allEvtAtt = (attendances || []).filter(a => a.event_id === evt.id);
+      
+      // Deduplicar asistentes para la lista principal del evento (priorizar el registro maestro ${evt.id}_${userId})
+      const uniqueAttendeesMap = new Map();
+      allEvtAtt.forEach(a => {
+        const uId = a.user_id;
+        if (!uId) return;
+        if (!uniqueAttendeesMap.has(uId) || a.id === `${evt.id}_${uId}`) {
+          uniqueAttendeesMap.set(uId, a);
+        }
+      });
+      const evtAttendees = Array.from(uniqueAttendeesMap.values());
+
       let parsedEquipment = [];
       if (evt.equipment) {
         try {
@@ -105,6 +128,41 @@ export async function onRequestGet({ env, data }) {
       }
       const isPrivVal = evt.is_private === 1 || evt.is_private === true;
       const visState = evt.visibility_state || (evt.is_locked === 1 ? 'locked' : evt.is_hidden === 1 ? 'hidden' : 'unlocked');
+      
+      let parsedSessions = [];
+      if (evt.sessions_json) {
+        try {
+          parsedSessions = typeof evt.sessions_json === 'string' ? JSON.parse(evt.sessions_json) : evt.sessions_json;
+        } catch {
+          parsedSessions = [];
+        }
+      }
+
+      // Si no hay sessions_json pero existen asistencias registradas con session_id, reconstruir clases C1, C2...
+      if (!Array.isArray(parsedSessions) || parsedSessions.length === 0) {
+        const sessionsFoundMap = new Map();
+        allEvtAtt.forEach(a => {
+          const sId = (a.session_id || 'c1').toLowerCase();
+          if (!sessionsFoundMap.has(sId)) {
+            const num = sId.replace(/\D/g, '') || '1';
+            sessionsFoundMap.set(sId, {
+              id: sId,
+              name: `C${num}`,
+              title: `Clase ${num}`,
+              date: a.session_date || evt.date,
+              topic: a.session_topic || evt.objective || '',
+              attendances: {}
+            });
+          }
+          const sObj = sessionsFoundMap.get(sId);
+          if (a.user_id) {
+            sObj.attendances[a.user_id] = a.status || (a.attended ? 'asistio' : 'no_vino');
+          }
+        });
+        if (sessionsFoundMap.size > 0) {
+          parsedSessions = Array.from(sessionsFoundMap.values());
+        }
+      }
       return {
         ...evt,
         schoolName: evt.school_name || evt.schoolName || 'Institución Educativa STEAM',
@@ -122,15 +180,43 @@ export async function onRequestGet({ env, data }) {
         isHidden: visState === 'hidden',
         is_hidden: visState === 'hidden' ? 1 : 0,
         equipment: parsedEquipment,
+        sessions: parsedSessions,
         attendees: evtAttendees.map(a => ({
           userId: a.user_id,
           name: a.user_name,
           status: a.status,
           attended: a.attended === 1,
+          attendedWeight: a.attended_weight !== undefined && a.attended_weight !== null 
+            ? Number(a.attended_weight) 
+            : (a.status === 'asistio' ? 1.0 : (a.status === 'incompleto' ? 0.5 : (a.attended === 1 ? 1.0 : 0.0))),
           updatedAt: a.updated_at
         }))
       };
     });
+
+    // Sesión de asistencia relámpago activa si no ha expirado
+    let activeAttendanceSession = null;
+    if (activeSessionRes && activeSessionRes.is_active === 1) {
+      const now = Date.now();
+      const expiresAt = Number(activeSessionRes.expires_at) || 0;
+      if (now <= expiresAt + 2000) {
+        let parsedOpts = [];
+        try { parsedOpts = JSON.parse(activeSessionRes.options_json); } catch {}
+        activeAttendanceSession = {
+          id: activeSessionRes.id,
+          eventId: activeSessionRes.event_id,
+          eventTitle: activeSessionRes.event_title,
+          eventType: activeSessionRes.event_type,
+          targetWord: activeSessionRes.target_word,
+          options: parsedOpts,
+          familyName: activeSessionRes.family_name,
+          durationSeconds: activeSessionRes.duration_seconds,
+          startedAt: activeSessionRes.started_at,
+          expiresAt: expiresAt,
+          remainingSeconds: Math.max(0, Math.ceil((expiresAt - now) / 1000))
+        };
+      }
+    }
 
     const badgeMap = {};
     (userBadges || []).forEach(b => {
@@ -219,6 +305,7 @@ export async function onRequestGet({ env, data }) {
       memberBadgesMap,
       catalogImageUrlsMap,
       members: members || [],
+      activeAttendanceSession,
       isLeaderOrStaff
     });
   } catch (err) {
@@ -278,20 +365,218 @@ export async function onRequestPost({ request, env, data }) {
     // ── 2. VALIDACIÓN DOCENTE DE ASISTENCIA REAL (Asistió 1 / 0) ──
     if (action === 'verify-attendance') {
       if (!isLeaderOrStaff) return Response.json({ error: 'Solo líderes pueden verificar asistencia' }, { status: 403 });
-      const { eventId, targetUserId, attended } = body;
+      const { eventId, targetUserId, attended, status: optStatus } = body;
       
       const attendanceId = `${eventId}_${targetUserId}`;
       const attendedVal = attended ? 1 : 0;
+      const finalStatus = optStatus || (attendedVal ? 'asistio' : 'no_vino');
+      const finalWeight = finalStatus === 'asistio' ? 1.0 : (finalStatus === 'incompleto' ? 0.5 : 0.0);
 
       await env.DB.prepare(`
-        INSERT INTO simi_asistencias (id, event_id, user_id, user_name, status, attended, updated_at)
-        VALUES (?, ?, ?, 'Semillerista', 'Asistiré', ?, datetime('now'))
+        INSERT INTO simi_asistencias (id, event_id, user_id, user_name, status, attended, attended_weight, updated_at)
+        VALUES (?, ?, ?, 'Semillerista', ?, ?, ?, datetime('now'))
         ON CONFLICT(id) DO UPDATE SET 
+          status = excluded.status,
           attended = excluded.attended,
+          attended_weight = excluded.attended_weight,
           updated_at = datetime('now')
-      `).bind(attendanceId, eventId, targetUserId, attendedVal).run();
+      `).bind(attendanceId, eventId, targetUserId, finalStatus, attendedVal, finalWeight).run();
 
-      return Response.json({ success: true, attended: attendedVal });
+      return Response.json({ success: true, attended: attendedVal, status: finalStatus, attendedWeight: finalWeight });
+    }
+
+    // ── 2B. INICIAR VERIFICACIÓN RELÁMPAGO FLASH (2FA 5-10s) ──
+    if (action === 'start-flash-attendance') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'Solo líderes o docentes pueden iniciar asistencia relámpago' }, { status: 403 });
+      const { 
+        eventId, eventTitle = 'Sesión SIMI3D', eventType = 'capacitacion_tecnica',
+        targetWord, options = [], familyName = 'Técnica 3D', durationSeconds = 8,
+        sessionId = 'c1'
+      } = body;
+
+      if (!eventId || !targetWord) return Response.json({ error: 'Falta eventId o targetWord' }, { status: 400 });
+
+      const parsedDuration = Math.min(10, Math.max(5, Number(durationSeconds) || 8));
+      const now = Date.now();
+      const expiresAt = now + (parsedDuration * 1000);
+      const optionsJson = JSON.stringify(options);
+
+      await env.DB.prepare(`
+        INSERT INTO simi_sesion_asistencia (
+          id, event_id, event_title, event_type, target_word, options_json,
+          family_name, duration_seconds, started_at, expires_at, is_active, created_by, session_id, updated_at
+        ) VALUES ('active_simi_session', ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, 1, ?, ?, datetime('now'))
+        ON CONFLICT(id) DO UPDATE SET
+          event_id = excluded.event_id,
+          event_title = excluded.event_title,
+          event_type = excluded.event_type,
+          target_word = excluded.target_word,
+          options_json = excluded.options_json,
+          family_name = excluded.family_name,
+          duration_seconds = excluded.duration_seconds,
+          started_at = datetime('now'),
+          expires_at = excluded.expires_at,
+          is_active = 1,
+          created_by = excluded.created_by,
+          session_id = excluded.session_id,
+          updated_at = datetime('now')
+      `).bind(eventId, eventTitle, eventType, targetWord.toUpperCase(), optionsJson, familyName, parsedDuration, expiresAt, userName, sessionId).run();
+
+      if (body.sessionDate || body.sessionTopic) {
+        try {
+          if (body.sessionTopic && body.sessionDate) {
+            await env.DB.prepare("UPDATE simi_eventos SET objective = ?, date = ?, updated_at = datetime('now') WHERE id = ?")
+              .bind(body.sessionTopic, body.sessionDate, eventId).run();
+          } else if (body.sessionTopic) {
+            await env.DB.prepare("UPDATE simi_eventos SET objective = ?, updated_at = datetime('now') WHERE id = ?")
+              .bind(body.sessionTopic, eventId).run();
+          } else if (body.sessionDate) {
+            await env.DB.prepare("UPDATE simi_eventos SET date = ?, updated_at = datetime('now') WHERE id = ?")
+              .bind(body.sessionDate, eventId).run();
+          }
+        } catch (_) {}
+      }
+
+      return Response.json({
+        success: true,
+        session: {
+          id: 'active_simi_session',
+          eventId,
+          eventTitle,
+          eventType,
+          targetWord: targetWord.toUpperCase(),
+          options,
+          familyName,
+          durationSeconds: parsedDuration,
+          sessionId,
+          expiresAt
+        }
+      });
+    }
+
+    // ── 2C. CERRAR SESIÓN RELÁMPAGO FLASH ──
+    if (action === 'close-flash-attendance') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      await env.DB.prepare("UPDATE simi_sesion_asistencia SET is_active = 0, updated_at = datetime('now') WHERE id = 'active_simi_session'").run().catch(() => {});
+      return Response.json({ success: true });
+    }
+
+    // ── 2D. ENVÍO DE RESPUESTA DE ESTUDIANTE A ASISTENCIA FLASH ──
+    if (action === 'submit-flash-attendance') {
+      const { eventId, selectedWord } = body;
+      if (!eventId || !selectedWord) return Response.json({ error: 'Faltan parámetros' }, { status: 400 });
+
+      const session = await env.DB.prepare("SELECT * FROM simi_sesion_asistencia WHERE id = 'active_simi_session' AND is_active = 1").first();
+      if (!session) {
+        return Response.json({ success: false, error: 'No hay ninguna verificación de asistencia activa o ya concluyó' }, { status: 400 });
+      }
+
+      const now = Date.now();
+      const expiresAt = Number(session.expires_at) || 0;
+      // Margen de gracia de 2.5 segundos para tolerar latencia de red
+      if (now > expiresAt + 2500) {
+        return Response.json({ success: false, expired: true, message: 'El tiempo límite de verificación ha expirado' }, { status: 400 });
+      }
+
+      const isMatch = String(selectedWord).trim().toUpperCase() === String(session.target_word).trim().toUpperCase();
+      if (!isMatch) {
+        return Response.json({ success: false, correct: false, message: 'Palabra incorrecta. Asistencia no registrada.' });
+      }
+
+      const targetSessId = session.session_id || 'c1';
+      const sessionAttendanceId = `${eventId}_${targetSessId}_${userId}`;
+      const attendanceId = `${eventId}_${userId}`;
+
+      // 1. Guardar asistencia de la sesión específica
+      await env.DB.prepare(`
+        INSERT INTO simi_asistencias (id, event_id, user_id, user_name, status, attended, attended_weight, session_id, updated_at)
+        VALUES (?, ?, ?, ?, 'asistio', 1, 1.0, ?, datetime('now'))
+        ON CONFLICT(id) DO UPDATE SET 
+          status = 'asistio',
+          attended = 1,
+          attended_weight = 1.0,
+          session_id = excluded.session_id,
+          user_name = excluded.user_name,
+          updated_at = datetime('now')
+      `).bind(sessionAttendanceId, eventId, userId, userName, targetSessId).run();
+
+      // 2. Guardar última asistencia maestra
+      await env.DB.prepare(`
+        INSERT INTO simi_asistencias (id, event_id, user_id, user_name, status, attended, attended_weight, updated_at)
+        VALUES (?, ?, ?, ?, 'asistio', 1, 1.0, datetime('now'))
+        ON CONFLICT(id) DO UPDATE SET 
+          status = 'asistio',
+          attended = 1,
+          attended_weight = 1.0,
+          user_name = excluded.user_name,
+          updated_at = datetime('now')
+      `).bind(attendanceId, eventId, userId, userName).run();
+
+      return Response.json({
+        success: true,
+        correct: true,
+        expEarned: 50,
+        message: '¡Asistencia Relámpago Confirmada! (+50 EXP)'
+      });
+    }
+
+    // ── 2E. GUARDADO EN LOTE DE LISTA TRADICIONAL (3 ESTADOS) ──
+    if (action === 'batch-save-attendance') {
+      if (!isLeaderOrStaff) return Response.json({ error: 'No autorizado' }, { status: 403 });
+      const { eventId, sessionId = 'c1', sessionDate, sessionTopic, attendances = [], sessions = [] } = body;
+      if (!eventId || !Array.isArray(attendances)) return Response.json({ error: 'Parámetros inválidos' }, { status: 400 });
+
+      const statements = [];
+      for (const item of attendances) {
+        const targetUserId = item.userId || item.id || item.email;
+        if (!targetUserId) continue;
+        const targetUserName = item.userName || item.name || item.full_name || 'Semillerista';
+        const st = (item.status || 'asistio').toLowerCase();
+        const weight = st === 'asistio' ? 1.0 : (st === 'incompleto' ? 0.5 : 0.0);
+        const attendedVal = st === 'no_vino' ? 0 : 1;
+        const sessionAttendanceId = `${eventId}_${sessionId}_${targetUserId}`;
+
+        // Guardado específico por sesión (C1, C2, C3...)
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO simi_asistencias (id, event_id, user_id, user_name, status, attended, attended_weight, session_id, session_date, session_topic, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(id) DO UPDATE SET
+              status = excluded.status,
+              attended = excluded.attended,
+              attended_weight = excluded.attended_weight,
+              user_name = excluded.user_name,
+              session_id = excluded.session_id,
+              session_date = excluded.session_date,
+              session_topic = excluded.session_topic,
+              updated_at = datetime('now')
+          `).bind(sessionAttendanceId, eventId, targetUserId, targetUserName, st, attendedVal, weight, sessionId, sessionDate, sessionTopic)
+        );
+      }
+
+      // Registro/actualización de sesiones y metadatos en el evento (UPSERT consolidado en 1 sola sentencia)
+      const sessionsStr = Array.isArray(sessions) && sessions.length > 0 ? JSON.stringify(sessions) : null;
+      statements.push(
+        env.DB.prepare(`
+          INSERT INTO simi_eventos (id, school_name, date, objective, sessions_json, updated_at)
+          VALUES (?, 'Sesión SIMI3D', COALESCE(?, date('now')), COALESCE(?, 'Bitácora de sesión'), ?, datetime('now'))
+          ON CONFLICT(id) DO UPDATE SET
+            sessions_json = COALESCE(excluded.sessions_json, simi_eventos.sessions_json),
+            objective = COALESCE(excluded.objective, simi_eventos.objective),
+            date = COALESCE(excluded.date, simi_eventos.date),
+            updated_at = datetime('now')
+        `).bind(eventId, sessionDate || null, sessionTopic || null, sessionsStr)
+      );
+
+      if (statements.length > 0) {
+        try {
+          await env.DB.batch(statements);
+        } catch (batchErr) {
+          console.error('[SIMI D1 BATCH ERROR]', batchErr);
+        }
+      }
+
+      return Response.json({ success: true, count: attendances.length });
     }
 
     // ── 3. GUARDAR / EDITAR EVENTO (Visita Escolar o Capacitación) ──
@@ -310,14 +595,15 @@ export async function onRequestPost({ request, env, data }) {
       const finalVisState = visibilityState || visibility_state || (isLocked || is_locked === 1 ? 'locked' : isHidden || is_hidden === 1 ? 'hidden' : 'unlocked');
       const lockedVal = finalVisState === 'locked' ? 1 : 0;
       const hiddenVal = finalVisState === 'hidden' ? 1 : 0;
+      const sessionsJson = body.sessions_json || (Array.isArray(body.sessions) ? JSON.stringify(body.sessions) : null);
 
       await env.DB.prepare(`
         INSERT INTO simi_eventos (
           id, event_type, school_name, date, time, location, 
           status, leader, objective, equipment, badge_tier, students_count,
-          visibility_state, is_locked, is_hidden, updated_at
+          visibility_state, is_locked, is_hidden, sessions_json, updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         ON CONFLICT(id) DO UPDATE SET
           event_type = excluded.event_type,
           school_name = excluded.school_name,
@@ -333,11 +619,12 @@ export async function onRequestPost({ request, env, data }) {
           visibility_state = excluded.visibility_state,
           is_locked = excluded.is_locked,
           is_hidden = excluded.is_hidden,
+          sessions_json = COALESCE(excluded.sessions_json, simi_eventos.sessions_json),
           updated_at = datetime('now')
       `).bind(
         eventId, eventType, schoolName, date, time, location,
         status, leader, objective, equipmentStr, badgeTier, Number(studentsCount),
-        finalVisState, lockedVal, hiddenVal
+        finalVisState, lockedVal, hiddenVal, sessionsJson
       ).run();
 
       return Response.json({ success: true, eventId, visibilityState: finalVisState });
@@ -737,13 +1024,15 @@ export async function onRequestPost({ request, env, data }) {
         const lockedVal = visState === 'locked' ? 1 : 0;
         const hiddenVal = visState === 'hidden' ? 1 : 0;
 
+        const sessionsJson = item.sessions_json || (Array.isArray(item.sessions) ? JSON.stringify(item.sessions) : null);
+
         await env.DB.prepare(`
           INSERT INTO simi_eventos (
             id, event_type, school_name, date, time, location,
             status, leader, objective, equipment, badge_tier, students_count,
-            visibility_state, is_locked, is_hidden, updated_at
+            visibility_state, is_locked, is_hidden, sessions_json, updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
           ON CONFLICT(id) DO UPDATE SET
             event_type = excluded.event_type,
             school_name = excluded.school_name,
@@ -759,11 +1048,12 @@ export async function onRequestPost({ request, env, data }) {
             visibility_state = excluded.visibility_state,
             is_locked = excluded.is_locked,
             is_hidden = excluded.is_hidden,
+            sessions_json = COALESCE(excluded.sessions_json, simi_eventos.sessions_json),
             updated_at = datetime('now')
         `).bind(
           item.id, eventType, schoolName, date, time, location,
           status, leader, objective, equipmentStr, badgeTier, studentsCount,
-          visState, lockedVal, hiddenVal
+          visState, lockedVal, hiddenVal, sessionsJson
         ).run();
       }
 
@@ -942,6 +1232,7 @@ async function ensureSimiSchema(env) {
       visibility_state TEXT DEFAULT 'unlocked',
       is_locked INTEGER DEFAULT 0,
       is_hidden INTEGER DEFAULT 0,
+      sessions_json TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
@@ -950,6 +1241,10 @@ async function ensureSimiSchema(env) {
   try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN visibility_state TEXT DEFAULT "unlocked"').run(); } catch (_) { }
   try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN is_locked INTEGER DEFAULT 0').run(); } catch (_) { }
   try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN is_hidden INTEGER DEFAULT 0').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_eventos ADD COLUMN sessions_json TEXT').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_asistencias ADD COLUMN session_id TEXT DEFAULT "c1"').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_asistencias ADD COLUMN session_date TEXT').run(); } catch (_) { }
+  try { await env.DB.prepare('ALTER TABLE simi_asistencias ADD COLUMN session_topic TEXT').run(); } catch (_) { }
 
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS simi_asistencias (
@@ -959,10 +1254,37 @@ async function ensureSimiSchema(env) {
       user_name TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'Asistiré',
       attended INTEGER DEFAULT 0,
+      attended_weight REAL DEFAULT 1.0,
+      session_id TEXT DEFAULT 'c1',
+      session_date TEXT,
+      session_topic TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
   `).run();
+
+  try { await env.DB.prepare('ALTER TABLE simi_asistencias ADD COLUMN attended_weight REAL DEFAULT 1.0').run(); } catch (_) { }
+
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS simi_sesion_asistencia (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      event_title TEXT,
+      event_type TEXT DEFAULT 'capacitacion_tecnica',
+      target_word TEXT NOT NULL,
+      options_json TEXT NOT NULL,
+      family_name TEXT,
+      duration_seconds INTEGER DEFAULT 8,
+      session_id TEXT DEFAULT 'c1',
+      started_at TEXT DEFAULT (datetime('now')),
+      expires_at INTEGER NOT NULL,
+      is_active INTEGER DEFAULT 1,
+      created_by TEXT,
+      updated_at TEXT DEFAULT (datetime('now'))
+    )
+  `).run();
+
+  try { await env.DB.prepare('ALTER TABLE simi_sesion_asistencia ADD COLUMN session_id TEXT DEFAULT "c1"').run(); } catch (_) { }
 
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS simi_proyectos (

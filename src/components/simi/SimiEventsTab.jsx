@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import {
     Calendar, CheckCircle2, Plus, X,
     Edit3, Trash2, Check, School, Users, Award, Shield, CheckCheck, Clock,
-    Eye, EyeOff, Lock, Unlock
+    Eye, EyeOff, Lock, Unlock, Zap
 } from 'lucide-react';
 import { SIMI_SCHOOL_EVENTS } from '../../data/simiData';
 import { api } from '../../lib/api';
+import SimiAttendanceManagerModal from './SimiAttendanceManagerModal';
 
 // Función para formatear fechas a día mes año (DD/MM/AAAA o DD de Mes, AAAA)
 export function formatSimiDate(dateStr) {
@@ -34,8 +35,10 @@ export default function SimiEventsTab({
     initialEvents, 
     onEventsChange,
     isManageModeActive = false,
-    onToggleManageMode
+    onToggleManageMode,
+    members = []
 }) {
+    const [attendanceModalEvent, setAttendanceModalEvent] = useState(null);
     const [events, setEvents] = useState(() => {
         if (initialEvents && initialEvents.length > 0) return initialEvents;
         const saved = localStorage.getItem('simi_events_list');
@@ -706,7 +709,37 @@ export default function SimiEventsTab({
                             <div 
                                 className="simi-event-rsvp-actions"
                                 onClick={e => e.stopPropagation()}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}
                             >
+                                {isLeader && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setAttendanceModalEvent(evt);
+                                        }}
+                                        style={{
+                                            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.16) 0%, rgba(2, 132, 199, 0.16) 100%)',
+                                            border: '1.5px solid #06b6d4',
+                                            color: '#06b6d4',
+                                            padding: '6px 12px',
+                                            borderRadius: '9px',
+                                            fontSize: '0.76rem',
+                                            fontWeight: 850,
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                            boxShadow: '0 2px 8px rgba(6, 182, 212, 0.18)',
+                                            transition: 'all 0.15s ease'
+                                        }}
+                                        title="Pasar asistencia dinámica relámpago o lista tradicional"
+                                    >
+                                        <Zap size={14} fill="currentColor" />
+                                        <span>Tomar Asistencia</span>
+                                    </button>
+                                )}
+
                                 <button 
                                     onClick={(e) => {
                                         if (effectiveLocked) return;
@@ -892,6 +925,28 @@ export default function SimiEventsTab({
                                         </span>
                                     </div>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAttendanceModalEvent(viewingEvent)}
+                                            style={{
+                                                background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(2, 132, 199, 0.2) 100%)',
+                                                color: '#06b6d4',
+                                                border: '1.5px solid #06b6d4',
+                                                padding: '5px 13px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 850,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '5px',
+                                                boxShadow: '0 2px 8px rgba(6, 182, 212, 0.25)'
+                                            }}
+                                            title="Pasar asistencia dinámica relámpago o lista tradicional de 3 estados"
+                                        >
+                                            <Zap size={13} fill="currentColor" />
+                                            <span>⚡ Tomar Asistencia (Flash / Manual)</span>
+                                        </button>
                                         <button
                                             type="button"
                                             onClick={() => handleQuickStatusChange(viewingEvent.id, 'Realizada')}
@@ -1216,6 +1271,46 @@ export default function SimiEventsTab({
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* MODAL MAESTRO DE ASISTENCIA DUAL (FLASH 2FA / LISTA TRADICIONAL) */}
+            {attendanceModalEvent && (
+                <SimiAttendanceManagerModal
+                    isOpen={Boolean(attendanceModalEvent)}
+                    onClose={() => setAttendanceModalEvent(null)}
+                    event={attendanceModalEvent}
+                    members={members && members.length > 0 ? members : (JSON.parse(localStorage.getItem('simi_members_list') || '[]'))}
+                    onAttendanceUpdated={(newAttendees, sessionMeta) => {
+                        const updatedSessions = sessionMeta?.sessions || attendanceModalEvent?.sessions || [];
+                        const updated = events.map(ev => {
+                            if (ev.id === attendanceModalEvent.id) {
+                                return { 
+                                    ...ev, 
+                                    attendees: newAttendees,
+                                    sessions: updatedSessions,
+                                    date: sessionMeta?.sessionDate || ev.date,
+                                    session_topic: sessionMeta?.sessionTopic || ev.session_topic
+                                };
+                            }
+                            return ev;
+                        });
+                        persistEvents(updated);
+                        setAttendanceModalEvent(prev => prev ? ({
+                            ...prev,
+                            attendees: newAttendees,
+                            sessions: updatedSessions,
+                            date: sessionMeta?.sessionDate || prev.date,
+                            session_topic: sessionMeta?.sessionTopic || prev.session_topic
+                        }) : null);
+                        if (viewingEvent && viewingEvent.id === attendanceModalEvent.id) {
+                            setViewingEvent(prev => ({ 
+                                ...prev, 
+                                attendees: newAttendees,
+                                sessions: updatedSessions 
+                            }));
+                        }
+                    }}
+                />
             )}
         </div>
     );
