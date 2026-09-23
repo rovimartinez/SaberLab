@@ -910,34 +910,41 @@
 }
 
 /* ── PRESERVAR SIMULADORES Y LABORATORIOS PRÁCTICOS (Dejar intactos con su estilo de laboratorio) ── */
-#arduino-simulator-container,
-#led-simulator-container,
-.arduino-simulator-wrapper,
-.circuit-simulator,
-.circuit-simulator-container,
-.simulator-workspace,
-[id*="simulator"],
-[id*="practical-lab"],
-#charge-interaction-container,
-#atom-model-container,
-#conductor-animation-container,
-#material-sorter-container,
-#current-direction-container,
-#ac-dc-simulator-container,
-#circuit-states-container,
-.practical-lab-root,
-.sim-card,
-.dark-lab-box,
-.coulomb-law-card {
+:root[data-theme='light'] #arduino-simulator-container,
+:root[data-theme='light'] #led-simulator-container,
+:root[data-theme='light'] .arduino-simulator-wrapper,
+:root[data-theme='light'] .circuit-simulator,
+:root[data-theme='light'] .circuit-simulator-container,
+:root[data-theme='light'] .simulator-workspace,
+:root[data-theme='light'] [id*="simulator"]:not(#ir-pir-sensor-simulator-container),
+:root[data-theme='light'] [id*="practical-lab"],
+:root[data-theme='light'] #charge-interaction-container,
+:root[data-theme='light'] #atom-model-container,
+:root[data-theme='light'] #conductor-animation-container,
+:root[data-theme='light'] #material-sorter-container,
+:root[data-theme='light'] #current-direction-container,
+:root[data-theme='light'] #ac-dc-simulator-container,
+:root[data-theme='light'] #circuit-states-container,
+:root[data-theme='light'] .practical-lab-root,
+:root[data-theme='light'] .sim-card,
+:root[data-theme='light'] .dark-lab-box,
+:root[data-theme='light'] .coulomb-law-card {
     background: #0f172a !important;
     border: 1px solid rgba(56, 189, 248, 0.3) !important;
     border-radius: 20px !important;
     color: #f8fafc !important;
 }
 
+/* IR/PIR Simulator: mantiene fondo claro y texto oscuro en light mode */
+:root[data-theme='light'] #ir-pir-sensor-simulator-container {
+    background: transparent !important;
+    border: none !important;
+    color: #0f172a !important;
+}
+
 /* Forzar que todos los textos, párrafos y títulos dentro de simuladores y laboratorios conserven su contraste luminoso */
 :root[data-theme='light'] [id*="practical-lab"] p,
-:root[data-theme='light'] [id*="simulator"] p,
+:root[data-theme='light'] [id*="simulator"]:not(#ir-pir-sensor-simulator-container) p,
 :root[data-theme='light'] .practical-lab-root p,
 :root[data-theme='light'] .sim-card p,
 :root[data-theme='light'] .dark-lab-box p,
@@ -949,16 +956,26 @@
 :root[data-theme='light'] [id*="practical-lab"] h2,
 :root[data-theme='light'] [id*="practical-lab"] h3,
 :root[data-theme='light'] [id*="practical-lab"] h4,
-:root[data-theme='light'] [id*="simulator"] h1,
-:root[data-theme='light'] [id*="simulator"] h2,
-:root[data-theme='light'] [id*="simulator"] h3,
-:root[data-theme='light'] [id*="simulator"] h4,
+:root[data-theme='light'] [id*="simulator"]:not(#ir-pir-sensor-simulator-container) h1,
+:root[data-theme='light'] [id*="simulator"]:not(#ir-pir-sensor-simulator-container) h2,
+:root[data-theme='light'] [id*="simulator"]:not(#ir-pir-sensor-simulator-container) h3,
+:root[data-theme='light'] [id*="simulator"]:not(#ir-pir-sensor-simulator-container) h4,
 :root[data-theme='light'] .practical-lab-root h3,
 :root[data-theme='light'] .practical-lab-root h4,
 :root[data-theme='light'] .dark-lab-box h3,
 :root[data-theme='light'] .dark-lab-box h4,
 :root[data-theme='light'] .coulomb-law-card h4 {
     color: #f8fafc !important;
+}
+
+/* IR/PIR: h4 y p propios con colores oscuros en light mode */
+:root[data-theme='light'] #ir-pir-sensor-simulator-container .ir-pir-sim-title {
+    color: #0c1a2e !important;
+    opacity: 1 !important;
+}
+:root[data-theme='light'] #ir-pir-sensor-simulator-container .ir-pir-sim-subtitle {
+    color: #1e3a5f !important;
+    opacity: 1 !important;
 }
 
 :root[data-theme='light'] [id*="practical-lab"] span,

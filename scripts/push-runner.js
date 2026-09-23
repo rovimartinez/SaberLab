@@ -4,7 +4,7 @@
  * y ejecuta git add → commit → push con animaciones y colores.
  */
 
-import { exec, execSync, spawn } from 'child_process';
+import { exec } from 'child_process';
 import * as readline from 'readline';
 
 process.removeAllListeners('warning');
@@ -21,11 +21,7 @@ const C = {
     yellow:  '\x1b[33m',
     red:     '\x1b[31m',
     white:   '\x1b[37m',
-    bgBlue:  '\x1b[44m',
-    bgGreen: '\x1b[42m',
 };
-
-const isWindows = process.platform === 'win32';
 
 // ─── Banner ──────────────────────────────────────────────────────────────────
 function printBanner() {
@@ -66,13 +62,26 @@ class Spinner {
     }
 }
 
-// ─── Leer línea de consola (prompt interactivo) ───────────────────────────────
+// ─── Prompt interactivo ───────────────────────────────────────────────────────
 function prompt(question) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     return new Promise(resolve => {
         rl.question(question, answer => {
             rl.close();
             resolve(answer.trim());
+        });
+    });
+}
+
+// ─── Esperar tecla para cerrar ────────────────────────────────────────────────
+function waitForKeypress() {
+    return new Promise(resolve => {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.once('data', () => {
+            process.stdin.setRawMode(false);
+            process.stdin.pause();
+            resolve();
         });
     });
 }
@@ -95,9 +104,7 @@ async function getGitStatus() {
     const files = raw.split('\n').filter(Boolean).map(line => {
         const code = line.substring(0, 2).trim();
         const file = line.substring(3);
-        const type = code === '??' ? 'new'
-            : code === 'D' ? 'deleted'
-            : 'modified';
+        const type = code === '??' ? 'new' : code === 'D' ? 'deleted' : 'modified';
         return { code, file, type };
     });
 
@@ -111,7 +118,7 @@ async function getGitStatus() {
     return { files, summary };
 }
 
-// ─── Imprimir lista de archivos modificados ───────────────────────────────────
+// ─── Imprimir archivos modificados ────────────────────────────────────────────
 function printChangedFiles(files) {
     const MAX_SHOW = 30;
     const shown = files.slice(0, MAX_SHOW);
@@ -123,7 +130,6 @@ function printChangedFiles(files) {
         const icon  = type === 'new' ? '✚' : type === 'deleted' ? '✖' : '✎';
         const color = type === 'new' ? C.green : type === 'deleted' ? C.red : C.yellow;
         const label = type === 'new' ? 'NUEVO    ' : type === 'deleted' ? 'ELIMINADO' : 'CAMBIO   ';
-        // Acortar la ruta si es larga
         const shortFile = file.length > 52 ? '...' + file.slice(-49) : file;
         console.log(`  ${color}${icon} ${label}${C.reset}  ${C.dim}${shortFile}${C.reset}`);
     });
@@ -134,7 +140,7 @@ function printChangedFiles(files) {
     console.log(`  ${C.dim}${'─'.repeat(64)}${C.reset}\n`);
 }
 
-// ─── Imprimir resumen de la subida ───────────────────────────────────────────
+// ─── Panel final ──────────────────────────────────────────────────────────────
 function printSummary(summary, commitMsg, branch) {
     const repoUrl = 'https://github.com/rovimartinez/SaberLab';
     console.log(`
@@ -142,14 +148,14 @@ function printSummary(summary, commitMsg, branch) {
   ║           🎉  ¡CAMBIOS SUBIDOS EXITOSAMENTE!  🎉              ║
   ╚══════════════════════════════════════════════════════════════╝${C.reset}
 
-  ${C.cyan}${C.bright}📝 Commit:${C.reset}   ${commitMsg}
-  ${C.cyan}${C.bright}🌿 Rama:${C.reset}     ${branch}
-  ${C.green}${C.bright}✚ Nuevos:${C.reset}   ${summary.added} archivo(s)
-  ${C.yellow}${C.bright}✎ Cambios:${C.reset}  ${summary.modified} archivo(s)
+  ${C.cyan}${C.bright}📝 Commit:${C.reset}    ${commitMsg}
+  ${C.cyan}${C.bright}🌿 Rama:${C.reset}      ${branch}
+  ${C.green}${C.bright}✚ Nuevos:${C.reset}    ${summary.added} archivo(s)
+  ${C.yellow}${C.bright}✎ Cambios:${C.reset}   ${summary.modified} archivo(s)
   ${C.red}${C.bright}✖ Eliminados:${C.reset} ${summary.deleted} archivo(s)
 
   ${C.blue}${C.bright}🔗 Repositorio:${C.reset}  ${repoUrl}
-  ${C.blue}${C.bright}📦 Ver en GitHub:${C.reset} ${repoUrl}/commits
+  ${C.blue}${C.bright}📦 Ver commits:${C.reset}  ${repoUrl}/commits
 
   ${C.dim}──────────────────────────────────────────────────────────────${C.reset}
   ${C.yellow}💡 SaberLab ya está actualizado en la nube. ¡Excelente trabajo!${C.reset}
@@ -160,7 +166,7 @@ function printSummary(summary, commitMsg, branch) {
 async function main() {
     printBanner();
 
-    // 1. Verificar que estamos en el repositorio correcto
+    // 1. Verificar repositorio y rama activa
     let branch = 'main';
     try {
         branch = await run('git rev-parse --abbrev-ref HEAD');
@@ -179,7 +185,9 @@ async function main() {
 
     if (summary.total === 0) {
         console.log(`\n  ${C.green}✓ El repositorio está al día. No hay cambios que subir.${C.reset}\n`);
-        process.exit(0);
+        console.log(`  ${C.dim}Presiona cualquier tecla para cerrar...${C.reset}\n`);
+        await waitForKeypress();
+        return;
     }
 
     // 3. Mostrar archivos modificados
@@ -191,7 +199,9 @@ async function main() {
 
     if (!commitMsg) {
         console.log(`\n  ${C.red}✖ El mensaje del commit no puede estar vacío. Operación cancelada.${C.reset}\n`);
-        process.exit(1);
+        console.log(`  ${C.dim}Presiona cualquier tecla para cerrar...${C.reset}\n`);
+        await waitForKeypress();
+        return;
     }
 
     console.log();
@@ -204,7 +214,9 @@ async function main() {
     } catch (err) {
         spBuild.fail('Error de compilación. Corrige los errores antes de subir.');
         console.log(`\n  ${C.red}${err.message.slice(0, 400)}${C.reset}\n`);
-        process.exit(1);
+        console.log(`  ${C.dim}Presiona cualquier tecla para cerrar...${C.reset}\n`);
+        await waitForKeypress();
+        return;
     }
 
     // 6. git add .
@@ -214,6 +226,7 @@ async function main() {
         spAdd.succeed('Todos los archivos preparados en el área de staging');
     } catch (err) {
         spAdd.fail(`Error en git add: ${err.message}`);
+        await waitForKeypress();
         process.exit(1);
     }
 
@@ -224,6 +237,7 @@ async function main() {
         spCommit.succeed(`Commit creado: "${commitMsg}"`);
     } catch (err) {
         spCommit.fail(`Error en git commit: ${err.message}`);
+        await waitForKeypress();
         process.exit(1);
     }
 
@@ -234,21 +248,21 @@ async function main() {
         spPush.succeed(`¡Push exitoso! Rama "${branch}" actualizada en GitHub`);
     } catch (err) {
         spPush.fail(`Error en git push: ${err.message}`);
+        await waitForKeypress();
         process.exit(1);
     }
 
     // 9. Panel final
     printSummary(summary, commitMsg, branch);
 
-    // 10. Cuenta regresiva antes de cerrar
-    for (let i = 5; i >= 1; i--) {
-        process.stdout.write(`\r  ${C.dim}Cerrando en ${i} segundo${i !== 1 ? 's' : ''}...   ${C.reset}`);
-        await new Promise(r => setTimeout(r, 1000));
-    }
-    console.log(`\r  ${C.dim}Cerrando...                  ${C.reset}\n`);
+    // 10. Esperar tecla para cerrar
+    console.log(`  ${C.dim}Presiona cualquier tecla para cerrar...${C.reset}\n`);
+    await waitForKeypress();
 }
 
-main().catch(err => {
+main().catch(async err => {
     console.log(`\n  ${C.red}✖ Error inesperado: ${err.message}${C.reset}\n`);
+    console.log(`  ${C.dim}Presiona cualquier tecla para cerrar...${C.reset}\n`);
+    await waitForKeypress();
     process.exit(1);
 });

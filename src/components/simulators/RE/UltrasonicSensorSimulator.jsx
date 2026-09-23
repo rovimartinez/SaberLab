@@ -266,8 +266,8 @@ export default function UltrasonicSensorSimulator() {
                         </div>
                         <pre style={{ margin: 0, padding: '0.75rem', background: '#020617', borderRadius: '10px', fontSize: '0.78rem', color: '#e2e8f0', overflowX: 'auto', lineHeight: '1.6' }}>
                             <code>
-{`const int TRIG_PIN = 9;
-const int ECHO_PIN = 10;
+{`int TRIG_PIN = 9;
+int ECHO_PIN = 10;
 
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);

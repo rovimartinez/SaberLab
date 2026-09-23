@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import {
     X,
     ArrowLeft,
@@ -68,6 +69,7 @@ export const LessonModalViewer = ({
     const [currentCourseId, setCurrentCourseId] = useState(courseId);
     const [currentModuleId, setCurrentModuleId] = useState(moduleId);
     const [currentLessonId, setCurrentLessonId] = useState(lessonId);
+    const [isMaximized, setIsMaximized] = useState(false);
 
     useEffect(() => {
         setCurrentCourseId(courseId);
@@ -276,9 +278,9 @@ export const LessonModalViewer = ({
     if (typeof document === 'undefined') return null;
 
     return createPortal(
-        <div className="lesson-modal-backdrop animate-fade-in" onClick={onClose}>
+        <div className={`lesson-modal-backdrop animate-fade-in${isMaximized ? ' lesson-modal-maximized-backdrop' : ''}`} onClick={isMaximized ? undefined : onClose}>
             <div 
-                className="lesson-modal-dialog glass-panel" 
+                className={`lesson-modal-dialog glass-panel${isMaximized ? ' lesson-modal-dialog--maximized' : ''}`}
                 onClick={(e) => e.stopPropagation()}
                 style={{ '--subject-color': subject.color || '#38bdf8' }}
             >
@@ -322,6 +324,14 @@ export const LessonModalViewer = ({
                         </div>
 
                         <div className="lesson-modal-header-right">
+                            <button
+                                className="lesson-modal-maximize-btn"
+                                onClick={() => setIsMaximized(v => !v)}
+                                title={isMaximized ? 'Restaurar tamaño (F11)' : 'Maximizar modal'}
+                                aria-label={isMaximized ? 'Restaurar' : 'Maximizar'}
+                            >
+                                {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                            </button>
                             <button 
                                 className="lesson-modal-close-btn" 
                                 onClick={onClose}

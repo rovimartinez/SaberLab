@@ -177,43 +177,50 @@ const lessonDefinition = {
             <div id="ir-pir-sensor-simulator-container"></div>
         </div>
 
-        <!-- 5. PROGRAMACIÓN EN C++ -->
-        <div class="theory-section">
-            <h3 id="re-m2-3-5">5. Programación en C++: Lectura Digital y Toma de Decisiones</h3>
-            <p>La lectura de estos sensores se realiza configurando el pin como <code>INPUT</code> y utilizando la función <code>digitalRead()</code>:</p>
-
-            <pre style="background: rgba(15, 23, 42, 0.75); padding: 1.25rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); overflow-x: auto;"><code style="color: #e2e8f0;">// Código Ejemplo: Seguidor de Línea / Detección con Sensor Infrarrojo
-const int PIN_IR = 2;       // Pin D2 conectado a OUT del sensor IR
-const int PIN_LED = 13;     // LED indicador integrado
-
-void setup() {
-  pinMode(PIN_IR, INPUT);   // Configuramos el pin del sensor como entrada
-  pinMode(PIN_LED, OUTPUT); // Configuramos el LED como salida
-  Serial.begin(9600);       // Iniciamos comunicación serial a 9600 baudios
-}
-
-void loop() {
-  int lectura = digitalRead(PIN_IR);
-
-  if (lectura == LOW) {
-    // LOW = El sensor detecta superficie blanca u obstáculo (Rebote recibido)
-    digitalWrite(PIN_LED, HIGH);
-    Serial.println("Pista Blanca: Avanzando...");
-  } else {
-    // HIGH = El sensor detecta línea negra o vacío (Luz absorbida)
-    digitalWrite(PIN_LED, LOW);
-    Serial.println("¡Linea Negra Detectada! Corrigiendo direccion...");
-  }
-
-  delay(50); // Pequeña pausa de estabilidad
-}</code></pre>
-
             <div style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; border-radius: 12px; padding: 1.25rem; margin: 1.25rem 0;">
                 <h4 style="color: #f59e0b; margin-top: 0;">💡 Resumen Lógico Clave para el Examen:</h4>
-                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6; margin: 0;">
-                    • <strong>Sensor IR (TCRT5000):</strong> Superficie blanca / Obstáculo $\rightarrow$ <code>LOW (0V)</code> | Línea negra / Sin obstáculo $\rightarrow$ <code>HIGH (5V)</code>.<br>
-                    • <strong>Sensor PIR (HC-SR501):</strong> Presencia en movimiento detectada $\rightarrow$ <code>HIGH (5V)</code> | Área en reposo $\rightarrow$ <code>LOW (0V)</code>.
+                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.8; margin: 0;">
+                    • <strong>Sensor IR (TCRT5000 / FC-51):</strong> Superficie blanca / Obstáculo ➔ <code>LOW (0V)</code> | Línea negra / Sin obstáculo ➔ <code>HIGH (5V)</code>.<br>
+                    • <strong>Sensor PIR (HC-SR501 / Parallax):</strong> Presencia en movimiento detectada ➔ <code>HIGH (5V)</code> | Área en reposo ➔ <code>LOW (0V)</code>.
                 </p>
+            </div>
+        </div>
+
+        <!-- 5. RETO PRÁCTICO ASINCRÓNICO (TINKERCAD CIRCUITS) -->
+        <div class="theory-section">
+            <h3 id="re-m2-3-5">5. Reto Práctico Asincrónico: Sistema de Detección Bicolor en Tinkercad</h3>
+            <p>
+                Como ejercicio práctico asincrónico para consolidar lo aprendido, deberás implementar y simular en <a href="https://www.tinkercad.com/circuits" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-weight: 800;">Tinkercad Circuits</a> un <strong>Sistema de Señalización Bicolor Inteligente</strong> utilizando un microcontrolador <strong>Arduino Uno</strong> y un sensor digital de detección (PIR / IR).
+            </p>
+
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1.5px solid rgba(56, 189, 248, 0.25); border-radius: 16px; padding: 1.35rem; margin: 1.25rem 0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.65rem;">
+                        <span style="background: #0284c7; color: #ffffff; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-family: monospace; font-weight: 900;">RETO ASINCRÓNICO</span>
+                        <h4 style="margin: 0; color: #f8fafc; font-size: 1.05rem; font-weight: 850;">Consigna: Baliza de Seguridad Bicolor</h4>
+                    </div>
+                    <span style="color: #94a3b8; font-size: 0.8rem; font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">Plataforma: Tinkercad</span>
+                </div>
+
+                <h5 style="color: #38bdf8; margin: 0 0 0.5rem; font-size: 0.92rem; font-weight: 800;">🎯 Requerimientos Técnicos del Circuito:</h5>
+                <ul style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.7; margin: 0 0 1rem 0; padding-left: 1.25rem;">
+                    <li><strong>Sensor de Entrada:</strong> Sensor PIR Parallax o Sensor IR conectado al <strong>Pin Digital 2</strong>.</li>
+                    <li><strong>LED Verde (Detección Activa):</strong> Conectado al <strong>Pin Digital 8</strong> con resistencia limitadora de <strong>220 Ω</strong> o <strong>330 Ω</strong>. Debe <strong>encenderse</strong> cuando el sensor detecte presencia/obstáculo.</li>
+                    <li><strong>LED Rojo (Área en Reposo):</strong> Conectado al <strong>Pin Digital 7</strong> con resistencia limitadora de <strong>220 Ω</strong> o <strong>330 Ω</strong>. Debe <strong>encenderse</strong> cuando no haya detección y apagarse cuando el verde esté activo.</li>
+                    <li><strong>Telemetría por Monitor Serial (9600 baud):</strong> Imprimir en vivo el estado (<code>"¡OBJETO DETECTADO! - Paso Autorizado"</code> vs <code>"Área Despejada / En Reposo"</code>).</li>
+                </ul>
+
+
+                <div style="margin-top: 1rem; padding: 1rem 1.1rem; background: rgba(56, 189, 248, 0.08); border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.2); font-size: 0.85rem; color: #cbd5e1; line-height: 1.7;">
+                    <strong style="color: #38bdf8; font-size: 0.9rem;">📋 Formato de Entrega — PDF con los siguientes elementos:</strong>
+                    <ol style="margin: 0.6rem 0 0 0; padding-left: 1.3rem; color: #cbd5e1;">
+                        <li><strong style="color: #f8fafc;">Nombre completo del estudiante</strong> en la parte superior del documento.</li>
+                        <li><strong style="color: #f8fafc;">Pantallazo del circuito en Tinkercad</strong> mostrando claramente el conexionado de la protoboard, el Arduino, el sensor y los dos LEDs con sus resistencias.</li>
+                        <li><strong style="color: #f8fafc;">Pantallazo del código</strong> (Editor de código de Tinkercad o IDE de Arduino) con la lógica de detección implementada.</li>
+                        <li><strong style="color: #f8fafc;">Enlace público del proyecto</strong> en Tinkercad (clic en <em>Compartir → Copiar enlace</em>) pegado como texto en el PDF.</li>
+                    </ol>
+                    <p style="margin: 0.65rem 0 0; color: #94a3b8; font-size: 0.8rem;">💡 Nombra el archivo PDF como: <code style="background: rgba(255,255,255,0.06); padding: 0.1rem 0.4rem; border-radius: 4px; color: #38bdf8;">Apellido-Nombre.pdf</code> y entrégalo a través del medio indicado por el docente.</p>
+                </div>
             </div>
         </div>
     `,
@@ -222,7 +229,7 @@ void loop() {
         { id: 're-m2-3-2', title: '2. Sensor Infrarrojo (TCRT5000) y Reflexión' },
         { id: 're-m2-3-3', title: '3. Sensor PIR (HC-SR501) y Detección Térmica' },
         { id: 're-m2-3-4', title: '4. Lab. Interactivo: Simulador Dual IR + PIR' },
-        { id: 're-m2-3-5', title: '5. Programación en C++ y Toma de Decisiones' }
+        { id: 're-m2-3-5', title: '5. Reto Asincrónico: Baliza Bicolor en Tinkercad' }
     ],
     flashcards: [
         {
