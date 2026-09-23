@@ -90,25 +90,51 @@ const PanelInicio = () => {
         const cachedVis = getCachedStorage('saberlab_cached_visibility', {});
         const cachedServerAppVis = cachedVis[0] || cachedVis['0'];
         if (cachedServerAppVis && Object.keys(cachedServerAppVis).length > 0) {
-            return cachedServerAppVis;
+            return {
+                certificates: 'hidden',
+                ...cachedServerAppVis
+            };
         }
         const saved = localStorage.getItem('saberlab_app_visibility_map');
         if (saved) {
-            try { return JSON.parse(saved); } catch (e) { }
+            try { 
+                const parsed = JSON.parse(saved);
+                return {
+                    certificates: 'hidden',
+                    ...parsed
+                };
+            } catch (e) { }
         }
         return {
             activities: 'locked',
             grades: 'locked',
             components: 'locked',
-            rewards: 'hidden'
+            rewards: 'hidden',
+            certificates: 'hidden'
         };
     });
 
     // Sincronización en vivo con Cloudflare D1 y migración automática
     useEffect(() => {
         if (serverAppVis && Object.keys(serverAppVis).length > 0) {
-            setAppVisibilityMap(serverAppVis);
-            localStorage.setItem('saberlab_app_visibility_map', JSON.stringify(serverAppVis));
+            const merged = {
+                certificates: 'hidden',
+                ...serverAppVis
+            };
+            setAppVisibilityMap(merged);
+            localStorage.setItem('saberlab_app_visibility_map', JSON.stringify(merged));
+
+            // Si al servidor le faltaba certificates, actualizarlo de inmediato en D1
+            if (isStaff && !serverAppVis.certificates) {
+                api('/visibility', {
+                    method: 'POST',
+                    body: { course_id: 0, lecciones: merged }
+                }).then(() => {
+                    if (refreshLessonVisibility) refreshLessonVisibility();
+                }).catch(err => {
+                    console.error('Error auto-sincronizando certificates en D1:', err);
+                });
+            }
         } else if (isStaff) {
             // Si D1 aún no tiene fila 0 pero el docente tiene una configuración en local o por defecto,
             // persistirla de inmediato en la base de datos para que todos los alumnos la hereden
@@ -122,7 +148,13 @@ const PanelInicio = () => {
                     activities: 'locked',
                     grades: 'locked',
                     components: 'locked',
-                    rewards: 'hidden'
+                    rewards: 'hidden',
+                    certificates: 'hidden'
+                };
+            } else {
+                toSync = {
+                    certificates: 'hidden',
+                    ...toSync
                 };
             }
             api('/visibility', {
@@ -138,7 +170,7 @@ const PanelInicio = () => {
 
     const cycleAppVisibility = async (appId, e) => {
         e?.stopPropagation();
-        const current = appVisibilityMap[appId] || (appId === 'rewards' ? 'hidden' : ['activities', 'grades', 'components'].includes(appId) ? 'locked' : 'unlocked');
+        const current = appVisibilityMap[appId] || (['rewards', 'certificates'].includes(appId) ? 'hidden' : ['activities', 'grades', 'components'].includes(appId) ? 'locked' : 'unlocked');
         const nextState = current === 'unlocked' ? 'locked' : current === 'locked' ? 'hidden' : 'unlocked';
         const next = { ...appVisibilityMap, [appId]: nextState };
         
@@ -690,7 +722,10 @@ const PanelInicio = () => {
     const allApps = [...progresoApps, ...herramientasApps, ...academicoApps, ...sistemaApps];
 
     const renderAppTile = (app) => {
-        const visState = appVisibilityMap[app.id] || (app.isLocked ? 'locked' : 'unlocked');
+        const defaultState = (['rewards', 'certificates'].includes(app.id)) 
+            ? 'hidden' 
+            : (app.isLocked ? 'locked' : 'unlocked');
+        const visState = appVisibilityMap[app.id] || defaultState;
         const isHidden = visState === 'hidden';
         const isTileLocked = visState === 'locked';
 
@@ -1165,25 +1200,20 @@ const PanelInicio = () => {
                         </div>
                     </div>
 
-                    {/* Botón de Gestión de Visibilidad para Docentes/Admin */}
+                    {/* Botón de Gestión de Visibilidad para Docentes/Admin (Solo Icono) */}
                     <button
                         type="button"
                         className={`category-manage-toggle-btn ${isManageModeActive ? 'active' : ''}`}
                         onClick={() => setIsManageModeActive(!isManageModeActive)}
-                        title={isManageModeActive ? "Haz clic para finalizar y guardar la visibilidad" : "Gestionar visibilidad (Mostrar / Bloquear / Ocultar) en todas las tarjetas del Dashboard"}
+                        title={isManageModeActive ? "Finalizar gestión de visibilidad" : "Gestionar visibilidad (Mostrar / Bloquear / Ocultar)"}
+                        aria-label="Gestionar visibilidad"
                     >
                         {isManageModeActive ? (
-                            <>
-                                <Check size={14} className="manage-toggle-icon" />
-                                <span>Finalizar Edición</span>
-                                <span className="manage-toggle-pulse-dot" />
-                            </>
+                            <Check size={16} className="manage-toggle-icon" />
                         ) : (
-                            <>
-                                <Edit3 size={14} className="manage-toggle-icon" />
-                                <span>Gestionar Visibilidad</span>
-                            </>
+                            <Edit3 size={16} className="manage-toggle-icon" />
                         )}
+                        {isManageModeActive && <span className="manage-toggle-pulse-dot" />}
                     </button>
                 </div>
                 <div className="apps-hub-grid bottom-row-grid">
