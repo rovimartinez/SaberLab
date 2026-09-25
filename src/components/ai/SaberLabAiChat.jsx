@@ -1280,11 +1280,7 @@ export default function SaberLabAiChat({ forceBot = null }) {
                     title={`Asistente Virtual SaberLab (${currentBot.name})`}
                     aria-label="Abrir Asistente IA"
                 >
-                    {isRoboBotActive ? (
-                        <span style={{ fontSize: '21px' }} role="img" aria-label="RoboBot">🤖</span>
-                    ) : (
-                        <img src={SABERLAB_LOGO} alt="SaberLab Logo" className="saberlab-ai-fab-logo" />
-                    )}
+                    <img src={SABERLAB_LOGO} alt="SaberLab Logo" className="saberlab-ai-fab-logo" />
                 </button>
             )}
 
