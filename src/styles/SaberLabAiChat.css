@@ -147,7 +147,7 @@
 
 /* ── COMPAÑERO 3D EXCLUSIVO DE ROBOBOT (SOLO EL ROBOT SIN CONTENEDOR, ANCLADO A LA DERECHA, TAMAÑO COMPACTO A LA MITAD) ── */
 .saberlab-ai-robobot-companion {
-    width: 220px;
+    width: 210px;
     height: 200px;
     align-self: flex-end;
     pointer-events: auto;
@@ -161,6 +161,7 @@
     flex-direction: column;
     overflow: visible;
     flex-shrink: 0;
+    margin-left: -18px;
     margin-right: 0px;
     margin-bottom: 0px;
     transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -182,7 +183,7 @@
 }
 
 .saberlab-robobot-iframe-wrapper {
-    width: 240px;
+    width: 210px;
     height: 200px;
     position: relative;
     overflow: hidden;
@@ -199,7 +200,7 @@
     height: 500px;
     border: none;
     display: block;
-    transform: scale(0.48) translate(2%, -3%);
+    transform: scale(0.48) translate(-3%, -3%);
     transform-origin: center center;
     pointer-events: auto;
     background: transparent;
