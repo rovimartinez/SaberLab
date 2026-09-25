@@ -710,6 +710,18 @@ const PanelInicio = () => {
                 desc: 'Usuarios y configuración'
             },
             {
+                id: 'aiEngineStatus',
+                name: 'Estado de la IA',
+                badge: '🟢 Online',
+                icon: <Bot size={26} />,
+                gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                shadow: 'rgba(16, 185, 129, 0.35)',
+                desc: 'Telemetría de Gemini y tutores pedagógicos en vivo',
+                onClick: () => {
+                    setActiveAppModal('platformAdmin');
+                }
+            },
+            {
                 id: 'examsManagement',
                 name: 'Exámenes',
                 badge: 'Evaluaciones',

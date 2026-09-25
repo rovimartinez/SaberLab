@@ -3,11 +3,12 @@ import { useLocation } from 'react-router-dom';
 import { 
     Sparkles, Send, X, Trash2, Copy, Check, Box, Cpu, RotateCcw,
     Maximize2, Minimize2, Plus, History, MessageSquare, Clock, Zap,
-    ExternalLink, Users, Shield, BookOpen
+    ExternalLink, BookOpen
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../context/useAuth';
 import '../../styles/SaberLabAiChat.css';
+import { runThanosSnap, runThanosWindowDust, runThanosWindowClose } from './thanosSnap';
 
 const SABERLAB_LOGO = 'https://i.postimg.cc/KY1FZC3G/Logo_Nuevo.png';
 
@@ -320,6 +321,163 @@ function cleanLatexMathString(raw) {
     return str;
 }
 
+// ── Recuperación y Respuesta de Contingencia Local Inmediata en Cliente ──
+function generateClientOfflineReply(query, botType, isBrief = false) {
+    const q = (query || '').toLowerCase().trim();
+
+    if (botType === 'robobot') {
+        if (q.includes('puente h') || q.includes('l298n') || q.includes('motor dc') || q.includes('velocidad y giro') || q.includes('giro')) {
+            return `El módulo **Puente H L298N** permite controlar tanto el sentido de giro como la velocidad de hasta 2 motores DC desde Arduino:
+
+### 🔌 Conexiones Principales:
+* **ENA (Enable A):** Conectar a un pin con **PWM** de Arduino (ej: \`~9\`) para regular la velocidad (0 a 255 con \`analogWrite\`).
+* **IN1 e IN2:** Conectar a pines digitales (ej: \`8\` y \`7\`) para controlar la dirección de rotación.
+* **OUT1 y OUT2:** Conectar a los 2 terminales del Motor DC.
+* **GND:** Unir el GND de la fuente externa con el GND de Arduino (**tierra común obligatoria**).
+
+### ⚙️ Tabla de Control de Giro:
+| IN1 | IN2 | Estado del Motor |
+|---|---|---|
+| **HIGH** | **LOW** | Giro hacia adelante ↻ |
+| **LOW** | **HIGH** | Giro en reversa ↺ |
+| **LOW** | **LOW** | Parada suave |
+
+### 💻 Código de Ejemplo en C++:
+\`\`\`cpp
+const int ENA = 9;  // Pin PWM para velocidad
+const int IN1 = 8;  // Dirección
+const int IN2 = 7;
+
+void setup() {
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+}
+
+void loop() {
+  // Giro adelante al 80% de velocidad (200 de 255)
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  analogWrite(ENA, 200);
+  delay(3000);
+
+  // Giro en reversa al 100% de velocidad
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  analogWrite(ENA, 255);
+  delay(3000);
+}
+\`\`\`
+
+¿Deseas conectar un segundo motor o integrar un potenciómetro para variar la velocidad?`;
+        }
+
+        if (q.includes('ldr') || q.includes('fotorresistencia') || q.includes('analogread')) {
+            return `Para leer una **fotorresistencia LDR** en Arduino usamos \`analogRead(pin)\`, que convierte el voltaje en un valor entre **0 y 1023**:
+
+### 🔌 Conexión con Divisor de Tensión:
+1. Conecta un terminal del LDR a **5V**.
+2. Conecta el otro terminal a **A0** y a una resistencia de **10 kΩ**.
+3. El otro extremo de la resistencia de **10 kΩ** va a **GND**.
+
+### 💻 Código en C++:
+\`\`\`cpp
+const int pinLDR = A0;
+int valorLuz = 0;
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  valorLuz = analogRead(pinLDR);
+  Serial.print("Luz: ");
+  Serial.println(valorLuz);
+  delay(500);
+}
+\`\`\``;
+        }
+
+        if (q.includes('ultrasonico') || q.includes('ultrasónico') || q.includes('hc-sr04') || q.includes('distancia') || q.includes('echo') || q.includes('trigger')) {
+            return `El sensor **HC-SR04** mide distancias mediante ondas de sonido de 40 kHz midiendo el tiempo de rebote del eco:
+
+### 🔌 Conexiones a Arduino:
+* **VCC:** Conectar a **5V**.
+* **GND:** Conectar a **GND**.
+* **Trig (Disparo):** Conectar al **Pin 9** (salida digital que emite el pulso de 10 µs).
+* **Echo (Recepción):** Conectar al **Pin 8** (entrada digital que mide la duración del eco).
+
+### 📐 Cálculo de Distancia:
+$$\\text{Distancia (cm)} = \\frac{\\text{Tiempo (µs)} \\times 0.0343}{2}$$
+
+### 💻 Código en C++:
+\`\`\`cpp
+const int pinTrig = 9;
+const int pinEcho = 8;
+long duracion;
+int distanciaCm;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinTrig, OUTPUT);
+  pinMode(pinEcho, INPUT);
+}
+
+void loop() {
+  digitalWrite(pinTrig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pinTrig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinTrig, LOW);
+
+  duracion = pulseIn(pinEcho, HIGH);
+  distanciaCm = duracion * 0.0343 / 2;
+
+  Serial.print("Distancia: ");
+  Serial.print(distanciaCm);
+  Serial.println(" cm");
+  delay(250);
+}
+\`\`\`
+
+¿Deseas activar un buzzer de alarma cuando un objeto esté a menos de 10 cm?`;
+        }
+
+        return `Todo programa en Arduino se estructura en **void setup()** (inicialización de pines y comunicación Serial) y **void loop()** (bucle cíclico continuo para leer sensores y actuar sobre motores). ¿Qué parte de tu circuito deseas revisar?`;
+    }
+
+    if (botType === 'electrobot') {
+        return `La **Ley de Ohm** (**V = I × R**) y la **Ley de Watt** (**P = V × I**) son las bases del análisis de circuitos. En serie la corriente es idéntica en toda la malla; en paralelo el voltaje se mantiene constante en cada rama.`;
+    }
+
+    if (botType === 'tridibot') {
+        return `Los atajos fundamentales en Blender 4.x son: **G** (Mover/Grab), **R** (Rotar), **S** (Escalar), **Tab** (alternar Modo Objeto y Modo Edición) y **Ctrl + R** (Loop Cut).`;
+    }
+
+    if (botType === 'impribot') {
+        if (q.includes('soporte') || q.includes('arbol') || q.includes('árbol') || q.includes('tree') || q.includes('orca') || q.includes('cura')) {
+            return `Para configurar **Soportes Tipo Árbol (Tree Supports)** en OrcaSlicer o Cura:
+
+### 🌲 En OrcaSlicer / Bambu Studio:
+1. Ve a la pestaña **Support (Soporte)**.
+2. Marca la casilla **Enable Support**.
+3. En **Type (Tipo)**, selecciona **Tree(auto)** o **Tree(manual)**.
+4. En **Style (Estilo)**, elige **Tree Slim** (ahorra hasta 40% de material y es facilísimo de retirar).
+5. Ajusta el ángulo de voladizo (**Threshold angle**) a **45°** o **50°**.
+
+### 🌲 En Ultimaker Cura:
+1. Activa la visibilidad de ajustes en la categoría **Soporte**.
+2. Marca **Generar Soporte**.
+3. En **Estructura del soporte**, cambia de *Normal* a **Árbol**.
+4. En **Ángulo de voladizo del soporte**, define **50°**.
+
+> 💡 **Ventaja de los soportes árbol:** Nacen desde la placa de construcción rodeando la pieza como ramas, sin tocar superficies visibles del modelo, reduciendo marcas y tiempos de postprocesado.`;
+        }
+
+        return `El filamento **PETG** se imprime típicamente con boquilla a **230 °C - 245 °C** y cama caliente a **75 °C - 85 °C**, ofreciendo excelente resistencia mecánica y térmica sin warping.`;
+    }
+}
+
 function sanitizeSessions(parsed) {
     if (!parsed) return { electrobot: [], robobot: [], tridibot: [], impribot: [] };
     const cleaned = {
@@ -342,6 +500,7 @@ function sanitizeSessions(parsed) {
 
         cleaned[botKey] = rawList
             .filter(sess => {
+                if (!sess || !Array.isArray(sess.messages) || sess.messages.length === 0) return false;
                 // Eliminar sesiones cruzadas en electrobot o robobot que contengan texto de SIMIBot o SIMI3D
                 if (botKey === 'electrobot' || botKey === 'robobot') {
                     const isContaminated = sess.messages?.some(m => 
@@ -363,6 +522,18 @@ function sanitizeSessions(parsed) {
     return cleaned;
 }
 
+export function getEffectiveUserId(user) {
+    if (user?.id) return String(user.id);
+    try {
+        const cached = localStorage.getItem('saberlab_cached_user');
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed?.id) return String(parsed.id);
+        }
+    } catch {}
+    return 'guest';
+}
+
 function getStoredSessions(userId = 'guest') {
     const storageKey = `saberlab_ai_sessions_${userId}_v3`;
     try {
@@ -371,10 +542,14 @@ function getStoredSessions(userId = 'guest') {
             return sanitizeSessions(JSON.parse(saved));
         }
 
-        // Migración retrocompatible del formato v2 si existía
+        // Migración retrocompatible única del formato v2 si existía
         const oldSaved = localStorage.getItem('saberlab_ai_sessions_v2');
         if (oldSaved) {
-            return sanitizeSessions(JSON.parse(oldSaved));
+            const migrated = sanitizeSessions(JSON.parse(oldSaved));
+            localStorage.setItem(storageKey, JSON.stringify(migrated));
+            // ELIMINAR v2 de inmediato para que nunca vuelva a resucitar sesiones borradas
+            localStorage.removeItem('saberlab_ai_sessions_v2');
+            return migrated;
         }
     } catch {}
     return { electrobot: [], robobot: [], tridibot: [], impribot: [] };
@@ -439,11 +614,10 @@ function resolveCourseContext(pathname, enrolledCourses) {
 }
 
 
-export default function SaberLabAiChat() {
+export default function SaberLabAiChat({ forceBot = null }) {
     const location = useLocation();
-    const { user, isStaff, isImpersonating, enrolledCourses } = useAuth();
-    const userId = user?.id || 'guest';
-    const isStaffOrAdmin = Boolean(isStaff && !isImpersonating);
+    const { user, enrolledCourses } = useAuth();
+    const userId = getEffectiveUserId(user);
 
     const [courseTick, setCourseTick] = useState(0);
 
@@ -458,22 +632,77 @@ export default function SaberLabAiChat() {
         };
     }, []);
 
-    const { courseAbbr, courseTitle, botId: expectedBotId, isSimi: isSimiCourse } = resolveCourseContext(location.pathname, enrolledCourses);
+    const resolvedContext = resolveCourseContext(location.pathname, enrolledCourses);
+    const expectedBotId = forceBot || resolvedContext.botId;
+    const courseAbbr = resolvedContext.courseAbbr || 'RE';
+    const isSimiCourse = forceBot ? false : resolvedContext.isSimi;
     const isSingleBotCourse = !isSimiCourse;
 
     const [isOpen, setIsOpen] = useState(false);
+    const [isChatWindowVisible, setIsChatWindowVisible] = useState(false);
     const [activeBot, setActiveBot] = useState(() => {
+        if (forceBot) return forceBot;
         if (!isSimiCourse) return expectedBotId;
         const saved = localStorage.getItem(`saberlab_active_bot_${userId}`);
         if (saved === 'tridibot' || saved === 'impribot') return saved;
         return 'impribot';
     });
 
+    const isRoboBotActive = activeBot === 'robobot' || activeBot === 're';
+
+    const triggerOpenSequence = (botToUse = null) => {
+        const currentTargetBot = botToUse || activeBot;
+        const isRobot = currentTargetBot === 'robobot' || currentTargetBot === 're';
+        setActiveSessionId(null);
+        setShowHistory(false);
+        setIsOpen(true);
+        if (isRobot) {
+            setIsChatWindowVisible(false);
+            setTimeout(() => {
+                setIsChatWindowVisible(true);
+            }, 280);
+        } else {
+            setIsChatWindowVisible(true);
+        }
+    };
+
+    const handleCloseChat = () => {
+        if (windowRef.current) {
+            runThanosWindowClose(windowRef.current, currentBot.color || '#0284c7', () => {
+                setIsChatWindowVisible(false);
+                setIsOpen(false);
+                setShowHistory(false);
+            });
+        } else {
+            setIsChatWindowVisible(false);
+            setIsOpen(false);
+            setShowHistory(false);
+        }
+    };
+
+    // Permitir apertura remota desde botones o callouts (ej. Landing Page u otros componentes)
+    useEffect(() => {
+        const handleOpenAiChat = (e) => {
+            const requestedBot = e.detail?.bot || activeBot;
+            if (e.detail?.bot) {
+                setActiveBot(e.detail.bot);
+            }
+            triggerOpenSequence(requestedBot);
+        };
+        window.addEventListener('saberlab_open_ai_chat', handleOpenAiChat);
+        return () => window.removeEventListener('saberlab_open_ai_chat', handleOpenAiChat);
+    }, [activeBot]);
+
+    // Notificar visibilidad del chat para sincronizar fondos u otros elementos de la página
+    useEffect(() => {
+        window.dispatchEvent(new CustomEvent('saberlab_ai_chat_visibility', { 
+            detail: { isOpen, activeBot, isRoboBotActive } 
+        }));
+    }, [isOpen, activeBot, isRoboBotActive]);
+
     const [sessions, setSessions] = useState(() => getStoredSessions(userId));
-    const [activeSessionId, setActiveSessionId] = useState(() => {
-        const initialBot = !isSimiCourse ? expectedBotId : (localStorage.getItem(`saberlab_active_bot_${userId}`) || 'impribot');
-        return localStorage.getItem(`saberlab_active_session_id_${userId}_${initialBot}`) || null;
-    });
+    // Siempre arranca en nueva conversación limpia; solo se selecciona una previa si el usuario va al Historial
+    const [activeSessionId, setActiveSessionId] = useState(null);
     const [isWide, setIsWide] = useState(() => {
         return localStorage.getItem('saberlab_chat_wide') === 'true';
     });
@@ -481,46 +710,35 @@ export default function SaberLabAiChat() {
         return localStorage.getItem('saberlab_ai_brief_mode') === 'true';
     });
     const [showHistory, setShowHistory] = useState(false);
-    const [historyTab, setHistoryTab] = useState('mine'); // 'mine' | 'audit'
-    const [auditSessions, setAuditSessions] = useState([]);
-    const [isLoadingAudit, setIsLoadingAudit] = useState(false);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
     const messagesEndRef = useRef(null);
     const textareaRef = useRef(null);
+    const windowRef = useRef(null);
 
     // Sincronizar bot al navegar dentro de un curso o cambiar de curso activo
     useEffect(() => {
+        if (forceBot) {
+            if (activeBot !== forceBot) {
+                setActiveBot(forceBot);
+                setActiveSessionId(null);
+            }
+            return;
+        }
         if (!isSimiCourse) {
             if (activeBot !== expectedBotId) {
                 setActiveBot(expectedBotId);
-                const list = sessions[expectedBotId] || [];
-                const savedSessionForBot = localStorage.getItem(`saberlab_active_session_id_${userId}_${expectedBotId}`);
-                if (savedSessionForBot && list.some(s => s.id === savedSessionForBot)) {
-                    setActiveSessionId(savedSessionForBot);
-                } else if (list.length > 0) {
-                    setActiveSessionId(list[0].id);
-                } else {
-                    setActiveSessionId(null);
-                }
+                setActiveSessionId(null);
             }
         } else {
             // En SIMI sólo están permitidos tridibot e impribot
             if (activeBot !== 'tridibot' && activeBot !== 'impribot') {
                 setActiveBot('impribot');
-                const list = sessions.impribot || [];
-                const savedSessionForBot = localStorage.getItem(`saberlab_active_session_id_${userId}_impribot`);
-                if (savedSessionForBot && list.some(s => s.id === savedSessionForBot)) {
-                    setActiveSessionId(savedSessionForBot);
-                } else if (list.length > 0) {
-                    setActiveSessionId(list[0].id);
-                } else {
-                    setActiveSessionId(null);
-                }
+                setActiveSessionId(null);
             }
         }
-    }, [expectedBotId, isSimiCourse, location.pathname, courseTick, activeBot, sessions, userId]);
+    }, [forceBot, expectedBotId, isSimiCourse, location.pathname, courseTick, activeBot, sessions, userId]);
 
     // Recargar sesiones si cambia el usuario autenticado
     useEffect(() => {
@@ -532,10 +750,16 @@ export default function SaberLabAiChat() {
     const currentSession = botSessions.find(s => s.id === activeSessionId) || null;
     const messages = currentSession ? currentSession.messages : [];
 
-    // Guardar en localStorage exclusivo del estudiante
+    // Guardar en localStorage exclusivo del estudiante (solo sesiones con al menos 1 mensaje)
     useEffect(() => {
         try {
-            localStorage.setItem(`saberlab_ai_sessions_${userId}_v3`, JSON.stringify(sessions));
+            const cleanedSessions = {};
+            for (const botKey of Object.keys(sessions)) {
+                cleanedSessions[botKey] = (sessions[botKey] || []).filter(
+                    s => Array.isArray(s.messages) && s.messages.length > 0
+                );
+            }
+            localStorage.setItem(`saberlab_ai_sessions_${userId}_v3`, JSON.stringify(cleanedSessions));
             localStorage.setItem(`saberlab_active_bot_${userId}`, activeBot);
             if (activeSessionId) {
                 localStorage.setItem(`saberlab_active_session_id_${userId}_${activeBot}`, activeSessionId);
@@ -549,125 +773,123 @@ export default function SaberLabAiChat() {
 
     // Auto-scroll al final cuando llegan mensajes
     useEffect(() => {
-        if (isOpen && !showHistory) {
+        if (isOpen) {
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages, isLoading, isOpen, activeBot, showHistory]);
+    }, [messages, isLoading, isOpen, activeBot]);
 
-    // Enfocar textarea al abrir
+    // Enfocar textarea y ejecutar efecto de polvo cósmico al abrir
     useEffect(() => {
-        if (isOpen && !showHistory) {
-            setTimeout(() => textareaRef.current?.focus(), 150);
+        if (isOpen && isChatWindowVisible) {
+            setTimeout(() => {
+                textareaRef.current?.focus();
+                if (windowRef.current) {
+                    runThanosWindowDust(windowRef.current, currentBot.color || '#0284c7');
+                }
+            }, 80);
         }
-    }, [isOpen, activeBot, showHistory]);
-
-    // Asegurar que estudiantes o modo vista de alumno nunca queden en la pestaña de auditoría
-    useEffect(() => {
-        if (!isStaffOrAdmin && historyTab !== 'mine') {
-            setHistoryTab('mine');
-        }
-    }, [isStaffOrAdmin, historyTab]);
-
-    // Cargar sesiones de auditoría para docentes/admin
-    const loadAuditSessions = async () => {
-        if (!isStaffOrAdmin) return;
-        setIsLoadingAudit(true);
-        try {
-            const res = await api('/ai/chat?mode=audit');
-            if (res?.data?.success && Array.isArray(res.data.sessions)) {
-                setAuditSessions(res.data.sessions);
-            }
-        } catch (err) {
-            console.warn('[Audit Load Warning]', err);
-        } finally {
-            setIsLoadingAudit(false);
-        }
-    };
+    }, [isOpen, isChatWindowVisible, activeBot, currentBot.color]);
 
     const handleSwitchBot = (newBot) => {
         if (!isSimiCourse) return; // En cursos estándar el bot es único e inamovible
         if (newBot !== 'tridibot' && newBot !== 'impribot') return;
         setActiveBot(newBot);
-        const otherSessions = sessions[newBot] || [];
-        const savedSessionForBot = localStorage.getItem(`saberlab_active_session_id_${userId}_${newBot}`);
-        if (savedSessionForBot && otherSessions.some(s => s.id === savedSessionForBot)) {
-            setActiveSessionId(savedSessionForBot);
-        } else if (otherSessions.length > 0) {
-            setActiveSessionId(otherSessions[0].id);
-        } else {
-            setActiveSessionId(null);
-        }
+        setActiveSessionId(null); // Al cambiar de bot, iniciar en conversación nueva y limpia
     };
 
     const handleNewChat = () => {
         setActiveSessionId(null);
-        setShowHistory(false);
         setInputText('');
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setShowHistory(false);
+        }
         setTimeout(() => textareaRef.current?.focus(), 150);
     };
 
     const handleSelectSession = (sessId) => {
         setActiveSessionId(sessId);
-        setShowHistory(false);
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setShowHistory(false);
+        }
         setTimeout(() => textareaRef.current?.focus(), 150);
     };
 
-    const handleSelectAuditSession = async (auditSess) => {
-        try {
-            const res = await api(`/ai/chat?session_id=${auditSess.id}`);
-            if (res?.data?.success && Array.isArray(res.data.messages)) {
-                const targetBot = auditSess.bot_id || 'tridibot';
-                setActiveBot(targetBot);
-                const loadedSession = {
-                    id: auditSess.id,
-                    title: auditSess.title || 'Conversación Supervisada',
-                    createdAt: auditSess.created_at,
-                    messages: res.data.messages.map(m => ({
-                        role: m.role,
-                        content: m.content,
-                        isOutOfScope: !!m.is_out_of_scope,
-                        timestamp: m.created_at
-                    }))
-                };
-                setSessions(prev => ({
-                    ...prev,
-                    [targetBot]: [loadedSession, ...(prev[targetBot] || []).filter(s => s.id !== auditSess.id)]
-                }));
-                setActiveSessionId(auditSess.id);
-                setShowHistory(false);
-            }
-        } catch (err) {
-            console.error('[Audit Session Load Error]', err);
-        }
-    };
+    const [deletingSessionIds, setDeletingSessionIds] = useState(() => new Set());
 
-    const [sessionToDelete, setSessionToDelete] = useState(null);
-    const [isDeletingSession, setIsDeletingSession] = useState(false);
-
-    const promptDeleteSession = (sess, e) => {
+    const handleDeleteSession = async (sessId, e) => {
         e?.stopPropagation();
-        setSessionToDelete(sess);
-    };
+        if (deletingSessionIds.has(sessId)) return;
 
-    const handleConfirmDeleteSession = async () => {
-        if (!sessionToDelete) return;
-        const sessId = sessionToDelete.id;
-        setIsDeletingSession(true);
+        // Localizar el elemento HTML de la fila en el historial
+        const targetEl = e?.currentTarget?.closest('.saberlab-history-item') || document.getElementById(`saberlab-sess-item-${sessId}`);
+
+        setDeletingSessionIds(prev => new Set(prev).add(sessId));
+
+        // 1. PURGADO SÍNCRONO E INMEDIATO EN LOCALSTORAGE
+        // Se ejecuta en el milisegundo 0 para que si el usuario recarga la página, el chat ya no exista jamás.
         try {
-            await api(`/ai/chat?session_id=${sessId}`, { method: 'DELETE' });
-        } catch (err) {
-            console.warn('[AI Chat Delete Error]', err);
+            const currentUid = getEffectiveUserId(user);
+            const storageKey = `saberlab_ai_sessions_${currentUid}_v3`;
+
+            const purgeFromKey = (k) => {
+                try {
+                    const raw = localStorage.getItem(k);
+                    if (!raw) return;
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        let changed = false;
+                        for (const b of Object.keys(parsed)) {
+                            if (Array.isArray(parsed[b])) {
+                                const initialLen = parsed[b].length;
+                                parsed[b] = parsed[b].filter(s => s.id !== sessId);
+                                if (parsed[b].length !== initialLen) changed = true;
+                            }
+                        }
+                        if (changed) {
+                            localStorage.setItem(k, JSON.stringify(parsed));
+                        }
+                    }
+                } catch {}
+            };
+
+            purgeFromKey(storageKey);
+            purgeFromKey('saberlab_ai_sessions_guest_v3');
+            // Eliminar de raíz cualquier respaldo zombie v2
+            localStorage.removeItem('saberlab_ai_sessions_v2');
+        } catch (storageErr) {
+            console.warn('[Storage Purge Error]', storageErr);
         }
 
+        // 2. DISPARAR LA ELIMINACIÓN EN CLOUDFLARE D1 EN SEGUNDO PLANO
+        api(`/ai/chat?session_id=${sessId}`, { method: 'DELETE' }).catch(err => {
+            console.warn('[AI Chat D1 Delete Warning]', err);
+        });
+
+        // 3. ACTUALIZACIÓN INMEDIATA DEL ESTADO DE REACT
         setSessions(prev => {
-            const updatedList = (prev[activeBot] || []).filter(s => s.id !== sessId);
+            const currentList = prev[activeBot] || [];
+            const updatedList = currentList.filter(s => s.id !== sessId);
             return { ...prev, [activeBot]: updatedList };
         });
+
         if (activeSessionId === sessId) {
             setActiveSessionId(null);
         }
-        setIsDeletingSession(false);
-        setSessionToDelete(null);
+
+        // 4. ANIMACIÓN VISUAL DE CHASQUIDO DE THANOS EN PARALELO
+        const releaseLock = () => {
+            setDeletingSessionIds(prev => {
+                const next = new Set(prev);
+                next.delete(sessId);
+                return next;
+            });
+        };
+
+        if (targetEl) {
+            runThanosSnap(targetEl, releaseLock);
+        } else {
+            releaseLock();
+        }
     };
 
     const handleSendMessage = async (textToSend = inputText) => {
@@ -808,20 +1030,19 @@ export default function SaberLabAiChat() {
                 });
             }
         } catch (err) {
-            const isLimitErr = err?.status === 429 || /rate|limit|429|quota/i.test(err?.message || '');
+            console.warn('[AI Fetch Error, activating immediate offline recovery]', err);
+            
+            // Si la llamada remota falla o se interrumpe la red, recuperar respuesta del tutor de inmediato
+            const fallbackReply = generateClientOfflineReply(query, activeBot, isBriefMode);
+            const cleanText = cleanLatexMathString(fallbackReply);
 
-            const errorMsg = isLimitErr ? {
-                role: 'assistant',
-                content: `Me siento al límite de mi capacidad en este momento ${currentBot.icon}. He atendido muchísimas consultas y mis circuitos necesitan un breve respiro para recargar energía.\n\nLamento no poder ayudarte ahora mismo con esta respuesta. Para que no te quedes con la duda y sigas avanzando con tu aprendizaje, te sugiero consultarla directamente con Gemini o ChatGPT:`,
-                timestamp: Date.now(),
-                isRateLimited: true,
-                userQuery: query
-            } : { 
+            const aiMsg = { 
                 role: 'assistant', 
-                content: `⚠️ No fue posible conectar con ${currentBot.name} en este momento.`, 
+                content: cleanText, 
                 timestamp: Date.now(),
-                isError: true,
-                retryQuery: query
+                isOutOfScope: false,
+                isRateLimited: false,
+                userQuery: query
             };
 
             setSessions(prev => {
@@ -829,7 +1050,10 @@ export default function SaberLabAiChat() {
                 const idx = list.findIndex(s => s.id === sessId);
                 if (idx >= 0) {
                     const copy = [...list];
-                    copy[idx] = { ...copy[idx], messages: [...copy[idx].messages, errorMsg] };
+                    copy[idx] = { 
+                        ...copy[idx], 
+                        messages: [...copy[idx].messages, aiMsg] 
+                    };
                     return { ...prev, [activeBot]: copy };
                 }
                 return prev;
@@ -1051,22 +1275,99 @@ export default function SaberLabAiChat() {
             {/* BOTÓN FLOTANTE DISPARADOR */}
             {!isOpen && (
                 <button 
-                    className="saberlab-ai-fab"
-                    onClick={() => setIsOpen(true)}
+                    className={`saberlab-ai-fab ${isRoboBotActive ? 'is-robobot' : ''}`}
+                    onClick={() => triggerOpenSequence()}
                     title={`Asistente Virtual SaberLab (${currentBot.name})`}
                     aria-label="Abrir Asistente IA"
                 >
-                    <img src={SABERLAB_LOGO} alt="SaberLab Logo" className="saberlab-ai-fab-logo" />
+                    {isRoboBotActive ? (
+                        <span style={{ fontSize: '21px' }} role="img" aria-label="RoboBot">🤖</span>
+                    ) : (
+                        <img src={SABERLAB_LOGO} alt="SaberLab Logo" className="saberlab-ai-fab-logo" />
+                    )}
                 </button>
             )}
 
-            {/* VENTANA DE CHAT FLOTANTE */}
-            {isOpen && (
-                <div className={`saberlab-ai-window ${isWide ? 'wide' : ''}`} role="dialog" aria-modal="false">
+            {/* CONTENEDOR FLOTANTE CON VENTANA PRINCIPAL Y PANEL LATERAL (ESTILO ASISTENCIA DUAL) */}
+            {(isOpen || isRoboBotActive) && (
+                <div className={`saberlab-ai-layout ${!isOpen ? 'is-layout-hidden' : ''}`} role="dialog" aria-modal="false">
+                    {/* 1. CARD / PANEL LATERAL: HISTORIAL (A LA IZQUIERDA) */}
+                    {isOpen && isChatWindowVisible && showHistory && (
+                        <aside className="saberlab-ai-side-panel" aria-label="Historial de Conversaciones">
+                            <div className="saberlab-history-header">
+                                <div className="saberlab-history-title">
+                                    <History size={16} color={currentBot.color} />
+                                    <span>Historial</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span className="saberlab-history-count-badge" style={{ background: `${currentBot.color}20`, color: currentBot.color }}>
+                                        {botSessions.length}
+                                    </span>
+                                    <button 
+                                        className="saberlab-history-back-btn" 
+                                        onClick={() => setShowHistory(false)} 
+                                        title="Cerrar panel de historial"
+                                        aria-label="Cerrar historial"
+                                    >
+                                        <X size={15} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="saberlab-history-list">
+                                {botSessions.length === 0 ? (
+                                    <div className="saberlab-history-empty">
+                                        <div className="saberlab-history-empty-icon">💬</div>
+                                        <h5 className="saberlab-history-empty-title">Sin conversaciones guardadas</h5>
+                                        <p>No tienes chats previos con {currentBot.name}. ¡Inicia una nueva charla!</p>
+                                    </div>
+                                ) : (
+                                    botSessions.map(sess => (
+                                        <div 
+                                            key={sess.id} 
+                                            id={`saberlab-sess-item-${sess.id}`}
+                                            className={`saberlab-history-item ${activeSessionId === sess.id ? 'active' : ''}`}
+                                            onClick={() => handleSelectSession(sess.id)}
+                                        >
+                                            <div className="saberlab-history-icon-box" style={{ background: `${currentBot.color}15`, color: currentBot.color }}>
+                                                <MessageSquare size={16} />
+                                            </div>
+                                            <div className="saberlab-history-info">
+                                                <div className="saberlab-history-item-title">
+                                                    <span>{sess.title || 'Conversación sin título'}</span>
+                                                    {activeSessionId === sess.id && (
+                                                        <span className="saberlab-history-active-tag">Activa</span>
+                                                    )}
+                                                </div>
+                                                <div className="saberlab-history-item-meta">
+                                                    <span>{new Date(sess.createdAt || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                    <span>•</span>
+                                                    <span>{sess.messages?.length || 0} mensajes</span>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                className="saberlab-history-del-btn"
+                                                onClick={(e) => handleDeleteSession(sess.id, e)}
+                                                title="Chasquido de Thanos 🫰 (Eliminar conversación)"
+                                                aria-label="Eliminar con chasquido de dedos"
+                                                disabled={deletingSessionIds.has(sess.id)}
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </aside>
+                    )}
+
+                    {/* 2. VENTANA PRINCIPAL DE CHAT (A LA DERECHA) */}
+                    {isOpen && isChatWindowVisible && (
+                    <div ref={windowRef} className={`saberlab-ai-window ${isWide ? 'wide' : ''} ${showHistory ? 'has-side-panel' : ''}`}>
                     {/* Header */}
                     <div className="saberlab-ai-header">
                         <div className="saberlab-ai-header-left">
-                            <div className="saberlab-ai-avatar">
+                            <div className={`saberlab-ai-avatar ${isRoboBotActive ? 'is-robobot' : ''}`}>
                                 <img src={SABERLAB_LOGO} alt="Logo" className="saberlab-ai-avatar-img" />
                             </div>
                             <div className="saberlab-ai-title-wrap">
@@ -1097,10 +1398,7 @@ export default function SaberLabAiChat() {
                             </button>
                             <button 
                                 className={`saberlab-ai-btn-icon ${showHistory ? 'active' : ''}`} 
-                                onClick={() => {
-                                    setShowHistory(prev => !prev);
-                                    if (!showHistory && historyTab === 'audit') loadAuditSessions();
-                                }} 
+                                onClick={() => setShowHistory(prev => !prev)} 
                                 title="Historial de Conversaciones"
                             >
                                 <History size={15} />
@@ -1114,8 +1412,8 @@ export default function SaberLabAiChat() {
                             </button>
                             <button 
                                 className="saberlab-ai-btn-icon" 
-                                onClick={() => setIsOpen(false)} 
-                                title="Minimizar Chat"
+                                onClick={handleCloseChat} 
+                                title="Cerrar Asistente IA"
                             >
                                 <X size={17} />
                             </button>
@@ -1145,148 +1443,8 @@ export default function SaberLabAiChat() {
                         </div>
                     )}
 
-                    {/* VISTA PRINCIPAL: CHAT vs HISTORIAL */}
-                    {showHistory ? (
-                        <div className="saberlab-ai-history-view">
-                            {/* Pestañas de Historial (Estudiante vs Auditoría Docente) */}
-                            {isStaffOrAdmin && (
-                                <div className="saberlab-history-tabs">
-                                    <button 
-                                        className={`saberlab-history-tab ${historyTab === 'mine' ? 'active' : ''}`}
-                                        onClick={() => setHistoryTab('mine')}
-                                    >
-                                        <MessageSquare size={13} />
-                                        <span>Mis Conversaciones</span>
-                                    </button>
-                                    <button 
-                                        className={`saberlab-history-tab ${historyTab === 'audit' ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setHistoryTab('audit');
-                                            loadAuditSessions();
-                                        }}
-                                    >
-                                        <Shield size={13} />
-                                        <span>Supervisión Alumnos</span>
-                                        <span className="saberlab-audit-badge">Staff</span>
-                                    </button>
-                                </div>
-                            )}
-
-                            <div className="saberlab-history-header">
-                                <div className="saberlab-history-title">
-                                    <Clock size={16} color={currentBot.color} />
-                                    <span>
-                                        {historyTab === 'audit' && isStaffOrAdmin ? 'Historial Global de Alumnos' : `Chats con ${currentBot.name}`}
-                                    </span>
-                                    <span className="saberlab-history-count-badge" style={{ background: `${currentBot.color}20`, color: currentBot.color }}>
-                                        {historyTab === 'audit' && isStaffOrAdmin ? auditSessions.length : botSessions.length}
-                                    </span>
-                                </div>
-                                <button 
-                                    className="saberlab-history-back-btn" 
-                                    onClick={() => setShowHistory(false)} 
-                                    title="Volver a la conversación activa"
-                                >
-                                    <X size={15} />
-                                    <span>Volver</span>
-                                </button>
-                            </div>
-
-                            <div className="saberlab-history-list">
-                                {historyTab === 'audit' && isStaffOrAdmin ? (
-                                    isLoadingAudit ? (
-                                        <div className="saberlab-history-empty">
-                                            <p>Cargando registros de auditoría pedagógica...</p>
-                                        </div>
-                                    ) : auditSessions.length === 0 ? (
-                                        <div className="saberlab-history-empty">
-                                            <div className="saberlab-history-empty-icon">🛡️</div>
-                                            <h5 className="saberlab-history-empty-title">Sin consultas registradas</h5>
-                                            <p>Aún no hay preguntas de estudiantes registradas en Cloudflare D1.</p>
-                                        </div>
-                                    ) : (
-                                        auditSessions.map(sess => (
-                                            <div 
-                                                key={sess.id} 
-                                                className="saberlab-history-item"
-                                                onClick={() => handleSelectAuditSession(sess)}
-                                            >
-                                                <div className="saberlab-history-icon-box" style={{ background: '#0284c715', color: '#0284c7' }}>
-                                                    <Users size={16} />
-                                                </div>
-                                                <div className="saberlab-history-info">
-                                                    <div className="saberlab-history-item-title">
-                                                        <span>{sess.title || 'Conversación de Estudiante'}</span>
-                                                    </div>
-                                                    <div className="saberlab-history-item-meta">
-                                                        <strong>{sess.user_name || sess.user_email || 'Estudiante'}</strong>
-                                                        <span>•</span>
-                                                        <span>{sess.course_abbr || 'Curso'}</span>
-                                                        <span>•</span>
-                                                        <span>{new Date(sess.updated_at || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )
-                                ) : (
-                                    botSessions.length === 0 ? (
-                                        <div className="saberlab-history-empty">
-                                            <div className="saberlab-history-empty-icon">💬</div>
-                                            <h5 className="saberlab-history-empty-title">Sin conversaciones guardadas</h5>
-                                            <p>No tienes chats previos con {currentBot.name}. ¡Inicia una nueva charla abajo!</p>
-                                        </div>
-                                    ) : (
-                                        botSessions.map(sess => (
-                                            <div 
-                                                key={sess.id} 
-                                                className={`saberlab-history-item ${activeSessionId === sess.id ? 'active' : ''}`}
-                                                onClick={() => handleSelectSession(sess.id)}
-                                            >
-                                                <div className="saberlab-history-icon-box" style={{ background: `${currentBot.color}15`, color: currentBot.color }}>
-                                                    <MessageSquare size={16} />
-                                                </div>
-                                                <div className="saberlab-history-info">
-                                                    <div className="saberlab-history-item-title">
-                                                        <span>{sess.title || 'Conversación sin título'}</span>
-                                                        {activeSessionId === sess.id && (
-                                                            <span className="saberlab-history-active-tag">Activa</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="saberlab-history-item-meta">
-                                                        <span>{new Date(sess.createdAt || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                                        <span>•</span>
-                                                        <span>{sess.messages?.length || 0} mensajes</span>
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    className="saberlab-history-del-btn"
-                                                    onClick={(e) => handleDeleteSession(sess.id, e)}
-                                                    title="Eliminar conversación del historial"
-                                                >
-                                                    <Trash2 size={15} />
-                                                </button>
-                                            </div>
-                                        ))
-                                    )
-                                )}
-                            </div>
-
-                            <div className="saberlab-history-footer">
-                                <button 
-                                    className="saberlab-history-new-btn"
-                                    style={{ background: currentBot.color }}
-                                    onClick={handleNewChat}
-                                >
-                                    <Plus size={16} />
-                                    <span>Iniciar Nueva Conversación</span>
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Cuerpo de Mensajes */}
-                            <div className="saberlab-ai-body">
+                        {/* Cuerpo de Mensajes */}
+                        <div className="saberlab-ai-body">
                         {messages.length === 0 ? (
                             <div className="saberlab-ai-welcome-box">
                                 <div className="saberlab-ai-welcome-logo-wrap" style={{ borderColor: currentBot.color }}>
@@ -1315,7 +1473,7 @@ export default function SaberLabAiChat() {
                         ) : (
                             messages.map((msg, idx) => (
                                 <div key={idx} className={`saberlab-msg-row ${msg.role === 'user' ? 'user' : 'ai'}`}>
-                                    <div className={`saberlab-msg-avatar ${msg.role === 'user' ? 'user' : 'ai'}`}>
+                                    <div className={`saberlab-msg-avatar ${msg.role === 'user' ? 'user' : `ai ${isRoboBotActive ? 'is-robobot' : ''}`}`}>
                                         {msg.role === 'user' ? (
                                             'Tú'
                                         ) : (
@@ -1379,7 +1537,7 @@ export default function SaberLabAiChat() {
                         {/* Typing Loader */}
                         {isLoading && (
                             <div className="saberlab-msg-row ai">
-                                <div className="saberlab-msg-avatar ai">
+                                <div className={`saberlab-msg-avatar ai ${isRoboBotActive ? 'is-robobot' : ''}`}>
                                     <img src={SABERLAB_LOGO} alt="Bot Avatar" className="saberlab-msg-avatar-img" />
                                 </div>
                                 <div className="saberlab-ai-typing">
@@ -1419,58 +1577,29 @@ export default function SaberLabAiChat() {
                             </button>
                         </div>
                     </div>
-                    </>
+                    {/* Fin de .saberlab-ai-input-container */}
+                    </div>
                     )}
+                    {/* Fin de .saberlab-ai-window */}
 
-                    {/* MODAL MODERNO DE CONFIRMACIÓN DE ELIMINACIÓN */}
-                    {sessionToDelete && (
-                        <div className="saberlab-ai-confirm-overlay" onClick={() => !isDeletingSession && setSessionToDelete(null)}>
-                            <div className="saberlab-ai-confirm-modal" onClick={e => e.stopPropagation()}>
-                                <div className="saberlab-ai-confirm-icon-wrap">
-                                    <div className="saberlab-ai-confirm-icon-bg">
-                                        <Trash2 size={24} className="saberlab-ai-confirm-icon" />
-                                    </div>
-                                </div>
-                                <h4 className="saberlab-ai-confirm-title">¿Eliminar conversación?</h4>
-                                <p className="saberlab-ai-confirm-desc">
-                                    Esta conversación se borrará permanentemente de tu historial y de la nube.
-                                </p>
-                                {sessionToDelete.title && (
-                                    <div className="saberlab-ai-confirm-preview">
-                                        <MessageSquare size={13} className="saberlab-ai-confirm-preview-icon" />
-                                        <span className="saberlab-ai-confirm-preview-text">"{sessionToDelete.title}"</span>
-                                    </div>
-                                )}
-                                <div className="saberlab-ai-confirm-actions">
-                                    <button
-                                        type="button"
-                                        className="saberlab-ai-confirm-btn cancel"
-                                        onClick={() => setSessionToDelete(null)}
-                                        disabled={isDeletingSession}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="saberlab-ai-confirm-btn delete"
-                                        onClick={handleConfirmDeleteSession}
-                                        disabled={isDeletingSession}
-                                    >
-                                        {isDeletingSession ? (
-                                            <>
-                                                <RotateCcw size={14} className="saberlab-ai-spin" />
-                                                <span>Eliminando...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Trash2 size={14} />
-                                                <span>Eliminar</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
+                    {/* 3. COMPAÑERO 3D EXCLUSIVO DE ROBOBOT (SOLO EL ROBOT SIN CONTENEDOR, ANCLADO A LA DERECHA) */}
+                    {isRoboBotActive && (
+                        <aside 
+                            className={`saberlab-ai-robobot-companion standalone-robot ${isOpen ? 'is-active' : 'is-inactive'}`} 
+                            aria-label="RoboBot 3D Interactivo"
+                        >
+                            <div className="saberlab-robobot-iframe-wrapper">
+                                <iframe 
+                                    src="https://my.spline.design/genkubgreetingrobot-KpUVWUhqRjQeYHGSNgH8UlNa/" 
+                                    frameBorder="0" 
+                                    width="100%" 
+                                    height="100%" 
+                                    className="saberlab-robobot-spline-iframe"
+                                    title="RoboBot 3D Companion"
+                                    loading="eager"
+                                />
                             </div>
-                        </div>
+                        </aside>
                     )}
                 </div>
             )}

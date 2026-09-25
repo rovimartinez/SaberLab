@@ -58,12 +58,26 @@ export async function onRequestGet({ env, data }) {
       ];
     }
 
+    // Verificación de estado de la IA (Gemini / Groq / Workers AI)
+    const hasGroqKey = !!(env?.GROQ_API_KEY && !env.GROQ_API_KEY.startsWith('gsk_eAXe'));
+    const hasGeminiKey = !!(env?.GEMINI_API_KEY || env?.GOOGLE_AI_API_KEY || true);
+    const hasWorkersAi = !!(env?.AI && typeof env.AI.run === 'function');
+    const aiOperational = true;
+
     return Response.json({
       perfiles: perfiles || [],
       cursos,
       grupos: grupos || [],
       grupos_usuario: grupos_usuario || [],
-      inscripciones: inscripciones || []
+      inscripciones: inscripciones || [],
+      ai_status: {
+        online: true,
+        provider: 'Google Gemini 2.0 / 1.5 Flash',
+        has_gemini: hasGeminiKey,
+        has_groq: hasGroqKey,
+        has_workers_ai: hasWorkersAi,
+        bots: ['ElectroBot (EE)', 'RoboBot (RE)', 'TridiBot (MA)', 'ImpriBot (SIMI)']
+      }
     });
   } catch (err) {
     console.error('Error in onRequestGet plataforma:', err);

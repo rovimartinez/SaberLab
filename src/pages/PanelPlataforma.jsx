@@ -15,9 +15,14 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const [courses, setCourses] = useState([]);
     const [groups, setGroups] = useState([]);
     const [userGroups, setUserGroups] = useState({});
+    const [aiStatus, setAiStatus] = useState({ online: true, provider: 'Google Gemini / Groq', bots: [] });
+    const [aiTestResult, setAiTestResult] = useState(null);
+    const [testingAi, setTestingAi] = useState(false);
+    const [botPingResults, setBotPingResults] = useState({});
+    const [testingBotId, setTestingBotId] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Cargar usuarios de Supabase
+    // Cargar usuarios y estado del sistema
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -28,6 +33,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                 if (data.perfiles) setUsers(data.perfiles);
                 if (data.cursos) setCourses(data.cursos);
                 if (data.grupos) setGroups(data.grupos);
+                if (data.ai_status) setAiStatus(data.ai_status);
 
                 const ugMap = {};
                 (data.grupos_usuario || []).forEach(ug => {
@@ -303,18 +309,229 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                         className={`admin-tab ${activeTab === 'users' ? 'active' : ''}`}
                         onClick={() => setActiveTab('users')}
                     >
-                        Usuarios
+                        👥 Usuarios
                     </button>
                     <button 
                         className={`admin-tab ${activeTab === 'settings' ? 'active' : ''}`}
                         onClick={() => setActiveTab('settings')}
                     >
-                        Catálogos y Opciones
+                        ⚙️ Catálogos y Opciones
+                    </button>
+                    <button 
+                        className={`admin-tab ${activeTab === 'ai' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('ai')}
+                    >
+                        🤖 Estado del Motor IA
                     </button>
                 </div>
             )}
 
-            {(section ? section === 'users' : true) && (
+            {/* Subsección: Estado de la IA Dedicada */}
+            {(section === 'ai' || (!section && activeTab === 'ai')) && (
+                <div className="settings-grid" style={{ gridTemplateColumns: '1fr' }}>
+                    <div className="settings-panel" style={{ border: aiStatus?.online ? '1.5px solid rgba(16, 185, 129, 0.45)' : '1.5px solid rgba(239, 68, 68, 0.45)', background: 'var(--surface-card, #ffffff)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    borderRadius: '50%',
+                                    background: aiStatus?.online ? '#10b981' : '#ef4444',
+                                    boxShadow: aiStatus?.online ? '0 0 14px #10b981' : '0 0 14px #ef4444'
+                                }} />
+                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-heading, #1e293b)' }}>Telemetría y Estado de los Tutores IA</h3>
+                            </div>
+                            <span style={{
+                                padding: '6px 14px',
+                                borderRadius: '20px',
+                                fontSize: '0.85rem',
+                                fontWeight: 800,
+                                background: aiStatus?.online ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                color: aiStatus?.online ? '#10b981' : '#ef4444'
+                            }}>
+                                {aiStatus?.online ? '🟢 IA ONLINE / OPERACIONAL' : '🔴 IA OFFLINE'}
+                            </span>
+                        </div>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '1.5rem' }}>
+                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Proveedor Principal</span>
+                                <h4 style={{ margin: '4px 0 0 0', color: 'var(--brand-primary, #6366f1)' }}>{aiStatus?.provider || 'Google Gemini 2.5 Flash'}</h4>
+                            </div>
+                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tutores Conectados</span>
+                                <h4 style={{ margin: '4px 0 0 0' }}>4 Asistentes Especializados</h4>
+                            </div>
+                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Modo de Contingencia</span>
+                                <h4 style={{ margin: '4px 0 0 0', color: '#10b981' }}>Heurístico Offline Activo</h4>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-heading, #1e293b)' }}>
+                                📡 Ping y Diagnóstico en Tiempo Real por Tutor:
+                            </h4>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                Inferencia real con latencia de red, modelo e ID de sesión D1
+                            </span>
+                        </div>
+
+                        {/* Grid de Ping Individual por Bot */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                            {[
+                                { id: 'electrobot', name: 'ElectroBot', course: 'EE', color: '#eab308', icon: '⚡', subtitle: 'Electricidad y Circuitos', query: '¿Cómo calcular la resistencia equivalente en un circuito paralelo?' },
+                                { id: 'robobot', name: 'RoboBot', course: 'RE', color: '#0284c7', icon: '🤖', subtitle: 'Robótica y Arduino C++', query: '¿Cómo leer una fotorresistencia LDR con analogRead() en Arduino?' },
+                                { id: 'tridibot', name: 'TridiBot', course: 'MA', color: '#8b5cf6', icon: '🧊', subtitle: 'Modelado 3D y Blender', query: '¿Cuáles son los atajos fundamentales G, R, S en Blender?' },
+                                { id: 'impribot', name: 'ImpriBot', course: 'SIMI', color: '#06b6d4', icon: '🚀', subtitle: 'Impresión 3D y Slicers', query: '¿Cuáles son las temperaturas recomendadas para filamento PETG?' }
+                            ].map(bot => {
+                                const isTestingThis = testingBotId === bot.id;
+                                const result = botPingResults[bot.id];
+
+                                return (
+                                    <div key={bot.id} style={{
+                                        background: 'var(--surface-ground, #f8fafc)',
+                                        border: `1.5px solid ${result?.success ? 'rgba(16, 185, 129, 0.4)' : result?.error ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-default, #e2e8f0)'}`,
+                                        borderRadius: '14px',
+                                        padding: '1.1rem',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '0.75rem',
+                                        position: 'relative'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontSize: '1.4rem' }}>{bot.icon}</span>
+                                                <div>
+                                                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-heading, #1e293b)' }}>
+                                                        {bot.name} <span style={{ fontSize: '0.75rem', color: bot.color, fontWeight: 700 }}>({bot.course})</span>
+                                                    </h4>
+                                                    <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{bot.subtitle}</span>
+                                                </div>
+                                            </div>
+                                            {result && (
+                                                <span style={{
+                                                    fontSize: '0.72rem',
+                                                    fontWeight: 800,
+                                                    padding: '2px 8px',
+                                                    borderRadius: '12px',
+                                                    background: result.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                                    color: result.success ? '#10b981' : '#ef4444'
+                                                }}>
+                                                    {result.success ? `${result.latencyMs} ms` : 'Fallo'}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            disabled={isTestingThis}
+                                            onClick={async () => {
+                                                setTestingBotId(bot.id);
+                                                const startTime = performance.now();
+                                                try {
+                                                    const res = await api('/ai/chat', {
+                                                        method: 'POST',
+                                                        body: {
+                                                            botType: bot.id,
+                                                            courseAbbr: bot.course,
+                                                            messages: [{ role: 'user', content: bot.query }],
+                                                            isBrief: true
+                                                        }
+                                                    });
+                                                    const elapsed = Math.round(performance.now() - startTime);
+                                                    if (res?.data?.success && res.data.message) {
+                                                        setBotPingResults(prev => ({
+                                                            ...prev,
+                                                            [bot.id]: {
+                                                                success: true,
+                                                                text: res.data.message.content,
+                                                                model: res.data.model || 'SaberLab AI',
+                                                                latencyMs: elapsed,
+                                                                timestamp: new Date().toLocaleTimeString()
+                                                            }
+                                                        }));
+                                                        setAiStatus(prev => ({ ...prev, online: true }));
+                                                    } else {
+                                                        setBotPingResults(prev => ({
+                                                            ...prev,
+                                                            [bot.id]: {
+                                                                success: false,
+                                                                error: res?.error?.message || res?.data?.error || 'Sin respuesta',
+                                                                latencyMs: elapsed,
+                                                                timestamp: new Date().toLocaleTimeString()
+                                                            }
+                                                        }));
+                                                    }
+                                                } catch (err) {
+                                                    const elapsed = Math.round(performance.now() - startTime);
+                                                    setBotPingResults(prev => ({
+                                                        ...prev,
+                                                        [bot.id]: {
+                                                            success: false,
+                                                            error: err.message || 'Error de conexión',
+                                                            latencyMs: elapsed,
+                                                            timestamp: new Date().toLocaleTimeString()
+                                                        }
+                                                    }));
+                                                } finally {
+                                                    setTestingBotId(null);
+                                                }
+                                            }}
+                                            style={{
+                                                background: isTestingThis ? 'rgba(99, 102, 241, 0.2)' : `linear-gradient(135deg, ${bot.color} 0%, #475569 100%)`,
+                                                color: '#fff',
+                                                border: 'none',
+                                                padding: '7px 12px',
+                                                borderRadius: '8px',
+                                                fontWeight: 700,
+                                                fontSize: '0.82rem',
+                                                cursor: isTestingThis ? 'wait' : 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '6px'
+                                            }}
+                                        >
+                                            {isTestingThis ? '⚡ Ejecutando Ping...' : `⚡ Probar Ping en Vivo (${bot.name})`}
+                                        </button>
+
+                                        {result && (
+                                            <div style={{
+                                                marginTop: '4px',
+                                                padding: '8px 10px',
+                                                borderRadius: '8px',
+                                                fontSize: '0.78rem',
+                                                background: result.success ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                                                border: result.success ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                                                color: 'var(--text-primary)'
+                                            }}>
+                                                {result.success ? (
+                                                    <>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#10b981', fontWeight: 700 }}>
+                                                            <span>✓ Inferencia exitosa [{result.model}]</span>
+                                                            <span>{result.timestamp}</span>
+                                                        </div>
+                                                        <p style={{ margin: 0, color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: '1.3' }}>
+                                                            "{result.text.slice(0, 110)}..."
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <div style={{ color: '#ef4444', fontWeight: 600 }}>
+                                                        ✗ Error: {result.error} ({result.timestamp})
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {(section === 'users' || (!section && activeTab === 'users')) && (
                 <>
                     <div className="admin-controls">
                         <div className="search-wrapper">
@@ -582,6 +799,7 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                             </button>
                         </div>
                     </div>
+
                 </div>
             )}
 

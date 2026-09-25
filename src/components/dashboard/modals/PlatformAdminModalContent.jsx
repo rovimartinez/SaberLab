@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import PanelPlataforma from '../../../pages/PanelPlataforma';
 
-export const PlatformAdminModalContent = () => {
-    const [platformSubSection, setPlatformSubSection] = useState('users');
+export const PlatformAdminModalContent = ({ initialSection = 'users' }) => {
+    const [platformSubSection, setPlatformSubSection] = useState(initialSection);
 
     return (
         <div className="admin-modal-tool-wrap animate-fade-in" style={{ width: '100%' }}>
@@ -20,6 +20,13 @@ export const PlatformAdminModalContent = () => {
                     onClick={() => setPlatformSubSection('settings')}
                 >
                     ⚙️ Catálogos & Ajustes
+                </button>
+                <button 
+                    type="button" 
+                    className={`admin-subnav-btn ${platformSubSection === 'ai' ? 'active' : ''}`}
+                    onClick={() => setPlatformSubSection('ai')}
+                >
+                    🤖 Estado del Motor IA
                 </button>
             </div>
             <PanelPlataforma showHeader={false} showTabs={false} section={platformSubSection} />

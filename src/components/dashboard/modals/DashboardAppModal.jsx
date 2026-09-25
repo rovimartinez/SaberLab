@@ -366,7 +366,12 @@ export const DashboardAppModal = ({
 
                         {/* 3. Plataforma (Usuarios y Catálogos) */}
                         {activeAppModal === 'platformAdmin' && (
-                            <PlatformAdminModalContent />
+                            <PlatformAdminModalContent initialSection="users" />
+                        )}
+
+                        {/* 3.1 Estado de la IA Directo */}
+                        {activeAppModal === 'aiEngineStatus' && (
+                            <PlatformAdminModalContent initialSection="ai" />
                         )}
 
                         {/* 4. Exámenes (Evaluaciones y Creador) */}

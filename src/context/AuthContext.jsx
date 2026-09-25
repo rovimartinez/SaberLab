@@ -414,6 +414,26 @@ export const AuthProvider = ({ children }) => {
 
       // Cargar cursos y el resto de la telemetría en segundo plano sin congelar la app
       await activateResolvedProfile(loggedInUser, p);
+
+      // Verificación y calentamiento automático de la IA al iniciar sesión (Ping en segundo plano)
+      if (token) {
+        setTimeout(() => {
+          api('/ai/chat', {
+            method: 'POST',
+            body: {
+              botType: 'robobot',
+              courseAbbr: 'RE',
+              messages: [{ role: 'user', content: `Hola, soy ${p.full_name || 'estudiante'} y acabo de iniciar sesión.` }],
+              isBrief: true
+            }
+          }).then(res => {
+            if (res?.data?.success) {
+              window.__SABERLAB_AI_ONLINE = true;
+              window.__SABERLAB_AI_PROVIDER = res.data.model;
+            }
+          }).catch(() => {});
+        }, 1200);
+      }
     } catch (err) {
       console.error('Session validation error:', err);
       clearToken();

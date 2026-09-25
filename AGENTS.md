@@ -27,6 +27,7 @@
    - 🤖 **Robótica (RE):** [`re-course-architecture-map`](.agents/skills/re-course-architecture-map/SKILL.md)
    - 🎨 **Modelado 3D (MA):** [`ma-course-architecture-map`](.agents/skills/ma-course-architecture-map/SKILL.md)
    - 🖨️ **Semillero SIMI3D (SIMI):** [`simi-architecture-map`](.agents/skills/simi-architecture-map/SKILL.md)
+   - 🧠 **Motor de IA & Tutores:** [`saberlab-ai-engine`](.agents/skills/saberlab-ai-engine/SKILL.md)
 
 ---
 

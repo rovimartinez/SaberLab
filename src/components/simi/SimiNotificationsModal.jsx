@@ -377,8 +377,6 @@ export default function SimiNotificationsModal({ isOpen, onClose, onNavigateTab 
                                 color: '#06b6d4',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyCenter: 'center',
-                                display: 'flex',
                                 justifyContent: 'center'
                             }}>
                                 <Check size={22} />

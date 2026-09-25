@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Efectos de Apertura FAB Bot - 20 Variaciones</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+      overflow-x: hidden;
+    }
+
+    .code-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Fondo de cuadrícula clara moderna */
+    .bg-light-grid {
+      background-color: #f8fafc;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    }
+
+    /* Scrollbar estilizado en tonos claros */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Pulso suave de respiración en reposo */
+    @keyframes fabBreathing {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4), 0 0 0 0 rgba(99, 102, 241, 0.3);
+      }
+      50% {
+        transform: scale(1.04);
+        box-shadow: 0 16px 30px -5px rgba(99, 102, 241, 0.5), 0 0 0 10px rgba(99, 102, 241, 0);
+      }
+    }
+    .fab-idle-pulse {
+      animation: fabBreathing 2.8s ease-in-out infinite;
+    }
+
+    /* Laser beam para la proyección holográfica */
+    @keyframes holoLaserBeam {
+      0% { opacity: 0; transform: scaleX(0.1) translateY(40px); }
+      30% { opacity: 1; transform: scaleX(1) translateY(0); filter: drop-shadow(0 0 18px #06b6d4); }
+      80% { opacity: 0.8; }
+      100% { opacity: 0; transform: scaleX(1.4) translateY(-30px); }
+    }
+    .laser-beam-anim {
+      animation: holoLaserBeam 0.55s ease-out forwards;
+    }
+
+    /* ========================================================
+       01. THANOS DUST SNAP (En sitio fijo: sin escalar ni encoger)
+       ======================================================== */
+    .thanos-opening {
+      animation: thanosAssembleInPlace 0.62s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform: none !important;
+    }
+    .thanos-closing {
+      animation: thanosDisintegrateInPlace 0.52s ease-in forwards;
+      transform: none !important;
+    }
+    @keyframes thanosAssembleInPlace {
+      0% {
+        opacity: 0;
+        filter: blur(14px) brightness(1.6);
+        box-shadow: 0 0 50px rgba(168, 85, 247, 0.7);
+      }
+      60% {
+        opacity: 0.85;
+        filter: blur(2px) brightness(1.15);
+      }
+      100% {
+        opacity: 1;
+        filter: none;
+        box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.14);
+      }
+    }
+    @keyframes thanosDisintegrateInPlace {
+      0% {
+        opacity: 1;
+        filter: none;
+      }
+      40% {
+        opacity: 0.8;
+        filter: blur(3px) brightness(1.3) drop-shadow(0 0 16px #c084fc);
+      }
+      100% {
+        opacity: 0;
+        filter: blur(16px) brightness(1.8);
+      }
+    }
+
+    /* ========================================================
+       02. MATRIX DIGITAL STREAM (Transparente, sin bordes verdes, hacia arriba al abrir y hacia abajo al cerrar)
+       ======================================================== */
+    .matrix-opening {
+      animation: matrixCompileUpwards 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform: none !important;
+    }
+    .matrix-closing {
+      animation: matrixDecompileDownwards 0.9s cubic-bezier(0.4, 0, 1, 1) forwards;
+      transform: none !important;
+    }
+    @keyframes matrixCompileUpwards {
+      0% {
+        opacity: 0;
+        clip-path: inset(100% 0 0 0);
+      }
+      20% {
+        opacity: 0.95;
+      }
+      100% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+      }
+    }
+    @keyframes matrixDecompileDownwards {
+      0% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+      }
+      30% {
+        opacity: 0.85;
+      }
+      100% {
+        opacity: 0;
+        clip-path: inset(100% 0 0 0);
+      }
+    }
+
+    /* ========================================================
+       03. NANOTECH WEAVE (En sitio fijo: sin escalar)
+       ======================================================== */
+    .nanotech-opening {
+      animation: nanoAssembleInPlace 0.58s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      transform: none !important;
+    }
+    .nanotech-closing {
+      animation: nanoDisassembleInPlace 0.4s ease-in forwards;
+      transform: none !important;
+    }
+    @keyframes nanoAssembleInPlace {
+      0% {
+        opacity: 0;
+        clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+        filter: brightness(2) drop-shadow(0 0 20px #f59e0b);
+      }
+      50% {
+        opacity: 0.88;
+        clip-path: polygon(15% 0%, 85% 0%, 100% 85%, 0% 85%);
+        filter: brightness(1.3);
+      }
+      100% {
+        opacity: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        filter: none;
+      }
+    }
+    @keyframes nanoDisassembleInPlace {
+      0% {
+        opacity: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        filter: none;
+      }
+      50% {
+        opacity: 0.7;
+        clip-path: polygon(25% 15%, 75% 15%, 85% 85%, 15% 85%);
+        filter: brightness(1.5) drop-shadow(0 0 15px #f59e0b);
+      }
+      100% {
+        opacity: 0;
+        clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+        filter: blur(8px);
+      }
+    }
+
+    /* ========================================================
+       04. VOXEL QUANTUM DISSOLVE
+       ======================================================== */
+    .voxel-opening {
+      animation: voxelBuild 0.54s steps(8, end) forwards;
+      transform-origin: bottom right;
+    }
+    .voxel-closing {
+      animation: voxelVanish 0.38s steps(6, end) forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes voxelBuild {
+      0% { opacity: 0; transform: scale(0.15) translate(40px, 40px); filter: contrast(4) blur(8px); }
+      35% { opacity: 0.6; transform: scale(0.65) translate(-12px, -15px); filter: contrast(2.5); }
+      70% { opacity: 0.9; transform: scale(1.05) translate(4px, 2px); }
+      100% { opacity: 1; transform: scale(1) translate(0, 0); filter: none; }
+    }
+    @keyframes voxelVanish {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.7) translate(15px, 15px); filter: contrast(3); }
+      100% { opacity: 0; transform: scale(0.08) translate(35px, 35px); filter: contrast(5); }
+    }
+
+    /* ========================================================
+       05. HOLOGRAM BEAM (Haz de Holograma Proyectado)
+       ======================================================== */
+    .holo-opening {
+      animation: holoBeamOpen 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom center;
+    }
+    .holo-closing {
+      animation: holoBeamClose 0.35s ease-in forwards;
+      transform-origin: bottom center;
+    }
+    @keyframes holoBeamOpen {
+      0% {
+        opacity: 0;
+        transform: scaleY(0.05) scaleX(0.4) translateY(60px);
+        filter: brightness(2.5) contrast(1.5) drop-shadow(0 0 20px #06b6d4);
+      }
+      50% {
+        opacity: 0.85;
+        transform: scaleY(1.08) scaleX(0.95) translateY(-5px);
+        filter: brightness(1.4) drop-shadow(0 0 10px #06b6d4);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: none;
+      }
+    }
+    @keyframes holoBeamClose {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scaleY(0.02) scaleX(0.5) translateY(40px); filter: brightness(2); }
+    }
+
+    /* ========================================================
+       03. DRONE DEPLOY (Dron Eyector Mecánico)
+       ======================================================== */
+    .drone-opening {
+      animation: droneDeployOpen 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .drone-closing {
+      animation: droneDeployClose 0.38s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes droneDeployOpen {
+      0% { opacity: 0; transform: translateY(80px) scale(0.4) rotate(-8deg); }
+      60% { opacity: 1; transform: translateY(-10px) scale(1.02) rotate(2deg); }
+      80% { transform: translateY(4px) scale(0.99) rotate(-0.5deg); }
+      100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    }
+    @keyframes droneDeployClose {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(60px) scale(0.3) rotate(10deg); }
+    }
+
+    /* ========================================================
+       04. ORIGAMI 3D UNFOLD (Pliegues en Perspectiva 3D)
+       ======================================================== */
+    .origami-opening {
+      animation: origamiUnfold 0.56s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .origami-closing {
+      animation: origamiFold 0.36s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes origamiUnfold {
+      0% {
+        opacity: 0;
+        transform: perspective(900px) rotateX(-50deg) rotateY(40deg) scale(0.4) translate(30px, 40px);
+        filter: brightness(1.4);
+      }
+      60% {
+        opacity: 1;
+        transform: perspective(900px) rotateX(10deg) rotateY(-8deg) scale(1.02);
+      }
+      100% {
+        opacity: 1;
+        transform: perspective(900px) rotateX(0deg) rotateY(0deg) scale(1) translate(0, 0);
+        filter: none;
+      }
+    }
+    @keyframes origamiFold {
+      0% { opacity: 1; transform: perspective(900px) rotateX(0deg) scale(1); }
+      100% { opacity: 0; transform: perspective(900px) rotateX(-60deg) rotateY(30deg) scale(0.25); }
+    }
+
+    /* ========================================================
+       05. QUANTUM GLITCH (Decodificación Ciberpunk)
+       ======================================================== */
+    .glitch-opening {
+      animation: quantumGlitchOpen 0.48s steps(8, end) forwards;
+      transform-origin: bottom right;
+    }
+    .glitch-closing {
+      animation: quantumGlitchClose 0.32s steps(5, end) forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes quantumGlitchOpen {
+      0% { opacity: 0; transform: scale(0.3) skewX(25deg); filter: invert(0.8) hue-rotate(90deg); }
+      25% { opacity: 0.7; transform: scale(0.7) translate(-10px, 5px) skewX(-15deg); filter: contrast(3); }
+      50% { opacity: 0.9; transform: scale(1.05) translate(8px, -4px) skewX(10deg); filter: hue-rotate(180deg); }
+      75% { opacity: 1; transform: scale(0.98) translate(-3px, 2px) skewX(-4deg); }
+      100% { opacity: 1; transform: scale(1) translate(0) skewX(0); filter: none; }
+    }
+    @keyframes quantumGlitchClose {
+      0% { opacity: 1; transform: scale(1); }
+      40% { opacity: 0.8; transform: scale(0.8) skewX(20deg); filter: invert(0.9); }
+      100% { opacity: 0; transform: scale(0.2) skewX(-30deg); }
+    }
+
+    /* ========================================================
+       06. JELLY ELASTIC SPRING (Rebote de Gelatina)
+       ======================================================== */
+    .jelly-opening {
+      animation: jellySpring 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .jelly-closing {
+      animation: jellyCollapse 0.35s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes jellySpring {
+      0% { opacity: 0; transform: scale(0.2, 0.2); }
+      35% { opacity: 1; transform: scale(1.22, 0.82); }
+      55% { transform: scale(0.88, 1.14); }
+      75% { transform: scale(1.05, 0.96); }
+      90% { transform: scale(0.98, 1.02); }
+      100% { opacity: 1; transform: scale(1, 1); }
+    }
+    @keyframes jellyCollapse {
+      0% { transform: scale(1); opacity: 1; }
+      40% { transform: scale(1.15, 0.85); opacity: 0.8; }
+      100% { transform: scale(0.1, 0.1); opacity: 0; }
+    }
+
+    /* ========================================================
+       07. COSMIC VORTEX (Portal Gravitacional)
+       ======================================================== */
+    .vortex-opening {
+      animation: cosmicVortexOpen 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .vortex-closing {
+      animation: cosmicVortexClose 0.4s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes cosmicVortexOpen {
+      0% { opacity: 0; transform: rotate(-360deg) scale(0.1); filter: blur(10px) brightness(2); }
+      60% { opacity: 0.9; transform: rotate(15deg) scale(1.04); filter: blur(2px); }
+      100% { opacity: 1; transform: rotate(0deg) scale(1); filter: none; }
+    }
+    @keyframes cosmicVortexClose {
+      0% { opacity: 1; transform: scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: rotate(360deg) scale(0.05); filter: blur(8px); }
+    }
+
+    /* ========================================================
+       08. BENTO MODULAR SNAP (Ensamblaje Magnético)
+       ======================================================== */
+    .bento-opening {
+      animation: bentoSnapOpen 0.52s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .bento-closing {
+      animation: bentoSnapClose 0.34s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes bentoSnapOpen {
+      0% { opacity: 0; transform: translateY(40px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes bentoSnapClose {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: translateY(30px) scale(0.85); }
+    }
+    .bento-item-header {
+      animation: bentoPartSlide 0.45s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .bento-item-body {
+      animation: bentoPartSlide 0.45s 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .bento-item-footer {
+      animation: bentoPartSlide 0.45s 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes bentoPartSlide {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========================================================
+       09. RIPPLE WAVE (Onda Expansiva Acuática)
+       ======================================================== */
+    .ripple-opening {
+      animation: rippleExpand 0.54s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .ripple-closing {
+      animation: rippleContract 0.36s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes rippleExpand {
+      0% {
+        opacity: 0;
+        clip-path: ellipse(15% 15% at 90% 90%);
+        transform: scale(0.85);
+      }
+      65% {
+        clip-path: ellipse(110% 110% at 90% 90%);
+        transform: scale(1.02);
+      }
+      100% {
+        opacity: 1;
+        clip-path: ellipse(180% 180% at 90% 90%);
+        transform: scale(1);
+      }
+    }
+    @keyframes rippleContract {
+      0% { clip-path: ellipse(180% 180% at 90% 90%); opacity: 1; }
+      100% { clip-path: ellipse(10% 10% at 90% 90%); opacity: 0; }
+    }
+
+    /* ========================================================
+       10. GLASS PRISM WIPE (Barrido Irisado de Prisma)
+       ======================================================== */
+    .prism-opening {
+      animation: prismWipe 0.52s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .prism-closing {
+      animation: prismFade 0.32s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes prismWipe {
+      0% {
+        opacity: 0;
+        clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+        filter: brightness(2) contrast(1.4);
+      }
+      50% {
+        opacity: 0.9;
+        filter: brightness(1.3);
+      }
+      100% {
+        opacity: 1;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        filter: none;
+      }
+    }
+    @keyframes prismFade {
+      0% { opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+      100% { opacity: 0; clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%); }
+    }
+
+    /* ========================================================
+       11. ACCORDION ROLLOUT (Despliegue Vertical de Pergamino)
+       ======================================================== */
+    .accordion-opening {
+      animation: accordionRoll 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom center;
+    }
+    .accordion-closing {
+      animation: accordionUnroll 0.34s ease-in forwards;
+      transform-origin: bottom center;
+    }
+    @keyframes accordionRoll {
+      0% { opacity: 0; transform: scaleY(0.04) translateY(40px); }
+      70% { opacity: 1; transform: scaleY(1.04) translateY(-4px); }
+      100% { opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+    @keyframes accordionUnroll {
+      0% { opacity: 1; transform: scaleY(1); }
+      100% { opacity: 0; transform: scaleY(0.05); }
+    }
+
+    /* ========================================================
+       12. PIXEL MATRIX (Síntesis por Bloques Pixelados)
+       ======================================================== */
+    .pixel-opening {
+      animation: pixelBuild 0.45s steps(6) forwards;
+      transform-origin: bottom right;
+    }
+    .pixel-closing {
+      animation: pixelDecon 0.32s steps(4) forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes pixelBuild {
+      0% { opacity: 0; transform: scale(0.2); filter: contrast(3) blur(6px); }
+      50% { opacity: 0.8; transform: scale(0.85); filter: contrast(2); }
+      100% { opacity: 1; transform: scale(1); filter: none; }
+    }
+    @keyframes pixelDecon {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.1); filter: blur(8px); }
+    }
+
+    /* ========================================================
+       13. BALLOON INFLATE (Inflado Neumático)
+       ======================================================== */
+    .balloon-opening {
+      animation: balloonPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .balloon-closing {
+      animation: balloonDeflate 0.32s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes balloonPop {
+      0% { opacity: 0; transform: scale(0.1) rotate(-15deg); }
+      65% { opacity: 1; transform: scale(1.1) rotate(3deg); }
+      85% { transform: scale(0.96) rotate(-1deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    @keyframes balloonDeflate {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.15) rotate(15deg); }
+    }
+
+    /* ========================================================
+       14. ELEVATOR GLASS LIFT (Ascensor de Cristal Flotante)
+       ======================================================== */
+    .elevator-opening {
+      animation: elevatorRise 0.52s cubic-bezier(0.2, 0.9, 0.25, 1) forwards;
+      transform-origin: bottom center;
+    }
+    .elevator-closing {
+      animation: elevatorDrop 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+      transform-origin: bottom center;
+    }
+    @keyframes elevatorRise {
+      0% { opacity: 0; transform: translateY(120px) scale(0.92); }
+      75% { opacity: 1; transform: translateY(-8px) scale(1.01); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes elevatorDrop {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(90px) scale(0.94); }
+    }
+
+    /* ========================================================
+       15. SPATIAL VISIONOS ZOOM (Zoom Cinemático 3D)
+       ======================================================== */
+    .spatial-opening {
+      animation: spatialDepthOpen 0.56s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .spatial-closing {
+      animation: spatialDepthClose 0.34s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes spatialDepthOpen {
+      0% {
+        opacity: 0;
+        transform: perspective(1200px) translateZ(-250px) scale(0.65) translateY(40px);
+        filter: blur(8px);
+      }
+      70% {
+        opacity: 1;
+        transform: perspective(1200px) translateZ(15px) scale(1.02);
+        filter: blur(0px);
+      }
+      100% {
+        opacity: 1;
+        transform: perspective(1200px) translateZ(0) scale(1) translateY(0);
+      }
+    }
+    @keyframes spatialDepthClose {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: perspective(1200px) translateZ(-200px) scale(0.6); filter: blur(10px); }
+    }
+
+    /* ========================================================
+       16. NEON CIRCUIT TRACE (Pistas Eléctricas)
+       ======================================================== */
+    .circuit-opening {
+      animation: circuitDraw 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .circuit-closing {
+      animation: circuitWipe 0.35s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes circuitDraw {
+      0% {
+        opacity: 0;
+        clip-path: inset(100% 0 0 100% round 24px);
+        transform: scale(0.95);
+        filter: drop-shadow(0 0 15px #10b981);
+      }
+      60% {
+        clip-path: inset(0 0 0 0 round 24px);
+        filter: drop-shadow(0 0 8px #10b981);
+      }
+      100% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0 round 24px);
+        transform: scale(1);
+        filter: none;
+      }
+    }
+    @keyframes circuitWipe {
+      0% { clip-path: inset(0 0 0 0 round 24px); opacity: 1; }
+      100% { clip-path: inset(100% 0 0 100% round 24px); opacity: 0; }
+    }
+
+    /* ========================================================
+       17. THANOS DUST SNAP (Cenizas Cósmicas en Polvo)
+       ======================================================== */
+    .thanos-opening {
+      animation: thanosAssemble 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .thanos-closing {
+      animation: thanosDisintegrate 0.55s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes thanosAssemble {
+      0% {
+        opacity: 0;
+        transform: scale(0.6) translate(40px, 30px);
+        filter: blur(14px) brightness(1.8) contrast(1.6);
+        box-shadow: 0 0 45px rgba(168, 85, 247, 0.6);
+      }
+      50% {
+        opacity: 0.85;
+        transform: scale(1.03) translate(-4px, -4px);
+        filter: blur(3px) brightness(1.2);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translate(0, 0);
+        filter: none;
+        box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.14);
+      }
+    }
+    @keyframes thanosDisintegrate {
+      0% {
+        opacity: 1;
+        transform: scale(1) translate(0, 0);
+        filter: none;
+      }
+      40% {
+        opacity: 0.8;
+        transform: scale(1.02) translate(15px, -10px) skewX(4deg);
+        filter: blur(4px) brightness(1.4) drop-shadow(0 0 20px #c084fc);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.4) translate(60px, -40px) skewX(18deg);
+        filter: blur(18px) brightness(2);
+      }
+    }
+
+    /* ========================================================
+       19. NANOTECH WEAVE (Micro-armadura Hexagonal)
+       ======================================================== */
+    .nanotech-opening {
+      animation: nanoAssemble 0.62s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .nanotech-closing {
+      animation: nanoDisassemble 0.42s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes nanoAssemble {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(8deg);
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        filter: brightness(2) drop-shadow(0 0 20px #f59e0b);
+      }
+      50% {
+        opacity: 0.85;
+        clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 75% 100%, 0% 100%, 0% 0%);
+        transform: scale(1.04) rotate(-2deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        filter: none;
+      }
+    }
+    @keyframes nanoDisassemble {
+      0% { opacity: 1; transform: scale(1); clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+      60% { opacity: 0.6; transform: scale(0.6) rotate(-6deg); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); filter: brightness(1.6); }
+      100% { opacity: 0; transform: scale(0.1) rotate(15deg); }
+    }
+
+    /* ========================================================
+       19. NEON CIRCUIT TRACE (Pistas Eléctricas)
+       ======================================================== */
+    .circuit-opening {
+      animation: circuitDraw 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transform-origin: bottom right;
+    }
+    .circuit-closing {
+      animation: circuitWipe 0.35s ease-in forwards;
+      transform-origin: bottom right;
+    }
+    @keyframes circuitDraw {
+      0% {
+        opacity: 0;
+        clip-path: inset(100% 0 0 100% round 24px);
+        transform: scale(0.95);
+        filter: drop-shadow(0 0 15px #10b981);
+      }
+      60% {
+        clip-path: inset(0 0 0 0 round 24px);
+        filter: drop-shadow(0 0 8px #10b981);
+      }
+      100% {
+        opacity: 1;
+        clip-path: inset(0 0 0 0 round 24px);
+        transform: scale(1);
+        filter: none;
+      }
+    }
+    @keyframes circuitWipe {
+      0% { clip-path: inset(0 0 0 0 round 24px); opacity: 1; }
+      100% { clip-path: inset(100% 0 0 100% round 24px); opacity: 0; }
+    }
+
+    /* Rayas holográficas sutiles */
+    .scanlines-overlay {
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.05) 50%
+      ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.02),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.02)
+      );
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-light-grid relative flex flex-col items-center justify-start py-8 px-4 md:px-8">
+
+  <!-- Canvas superpuesto para efectos de partículas físicas (Thanos, Matrix, Nanotech) -->
+  <canvas id="fxOverlayCanvas" class="pointer-events-none fixed inset-0 z-40 w-full h-full"></canvas>
+
+  <!-- Encabezado Principal en Tonos Claros -->
+  <header class="w-full max-w-5xl text-center mb-8">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold tracking-wide uppercase shadow-sm mb-3">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+      Tema Claro &middot; 19 Efectos de Animación FAB
+    </div>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">
+      Animaciones de Apertura FAB Chatbot
+    </h1>
+    <p class="text-slate-600 text-sm sm:text-base mt-2.5 max-w-2xl mx-auto leading-relaxed">
+      Haz clic en cualquier tarjeta para seleccionar su efecto, o presiona directamente el <strong>botón flotante (FAB)</strong> abajo a la derecha para ver la transición en vivo.
+    </p>
+
+    <!-- Controles Globales Superiores -->
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+      <!-- Selector de Velocidad -->
+      <div class="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm text-xs font-medium text-slate-700">
+        <span class="px-2.5 text-slate-400">Velocidad:</span>
+        <button onclick="setSpeed(0.5, this)" class="px-2.5 py-1 rounded-lg hover:bg-slate-100 transition">0.5x</button>
+        <button onclick="setSpeed(1, this)" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold border border-indigo-200/80 transition">1x</button>
+        <button onclick="setSpeed(1.5, this)" class="px-2.5 py-1 rounded-lg hover:bg-slate-100 transition">1.5x</button>
+      </div>
+
+      <!-- Botón de Audio Sintetizado Procedural -->
+      <button id="toggleAudioBtn" onclick="toggleAudio()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+        <span id="audioStatusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span id="audioBtnText">Efectos de Audio: Activados</span>
+      </button>
+
+      <!-- Botón de Disparo Directo -->
+      <button onclick="toggleChatWindow()" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-500/20 transition transform active:scale-95">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Alternar Chat (FAB)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Cuadrícula con las 19 Opciones de Efectos -->
+  <main class="w-full max-w-5xl mb-24">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+        <span>Catálogo de Variaciones</span>
+        <span class="text-xs bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-full font-mono font-bold">19</span>
+      </h2>
+      <div id="activeEffectLabel" class="text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
+        Activo: #01 Thanos Dust Snap
+      </div>
+    </div>
+
+    <div id="effectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <!-- Inyectado por JavaScript -->
+    </div>
+  </main>
+
+  <!-- ========================================================
+       VENTANA DE CHAT FLOTANTE (ESTILO LIGHT FROSTED GLASS)
+       ======================================================== -->
+  <div 
+    id="chatWindow" 
+    class="fixed bottom-24 right-5 sm:right-8 z-50 w-[calc(100vw-40px)] sm:w-[380px] h-[520px] max-h-[80vh] bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-3xl shadow-2xl flex flex-col overflow-hidden hidden"
+    style="box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(226, 232, 240, 0.8);">
+
+    <!-- Capa de scanlines futuristas / holográficas -->
+    <div id="scanlineOverlay" class="scanlines-overlay absolute inset-0 opacity-0 pointer-events-none transition-opacity duration-300 z-10"></div>
+
+    <!-- Haz de proyección láser para el holograma -->
+    <div id="holoLaser" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-32 bg-gradient-to-t from-cyan-400/40 via-cyan-300/10 to-transparent pointer-events-none opacity-0 z-20"></div>
+
+    <!-- Cabecera del Chat -->
+    <div id="chatHeaderBlock" class="relative z-20 flex items-center justify-between p-4 bg-slate-50/90 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          </div>
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white"></span>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+            <span>Aura AI Assistant</span>
+            <span class="text-[10px] font-semibold bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded-md">v2.4</span>
+          </h3>
+          <p id="chatEffectStatus" class="text-xs text-indigo-600 font-medium">#01 Thanos Dust Snap</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <!-- Botón Minimizar -->
+        <button onclick="closeChat()" class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition" title="Minimizar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <!-- Botón Cerrar -->
+        <button onclick="closeChat()" class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition" title="Cerrar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cuerpo de Mensajes -->
+    <div id="chatMessages" class="relative z-20 flex-1 p-4 overflow-y-auto space-y-3.5 text-xs sm:text-sm">
+      <!-- Mensaje del Bot -->
+      <div class="flex items-start gap-2.5">
+        <div class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
+          AI
+        </div>
+        <div class="bg-slate-100 border border-slate-200/80 rounded-2xl rounded-tl-sm p-3 text-slate-700 max-w-[85%] leading-relaxed shadow-sm">
+          ¡Hola! Soy tu asistente inteligente. Prueba a cambiar el efecto en la cuadrícula y pulsa el botón flotante para ver cómo me construyo y deconstruyo.
+        </div>
+      </div>
+
+      <!-- Mensaje del Usuario -->
+      <div class="flex items-start justify-end gap-2.5">
+        <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm p-3 max-w-[85%] leading-relaxed shadow-md shadow-indigo-600/20">
+          ¿Puedes mostrarme el efecto con partículas físicas y desintegración?
+        </div>
+        <div class="w-7 h-7 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
+          Tú
+        </div>
+      </div>
+
+      <!-- Respuesta interactiva con sugerencias -->
+      <div class="flex items-start gap-2.5">
+        <div class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
+          AI
+        </div>
+        <div class="bg-slate-100 border border-slate-200/80 rounded-2xl rounded-tl-sm p-3 text-slate-700 max-w-[85%] leading-relaxed shadow-sm">
+          Los efectos atómicos están ahora en las primeras posiciones. La ventana aparece y desaparece en su sitio exacto sin encogerse ni expandirse.
+          <div class="mt-2.5 flex flex-wrap gap-1.5">
+            <button onclick="selectAndTestEffect(0)" class="text-[11px] font-semibold bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 px-2.5 py-1 rounded-lg transition shadow-2xs">
+              🫰 #01 Thanos Snap
+            </button>
+            <button onclick="selectAndTestEffect(1)" class="text-[11px] font-semibold bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-2.5 py-1 rounded-lg transition shadow-2xs">
+              💻 #02 Matrix Rain
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie de Entrada del Chat -->
+    <div id="chatFooterBlock" class="relative z-20 p-3.5 bg-slate-50/90 border-t border-slate-100 flex items-center gap-2">
+      <input 
+        id="chatInput" 
+        type="text" 
+        placeholder="Escribe tu consulta aquí..." 
+        class="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition" />
+      <button 
+        onclick="simulateSend()"
+        class="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shrink-0 shadow-sm transition transform active:scale-95">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       BOTÓN FLOTANTE PRINCIPAL (FAB)
+       ======================================================== -->
+  <div class="fixed bottom-6 right-5 sm:right-8 z-50 flex items-center justify-center">
+    <!-- Etiqueta flotante informativa -->
+    <div id="fabTooltip" class="absolute right-16 px-3 py-1.5 rounded-xl bg-white border border-slate-200 shadow-md text-xs font-semibold text-slate-700 pointer-events-none whitespace-nowrap opacity-90 transition-opacity">
+      <span>Chatear con el Bot</span>
+      <div class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-white border-r border-t border-slate-200 rotate-45"></div>
+    </div>
+
+    <button 
+      id="mainFabBtn" 
+      onclick="toggleChatWindow()" 
+      class="fab-idle-pulse relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-xl shadow-indigo-500/30 transition-transform duration-300 hover:scale-110 active:scale-95 focus:outline-none">
+      
+      <!-- Icono del Bot (Estado Cerrado) -->
+      <span id="fabIconBot" class="transition-all duration-300 transform scale-100 rotate-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      </span>
+
+      <!-- Icono de Cruz (Estado Abierto) -->
+      <span id="fabIconClose" class="absolute transition-all duration-300 transform scale-50 rotate-0 opacity-0">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
+
+      <!-- Badge de notificación -->
+      <span id="fabBadge" class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 border-2 border-white flex items-center justify-center text-[9px] font-bold text-white">
+        1
+      </span>
+    </button>
+  </div>
+
+  <footer class="w-full max-w-5xl mt-auto pt-6 border-t border-slate-200 text-slate-500 text-xs flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+      <span>Haz clic en cualquiera de las 20 tarjetas para alternar entre efectos moleculares, cuánticos y físicos.</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-slate-400">Diseño Claro &middot; 20 Efectos CSS3 & Canvas &middot; Audio Procedural</span>
+    </div>
+  </footer>
+
+  <script>
+    /* Lista Completa de los Efectos Reordenados */
+    const FAB_EFFECTS = [
+      {
+        id: "thanos-snap",
+        name: "Thanos Dust Snap",
+        badge: "#01",
+        tag: "Ceniza & Partículas",
+        openClass: "thanos-opening",
+        closeClass: "thanos-closing",
+        accent: "from-purple-600 via-pink-600 to-indigo-600",
+        desc: "En sitio fijo sin escalar: partículas de ceniza se condensan para materializar la ventana y se desintegran en el viento al cerrarla.",
+        soundType: "thanosSnapSound"
+      },
+      {
+        id: "matrix-stream",
+        name: "Matrix Code Rain",
+        badge: "#02",
+        tag: "Cascada de Código",
+        openClass: "matrix-opening",
+        closeClass: "matrix-closing",
+        accent: "from-emerald-500 via-teal-500 to-green-600",
+        desc: "Fondo transparente sin bordes: al abrir se compila hacia arriba y al cerrar se disuelve hacia abajo.",
+        soundType: "matrixStreamSound"
+      },
+      {
+        id: "nanotech-weave",
+        name: "Nanotech Armor",
+        badge: "#03",
+        tag: "Tejido Molecular",
+        openClass: "nanotech-opening",
+        closeClass: "nanotech-closing",
+        accent: "from-amber-500 via-orange-500 to-red-500",
+        desc: "En sitio fijo sin encogerse: micro-malla hexagonal y chispas de energía plasma ensamblan la interfaz en su posición original.",
+        soundType: "nanotechSound"
+      },
+      {
+        id: "voxel-dissolve",
+        name: "Voxel Quantum Snap",
+        badge: "#04",
+        tag: "Deconstrucción Cuántica",
+        openClass: "voxel-opening",
+        closeClass: "voxel-closing",
+        accent: "from-sky-500 via-indigo-500 to-purple-600",
+        desc: "Bloques cúbicos discretos colapsan y se reconstruyen magnéticamente en alta velocidad.",
+        soundType: "voxelSound"
+      },
+      {
+        id: "holo-beam",
+        name: "Hologram Beam",
+        badge: "#05",
+        tag: "Estilo J.A.R.V.I.S.",
+        openClass: "holo-opening",
+        closeClass: "holo-closing",
+        accent: "from-cyan-400 to-blue-500",
+        desc: "Un haz láser vertical proyecta la interfaz con un resplandor cibernético y scanlines.",
+        soundType: "holoZap"
+      },
+      {
+        id: "drone-deploy",
+        name: "Drone Deploy",
+        badge: "#06",
+        tag: "Eyector Mecánico",
+        openClass: "drone-opening",
+        closeClass: "drone-closing",
+        accent: "from-indigo-500 to-purple-600",
+        desc: "El icono se desacopla como un micro-dron ascendiendo hacia la cabecera del chat.",
+        soundType: "droneFly"
+      },
+      {
+        id: "origami-unfold",
+        name: "Origami 3D Unfold",
+        badge: "#07",
+        tag: "Pliegues en Perspectiva",
+        openClass: "origami-opening",
+        closeClass: "origami-closing",
+        accent: "from-amber-400 to-orange-500",
+        desc: "La consola se desdobla tridimensionalmente desde la esquina inferior derecha.",
+        soundType: "paperUnfold"
+      },
+      {
+        id: "quantum-glitch",
+        name: "Quantum Glitch",
+        badge: "#08",
+        tag: "Ciberpunk RGB",
+        openClass: "glitch-opening",
+        closeClass: "glitch-closing",
+        accent: "from-fuchsia-500 to-pink-600",
+        desc: "Una ráfaga de ruido cromático desfasado decodifica el chat con estética futurista.",
+        soundType: "glitchBurst"
+      },
+      {
+        id: "jelly-spring",
+        name: "Jelly Elastic Spring",
+        badge: "#09",
+        tag: "Rebote de Gelatina",
+        openClass: "jelly-opening",
+        closeClass: "jelly-closing",
+        accent: "from-emerald-400 to-teal-500",
+        desc: "Un sobretiro elástico genera un rebote lúdico de gelatina con gran suavidad.",
+        soundType: "jellyBoing"
+      },
+      {
+        id: "cosmic-vortex",
+        name: "Cosmic Vortex",
+        badge: "#10",
+        tag: "Portal Gravitacional",
+        openClass: "vortex-opening",
+        closeClass: "vortex-closing",
+        accent: "from-purple-500 to-violet-700",
+        desc: "Una rotación espiral succiona el entorno y materializa la consola en el centro.",
+        soundType: "cosmicWarp"
+      },
+      {
+        id: "bento-snap",
+        name: "Bento Modular Snap",
+        badge: "#11",
+        tag: "Ensamble Magnético",
+        openClass: "bento-opening",
+        closeClass: "bento-closing",
+        accent: "from-slate-700 to-slate-900",
+        desc: "Cabecera, cuerpo y caja de texto se deslizan en tres tiempos con encastre magnético.",
+        soundType: "bentoClick"
+      },
+      {
+        id: "ripple-wave",
+        name: "Ripple Wave",
+        badge: "#12",
+        tag: "Onda Acuática",
+        openClass: "ripple-opening",
+        closeClass: "ripple-closing",
+        accent: "from-sky-400 to-cyan-500",
+        desc: "Ondas elípticas concéntricas descubren la interfaz desde el punto de contacto.",
+        soundType: "waterDrop"
+      },
+      {
+        id: "prism-wipe",
+        name: "Glass Prism Wipe",
+        badge: "#13",
+        tag: "Barrido Irisado",
+        openClass: "prism-opening",
+        closeClass: "prism-closing",
+        accent: "from-rose-400 to-orange-400",
+        desc: "Un destello diagonal barre el cristal con destellos prismáticos y brillo blanco.",
+        soundType: "prismChime"
+      },
+      {
+        id: "accordion-rollout",
+        name: "Accordion Rollout",
+        badge: "#14",
+        tag: "Pergamino Elástico",
+        openClass: "accordion-opening",
+        closeClass: "accordion-closing",
+        accent: "from-lime-500 to-emerald-600",
+        desc: "Despliegue vertical rápido con estiramiento elástico en el eje Y.",
+        soundType: "accordionRollSound"
+      },
+      {
+        id: "pixel-matrix-simple",
+        name: "Pixel Matrix",
+        badge: "#15",
+        tag: "Bloques Pixelados",
+        openClass: "pixel-opening",
+        closeClass: "pixel-closing",
+        accent: "from-teal-500 to-cyan-600",
+        desc: "Resolución progresiva por bloques escalonados que aumenta el detalle gradualmente.",
+        soundType: "pixelBit"
+      },
+      {
+        id: "balloon-inflate",
+        name: "Balloon Inflate",
+        badge: "#16",
+        tag: "Inflado Neumático",
+        openClass: "balloon-opening",
+        closeClass: "balloon-closing",
+        accent: "from-pink-500 to-rose-500",
+        desc: "El botón se infla superando su tamaño de forma orgánica antes de estabilizarse.",
+        soundType: "balloonPopSound"
+      },
+      {
+        id: "elevator-lift",
+        name: "Elevator Glass Lift",
+        badge: "#17",
+        tag: "Ascensor Flotante",
+        openClass: "elevator-opening",
+        closeClass: "elevator-closing",
+        accent: "from-blue-600 to-indigo-700",
+        desc: "Emerge desde el suelo con inercia vertical amortiguada como un ascensor panorámico.",
+        soundType: "elevatorHum"
+      },
+      {
+        id: "spatial-zoom",
+        name: "Spatial visionOS Zoom",
+        badge: "#18",
+        tag: "Profundidad 3D",
+        openClass: "spatial-opening",
+        closeClass: "spatial-closing",
+        accent: "from-violet-600 to-indigo-600",
+        desc: "Zoom cinemático con desenfoque de profundidad y perspectiva espacial en el eje Z.",
+        soundType: "spatialWhoosh"
+      },
+      {
+        id: "circuit-trace",
+        name: "Neon Circuit Trace",
+        badge: "#19",
+        tag: "Pistas Eléctricas",
+        openClass: "circuit-opening",
+        closeClass: "circuit-closing",
+        accent: "from-emerald-400 to-cyan-500",
+        desc: "Un circuito de energía esmeralda dibuja el perímetro cerrando el marco con precisión.",
+        soundType: "circuitZap"
+      }
+    ];
+
+    /* Estado de la Aplicación */
+    let currentEffectIndex = 0;
+    let isChatOpen = false;
+    let animSpeedMultiplier = 1;
+    let audioEnabled = true;
+
+    const chatWindow = document.getElementById("chatWindow");
+    const mainFabBtn = document.getElementById("mainFabBtn");
+    const fabIconBot = document.getElementById("fabIconBot");
+    const fabIconClose = document.getElementById("fabIconClose");
+    const fabBadge = document.getElementById("fabBadge");
+    const fabTooltip = document.getElementById("fabTooltip");
+    const activeEffectLabel = document.getElementById("activeEffectLabel");
+    const chatEffectStatus = document.getElementById("chatEffectStatus");
+    const holoLaser = document.getElementById("holoLaser");
+    const scanlineOverlay = document.getElementById("scanlineOverlay");
+    const chatHeaderBlock = document.getElementById("chatHeaderBlock");
+    const chatMessages = document.getElementById("chatMessages");
+    const chatFooterBlock = document.getElementById("chatFooterBlock");
+    const fxCanvas = document.getElementById("fxOverlayCanvas");
+    const fxCtx = fxCanvas ? fxCanvas.getContext("2d") : null;
+
+    let fxAnimFrameId = null;
+
+    function resizeFxCanvas() {
+      if (!fxCanvas) return;
+      fxCanvas.width = window.innerWidth;
+      fxCanvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeFxCanvas);
+    resizeFxCanvas();
+
+    /* Simulación física de partículas para el chasquido de Thanos */
+    function runThanosDustSimulation(isClosing) {
+      if (!fxCtx) return;
+      if (fxAnimFrameId) cancelAnimationFrame(fxAnimFrameId);
+
+      const targetRect = chatWindow.getBoundingClientRect();
+      const fabRect = mainFabBtn.getBoundingClientRect();
+
+      const particles = [];
+      const particleCount = 280;
+      const colors = ["#c084fc", "#a855f7", "#e879f9", "#818cf8", "#cbd5e1", "#f8fafc", "#9333ea"];
+
+      for (let i = 0; i < particleCount; i++) {
+        if (!isClosing) {
+          // CONSTRUCCIÓN: Partículas nacen dispersas y convergen en la ventana de chat
+          const startX = (Math.random() > 0.5) 
+            ? fabRect.left + fabRect.width / 2 + (Math.random() - 0.5) * 120
+            : targetRect.left + Math.random() * targetRect.width + (Math.random() - 0.5) * 80;
+          const startY = (Math.random() > 0.5)
+            ? fabRect.top + (Math.random() - 0.5) * 80
+            : targetRect.top + Math.random() * targetRect.height + (Math.random() - 0.5) * 80;
+
+          const destX = targetRect.left + Math.random() * targetRect.width;
+          const destY = targetRect.top + Math.random() * targetRect.height;
+
+          particles.push({
+            x: startX,
+            y: startY,
+            destX: destX,
+            destY: destY,
+            size: Math.random() * 2.8 + 1.2,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 0.1,
+            speed: Math.random() * 0.08 + 0.04
+          });
+        } else {
+          // DESINTEGRACIÓN: Partículas nacen de la ventana y se van con el viento
+          particles.push({
+            x: targetRect.left + Math.random() * targetRect.width,
+            y: targetRect.top + Math.random() * targetRect.height,
+            size: Math.random() * 3 + 1,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            vx: Math.random() * 5 + 2.5,
+            vy: (Math.random() - 0.7) * 4,
+            alpha: 1,
+            decay: Math.random() * 0.02 + 0.012
+          });
+        }
+      }
+
+      let frame = 0;
+      function animateThanos() {
+        fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+        let alive = false;
+
+        particles.forEach(p => {
+          if (!isClosing) {
+            p.x += (p.destX - p.x) * p.speed;
+            p.y += (p.destY - p.y) * p.speed;
+            p.alpha = Math.min(1, p.alpha + 0.035);
+
+            fxCtx.save();
+            fxCtx.globalAlpha = p.alpha;
+            fxCtx.fillStyle = p.color;
+            fxCtx.shadowColor = p.color;
+            fxCtx.shadowBlur = 6;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            fxCtx.fill();
+            fxCtx.restore();
+
+            const dist = Math.hypot(p.destX - p.x, p.destY - p.y);
+            if (dist > 3 && frame < 48) alive = true;
+          } else {
+            if (p.alpha > 0) {
+              alive = true;
+              fxCtx.save();
+              fxCtx.globalAlpha = p.alpha;
+              fxCtx.fillStyle = p.color;
+              fxCtx.shadowColor = "#a855f7";
+              fxCtx.shadowBlur = 8;
+              fxCtx.beginPath();
+              fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+              fxCtx.fill();
+              fxCtx.restore();
+
+              p.x += p.vx + Math.sin(frame * 0.15) * 0.8;
+              p.y += p.vy;
+              p.alpha -= p.decay;
+            }
+          }
+        });
+
+        frame++;
+        if (alive && frame < 65) {
+          fxAnimFrameId = requestAnimationFrame(animateThanos);
+        } else {
+          fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+        }
+      }
+      animateThanos();
+    }
+
+    /* Simulación de lluvia de código Matrix 100% transparente y con dirección vertical */
+    function runMatrixStreamSimulation(isClosing) {
+      if (!fxCtx) return;
+      if (fxAnimFrameId) cancelAnimationFrame(fxAnimFrameId);
+
+      const targetRect = chatWindow.getBoundingClientRect();
+      const chars = "0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ<>{}[]=/*+";
+      const fontSize = 15;
+      const columns = Math.floor(targetRect.width / fontSize);
+      const trailLength = 12;
+      
+      // Dirección unidireccional estricta:
+      // Al abrir: nacen abajo de la ventana y viajan hacia arriba
+      // Al cerrar: nacen arriba y viajan hacia abajo sin rebotar jamás
+      const totalRows = Math.ceil(targetRect.height / fontSize);
+      const colData = Array(columns).fill(0).map(() => ({
+        pos: isClosing ? -Math.random() * 4 : totalRows + Math.random() * 5,
+        speed: Math.random() * 0.28 + 0.38,
+        trailChars: Array(trailLength).fill(0).map(() => chars.charAt(Math.floor(Math.random() * chars.length))),
+        leadChar: chars.charAt(Math.floor(Math.random() * chars.length))
+      }));
+
+      const totalFrames = Math.round((isClosing ? 68 : 88) / animSpeedMultiplier);
+      let frames = 0;
+
+      function animateMatrix() {
+        fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+        // Recorte exacto para confinar los glifos dentro del marco del chat
+        fxCtx.save();
+        fxCtx.beginPath();
+        if (fxCtx.roundRect) {
+          fxCtx.roundRect(targetRect.left, targetRect.top, targetRect.width, targetRect.height, 24);
+        } else {
+          fxCtx.rect(targetRect.left, targetRect.top, targetRect.width, targetRect.height);
+        }
+        fxCtx.clip();
+
+        fxCtx.font = `700 ${fontSize}px 'JetBrains Mono', monospace`;
+        const progress = Math.min(1, frames / totalFrames);
+
+        for (let i = 0; i < columns; i++) {
+          const col = colData[i];
+          const x = targetRect.left + 4 + i * fontSize;
+
+          // Parpadeo sutil de glifos estilo decodificación
+          if (frames % 3 === 0 && Math.random() > 0.4) {
+            const randIdx = Math.floor(Math.random() * trailLength);
+            col.trailChars[randIdx] = chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+
+          // Dibujar estela continua en alto contraste sobre fondo claro
+          for (let t = 0; t < trailLength; t++) {
+            // Dirección constante sin rebotes
+            const charRow = !isClosing ? (col.pos + t) : (col.pos - t);
+            const y = targetRect.top + charRow * fontSize;
+
+            if (y >= targetRect.top - 5 && y <= targetRect.bottom + 20) {
+              const alphaFactor = Math.max(0, 1 - (t / trailLength));
+              if (t === 0) {
+                // Carácter guía: verde esmeralda muy oscuro y nítido para fondo claro
+                fxCtx.fillStyle = isClosing ? "rgba(4, 120, 87, 0.95)" : "rgba(6, 78, 59, 1)";
+                fxCtx.shadowColor = "rgba(16, 185, 129, 0.8)";
+                fxCtx.shadowBlur = 6;
+                fxCtx.fillText(col.leadChar, x, y);
+                fxCtx.shadowBlur = 0;
+              } else {
+                // Caracteres de estela legibles
+                const opacity = (1 - progress * 0.3) * (0.35 + 0.6 * alphaFactor);
+                fxCtx.fillStyle = `rgba(5, 150, 105, ${opacity})`;
+                fxCtx.fillText(col.trailChars[t], x, y);
+              }
+            }
+          }
+
+          // Desplazamiento unidireccional estricto (al abrir sube; al cerrar baja, sin volver a generarse)
+          if (!isClosing) {
+            col.pos -= col.speed;
+          } else {
+            col.pos += col.speed * 1.15;
+          }
+        }
+
+        // Línea de barrido sutil que acompaña el descubrimiento
+        const scanY = !isClosing 
+          ? targetRect.bottom - (targetRect.height * progress)
+          : targetRect.top + (targetRect.height * progress);
+
+        if (scanY >= targetRect.top && scanY <= targetRect.bottom) {
+          const beamGrad = fxCtx.createLinearGradient(targetRect.left, scanY, targetRect.right, scanY);
+          beamGrad.addColorStop(0, "rgba(16, 185, 129, 0)");
+          beamGrad.addColorStop(0.2, "rgba(16, 185, 129, 0.4)");
+          beamGrad.addColorStop(0.5, "rgba(5, 150, 105, 0.85)");
+          beamGrad.addColorStop(0.8, "rgba(16, 185, 129, 0.4)");
+          beamGrad.addColorStop(1, "rgba(16, 185, 129, 0)");
+
+          fxCtx.fillStyle = beamGrad;
+          fxCtx.fillRect(targetRect.left, scanY - 1, targetRect.width, 2.5);
+        }
+
+        fxCtx.restore();
+
+        frames++;
+        if (frames < totalFrames) {
+          fxAnimFrameId = requestAnimationFrame(animateMatrix);
+        } else {
+          fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+        }
+      }
+      animateMatrix();
+    }
+
+    /* Chispas moleculares de nanotecnología */
+    function runNanotechSimulation(isClosing) {
+      if (!fxCtx) return;
+      if (fxAnimFrameId) cancelAnimationFrame(fxAnimFrameId);
+
+      const targetRect = chatWindow.getBoundingClientRect();
+      const sparks = [];
+      const sparkCount = 90;
+
+      for (let i = 0; i < sparkCount; i++) {
+        sparks.push({
+          x: targetRect.left + Math.random() * targetRect.width,
+          y: targetRect.top + Math.random() * targetRect.height,
+          vx: (Math.random() - 0.5) * 8,
+          vy: (Math.random() - 0.5) * 8,
+          size: Math.random() * 3 + 1,
+          color: (Math.random() > 0.4) ? "#f59e0b" : "#fbbf24",
+          alpha: 1,
+          decay: 0.035
+        });
+      }
+
+      let f = 0;
+      function animateSparks() {
+        fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+        let alive = false;
+        sparks.forEach(s => {
+          if (s.alpha > 0) {
+            alive = true;
+            fxCtx.save();
+            fxCtx.globalAlpha = s.alpha;
+            fxCtx.fillStyle = s.color;
+            fxCtx.shadowColor = "#f59e0b";
+            fxCtx.shadowBlur = 8;
+            fxCtx.beginPath();
+            fxCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            fxCtx.fill();
+            fxCtx.restore();
+
+            s.x += s.vx;
+            s.y += s.vy;
+            s.alpha -= s.decay;
+          }
+        });
+        f++;
+        if (alive && f < 35) {
+          fxAnimFrameId = requestAnimationFrame(animateSparks);
+        } else {
+          fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+        }
+      }
+      animateSparks();
+    }
+
+    /* Síntesis Web Audio API Nativa Procedural (sin URLs externas) */
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type, isClose = false) {
+      if (!audioEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const mod = isClose ? 0.75 : 1.0;
+
+        switch (type) {
+          case "liquidPop":
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(320 * mod, now);
+            osc.frequency.exponentialRampToValueAtTime(740 * mod, now + 0.12);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+            break;
+
+          case "holoZap":
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(800 * mod, now);
+            osc.frequency.linearRampToValueAtTime(1400 * mod, now + 0.08);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            osc.start(now);
+            osc.stop(now + 0.14);
+            break;
+
+          case "glitchBurst":
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.setValueAtTime(620, now + 0.03);
+            osc.frequency.setValueAtTime(240, now + 0.06);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+            break;
+
+          case "jellyBoing":
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(260 * mod, now);
+            osc.frequency.exponentialRampToValueAtTime(520 * mod, now + 0.08);
+            osc.frequency.exponentialRampToValueAtTime(340 * mod, now + 0.18);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc.start(now);
+            osc.stop(now + 0.22);
+            break;
+
+          case "thanosSnapSound": {
+            // Desconectar el oscilador general para evitar cualquier pitido
+            osc.disconnect();
+
+            // 1. Chasquido de dedos muy suave y orgánico (madera/piel, sin frecuencias agudas)
+            const snapOsc = ctx.createOscillator();
+            const snapGain = ctx.createGain();
+            snapOsc.type = "sine";
+            snapOsc.frequency.setValueAtTime(280 * mod, now);
+            snapOsc.frequency.exponentialRampToValueAtTime(45, now + 0.05);
+            snapGain.gain.setValueAtTime(0.22, now);
+            snapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.055);
+            snapOsc.connect(snapGain);
+            snapGain.connect(ctx.destination);
+            snapOsc.start(now);
+            snapOsc.stop(now + 0.06);
+
+            // 2. Brisa eólica suave (ruido marrón/rosa filtrado con corte muy bajo)
+            const bufferLen = Math.floor(ctx.sampleRate * 0.45);
+            const noiseBuf = ctx.createBuffer(1, bufferLen, ctx.sampleRate);
+            const chData = noiseBuf.getChannelData(0);
+            for (let i = 0; i < bufferLen; i++) {
+              chData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferLen * 0.3));
+            }
+            const noiseSrc = ctx.createBufferSource();
+            noiseSrc.buffer = noiseBuf;
+
+            const lowFilter = ctx.createBiquadFilter();
+            lowFilter.type = "lowpass";
+            lowFilter.frequency.setValueAtTime(isClose ? 280 : 220, now);
+            lowFilter.frequency.exponentialRampToValueAtTime(50, now + 0.42);
+
+            const noiseVol = ctx.createGain();
+            noiseVol.gain.setValueAtTime(0.08, now + 0.01);
+            noiseVol.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+            noiseSrc.connect(lowFilter);
+            lowFilter.connect(noiseVol);
+            noiseVol.connect(ctx.destination);
+
+            noiseSrc.start(now + 0.005);
+            noiseSrc.stop(now + 0.43);
+            break;
+          }
+
+          case "matrixStreamSound": {
+            // Desconectar oscilador agudo para eliminar zumbidos o silbidos
+            osc.disconnect();
+
+            // Ráfaga táctil y suave de tecleo de terminal (suaves impulsos de baja frecuencia)
+            const clickCount = isClose ? 4 : 6;
+            for (let c = 0; c < clickCount; c++) {
+              const clickTime = now + (c * (isClose ? 0.045 : 0.06));
+              const clickOsc = ctx.createOscillator();
+              const clickGain = ctx.createGain();
+
+              clickOsc.type = "sine";
+              // Frecuencias apagadas y redondeadas (efecto teclado mecánico suave)
+              clickOsc.frequency.setValueAtTime(160 + Math.random() * 60, clickTime);
+              clickOsc.frequency.exponentialRampToValueAtTime(70, clickTime + 0.025);
+
+              clickGain.gain.setValueAtTime(0.07, clickTime);
+              clickGain.gain.exponentialRampToValueAtTime(0.0001, clickTime + 0.03);
+
+              clickOsc.connect(clickGain);
+              clickGain.connect(ctx.destination);
+
+              clickOsc.start(clickTime);
+              clickOsc.stop(clickTime + 0.035);
+            }
+
+            // Murmullo ambiental de datos digitales (filtro pasa-bajas muy suave)
+            const humOsc = ctx.createOscillator();
+            const humGain = ctx.createGain();
+            humOsc.type = "triangle";
+            humOsc.frequency.setValueAtTime(isClose ? 140 : 180, now);
+            humOsc.frequency.linearRampToValueAtTime(isClose ? 80 : 120, now + 0.35);
+
+            humGain.gain.setValueAtTime(0.035, now);
+            humGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+
+            humOsc.connect(humGain);
+            humGain.connect(ctx.destination);
+            humOsc.start(now);
+            humOsc.stop(now + 0.37);
+            break;
+          }
+
+          default:
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(440 * mod, now);
+            osc.frequency.exponentialRampToValueAtTime(660 * mod, now + 0.1);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            osc.start(now);
+            osc.stop(now + 0.12);
+            break;
+        }
+      } catch (err) {
+        // Fallback silencioso
+      }
+    }
+
+    /* Apertura de la Consola */
+    function openChat() {
+      const effect = FAB_EFFECTS[currentEffectIndex];
+
+      // Limpiar clases de animación previas
+      chatWindow.className = chatWindow.className
+        .split(" ")
+        .filter(c => !c.includes("opening") && !c.includes("closing"))
+        .join(" ");
+
+      const openDuration = (effect.id === "matrix-stream") ? 1.25 : 0.52;
+      chatWindow.classList.remove("hidden");
+      chatWindow.style.animationDuration = `${openDuration / animSpeedMultiplier}s`;
+      chatWindow.classList.add(effect.openClass);
+
+      // Disparadores específicos por efecto
+      if (effect.id === "holo-beam") {
+        holoLaser.style.opacity = "1";
+        scanlineOverlay.style.opacity = "0.3";
+        setTimeout(() => { holoLaser.style.opacity = "0"; }, 500 / animSpeedMultiplier);
+      } else if (effect.id === "quantum-glitch") {
+        scanlineOverlay.style.opacity = "0.5";
+        setTimeout(() => { scanlineOverlay.style.opacity = "0"; }, 550 / animSpeedMultiplier);
+      } else if (effect.id === "thanos-snap") {
+        runThanosDustSimulation(false);
+      } else if (effect.id === "matrix-stream") {
+        scanlineOverlay.style.opacity = "0";
+        runMatrixStreamSimulation(false);
+      } else if (effect.id === "nanotech-weave") {
+        runNanotechSimulation(false);
+      } else {
+        scanlineOverlay.style.opacity = "0";
+      }
+
+      // Animación en cascada para Bento Snap
+      if (effect.id === "bento-snap") {
+        chatHeaderBlock.classList.add("bento-item-header");
+        chatMessages.classList.add("bento-item-body");
+        chatFooterBlock.classList.add("bento-item-footer");
+      } else {
+        chatHeaderBlock.classList.remove("bento-item-header");
+        chatMessages.classList.remove("bento-item-body");
+        chatFooterBlock.classList.remove("bento-item-footer");
+      }
+
+      // Transformación del FAB a cruz de cierre
+      fabIconBot.classList.add("opacity-0", "rotate-90", "scale-50");
+      fabIconClose.classList.remove("opacity-0", "scale-50");
+      fabIconClose.classList.add("opacity-100", "scale-100");
+      fabBadge.classList.add("hidden");
+      fabTooltip.classList.add("opacity-0");
+      mainFabBtn.classList.remove("fab-idle-pulse");
+
+      playSound(effect.soundType, false);
+      isChatOpen = true;
+
+      setTimeout(() => {
+        const input = document.getElementById("chatInput");
+        if (input) input.focus();
+      }, 400);
+    }
+
+    /* Cierre de la Consola */
+    function closeChat() {
+      const effect = FAB_EFFECTS[currentEffectIndex];
+
+      chatWindow.className = chatWindow.className
+        .split(" ")
+        .filter(c => !c.includes("opening") && !c.includes("closing"))
+        .join(" ");
+
+      const closeDuration = (effect.id === "matrix-stream") ? 0.9 : 0.38;
+      chatWindow.style.animationDuration = `${closeDuration / animSpeedMultiplier}s`;
+      chatWindow.classList.add(effect.closeClass);
+
+      holoLaser.style.opacity = "0";
+      scanlineOverlay.style.opacity = "0";
+
+      // Deconstrucción de partículas
+      if (effect.id === "thanos-snap") {
+        runThanosDustSimulation(true);
+      } else if (effect.id === "matrix-stream") {
+        runMatrixStreamSimulation(true);
+      } else if (effect.id === "nanotech-weave") {
+        runNanotechSimulation(true);
+      }
+
+      // Restaurar icono de bot en el FAB
+      fabIconBot.classList.remove("opacity-0", "rotate-90", "scale-50");
+      fabIconClose.classList.add("opacity-0", "scale-50");
+      fabIconClose.classList.remove("opacity-100", "scale-100");
+      fabTooltip.classList.remove("opacity-0");
+      mainFabBtn.classList.add("fab-idle-pulse");
+
+      playSound(effect.soundType, true);
+
+      setTimeout(() => {
+        chatWindow.classList.add("hidden");
+        chatWindow.classList.remove(effect.closeClass);
+        isChatOpen = false;
+      }, (closeDuration * 1000) / animSpeedMultiplier);
+    }
+
+    function toggleChatWindow() {
+      if (isChatOpen) {
+        closeChat();
+      } else {
+        openChat();
+      }
+    }
+
+    function renderEffectsGrid() {
+      const grid = document.getElementById("effectsGrid");
+      grid.innerHTML = "";
+
+      FAB_EFFECTS.forEach((eff, idx) => {
+        const isSelected = idx === currentEffectIndex;
+        const card = document.createElement("div");
+        card.id = `card-effect-${idx}`;
+        card.onclick = () => selectAndTestEffect(idx);
+        card.className = `cursor-pointer rounded-2xl p-4 transition-all duration-200 border relative overflow-hidden group select-none ${
+          isSelected 
+            ? "bg-white border-indigo-400 shadow-md ring-2 ring-indigo-500/20" 
+            : "bg-white/80 hover:bg-white border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md"
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <span class="code-font text-xs font-bold px-2 py-0.5 rounded-md ${
+              isSelected ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"
+            }">${eff.badge}</span>
+            <span class="text-[11px] font-semibold text-slate-500">${eff.tag}</span>
+          </div>
+
+          <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-1.5 group-hover:text-indigo-600 transition-colors">
+            ${eff.name}
+          </h3>
+
+          <p class="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
+            ${eff.desc}
+          </p>
+
+          <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px] font-semibold text-indigo-600">
+            <span>${isSelected ? "Efecto Activo" : "Probar Efecto"}</span>
+            <span class="transform transition-transform group-hover:translate-x-1">&rarr;</span>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function selectAndTestEffect(index) {
+      currentEffectIndex = index;
+      const effect = FAB_EFFECTS[index];
+
+      activeEffectLabel.textContent = `Activo: ${effect.badge} ${effect.name}`;
+      chatEffectStatus.textContent = `${effect.badge} ${effect.name}`;
+
+      renderEffectsGrid();
+
+      // Cerrar y reabrir de inmediato para que se aprecie la animación
+      if (isChatOpen) {
+        closeChat();
+        setTimeout(() => {
+          openChat();
+        }, 420 / animSpeedMultiplier);
+      } else {
+        openChat();
+      }
+    }
+
+    function setSpeed(mult, btn) {
+      animSpeedMultiplier = mult;
+      const parent = btn.parentElement;
+      parent.querySelectorAll("button").forEach(b => {
+        b.className = "px-2.5 py-1 rounded-lg hover:bg-slate-100 transition";
+      });
+      btn.className = "px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-bold border border-indigo-200/80 transition";
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const dot = document.getElementById("audioStatusDot");
+      const txt = document.getElementById("audioBtnText");
+
+      if (audioEnabled) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+        txt.textContent = "Efectos de Audio: Activados";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-slate-400";
+        txt.textContent = "Efectos de Audio: Silenciados";
+      }
+    }
+
+    function simulateSend() {
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const msgBox = document.getElementById("chatMessages");
+      const userBubble = document.createElement("div");
+      userBubble.className = "flex items-start justify-end gap-2.5";
+      userBubble.innerHTML = `
+        <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm p-3 max-w-[85%] leading-relaxed shadow-md shadow-indigo-600/20">
+          ${text}
+        </div>
+        <div class="w-7 h-7 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
+          Tú
+        </div>
+      `;
+      msgBox.appendChild(userBubble);
+      input.value = "";
+      msgBox.scrollTop = msgBox.scrollHeight;
+
+      // Respuesta automática del bot
+      setTimeout(() => {
+        const botBubble = document.createElement("div");
+        botBubble.className = "flex items-start gap-2.5";
+        botBubble.innerHTML = `
+          <div class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
+            AI
+          </div>
+          <div class="bg-slate-100 border border-slate-200/80 rounded-2xl rounded-tl-sm p-3 text-slate-700 max-w-[85%] leading-relaxed shadow-sm">
+            Recibido con éxito. Puedes cambiar a cualquiera de las 20 animaciones en cualquier momento.
+          </div>
+        `;
+        msgBox.appendChild(botBubble);
+        msgBox.scrollTop = msgBox.scrollHeight;
+      }, 500);
+    }
+
+    document.getElementById("chatInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") simulateSend();
+    });
+
+    // Inicializar cuadrícula al cargar
+    renderEffectsGrid();
+  </script>
+</body>
+</html>

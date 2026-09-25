@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>20 Efectos de Eliminación de Chat (Canvas & CSS3)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+    .code-font {
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* Screen shake for explosive effects */
+    @keyframes screenShake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      15% { transform: translate(-6px, 4px) rotate(-1deg); }
+      30% { transform: translate(6px, -4px) rotate(1.2deg); }
+      45% { transform: translate(-4px, -3px) rotate(-0.5deg); }
+      65% { transform: translate(4px, 3px) rotate(0.8deg); }
+      85% { transform: translate(-2px, 1px) rotate(-0.2deg); }
+    }
+    .shake-screen {
+      animation: screenShake 0.45s ease-in-out;
+    }
+
+    /* Collapse animation for removed rows */
+    .collapse-row {
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                  margin-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                  padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                  opacity 0.25s ease;
+      max-height: 0 !important;
+      margin-bottom: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      border: none !important;
+      overflow: hidden !important;
+    }
+
+    /* 03. Laser beam cut: Rayo y corte coherentes en diagonal de 30 grados */
+    @keyframes laserBeamSweep {
+      0% {
+        transform: translate(-120%, -120%) rotate(28deg);
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+      }
+      75% {
+        opacity: 1;
+        filter: drop-shadow(0 0 16px #38bdf8) drop-shadow(0 0 35px #06b6d4) brightness(2.5);
+      }
+      100% {
+        transform: translate(120%, 120%) rotate(28deg);
+        opacity: 0;
+      }
+    }
+
+    .laser-beam-blade {
+      position: absolute;
+      top: -60%;
+      left: -40%;
+      width: 180%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, #38bdf8 20%, #ffffff 50%, #38bdf8 80%, transparent);
+      box-shadow: 0 0 18px 4px #06b6d4, 0 0 45px 8px #3b82f6;
+      animation: laserBeamSweep 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      pointer-events: none;
+      z-index: 60;
+    }
+
+    /* Resplandor incandescente fundido en la cicatriz del corte */
+    .laser-cut-scar {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 55;
+      background: linear-gradient(118deg, transparent 48%, rgba(254, 215, 170, 0.95) 49.5%, rgba(249, 115, 22, 0.9) 50%, rgba(56, 189, 248, 0.9) 50.8%, transparent 52%);
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+    }
+
+    /* Separación de las 2 mitades reales a lo largo de la misma pendiente de corte */
+    @keyframes laserHalfTopSlide {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+        filter: brightness(1.6) drop-shadow(0 0 10px #f97316);
+      }
+      40% {
+        filter: brightness(1.2);
+      }
+      100% {
+        transform: translate(-36px, -24px) rotate(-3.5deg);
+        opacity: 0;
+        filter: blur(2px) brightness(0.7);
+      }
+    }
+
+    @keyframes laserHalfBottomSlide {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+        filter: brightness(1.6) drop-shadow(0 0 10px #38bdf8);
+      }
+      40% {
+        filter: brightness(1.2);
+      }
+      100% {
+        transform: translate(42px, 32px) rotate(4deg);
+        opacity: 0;
+        filter: blur(2px) brightness(0.7);
+      }
+    }
+
+    .laser-slice-upper {
+      clip-path: polygon(0 0, 100% 0, 100% 32%, 0 68%) !important;
+      animation: laserHalfTopSlide 0.55s 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+      box-shadow: inset 0 -3px 8px rgba(249, 115, 22, 0.8) !important;
+    }
+
+    .laser-slice-lower {
+      clip-path: polygon(0 68%, 100% 32%, 100% 100%, 0 100%) !important;
+      animation: laserHalfBottomSlide 0.58s 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+      box-shadow: inset 0 3px 8px rgba(56, 189, 248, 0.8) !important;
+    }
+
+    /* 05. Black Hole Implosion / Vortex */
+    @keyframes blackHoleVortex {
+      0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+      40% { transform: scale(0.7) rotate(240deg); filter: contrast(2) hue-rotate(90deg); box-shadow: 0 0 40px #8b5cf6; }
+      80% { transform: scale(0.15) rotate(720deg); filter: brightness(3); opacity: 0.8; }
+      100% { transform: scale(0) rotate(1080deg); opacity: 0; }
+    }
+    .anim-vortex {
+      animation: blackHoleVortex 0.7s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+    }
+
+    /* 06. Acid Melting / Liquid Dissolve */
+    @keyframes acidMelt {
+      0% { filter: drop-shadow(0 0 0px #84cc16); }
+      35% { filter: hue-rotate(85deg) contrast(1.8) drop-shadow(0 0 18px #a3e635); transform: skewX(-4deg) scaleY(1.02); }
+      70% { transform: skewX(8deg) scaleY(0.5) translateY(20px); opacity: 0.7; }
+      100% { transform: scaleY(0.01) translateY(50px); filter: blur(10px) brightness(0.2); opacity: 0; }
+    }
+    .anim-acid {
+      animation: acidMelt 0.7s ease-in forwards;
+    }
+
+    /* 07. Pac-Man Bite Chomp */
+    @keyframes pacmanBite {
+      0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+      25% { clip-path: polygon(25% 0, 100% 0, 100% 100%, 25% 100%); }
+      50% { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+      75% { clip-path: polygon(75% 0, 100% 0, 100% 100%, 75% 100%); }
+      100% { clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%); opacity: 0; }
+    }
+    .anim-pacman {
+      animation: pacmanBite 0.55s steps(5) forwards;
+    }
+
+    /* 08. Retro 8-bit Pixelate */
+    @keyframes pixelGlitchOut {
+      0% { filter: contrast(1); transform: scale(1); }
+      25% { filter: contrast(3) hue-rotate(180deg); transform: translate(-3px, 2px); clip-path: inset(10% 0 15% 0); }
+      50% { filter: contrast(5) invert(0.8); transform: translate(4px, -2px) scale(0.9); clip-path: inset(25% 0 30% 0); }
+      75% { filter: blur(4px) contrast(8); transform: scale(0.5); clip-path: inset(50% 0 50% 0); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    .anim-8bit {
+      animation: pixelGlitchOut 0.45s steps(4) forwards;
+    }
+
+    /* 09. Interdimensional Portal (Rick & Morty Style) */
+    @keyframes portalSwirl {
+      0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0px #10b981); }
+      30% { transform: scale(0.9) rotate(45deg); filter: drop-shadow(0 0 25px #34d399) hue-rotate(60deg); }
+      70% { transform: scale(0.3) rotate(360deg); border-radius: 50%; opacity: 0.8; }
+      100% { transform: scale(0) rotate(720deg) translateY(-80px); opacity: 0; }
+    }
+    .anim-portal {
+      animation: portalSwirl 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* 10. Cyberpunk Electric Glitch */
+    @keyframes electroGlitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-8px, 4px) skewX(25deg); filter: invert(0.9) drop-shadow(0 0 10px #38bdf8); }
+      40% { transform: translate(8px, -4px) skewX(-25deg); filter: drop-shadow(0 0 15px #ec4899); }
+      60% { transform: translate(-4px, 2px) scaleY(0.4); filter: hue-rotate(180deg); }
+      80% { transform: translate(4px, -1px) scaleY(0.1); }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    .anim-glitch {
+      animation: electroGlitch 0.45s ease-out forwards;
+    }
+
+    /* 11. Origami Paper Crane Fold & Fly */
+    @keyframes origamiFly {
+      0% { transform: perspective(800px) rotateX(0deg) scale(1); }
+      35% { transform: perspective(800px) rotateX(75deg) rotateY(25deg) scale(0.7); filter: brightness(1.2); }
+      65% { transform: perspective(800px) rotateZ(-30deg) translate(80px, -60px) scale(0.4); opacity: 0.9; }
+      100% { transform: perspective(800px) translate(400px, -250px) rotateZ(-65deg) scale(0.05); opacity: 0; }
+    }
+    .anim-origami {
+      animation: origamiFly 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* 12. Slime / Chewing Gum Stretch and Snap */
+    @keyframes slimeStretch {
+      0% { transform: scale(1, 1); }
+      35% { transform: scale(1.4, 0.4) skewX(15deg); }
+      50% { transform: scale(0.4, 2.2) skewY(-20deg); opacity: 0.9; }
+      80% { transform: scale(0.1, 0.1) translateY(90px); opacity: 0.5; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    .anim-slime {
+      animation: slimeStretch 0.55s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    }
+
+    /* 13. Typewriter Inverted Eraser (Ink Vanish) */
+    @keyframes inkErase {
+      0% { filter: blur(0px); opacity: 1; transform: translateX(0); }
+      50% { filter: blur(4px) contrast(200%); transform: translateX(15px); }
+      100% { filter: blur(14px) contrast(50%); opacity: 0; transform: translateX(60px); }
+    }
+    .anim-eraser {
+      animation: inkErase 0.5s ease-in forwards;
+    }
+
+    /* 14. Broken Hinge (Animate.css Classic) */
+    @keyframes brokenHinge {
+      0% { transform-origin: top left; }
+      20%, 60% { transform: rotate(80deg); transform-origin: top left; }
+      40%, 80% { transform: rotate(60deg); transform-origin: top left; }
+      100% { transform: translateY(450px) rotate(90deg); opacity: 0; }
+    }
+    .anim-hinge {
+      animation: brokenHinge 0.85s ease-in-out forwards;
+    }
+
+    /* 15. Hydraulic Press Squash */
+    @keyframes hydraulicSquash {
+      0% { transform: scale(1, 1); }
+      40% { transform: scale(1.15, 0.7); }
+      100% { transform: scale(1.4, 0.01); opacity: 0; }
+    }
+    .anim-hydraulic {
+      animation: hydraulicSquash 0.35s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+    }
+
+    /* 16. Rocket Eject Launch */
+    @keyframes rocketLaunch {
+      25% { transform: translateY(12px) scale(0.96); }
+      100% { transform: translateY(-380px) scale(0.4); opacity: 0; filter: blur(4px); }
+    }
+    .anim-rocket {
+      animation: rocketLaunch 0.5s cubic-bezier(0.4, 0, 1, 0.5) forwards;
+    }
+
+    /* 17. Freeze & Ice Shatter */
+    @keyframes freezeShatter {
+      0% { filter: brightness(1); }
+      35% { filter: hue-rotate(180deg) brightness(1.7) contrast(1.5); border-color: #38bdf8; box-shadow: 0 0 20px #38bdf8; }
+      70% { transform: rotate(2deg) scale(1.02); filter: hue-rotate(190deg) contrast(2); }
+      100% { transform: scale(0.3) rotate(-20deg); filter: blur(10px) brightness(2); opacity: 0; }
+    }
+    .anim-freeze {
+      animation: freezeShatter 0.6s ease-out forwards;
+    }
+
+    /* 18. Ghostly Astral Projection Blur */
+    @keyframes astralProjection {
+      0% { transform: scale(1); filter: blur(0px); opacity: 1; }
+      50% { transform: scale(1.1) translateY(-25px); filter: blur(8px) brightness(1.5); opacity: 0.6; }
+      100% { transform: scale(1.2) translateY(-60px); filter: blur(24px) brightness(3); opacity: 0; }
+    }
+    .anim-ghost {
+      animation: astralProjection 0.55s ease-out forwards;
+    }
+
+    /* 19. Trapdoor Fall 3D */
+    @keyframes trapdoorFall {
+      0% { transform: perspective(600px) rotateX(0deg); opacity: 1; }
+      100% { transform: perspective(600px) rotateX(-95deg) translateY(40px); opacity: 0; }
+    }
+    .anim-trapdoor {
+      transform-origin: top center;
+      animation: trapdoorFall 0.45s ease-in forwards;
+    }
+
+    /* 20. iOS Kinetic Swipe Dismiss */
+    @keyframes iosSwipeOut {
+      0% { transform: translateX(0); opacity: 1; }
+      100% { transform: translateX(-120%); opacity: 0; }
+    }
+    .anim-ios {
+      animation: iosSwipeOut 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    /* Subtle custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-10 px-4 md:px-8 flex flex-col items-center">
+
+  <header class="w-full max-w-4xl text-center mb-8">
+    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm">
+      <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+      Visual Showcase &middot; Canvas & CSS3
+    </div>
+    <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+      20 Efectos de Eliminación de Chat
+    </h1>
+    <p class="text-slate-400 text-sm md:text-base mt-2 max-w-2xl mx-auto">
+      Animaciones de destrucción física, partículas en Canvas nativo y microinteracciones de frontend inspiradas en experimentos virales de la web.
+    </p>
+
+    <!-- Master Action Bar -->
+    <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+      <button id="btnRestoreAll" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold border border-slate-600/60 shadow-lg hover:shadow-indigo-500/10 transition-all flex items-center gap-2">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Restaurar los 20 Chats
+      </button>
+
+      <span class="text-xs text-slate-500 px-3 py-1 bg-slate-900/80 rounded-lg border border-slate-800">
+        Chats activos: <strong id="activeCount" class="text-indigo-400 font-mono">20</strong> / 20
+      </span>
+    </div>
+  </header>
+
+  <main class="w-full max-w-3xl">
+    <div id="chatListContainer" class="flex flex-col gap-3">
+      <!-- Chat rows injected dynamically by JavaScript -->
+    </div>
+  </main>
+
+  <footer class="mt-16 text-center text-xs text-slate-500 pb-8">
+    Inspirado en CodePen, librerías móviles de UI y dinámicas físicas de partículas en HTML5 Canvas.
+  </footer>
+
+  <script>
+    /* Array containing all 20 distinctive effect configurations */
+    const EFFECTS_CONFIG = [
+      {
+        id: "thanos-snap",
+        type: "canvas-thanos",
+        tag: "Chasquido de Thanos",
+        user: "Peter Parker",
+        time: "10:42 AM",
+        color: "from-purple-600 to-indigo-600",
+        btnColor: "bg-purple-600 hover:bg-purple-500 shadow-purple-900/40 text-white",
+        btnText: "Snap 🫰",
+        msg: "Señor Stark... no me siento muy bien, no me quiero ir..."
+      },
+      {
+        id: "paper-burn",
+        type: "canvas-burn",
+        tag: "Incineración & Chispas",
+        user: "Seguridad Bancaria",
+        time: "10:38 AM",
+        color: "from-amber-600 to-orange-600",
+        btnColor: "bg-orange-600 hover:bg-orange-500 shadow-orange-900/40 text-white",
+        btnText: "Quemar 🔥",
+        msg: "Token confidencial de un solo uso: 849-204 (Auto-destrucción)."
+      },
+      {
+        id: "laser-slice",
+        type: "css-laser",
+        tag: "Corte Láser Incandescente",
+        user: "Ingeniería Robótica",
+        time: "10:30 AM",
+        color: "from-cyan-600 to-blue-600",
+        btnColor: "bg-cyan-600 hover:bg-cyan-500 shadow-cyan-900/40 text-white",
+        btnText: "Cortar ⚡",
+        msg: "Alineación láser de precisión calibrada al 100% de potencia."
+      },
+      {
+        id: "paper-shredder",
+        type: "canvas-shredder",
+        tag: "Trituradora de Papel",
+        user: "Departamento Legal",
+        time: "10:25 AM",
+        color: "from-slate-600 to-zinc-600",
+        btnColor: "bg-slate-700 hover:bg-slate-600 shadow-slate-900/40 text-white",
+        btnText: "Triturar 📑",
+        msg: "Contrato firmado y procesado; pasar copia a trituradora."
+      },
+      {
+        id: "black-hole",
+        type: "css-vortex",
+        tag: "Vórtice Agujero Negro",
+        user: "Astrofísica Cuántica",
+        time: "10:15 AM",
+        color: "from-violet-700 to-fuchsia-800",
+        btnColor: "bg-violet-600 hover:bg-violet-500 shadow-violet-900/40 text-white",
+        btnText: "Succionar 🕳️",
+        msg: "Singularidad gravitacional detectada superando el horizonte."
+      },
+      {
+        id: "acid-melt",
+        type: "css-acid",
+        tag: "Disolución en Ácido",
+        user: "Laboratorio Químico",
+        time: "10:05 AM",
+        color: "from-lime-600 to-emerald-700",
+        btnColor: "bg-lime-600 hover:bg-lime-500 shadow-lime-900/40 text-white",
+        btnText: "Disolver 🧪",
+        msg: "Muestra de ácido fluorhídrico lista para prueba de corrosión."
+      },
+      {
+        id: "pacman-bite",
+        type: "css-pacman",
+        tag: "Bocados Pac-Man",
+        user: "Retro Arcade",
+        time: "09:55 AM",
+        color: "from-yellow-500 to-amber-600",
+        btnColor: "bg-yellow-600 hover:bg-yellow-500 shadow-yellow-900/40 text-white",
+        btnText: "Devorar 🟡",
+        msg: "Waka waka waka... Nuevo récord de puntaje alcanzado."
+      },
+      {
+        id: "pixel-matrix",
+        type: "canvas-matrix",
+        tag: "Lluvia de Código Matrix",
+        user: "Operador Nebuchadnezzar",
+        time: "09:48 AM",
+        color: "from-green-600 to-emerald-800",
+        btnColor: "bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/40 text-white",
+        btnText: "Desconectar 💻",
+        msg: "Sigue al conejo blanco. Ya no hay vuelta atrás con la píldora azul."
+      },
+      {
+        id: "portal-dimension",
+        type: "css-portal",
+        tag: "Portal Interdimensional",
+        user: "Rick Sanchez (C-137)",
+        time: "09:40 AM",
+        color: "from-emerald-500 to-teal-700",
+        btnColor: "bg-teal-600 hover:bg-teal-500 shadow-teal-900/40 text-white",
+        btnText: "Teletransportar 🌀",
+        msg: "Morty, no hay tiempo, salta al portal verde antes que nos sigan."
+      },
+      {
+        id: "electric-glitch",
+        type: "css-glitch",
+        tag: "Descarga Electromagnética",
+        user: "Cyberpunk Netrunner",
+        time: "09:32 AM",
+        color: "from-pink-600 to-rose-700",
+        btnColor: "bg-rose-600 hover:bg-rose-500 shadow-rose-900/40 text-white",
+        btnText: "Sobrecarga ⚡",
+        msg: "¡Alerta ICE! Daemon hostil interceptó la conexión neuronal."
+      },
+      {
+        id: "shatter-glass",
+        type: "canvas-shatter",
+        tag: "Cristal Roto en Fragmentos",
+        user: "Control de Daños",
+        time: "09:20 AM",
+        color: "from-sky-500 to-indigo-600",
+        btnColor: "bg-sky-600 hover:bg-sky-500 shadow-sky-900/40 text-white",
+        btnText: "Romper 🔨",
+        msg: "Vidrio templado bajo presión crítica. Evacuar el sector."
+      },
+      {
+        id: "origami-fold",
+        type: "css-origami",
+        tag: "Grulla de Origami 3D",
+        user: "Taller de Papel",
+        time: "09:12 AM",
+        color: "from-teal-600 to-cyan-700",
+        btnColor: "bg-teal-700 hover:bg-teal-600 shadow-teal-900/40 text-white",
+        btnText: "Plegar 🕊️",
+        msg: "Plegado tradicional completado: la figura cobra vuelo hacia arriba."
+      },
+      {
+        id: "slime-snap",
+        type: "css-slime",
+        tag: "Chicle Elástico / Slime",
+        user: "Laboratorio Viscoso",
+        time: "09:05 AM",
+        color: "from-lime-500 to-green-600",
+        btnColor: "bg-lime-700 hover:bg-lime-600 shadow-lime-900/40 text-white",
+        btnText: "Estirar 🫧",
+        msg: "Polímero no newtoniano estirado hasta el punto de ruptura elástica."
+      },
+      {
+        id: "ink-eraser",
+        type: "css-eraser",
+        tag: "Borrador de Tinta",
+        user: "Archivista Central",
+        time: "08:58 AM",
+        color: "from-slate-500 to-neutral-700",
+        btnColor: "bg-neutral-600 hover:bg-neutral-500 shadow-neutral-900/40 text-white",
+        btnText: "Borrar ✒️",
+        msg: "Corrigiendo notas manuscritas con solvente de tinta china."
+      },
+      {
+        id: "broken-hinge",
+        type: "css-hinge",
+        tag: "Bisagra Rota de Pared",
+        user: "Soporte de Mantenimiento",
+        time: "08:45 AM",
+        color: "from-red-600 to-amber-700",
+        btnColor: "bg-amber-700 hover:bg-amber-600 shadow-amber-900/40 text-white",
+        btnText: "Descolgar 🔩",
+        msg: "Tornillo de fijación izquierdo cedió por sobrepeso."
+      },
+      {
+        id: "hydraulic-press",
+        type: "css-hydraulic",
+        tag: "Prensa Hidráulica",
+        user: "Taller Metalúrgico",
+        time: "08:35 AM",
+        color: "from-stone-600 to-zinc-800",
+        btnColor: "bg-stone-700 hover:bg-stone-600 shadow-stone-900/40 text-white",
+        btnText: "Aplastar 🗜️",
+        msg: "Presión hidráulica a 200 bares lista para compresión de placa."
+      },
+      {
+        id: "rocket-eject",
+        type: "css-rocket",
+        tag: "Eyección de Cohete",
+        user: "Misión Orbital",
+        time: "08:22 AM",
+        color: "from-blue-600 to-indigo-800",
+        btnColor: "bg-blue-600 hover:bg-blue-500 shadow-blue-900/40 text-white",
+        btnText: "Despegar 🚀",
+        msg: "Secuencia de propulsión iniciada: T-menos 3 segundos para el despegue."
+      },
+      {
+        id: "freeze-shatter",
+        type: "css-freeze",
+        tag: "Congelación y Ruptura",
+        user: "Criogenia Médica",
+        time: "08:15 AM",
+        color: "from-sky-600 to-blue-700",
+        btnColor: "bg-sky-700 hover:bg-sky-600 shadow-sky-900/40 text-white",
+        btnText: "Congelar ❄️",
+        msg: "Temperatura descendió a -196°C con nitrógeno líquido."
+      },
+      {
+        id: "ghost-astral",
+        type: "css-ghost",
+        tag: "Desvanecimiento Astral",
+        user: "Modo Fantasma Incógnito",
+        time: "08:05 AM",
+        color: "from-purple-800 to-slate-800",
+        btnColor: "bg-indigo-900 hover:bg-indigo-800 shadow-indigo-950/40 text-white",
+        btnText: "Esfumar 👻",
+        msg: "Rastros de navegación y cookies cifradas disueltos en el éter."
+      },
+      {
+        id: "ios-kinetic",
+        type: "css-ios",
+        tag: "Swipe Deslizar Móvil",
+        user: "Notificaciones del Sistema",
+        time: "07:55 AM",
+        color: "from-slate-700 to-slate-900",
+        btnColor: "bg-red-600 hover:bg-red-500 shadow-red-950/40 text-white",
+        btnText: "Deslizar 📱",
+        msg: "Desliza a la izquierda para archivar o eliminar definitivamente."
+      }
+    ];
+
+    const chatContainer = document.getElementById("chatListContainer");
+    const activeCountSpan = document.getElementById("activeCount");
+    const btnRestoreAll = document.getElementById("btnRestoreAll");
+
+    function renderChatList() {
+      chatContainer.innerHTML = "";
+      EFFECTS_CONFIG.forEach((effect, index) => {
+        const numStr = String(index + 1).padStart(2, "0");
+        const row = document.createElement("div");
+        row.className = "chat-item-row bg-slate-900/90 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-3.5 md:p-4 flex items-center justify-between gap-3 shadow-md hover:shadow-xl transition-all relative overflow-hidden group";
+        row.id = `chat-card-${index}`;
+        row.dataset.index = index;
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3.5 min-w-0 pointer-events-none">
+            <!-- Distinct Number Badge -->
+            <div class="code-font text-xs md:text-sm font-bold w-9 h-9 rounded-xl bg-slate-800/90 border border-slate-700/60 text-indigo-400 flex items-center justify-center shrink-0 shadow-inner">
+              ${numStr}
+            </div>
+
+            <!-- Avatar -->
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr ${effect.color} text-white font-bold flex items-center justify-center shrink-0 shadow-md">
+              ${effect.user.charAt(0)}
+            </div>
+
+            <!-- User and Message -->
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-slate-100 truncate">${effect.user}</span>
+                <span class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700/50 text-indigo-300 hidden sm:inline-block">
+                  #${numStr} ${effect.tag}
+                </span>
+                <span class="text-[11px] text-slate-500 ml-auto hidden md:inline-block">${effect.time}</span>
+              </div>
+              <p class="text-xs text-slate-400 truncate mt-0.5">${effect.msg}</p>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <button 
+            type="button"
+            onclick="triggerElimination(${index})"
+            class="px-3.5 py-2 rounded-xl text-xs font-semibold ${effect.btnColor} shadow-md transition-all transform hover:scale-105 active:scale-95 shrink-0 flex items-center gap-1.5 focus:outline-none">
+            ${effect.btnText}
+          </button>
+        `;
+
+        chatContainer.appendChild(row);
+      });
+      updateActiveCount();
+    }
+
+    function updateActiveCount() {
+      const activeRows = chatContainer.querySelectorAll(".chat-item-row:not(.collapse-row)");
+      activeCountSpan.textContent = activeRows.length;
+    }
+
+    /* Helper: Smooth collapse and remove from DOM */
+    function collapseRow(rowElement, delay = 400) {
+      setTimeout(() => {
+        rowElement.classList.add("collapse-row");
+        setTimeout(() => {
+          rowElement.remove();
+          updateActiveCount();
+        }, 400);
+      }, delay);
+    }
+
+    /* Helper: Attach helper full-screen canvas over target */
+    function createOverlayCanvas(targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const canvas = document.createElement("canvas");
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      canvas.style.position = "fixed";
+      canvas.style.left = `${rect.left}px`;
+      canvas.style.top = `${rect.top}px`;
+      canvas.style.pointerEvents = "none";
+      canvas.style.zIndex = "9999";
+      document.body.appendChild(canvas);
+      return { canvas, ctx: canvas.getContext("2d"), rect };
+    }
+
+    function runThanosSnap(targetEl) {
+      const { canvas, ctx, rect } = createOverlayCanvas(targetEl);
+      
+      // Flash of purple stone power
+      targetEl.style.transition = "all 0.5s ease-out";
+      targetEl.style.boxShadow = "0 0 35px 8px rgba(168, 85, 247, 0.7)";
+      targetEl.style.borderColor = "#a855f7";
+
+      // Ash particle system
+      const particles = [];
+      const particleCount = 420;
+      const ashColors = ["#d8b4fe", "#c084fc", "#a855f7", "#94a3b8", "#cbd5e1", "#f1f5f9", "#64748b"];
+
+      for (let i = 0; i < particleCount; i++) {
+        // Start spread across the width with weight to the left
+        const startX = Math.random() * rect.width;
+        const startY = Math.random() * rect.height;
+        particles.push({
+          x: startX,
+          y: startY,
+          size: Math.random() * 2.8 + 1.2,
+          color: ashColors[Math.floor(Math.random() * ashColors.length)],
+          vx: Math.random() * 3.5 + 1.2, // Drifting right like dust in the wind
+          vy: (Math.random() - 0.7) * 2.2, // Floating slightly upward
+          alpha: 1,
+          decay: Math.random() * 0.015 + 0.009,
+          delay: (startX / rect.width) * 20 // Dissolve sequentially from left to right
+        });
+      }
+
+      // Hide actual element with opacity fade
+      setTimeout(() => {
+        targetEl.style.opacity = "0";
+        targetEl.style.filter = "blur(6px)";
+      }, 120);
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activeParticles = 0;
+
+        particles.forEach(p => {
+          if (frame >= p.delay && p.alpha > 0) {
+            activeParticles++;
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Wind physics & turbulence
+            p.x += p.vx + Math.sin(frame * 0.08) * 0.6;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+          } else if (p.alpha > 0) {
+            activeParticles++;
+          }
+        });
+
+        frame++;
+        if (activeParticles > 0) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.remove();
+          collapseRow(targetEl, 50);
+        }
+      }
+      animate();
+    }
+
+    function runPaperBurn(targetEl) {
+      const { canvas, ctx, rect } = createOverlayCanvas(targetEl);
+      targetEl.style.transition = "all 0.6s ease";
+      targetEl.style.filter = "brightness(2.2) contrast(1.5)";
+      targetEl.style.borderColor = "#f97316";
+
+      const sparks = [];
+      for (let i = 0; i < 280; i++) {
+        sparks.push({
+          x: Math.random() * rect.width,
+          y: rect.height - Math.random() * 15,
+          vx: (Math.random() - 0.5) * 4,
+          vy: -Math.random() * 4 - 2,
+          size: Math.random() * 3 + 1,
+          color: Math.random() > 0.3 ? "#f97316" : "#fbbf24",
+          alpha: 1,
+          decay: Math.random() * 0.02 + 0.012
+        });
+      }
+
+      setTimeout(() => {
+        targetEl.style.opacity = "0";
+        targetEl.style.transform = "scaleY(0.6) translateY(20px)";
+        targetEl.style.filter = "brightness(0) contrast(4)";
+      }, 200);
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = 0;
+
+        sparks.forEach(s => {
+          if (s.alpha > 0) {
+            alive++;
+            ctx.fillStyle = s.color;
+            ctx.globalAlpha = s.alpha;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            s.x += s.vx;
+            s.y += s.vy;
+            s.alpha -= s.decay;
+          }
+        });
+
+        if (alive > 0) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.remove();
+          collapseRow(targetEl, 50);
+        }
+      }
+      animate();
+    }
+
+    function runLaserSlice(targetEl) {
+      // 1. Crear el haz láser diagonal cruzando el elemento
+      const laserBlade = document.createElement("div");
+      laserBlade.className = "laser-beam-blade";
+      targetEl.appendChild(laserBlade);
+
+      // 2. Resplandor de corte incandescente al rojo vivo
+      const scarGlow = document.createElement("div");
+      scarGlow.className = "laser-cut-scar";
+      targetEl.appendChild(scarGlow);
+
+      // Chispas desprendidas a lo largo de la línea diagonal
+      const { canvas, ctx, rect } = createOverlayCanvas(targetEl);
+      const sparks = [];
+      for (let i = 0; i < 45; i++) {
+        const progress = Math.random();
+        sparks.push({
+          x: rect.width * progress,
+          y: rect.height * (0.68 - progress * 0.36),
+          vx: (Math.random() - 0.5) * 8 + (Math.random() > 0.5 ? 4 : -4),
+          vy: (Math.random() - 0.5) * 8,
+          size: Math.random() * 2.5 + 1.2,
+          color: Math.random() > 0.4 ? "#38bdf8" : "#fbbf24",
+          alpha: 1,
+          decay: Math.random() * 0.04 + 0.02
+        });
+      }
+
+      function animateLaserSparks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let aliveSparks = 0;
+        sparks.forEach(s => {
+          if (s.alpha > 0) {
+            aliveSparks++;
+            ctx.fillStyle = s.color;
+            ctx.globalAlpha = s.alpha;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+            s.x += s.vx;
+            s.y += s.vy;
+            s.alpha -= s.decay;
+          }
+        });
+        if (aliveSparks > 0) {
+          requestAnimationFrame(animateLaserSparks);
+        } else {
+          canvas.remove();
+        }
+      }
+
+      setTimeout(() => {
+        scarGlow.style.opacity = "1";
+        animateLaserSparks();
+      }, 140);
+
+      // 3. Crear duplicado idéntico para que una sea la mitad superior y la otra la mitad inferior
+      setTimeout(() => {
+        const lowerHalf = targetEl.cloneNode(true);
+        lowerHalf.removeAttribute("id");
+        lowerHalf.style.position = "absolute";
+        lowerHalf.style.top = `${targetEl.offsetTop}px`;
+        lowerHalf.style.left = `${targetEl.offsetLeft}px`;
+        lowerHalf.style.width = `${targetEl.offsetWidth}px`;
+        lowerHalf.style.height = `${targetEl.offsetHeight}px`;
+        lowerHalf.style.pointerEvents = "none";
+        lowerHalf.style.zIndex = "35";
+
+        targetEl.parentElement.appendChild(lowerHalf);
+
+        // Aplicar la división sincronizada
+        targetEl.classList.add("laser-slice-upper");
+        lowerHalf.classList.add("laser-slice-lower");
+
+        // Limpiar duplicado y colapsar la fila original
+        setTimeout(() => {
+          lowerHalf.remove();
+        }, 750);
+
+        collapseRow(targetEl, 700);
+      }, 260);
+    }
+
+    function runPaperShredder(targetEl) {
+      const { canvas, ctx, rect } = createOverlayCanvas(targetEl);
+      targetEl.style.opacity = "0";
+
+      const stripWidth = 14;
+      const stripsCount = Math.ceil(rect.width / stripWidth);
+      const strips = [];
+
+      for (let i = 0; i < stripsCount; i++) {
+        strips.push({
+          x: i * stripWidth,
+          y: 0,
+          w: stripWidth - 2,
+          h: rect.height,
+          speed: Math.random() * 4 + 4,
+          rot: (Math.random() - 0.5) * 0.05,
+          color: (i % 2 === 0) ? "#1e293b" : "#334155"
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height + 200);
+        let visible = false;
+
+        strips.forEach(s => {
+          if (s.y < rect.height + 150) {
+            visible = true;
+            ctx.save();
+            ctx.translate(s.x + s.w / 2, s.y);
+            ctx.rotate(s.rot);
+            ctx.fillStyle = s.color;
+            ctx.fillRect(-s.w / 2, 0, s.w, s.h);
+            ctx.restore();
+            s.y += s.speed;
+          }
+        });
+
+        if (visible) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.remove();
+          collapseRow(targetEl, 50);
+        }
+      }
+      animate();
+    }
+
+    function runMatrixDissolve(targetEl) {
+      const { canvas, ctx, rect } = createOverlayCanvas(targetEl);
+      targetEl.style.opacity = "0";
+
+      const chars = "0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ";
+      const fontSize = 12;
+      const columns = Math.floor(rect.width / fontSize);
+      const drops = Array(columns).fill(0);
+      let frames = 0;
+
+      function animate() {
+        ctx.fillStyle = "rgba(11, 15, 25, 0.15)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#10b981";
+        ctx.font = `${fontSize}px monospace`;
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars.charAt(Math.floor(Math.random() * chars.length));
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.85) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+
+        frames++;
+        if (frames < 45) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.remove();
+          collapseRow(targetEl, 50);
+        }
+      }
+      animate();
+    }
+
+    function runGlassShatter(targetEl) {
+      document.body.classList.add("shake-screen");
+      setTimeout(() => document.body.classList.remove("shake-screen"), 450);
+
+      const { canvas, ctx, rect } = createOverlayCanvas(targetEl);
+      targetEl.style.opacity = "0";
+
+      // Generate shards
+      const shards = [];
+      const shardCols = 10;
+      const shardRows = 4;
+      const cellW = rect.width / shardCols;
+      const cellH = rect.height / shardRows;
+
+      for (let r = 0; r < shardRows; r++) {
+        for (let c = 0; c < shardCols; c++) {
+          shards.push({
+            x: c * cellW + cellW / 2,
+            y: r * cellH + cellH / 2,
+            w: cellW,
+            h: cellH,
+            vx: (Math.random() - 0.5) * 12,
+            vy: Math.random() * 8 + 3,
+            rot: 0,
+            rotSpeed: (Math.random() - 0.5) * 0.2,
+            color: Math.random() > 0.5 ? "rgba(56, 189, 248, 0.7)" : "rgba(30, 41, 59, 0.9)"
+          });
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height + 250);
+        let onScreen = false;
+
+        shards.forEach(s => {
+          if (s.y < rect.height + 200) {
+            onScreen = true;
+            ctx.save();
+            ctx.translate(s.x, s.y);
+            ctx.rotate(s.rot);
+            ctx.fillStyle = s.color;
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-s.w / 2, -s.h / 2);
+            ctx.lineTo(s.w / 2, -s.h / 2);
+            ctx.lineTo(s.w / 2, s.h / 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            s.x += s.vx;
+            s.y += s.vy;
+            s.rot += s.rotSpeed;
+          }
+        });
+
+        if (onScreen) {
+          requestAnimationFrame(animate);
+        } else {
+          canvas.remove();
+          collapseRow(targetEl, 50);
+        }
+      }
+      animate();
+    }
+
+    function triggerElimination(index) {
+      const row = document.getElementById(`chat-card-${index}`);
+      if (!row || row.dataset.busy === "true") return;
+      row.dataset.busy = "true";
+
+      const effect = EFFECTS_CONFIG[index];
+
+      switch (effect.type) {
+        case "canvas-thanos":
+          runThanosSnap(row);
+          break;
+        case "canvas-burn":
+          runPaperBurn(row);
+          break;
+        case "css-laser":
+          runLaserSlice(row);
+          break;
+        case "canvas-shredder":
+          runPaperShredder(row);
+          break;
+        case "css-vortex":
+          row.classList.add("anim-vortex");
+          collapseRow(row, 650);
+          break;
+        case "css-acid":
+          row.classList.add("anim-acid");
+          collapseRow(row, 650);
+          break;
+        case "css-pacman":
+          row.classList.add("anim-pacman");
+          collapseRow(row, 550);
+          break;
+        case "canvas-matrix":
+          runMatrixDissolve(row);
+          break;
+        case "css-portal":
+          row.classList.add("anim-portal");
+          collapseRow(row, 650);
+          break;
+        case "css-glitch":
+          row.classList.add("anim-glitch");
+          collapseRow(row, 450);
+          break;
+        case "canvas-shatter":
+          runGlassShatter(row);
+          break;
+        case "css-origami":
+          row.classList.add("anim-origami");
+          collapseRow(row, 750);
+          break;
+        case "css-slime":
+          row.classList.add("anim-slime");
+          collapseRow(row, 550);
+          break;
+        case "css-eraser":
+          row.classList.add("anim-eraser");
+          collapseRow(row, 500);
+          break;
+        case "css-hinge":
+          row.classList.add("anim-hinge");
+          collapseRow(row, 850);
+          break;
+        case "css-hydraulic":
+          row.classList.add("anim-hydraulic");
+          collapseRow(row, 350);
+          break;
+        case "css-rocket":
+          row.classList.add("anim-rocket");
+          collapseRow(row, 500);
+          break;
+        case "css-freeze":
+          row.classList.add("anim-freeze");
+          collapseRow(row, 600);
+          break;
+        case "css-ghost":
+          row.classList.add("anim-ghost");
+          collapseRow(row, 550);
+          break;
+        case "css-ios":
+          row.classList.add("anim-ios");
+          collapseRow(row, 350);
+          break;
+        default:
+          collapseRow(row, 300);
+          break;
+      }
+    }
+
+    /* Reset / Restore all 20 chats */
+    btnRestoreAll.addEventListener("click", () => {
+      renderChatList();
+    });
+
+    /* Initial boot */
+    window.addEventListener("DOMContentLoaded", () => {
+      renderChatList();
+    });
+  </script>
+</body>
+</html>

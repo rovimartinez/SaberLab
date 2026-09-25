@@ -89,7 +89,7 @@ function waitForKeypress() {
 // ─── Ejecutar comando y capturar salida ───────────────────────────────────────
 function run(cmd, opts = {}) {
     return new Promise((resolve, reject) => {
-        exec(cmd, { encoding: 'utf8', ...opts }, (err, stdout, stderr) => {
+        exec(cmd, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024, ...opts }, (err, stdout, stderr) => {
             if (err && !opts.allowError) return reject(new Error(stderr || stdout || err.message));
             resolve(stdout.trim());
         });
@@ -244,12 +244,18 @@ async function main() {
     // 8. git push
     const spPush = new Spinner(`Subiendo a GitHub (rama: ${branch})...`).start();
     try {
-        await run(`git push origin ${branch}`, { timeout: 60000 });
+        await run(`git push origin ${branch}`, { timeout: 180000 });
         spPush.succeed(`¡Push exitoso! Rama "${branch}" actualizada en GitHub`);
     } catch (err) {
-        spPush.fail(`Error en git push: ${err.message}`);
-        await waitForKeypress();
-        process.exit(1);
+        // Git suele enviar su telemetría (Counting objects, Writing objects) por stderr
+        // Si el exit code fue 0, no es un error real.
+        if (err.message && !err.message.includes('rejected') && !err.message.includes('error:') && (err.message.includes('Everything up-to-date') || err.message.includes('up to date'))) {
+            spPush.succeed(`¡Push exitoso! Rama "${branch}" sincronizada con GitHub`);
+        } else {
+            spPush.fail(`Error en git push: ${err.message}`);
+            await waitForKeypress();
+            process.exit(1);
+        }
     }
 
     // 9. Panel final

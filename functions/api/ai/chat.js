@@ -8,13 +8,12 @@
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_DEFAULT_KEY = '';
 
-
-// Pool balanceado de modelos en Groq (Ultra veloz con cuota protegida)
+// Pool balanceado de modelos en Groq (Llama 3.3 70B, Qwen y GPT-OSS)
 const GROQ_MODELS_POOL = [
-  'qwen/qwen3.8-27b',       // Primario: Excelente razonamiento en español y capacidad técnica
-  'openai/gpt-oss-20b',     // Secundario: Modelo veloz y fluido
-  'openai/gpt-oss-120b',    // Tercero: Alta capacidad
-  'groq/compound'           // Cuarto: Multi-engine
+  'llama-3.3-70b-versatile', // Primario: Rendimiento superior y velocidad extrema
+  'openai/gpt-oss-120b',     // Secundario: Máxima capacidad de razonamiento técnico
+  'openai/gpt-oss-20b',      // Terciario: Ultra veloz con razonamiento
+  'qwen/qwen3.8-27b'         // Cuaternario: Excelente pedagogía en español
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -517,7 +516,7 @@ export async function onRequestDelete({ request, env, data }) {
   try {
     const session = await env.DB.prepare('SELECT user_id FROM ai_chat_sessions WHERE id = ?').bind(sessionId).first();
     if (!session) {
-      return Response.json({ success: false, error: 'Sesión no encontrada' }, { status: 404 });
+      return Response.json({ success: true, message: 'Conversación ya eliminada o no sincronizada' });
     }
 
     if (session.user_id !== user.id && !isStaff) {
@@ -625,42 +624,142 @@ export async function onRequestPost({ request, env, data }) {
       ...compactMessages
     ];
 
-    const maxTokensLimit = isBrief ? 250 : 500;
-    const computedTemp = isBrief ? 0.35 : Math.min(Math.max(temperature, 0.2), 0.8);
+    const maxTokensLimit = isBrief ? 800 : 1500;
+    const computedTemp = isBrief ? 0.4 : Math.min(Math.max(temperature, 0.2), 0.8);
 
     let assistantRawContent = null;
     let usedModel = 'SaberLab AI';
     let isRateLimited = false;
     let rateLimitCount = 0;
 
-    // ── VÍA 1: Pool de Modelos en Groq API ──
-    const groqKey = env?.GROQ_API_KEY || GROQ_DEFAULT_KEY;
-    if (groqKey) {
+    // ── VÍA 0: Google Gemini API (Google AI Studio) ──
+    const geminiKey = env?.GEMINI_API_KEY || 
+                      env?.GOOGLE_AI_API_KEY || 
+                      (typeof process !== 'undefined' && (process.env?.GEMINI_API_KEY || process.env?.GOOGLE_AI_API_KEY));
+    if (geminiKey) {
+      // Modelos activos en Google AI Studio ordenados por latencia ultrarrápida (<1s) y estabilidad
+      const geminiModels = [
+        'gemini-flash-lite-latest',
+        'gemini-3.5-flash-lite',
+        'gemini-3.7-flash',
+        'gemini-flash-latest',
+        'gemini-3.5-flash',
+        'gemini-3.8-flash'
+      ];
+      
+      // Asegurar que contents cumpla la especificación estricta de Gemini API:
+      // - El primer mensaje DEBE ser rol 'user'
+      // - No puede haber dos roles idénticos consecutivos
+      const sanitizedGeminiContents = [];
+      for (const m of compactMessages) {
+        const role = m.role === 'assistant' ? 'model' : 'user';
+        if (sanitizedGeminiContents.length === 0 && role === 'model') {
+          continue; // Ignorar si empieza con modelo
+        }
+        const last = sanitizedGeminiContents[sanitizedGeminiContents.length - 1];
+        if (last && last.role === role) {
+          last.parts[0].text += `\n\n${m.content}`;
+        } else {
+          sanitizedGeminiContents.push({
+            role,
+            parts: [{ text: m.content }]
+          });
+        }
+      }
+
+      if (sanitizedGeminiContents.length > 0) {
+        for (const gModel of geminiModels) {
+          try {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${geminiKey}`;
+            const geminiRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              signal: AbortSignal.timeout(9000),
+              body: JSON.stringify({
+                systemInstruction: {
+                  parts: [{ text: systemPrompt + (context ? `\n\n[Contexto Activo del Curso: ${context}]` : '') }]
+                },
+                contents: sanitizedGeminiContents,
+                generationConfig: {
+                  temperature: computedTemp,
+                  maxOutputTokens: maxTokensLimit
+                }
+              })
+            });
+
+            if (geminiRes.ok) {
+              const geminiData = await geminiRes.json();
+              const candidateText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (candidateText && candidateText.trim()) {
+                assistantRawContent = candidateText.trim();
+                usedModel = `Google ${gModel}`;
+                break;
+              }
+            } else {
+              const errBody = await geminiRes.text().catch(() => '');
+              console.warn(`[Gemini API Error] ${gModel} ${geminiRes.status}:`, errBody.slice(0, 150));
+            }
+          } catch (gemErr) {
+            console.warn(`[Gemini API Call Exception] ${gModel}`, gemErr);
+          }
+        }
+      }
+    }
+
+    // ── VÍA 1: Pool de Modelos en Groq API (Multi-Key & Multi-Model Resilient) ──
+    if (!assistantRawContent) {
+      const keysToTry = [];
+      if (env?.GROQ_API_KEY && !env.GROQ_API_KEY.startsWith('gsk_eAXe')) {
+        keysToTry.push(env.GROQ_API_KEY);
+      }
+      if (GROQ_DEFAULT_KEY && !keysToTry.includes(GROQ_DEFAULT_KEY)) {
+        keysToTry.push(GROQ_DEFAULT_KEY);
+      }
+
+      groqLoop: for (const groqKey of keysToTry) {
       for (const groqModel of GROQ_MODELS_POOL) {
         try {
+          const isReasoningModel = groqModel.includes('gpt-oss');
+          const requestPayload = {
+            model: groqModel,
+            messages: fullMessages,
+            temperature: computedTemp,
+            max_completion_tokens: maxTokensLimit,
+            max_tokens: maxTokensLimit,
+            stream: false
+          };
+
+          if (isReasoningModel) {
+            requestPayload.reasoning_effort = 'low';
+          }
+
           const groqResponse = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${groqKey}`
             },
-            body: JSON.stringify({
-              model: groqModel,
-              messages: fullMessages,
-              temperature: computedTemp,
-              max_tokens: maxTokensLimit,
-              stream: false
-            })
+            body: JSON.stringify(requestPayload)
           });
 
           if (groqResponse.ok) {
             const json = await groqResponse.json();
-            const content = json.choices?.[0]?.message?.content;
+            const choice = json.choices?.[0];
+            const content = choice?.message?.content;
+            const reasoning = choice?.message?.reasoning;
+
             if (content && content.trim()) {
               assistantRawContent = content;
               usedModel = `Groq (${groqModel.split('/')[1] || groqModel})`;
-              break;
+              break groqLoop;
+            } else if (reasoning && reasoning.trim()) {
+              assistantRawContent = reasoning;
+              usedModel = `Groq (${groqModel.split('/')[1] || groqModel} Thinking)`;
+              break groqLoop;
             }
+          } else if (groqResponse.status === 401) {
+            console.warn('[Groq 401 Invalid Key] Skipping key and attempting backup...');
+            break; // Salta a la siguiente API Key
           } else {
             const status = groqResponse.status;
             let errText = '';
@@ -676,6 +775,7 @@ export async function onRequestPost({ request, env, data }) {
           console.warn(`[Groq Fetch Error] Model: ${groqModel}`, groqErr);
         }
       }
+    }
     }
 
     // ── VÍA 2: Cloudflare Workers AI Nativo (Si Groq no responde) ──
@@ -906,6 +1006,152 @@ En el curso de **Electricidad y Electrónica Básica**, las dos relaciones cuant
 
   // 4. Respuestas temáticas de RoboBot (RE)
   if (botType === 'robobot') {
+    if (q.includes('ldr') || q.includes('fotorresistencia') || q.includes('analogread') || q.includes('luz')) {
+      return `[TITULO: Lectura de Fotorresistencia LDR con analogRead()]
+Para leer una **fotorresistencia LDR** en Arduino utilizamos la función \`analogRead(pin)\`, que convierte el nivel de tensión en un valor digital entre **0 y 1023** (resolución ADC de 10 bits):
+
+### 🔌 Circuito Divisor de Tensión:
+1. Conecta un terminal del LDR a **5V**.
+2. Conecta el otro terminal del LDR al pin analógico **A0** y a una resistencia de **10 kΩ**.
+3. Conecta el otro extremo de la resistencia de **10 kΩ** a **GND**.
+
+### 💻 Código de Ejemplo en C++:
+\`\`\`cpp
+const int pinLDR = A0;   // Pin analógico conectado al divisor
+int valorLuz = 0;        // Variable para almacenar la lectura (0 a 1023)
+
+void setup() {
+  Serial.begin(9600);    // Iniciar comunicación Serial
+}
+
+void loop() {
+  valorLuz = analogRead(pinLDR);  // Lectura del sensor
+  
+  Serial.print("Nivel de Luz: ");
+  Serial.println(valorLuz);
+  
+  // Ejemplo de umbral: si hay poca luz (valor bajo), encender alerta
+  if (valorLuz < 400) {
+    Serial.println("-> Entorno oscuro detectado");
+  }
+  
+  delay(500); // Pausa de medio segundo entre lecturas
+}
+\`\`\`
+
+¿Deseas conectar este sensor a un servomotor o a una luz nocturna automática?`;
+    }
+
+    if (q.includes('ultrasonico') || q.includes('ultrasónico') || q.includes('hc-sr04') || q.includes('distancia') || q.includes('echo') || q.includes('trigger')) {
+      return `[TITULO: Conexión y Programación del Sensor Ultrasónico HC-SR04]
+El sensor **HC-SR04** mide distancias mediante ondas de sonido de alta frecuencia (40 kHz) midiendo el tiempo que tarda el eco en rebotar contra un obstáculo:
+
+### 🔌 Conexión de Pines a Arduino:
+| Pin HC-SR04 | Pin Arduino | Función |
+|---|---|---|
+| **VCC** | **5V** | Alimentación eléctrica |
+| **GND** | **GND** | Tierra común |
+| **Trig (Disparo)** | **Pin 9 (Digital)** | Emite el pulso ultrasónico de 10 µs |
+| **Echo (Recepción)** | **Pin 8 (Digital)** | Mide la duración del pulso de retorno |
+
+### 📐 Fórmula Física de Conversión:
+$$\\text{Distancia (cm)} = \\frac{\\text{Tiempo (µs)} \\times 0.0343}{2}$$
+*(Se divide entre 2 porque la onda realiza el recorrido de ida y vuelta).*
+
+### 💻 Código Completo en C++ (Arduino IDE / Tinkercad):
+\`\`\`cpp
+const int pinTrig = 9;
+const int pinEcho = 8;
+
+long duracion;
+int distanciaCm;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(pinTrig, OUTPUT); // Trig envía pulsos
+  pinMode(pinEcho, INPUT);  // Echo recibe el eco
+}
+
+void loop() {
+  // 1. Limpiar el pin Trig
+  digitalWrite(pinTrig, LOW);
+  delayMicroseconds(2);
+
+  // 2. Disparar un pulso de 10 microsegundos
+  digitalWrite(pinTrig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pinTrig, LOW);
+
+  // 3. Medir el tiempo que Echo permanece en HIGH
+  duracion = pulseIn(pinEcho, HIGH);
+
+  // 4. Calcular distancia en centímetros
+  distanciaCm = duracion * 0.0343 / 2;
+
+  // 5. Imprimir telemetría en el Monitor Serial
+  Serial.print("Distancia medida: ");
+  Serial.print(distanciaCm);
+  Serial.println(" cm");
+
+  // Alerta si hay un obstáculo a menos de 15 cm
+  if (distanciaCm > 0 && distanciaCm <= 15) {
+    Serial.println("⚠️ ¡Obstáculo detectado!");
+  }
+
+  delay(200); // 5 mediciones por segundo
+}
+\`\`\`
+
+¿Deseas conectar este sensor a un buzzer de reversa o a un carrito esquivador de obstáculos?`;
+    }
+
+    if (q.includes('puente h') || q.includes('l298n') || q.includes('motor dc') || q.includes('velocidad y giro')) {
+      return `[TITULO: Control de Motores DC con Puente H L298N]
+El módulo **Puente H L298N** permite controlar tanto el **sentido de giro** como la **velocidad** de hasta 2 motores DC desde Arduino:
+
+### 🔌 Conexiones Principales:
+* **ENA (Enable A):** Conectar a un pin con **PWM** de Arduino (ej: \`~9\`) para regular la velocidad (0 a 255 con \`analogWrite\`).
+* **IN1 e IN2:** Conectar a pines digitales (ej: \`8\` y \`7\`) para controlar la dirección de rotación.
+* **OUT1 y OUT2:** Conectar a los 2 terminales del Motor DC.
+* **GND:** Unir el GND de la batería con el GND del Arduino (**tierra común obligatoria**).
+
+### ⚙️ Tabla de Control de Giro:
+| IN1 | IN2 | Estado del Motor |
+|---|---|---|
+| **HIGH** | **LOW** | Giro hacia adelante ↻ |
+| **LOW** | **HIGH** | Giro en reversa ↺ |
+| **LOW** | **LOW** | Frenado suave / Apagado |
+| **HIGH** | **HIGH** | Frenado electromagnético |
+
+### 💻 Código de Ejemplo en C++:
+\`\`\`cpp
+const int ENA = 9;  // Pin PWM para velocidad
+const int IN1 = 8;  // Control de dirección
+const int IN2 = 7;
+
+void setup() {
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+}
+
+void loop() {
+  // 1. Giro adelante al 80% de velocidad
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  analogWrite(ENA, 200);
+  delay(3000);
+
+  // 2. Giro en reversa a máxima velocidad
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  analogWrite(ENA, 255);
+  delay(3000);
+}
+\`\`\`
+
+¿Deseas probar este circuito en Tinkercad o necesitas agregar un segundo motor para un carrito seguidor?`;
+    }
     if (isBrief) {
       return `[TITULO: Programación en Arduino C++]
 Todo programa en Arduino se estructura en **void setup()** (inicialización de pines y comunicación Serial) y **void loop()** (bucle cíclico donde se leen sensores como el HC-SR04 y se comandan motores o servos).`;
@@ -952,9 +1198,56 @@ Los atajos primarios son: **Tab** (alternar Modo Objeto y Modo Edición), **1 / 
   }
 
   // 6. Respuestas temáticas de ImpriBot (SIMI)
-  if (isBrief) {
-    return `[TITULO: Parámetros Térmicos PLA y PETG]
+  if (botType === 'impribot') {
+    if (q.includes('pla') && (q.includes('que es') || q.includes('qué es') || q.includes('solo pla') || q.includes('definicion'))) {
+      return `[TITULO: ¿Qué es el PLA?]
+El **PLA (Ácido Poliláctico)** es el filamento termoplástico más utilizado en la impresión 3D FDM:
+
+* 🌱 **Origen Biodegradable:** Se fabrica a partir de recursos renovables como almidón de maíz y caña de azúcar.
+* 🌡️ **Temperatura de Trabajo:** Boquilla entre **200 °C y 215 °C**, cama opcional o tibia (**50 °C - 60 °C**).
+* ✨ **Facilidad de Impresión:** Casi no sufre contracción térmica (*sin warping*), no requiere cabina cerrada y emite un olor dulce imperceptible.
+* ⚠️ **Limitación:** Se ablanda a partir de los **60 °C**, por lo que no es apto para piezas mecánicas expuestas al sol o calor intenso (para eso se usa PETG o ABS).
+
+¿Deseas conocer los parámetros recomendados para configurarlo en tu Slicer?`;
+    }
+    if (q.includes('petg')) {
+      return `[TITULO: Filamento PETG]
+El **PETG (Polietileno Tereftalato con Glicol)** combina la facilidad de impresión del PLA con la resistencia mecánica y térmica del ABS:
+* 🌡️ **Temperaturas:** Boquilla a **230 - 245 °C** y cama a **70 - 80 °C**.
+* 💪 **Propiedades:** Excelente adhesión entre capas, resistente a impactos, agua y químicos.
+* ⚠️ **Consejo:** Tiende a generar hilos (*stringing*); calibra bien la retracción (2-4 mm en direct drive).`;
+    }
+    if (q.includes('warp') || q.includes('despega') || q.includes('despegando')) {
+      return `[TITULO: Solución al Warping (Alabeo)]
+El **Warping** ocurre cuando las capas inferiores se contraen al enfriarse rápidamente y se despegan de la cama:
+1. 🧼 **Limpia la superficie:** Usa alcohol isopropílico al 99% o agua tibia con jabón neutro.
+2. 📏 **Nivelación:** Calibra el *Z-Offset* para asegurar una primera capa bien aplastada (50-60% de compresión).
+3. 🌡️ **Temperatura de cama:** Sube 5 °C la cama caliente (PLA: 60 °C, PETG: 80 °C).
+4. 🛑 **Sin corrientes de aire:** Apaga el ventilador de capa en las primeras 3 capas y evita corrientes externas.`;
+    }
+    if (q.includes('soporte') || q.includes('arbol') || q.includes('árbol') || q.includes('tree') || q.includes('orca') || q.includes('cura') || q.includes('slicer')) {
+      return `[TITULO: Configuración de Soportes Tipo Árbol]
+Para configurar **Soportes Tipo Árbol (Tree Supports)** en OrcaSlicer o Cura:
+
+### 🌲 En OrcaSlicer / Bambu Studio:
+1. Ve a la pestaña **Support (Soporte)**.
+2. Marca la casilla **Enable Support**.
+3. En **Type (Tipo)**, selecciona **Tree(auto)** o **Tree(manual)**.
+4. En **Style (Estilo)**, elige **Tree Slim** (ahorra hasta 40% de material y es facilísimo de retirar).
+5. Ajusta el ángulo de voladizo (**Threshold angle**) a **45°** o **50°**.
+
+### 🌲 En Ultimaker Cura:
+1. Activa la visibilidad de ajustes en la categoría **Soporte**.
+2. Marca **Generar Soporte**.
+3. En **Estructura del soporte**, cambia de *Normal* a **Árbol**.
+4. En **Ángulo de voladizo del soporte**, define **50°**.
+
+> 💡 **Ventaja:** Nacen desde la placa rodeando la pieza como ramas, sin tocar paredes visibles del modelo.`;
+    }
+    if (isBrief) {
+      return `[TITULO: Parámetros Térmicos PLA y PETG]
 Para **PLA**: boquilla a 200-210 °C y cama a 55-60 °C. Para **PETG**: boquilla a 230-240 °C y cama a 75-80 °C. Mantén la primera capa a baja velocidad (20 mm/s) para máxima adherencia y evitar warping.`;
+    }
   }
   return `[TITULO: Parámetros Térmicos de Filamentos]
 ### 🧵 Manufactura Aditiva & Slicers - SIMI3D

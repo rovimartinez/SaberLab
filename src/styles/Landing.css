@@ -150,6 +150,12 @@
     z-index: 2;
     overflow: hidden;
     pointer-events: auto;
+    transition: opacity 0.35s ease;
+}
+
+.landing-spline-bg-wrapper.is-chat-active {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .landing-spline-bg-iframe {
@@ -162,6 +168,60 @@
     display: block;
     transform: scale(0.85) translate(18%, -5%);
     transform-origin: center right;
+}
+
+/* Callout interactivo sobre el Robot */
+.landing-robot-callout-btn {
+    position: absolute;
+    top: 26%;
+    right: 22%;
+    z-index: 25;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: #ffffff;
+    border: 1.5px solid rgba(168, 85, 247, 0.55);
+    border-radius: 9999px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.35), 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: saberlabCalloutFloat 2.6s infinite ease-in-out;
+}
+
+.landing-robot-callout-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: rgba(124, 58, 237, 0.95);
+    border-color: #d8b4fe;
+    box-shadow: 0 14px 36px rgba(168, 85, 247, 0.55);
+}
+
+.landing-robot-callout-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 10px #10b981;
+}
+
+@keyframes saberlabCalloutFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@media (max-width: 900px) {
+    .landing-robot-callout-btn {
+        display: none;
+    }
 }
 
 /* ── HERO ── */
