@@ -195,15 +195,17 @@
 }
 
 .saberlab-robobot-spline-iframe {
-    width: 500px;
-    height: 420px;
+    width: 580px;
+    height: 500px;
     border: none;
     display: block;
-    transform: scale(0.46) translate(0%, 2%);
+    transform: scale(0.48) translate(2%, -3%);
     transform-origin: center center;
     pointer-events: auto;
     background: transparent;
     flex-shrink: 0;
+    margin-bottom: -70px;
+    margin-right: -70px;
 }
 
 @media (max-width: 992px) {
