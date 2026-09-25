@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Shield, Settings, UserPlus, MoreVertical, Edit2, Trash2, Plus, X, Users, Check } from 'lucide-react';
 import { usePlatformSettings } from '../hooks/usePlatformSettings';
 import { COURSES_DEFINITION } from '../data/coursesData.jsx';
@@ -15,11 +16,12 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
     const [courses, setCourses] = useState([]);
     const [groups, setGroups] = useState([]);
     const [userGroups, setUserGroups] = useState({});
-    const [aiStatus, setAiStatus] = useState({ online: true, provider: 'Google Gemini / Groq', bots: [] });
+    const [aiStatus, setAiStatus] = useState({ online: true, provider: 'Google Gemini 2.0 / 1.5 Flash', bots: [] });
     const [aiTestResult, setAiTestResult] = useState(null);
     const [testingAi, setTestingAi] = useState(false);
     const [botPingResults, setBotPingResults] = useState({});
     const [testingBotId, setTestingBotId] = useState(null);
+    const [activePingModalResult, setActivePingModalResult] = useState(null);
     const [loading, setLoading] = useState(true);
 
     // Cargar usuarios y estado del sistema
@@ -317,68 +319,49 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                     >
                         ⚙️ Catálogos y Opciones
                     </button>
-                    <button 
-                        className={`admin-tab ${activeTab === 'ai' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('ai')}
-                    >
-                        🤖 Estado del Motor IA
-                    </button>
                 </div>
             )}
 
             {/* Subsección: Estado de la IA Dedicada */}
             {(section === 'ai' || (!section && activeTab === 'ai')) && (
                 <div className="settings-grid" style={{ gridTemplateColumns: '1fr' }}>
-                    <div className="settings-panel" style={{ border: aiStatus?.online ? '1.5px solid rgba(16, 185, 129, 0.45)' : '1.5px solid rgba(239, 68, 68, 0.45)', background: 'var(--surface-card, #ffffff)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                    <div className="settings-panel" style={{ border: aiStatus?.online ? '1.5px solid rgba(16, 185, 129, 0.45)' : '1.5px solid rgba(239, 68, 68, 0.45)', background: 'var(--surface-card, #ffffff)', padding: '1.25rem' }}>
+                        {/* 1. Header de Estado Principal */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{
-                                    width: '16px',
-                                    height: '16px',
+                                    width: '14px',
+                                    height: '14px',
                                     borderRadius: '50%',
                                     background: aiStatus?.online ? '#10b981' : '#ef4444',
-                                    boxShadow: aiStatus?.online ? '0 0 14px #10b981' : '0 0 14px #ef4444'
+                                    boxShadow: aiStatus?.online ? '0 0 12px #10b981' : '0 0 12px #ef4444'
                                 }} />
-                                <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-heading, #1e293b)' }}>Telemetría y Estado de los Tutores IA</h3>
+                                <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-heading, #1e293b)', fontWeight: 800 }}>Telemetría y Estado de los Tutores IA</h3>
                             </div>
                             <span style={{
-                                padding: '6px 14px',
+                                padding: '5px 12px',
                                 borderRadius: '20px',
-                                fontSize: '0.85rem',
+                                fontSize: '0.8rem',
                                 fontWeight: 800,
                                 background: aiStatus?.online ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                                 color: aiStatus?.online ? '#10b981' : '#ef4444'
                             }}>
-                                {aiStatus?.online ? '🟢 IA ONLINE / OPERACIONAL' : '🔴 IA OFFLINE'}
+                                {aiStatus?.online ? '🟢 ONLINE' : '🔴 OFFLINE'}
                             </span>
                         </div>
-                        
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '1.5rem' }}>
-                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Proveedor Principal</span>
-                                <h4 style={{ margin: '4px 0 0 0', color: 'var(--brand-primary, #6366f1)' }}>{aiStatus?.provider || 'Google Gemini 2.5 Flash'}</h4>
-                            </div>
-                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Tutores Conectados</span>
-                                <h4 style={{ margin: '4px 0 0 0' }}>4 Asistentes Especializados</h4>
-                            </div>
-                            <div style={{ padding: '12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Modo de Contingencia</span>
-                                <h4 style={{ margin: '4px 0 0 0', color: '#10b981' }}>Heurístico Offline Activo</h4>
-                            </div>
-                        </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-heading, #1e293b)' }}>
-                                📡 Ping y Diagnóstico en Tiempo Real por Tutor:
+                        {/* 2. Sub-encabezado Tutores */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                            <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-heading, #1e293b)', fontWeight: 800 }}>
+                                📡 Diagnóstico y Ping en Tiempo Real (Visibles a simple vista):
                             </h4>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                                Inferencia real con latencia de red, modelo e ID de sesión D1
+                            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                                Toca cualquier bot para ejecutar inferencia real
                             </span>
                         </div>
 
-                        {/* Grid de Ping Individual por Bot */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                        {/* 3. Grid de los 4 Bots (Visibles a simple vista en 4 columnas) */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
                             {[
                                 { id: 'electrobot', name: 'ElectroBot', course: 'EE', color: '#eab308', icon: '⚡', subtitle: 'Electricidad y Circuitos', query: '¿Cómo calcular la resistencia equivalente en un circuito paralelo?' },
                                 { id: 'robobot', name: 'RoboBot', course: 'RE', color: '#0284c7', icon: '🤖', subtitle: 'Robótica y Arduino C++', query: '¿Cómo leer una fotorresistencia LDR con analogRead() en Arduino?' },
@@ -388,37 +371,90 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                                 const isTestingThis = testingBotId === bot.id;
                                 const result = botPingResults[bot.id];
 
+                                const runPingTest = async (e) => {
+                                    if (e && e.stopPropagation) e.stopPropagation();
+                                    setTestingBotId(bot.id);
+                                    const startTime = performance.now();
+                                    try {
+                                        const res = await api('/ai/chat', {
+                                            method: 'POST',
+                                            body: {
+                                                botType: bot.id,
+                                                courseAbbr: bot.course,
+                                                messages: [{ role: 'user', content: bot.query }],
+                                                isBrief: true
+                                            }
+                                        });
+                                        const elapsed = Math.round(performance.now() - startTime);
+                                        if (res?.data?.success && res.data.message) {
+                                            const pingData = {
+                                                success: true,
+                                                text: res.data.message.content,
+                                                model: res.data.model || 'Google Gemini 2.0 / 1.5 Flash',
+                                                latencyMs: elapsed,
+                                                timestamp: new Date().toLocaleTimeString()
+                                            };
+                                            setBotPingResults(prev => ({ ...prev, [bot.id]: pingData }));
+                                            setAiStatus(prev => ({ ...prev, online: true }));
+                                            setActivePingModalResult({ bot, result: pingData });
+                                        } else {
+                                            const errData = {
+                                                success: false,
+                                                error: res?.error?.message || res?.data?.error || 'Sin respuesta',
+                                                latencyMs: elapsed,
+                                                timestamp: new Date().toLocaleTimeString()
+                                            };
+                                            setBotPingResults(prev => ({ ...prev, [bot.id]: errData }));
+                                            setActivePingModalResult({ bot, result: errData });
+                                        }
+                                    } catch (err) {
+                                        const elapsed = Math.round(performance.now() - startTime);
+                                        const errData = {
+                                            success: false,
+                                            error: err.message || 'Error de conexión',
+                                            latencyMs: elapsed,
+                                            timestamp: new Date().toLocaleTimeString()
+                                        };
+                                        setBotPingResults(prev => ({ ...prev, [bot.id]: errData }));
+                                        setActivePingModalResult({ bot, result: errData });
+                                    } finally {
+                                        setTestingBotId(null);
+                                    }
+                                };
+
                                 return (
                                     <div key={bot.id} style={{
                                         background: 'var(--surface-ground, #f8fafc)',
                                         border: `1.5px solid ${result?.success ? 'rgba(16, 185, 129, 0.4)' : result?.error ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-default, #e2e8f0)'}`,
                                         borderRadius: '14px',
-                                        padding: '1.1rem',
+                                        padding: '0.95rem',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        gap: '0.75rem',
+                                        justifyContent: 'space-between',
+                                        gap: '0.65rem',
                                         position: 'relative'
                                     }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '6px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span style={{ fontSize: '1.4rem' }}>{bot.icon}</span>
+                                                <span style={{ fontSize: '1.3rem' }}>{bot.icon}</span>
                                                 <div>
-                                                    <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-heading, #1e293b)' }}>
-                                                        {bot.name} <span style={{ fontSize: '0.75rem', color: bot.color, fontWeight: 700 }}>({bot.course})</span>
+                                                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-heading, #1e293b)' }}>
+                                                        {bot.name} <span style={{ fontSize: '0.72rem', color: bot.color, fontWeight: 700 }}>({bot.course})</span>
                                                     </h4>
-                                                    <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>{bot.subtitle}</span>
+                                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{bot.subtitle}</span>
                                                 </div>
                                             </div>
                                             {result && (
                                                 <span style={{
-                                                    fontSize: '0.72rem',
+                                                    fontSize: '0.7rem',
                                                     fontWeight: 800,
-                                                    padding: '2px 8px',
-                                                    borderRadius: '12px',
+                                                    padding: '2px 7px',
+                                                    borderRadius: '6px',
                                                     background: result.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                                                    color: result.success ? '#10b981' : '#ef4444'
+                                                    color: result.success ? '#10b981' : '#ef4444',
+                                                    whiteSpace: 'nowrap'
                                                 }}>
-                                                    {result.success ? `${result.latencyMs} ms` : 'Fallo'}
+                                                    {result.success ? `✓ ${result.latencyMs} ms` : '✕ Fallo'}
                                                 </span>
                                             )}
                                         </div>
@@ -426,106 +462,44 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                                         <button
                                             type="button"
                                             disabled={isTestingThis}
-                                            onClick={async () => {
-                                                setTestingBotId(bot.id);
-                                                const startTime = performance.now();
-                                                try {
-                                                    const res = await api('/ai/chat', {
-                                                        method: 'POST',
-                                                        body: {
-                                                            botType: bot.id,
-                                                            courseAbbr: bot.course,
-                                                            messages: [{ role: 'user', content: bot.query }],
-                                                            isBrief: true
-                                                        }
-                                                    });
-                                                    const elapsed = Math.round(performance.now() - startTime);
-                                                    if (res?.data?.success && res.data.message) {
-                                                        setBotPingResults(prev => ({
-                                                            ...prev,
-                                                            [bot.id]: {
-                                                                success: true,
-                                                                text: res.data.message.content,
-                                                                model: res.data.model || 'SaberLab AI',
-                                                                latencyMs: elapsed,
-                                                                timestamp: new Date().toLocaleTimeString()
-                                                            }
-                                                        }));
-                                                        setAiStatus(prev => ({ ...prev, online: true }));
-                                                    } else {
-                                                        setBotPingResults(prev => ({
-                                                            ...prev,
-                                                            [bot.id]: {
-                                                                success: false,
-                                                                error: res?.error?.message || res?.data?.error || 'Sin respuesta',
-                                                                latencyMs: elapsed,
-                                                                timestamp: new Date().toLocaleTimeString()
-                                                            }
-                                                        }));
-                                                    }
-                                                } catch (err) {
-                                                    const elapsed = Math.round(performance.now() - startTime);
-                                                    setBotPingResults(prev => ({
-                                                        ...prev,
-                                                        [bot.id]: {
-                                                            success: false,
-                                                            error: err.message || 'Error de conexión',
-                                                            latencyMs: elapsed,
-                                                            timestamp: new Date().toLocaleTimeString()
-                                                        }
-                                                    }));
-                                                } finally {
-                                                    setTestingBotId(null);
-                                                }
-                                            }}
+                                            onClick={runPingTest}
                                             style={{
-                                                background: isTestingThis ? 'rgba(99, 102, 241, 0.2)' : `linear-gradient(135deg, ${bot.color} 0%, #475569 100%)`,
+                                                background: isTestingThis ? 'rgba(99, 102, 241, 0.2)' : `linear-gradient(135deg, ${bot.color} 0%, #334155 100%)`,
                                                 color: '#fff',
                                                 border: 'none',
-                                                padding: '7px 12px',
+                                                padding: '6px 10px',
                                                 borderRadius: '8px',
                                                 fontWeight: 700,
-                                                fontSize: '0.82rem',
+                                                fontSize: '0.78rem',
                                                 cursor: isTestingThis ? 'wait' : 'pointer',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                gap: '6px'
+                                                gap: '5px',
+                                                boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
                                             }}
                                         >
-                                            {isTestingThis ? '⚡ Ejecutando Ping...' : `⚡ Probar Ping en Vivo (${bot.name})`}
+                                            {isTestingThis ? '⚡ Probando...' : `⚡ Probar Ping en Vivo`}
                                         </button>
-
-                                        {result && (
-                                            <div style={{
-                                                marginTop: '4px',
-                                                padding: '8px 10px',
-                                                borderRadius: '8px',
-                                                fontSize: '0.78rem',
-                                                background: result.success ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-                                                border: result.success ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
-                                                color: 'var(--text-primary)'
-                                            }}>
-                                                {result.success ? (
-                                                    <>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#10b981', fontWeight: 700 }}>
-                                                            <span>✓ Inferencia exitosa [{result.model}]</span>
-                                                            <span>{result.timestamp}</span>
-                                                        </div>
-                                                        <p style={{ margin: 0, color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: '1.3' }}>
-                                                            "{result.text.slice(0, 110)}..."
-                                                        </p>
-                                                    </>
-                                                ) : (
-                                                    <div style={{ color: '#ef4444', fontWeight: 600 }}>
-                                                        ✗ Error: {result.error} ({result.timestamp})
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
+                        </div>
+
+                        {/* 4. Métricas de Plataforma (Tutores Conectados & Contingencia) */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+                            <div style={{ padding: '10px 12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Tutores Conectados</span>
+                                <h4 style={{ margin: '3px 0 0 0', fontSize: '0.88rem', fontWeight: 800 }}>
+                                    4 Asistentes Especializados
+                                </h4>
+                            </div>
+                            <div style={{ padding: '10px 12px', borderRadius: '12px', background: 'var(--surface-ground, #f8fafc)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Modo de Contingencia</span>
+                                <h4 style={{ margin: '3px 0 0 0', color: '#10b981', fontSize: '0.88rem', fontWeight: 800 }}>
+                                    Heurístico Offline Activo
+                                </h4>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -989,6 +963,89 @@ const PanelPlataforma = ({ showHeader = true, showTabs = true, section }) => {
                     {toastMessage.type === 'success' ? '✓ ' : '✕ '}
                     {toastMessage.text}
                 </div>
+            )}
+
+            {/* Modal para Visualizar Respuesta de Inferencia IA */}
+            {activePingModalResult && typeof document !== 'undefined' && createPortal(
+                <div 
+                    className="saberlab-task-modal-backdrop" 
+                    style={{ zIndex: 10005 }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePingModalResult(null);
+                    }}
+                >
+                    <div 
+                        className="saberlab-task-modal-box" 
+                        style={{ maxWidth: '580px', width: '100%', padding: '1.5rem', zIndex: 10006 }} 
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--border-subtle, #e2e8f0)', paddingBottom: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                <span style={{ fontSize: '1.6rem' }}>{activePingModalResult.bot.icon}</span>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-heading, #1e293b)' }}>
+                                        {activePingModalResult.bot.name} <span style={{ color: activePingModalResult.bot.color, fontSize: '0.82rem' }}>({activePingModalResult.bot.course})</span>
+                                    </h3>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{activePingModalResult.bot.subtitle}</span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActivePingModalResult(null);
+                                }}
+                                style={{ background: 'var(--surface-subtle, #f1f5f9)', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        {/* Detalles de Inferencia */}
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 800, padding: '3px 10px', borderRadius: '12px', background: activePingModalResult.result.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: activePingModalResult.result.success ? '#10b981' : '#ef4444' }}>
+                                {activePingModalResult.result.success ? `✓ Inferencia Exitosa (${activePingModalResult.result.latencyMs} ms)` : '✕ Fallo en Respuesta'}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px', background: 'var(--surface-subtle, #f1f5f9)', color: 'var(--brand-primary, #0284c7)' }}>
+                                Modelo: {activePingModalResult.result.model || 'Google Gemini 2.0 / 1.5 Flash'}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '3px 10px', borderRadius: '12px', background: 'var(--surface-subtle, #f1f5f9)', color: 'var(--text-tertiary, #94a3b8)' }}>
+                                {activePingModalResult.result.timestamp}
+                            </span>
+                        </div>
+
+                        {/* Prompt de Prueba */}
+                        <div style={{ marginBottom: '1rem', background: 'var(--surface-subtle, #f8fafc)', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--border-subtle, #e2e8f0)' }}>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>Pregunta de Diagnóstico:</span>
+                            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-heading)' }}>
+                                "{activePingModalResult.bot.query}"
+                            </p>
+                        </div>
+
+                        {/* Respuesta Generada */}
+                        <div style={{ marginBottom: '1.25rem' }}>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.4rem' }}>Respuesta Generada por el Tutor IA:</span>
+                            <div style={{ background: 'var(--surface-card, #ffffff)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle, #cbd5e1)', fontSize: '0.85rem', lineHeight: '1.5', color: 'var(--text-heading)', maxHeight: '220px', overflowY: 'auto' }}>
+                                {activePingModalResult.result.success ? activePingModalResult.result.text : <span style={{ color: '#ef4444' }}>{activePingModalResult.result.error}</span>}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActivePingModalResult(null);
+                                }}
+                                style={{ padding: '0.6rem 1.25rem', borderRadius: '10px', border: 'none', background: 'var(--brand-primary, #0284c7)', color: '#fff', fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer' }}
+                            >
+                                Cerrar Diagnóstico
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

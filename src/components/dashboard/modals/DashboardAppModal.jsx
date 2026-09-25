@@ -16,6 +16,8 @@ const LiveMonitorModalContent = React.lazy(() => import('./LiveMonitorModalConte
 const InviteLinksModalContent = React.lazy(() => import('./InviteLinksModalContent'));
 const PlatformAdminModalContent = React.lazy(() => import('./PlatformAdminModalContent'));
 const ExamsManagementModalContent = React.lazy(() => import('./ExamsManagementModalContent'));
+const SchoolTasksModalContent = React.lazy(() => import('./SchoolTasksModalContent'));
+const AccessRequests = React.lazy(() => import('../../../pages/AccessRequests'));
 
 export const DashboardAppModal = ({
     activeAppModal,
@@ -85,7 +87,7 @@ export const DashboardAppModal = ({
     const isCoursesModal = activeAppModal === 'courses';
     const isComponentsModal = activeAppModal === 'components';
     const isResourcesModal = activeAppModal === 'resources';
-    const isAdminLargeModal = ['liveMonitor', 'inviteLinks', 'coursesManagement', 'platformAdmin', 'examsManagement'].includes(activeAppModal);
+    const isAdminLargeModal = ['liveMonitor', 'inviteLinks', 'coursesManagement', 'platformAdmin', 'examsManagement', 'schoolTasks', 'accessRequests'].includes(activeAppModal);
 
     return createPortal(
         <div className="app-modal-backdrop animate-fade-in" onClick={onClose}>
@@ -377,6 +379,16 @@ export const DashboardAppModal = ({
                         {/* 4. Exámenes (Evaluaciones y Creador) */}
                         {activeAppModal === 'examsManagement' && (
                             <ExamsManagementModalContent />
+                        )}
+
+                        {/* 5. Mis Pendientes Escolares */}
+                        {activeAppModal === 'schoolTasks' && (
+                            <SchoolTasksModalContent />
+                        )}
+
+                        {/* 6. Solicitudes de Acceso */}
+                        {activeAppModal === 'accessRequests' && (
+                            <AccessRequests />
                         )}
                     </React.Suspense>
                 </div>

@@ -109,9 +109,7 @@ const LessonLegacyBridge = ({ hasSimulator, onShowGuide, onShowArduinoParts }) =
 
             mountInto(
                 'ultrasonic-sensor-simulator-container',
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                    <UltrasonicSensorSimulator />
-                </div>
+                <UltrasonicSensorSimulator />
             );
 
             // Electricidad & Electrónica (EE)

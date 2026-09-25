@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye, Activity, ArrowLeft, BookOpen, FileCheck, ClipboardList, UserCheck } from 'lucide-react';
+import { Home, Layers, Target, BarChart2, Folder, Wrench, Settings, Shield, User, ChevronDown, LogOut, Bell, GraduationCap, ChevronRight, ChevronLeft, Award, Gift, Eye, Activity, ArrowLeft, BookOpen, FileCheck, ClipboardList, UserCheck, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useApps } from '../../context/useApps';
 import { api } from '../../lib/api';
@@ -107,8 +107,9 @@ const Sidebar = ({ isOpen, closeSidebar, toggleSidebar, isCompact = false, toggl
         ...(isStaffUser ? [{
             title: isAdmin ? 'ADMIN' : ['leader', 'lider', 'semillero_leader'].includes(profile?.role) ? 'LÍDER' : 'DOCENTE',
             items: [
-                { name: 'Solicitudes', path: '/dashboard/requests', icon: <UserCheck size={18} />, badge: pendingAccessRequestsCount > 0 ? pendingAccessRequestsCount : undefined },
+                { name: 'Solicitudes', path: '/dashboard?app=accessRequests', icon: <UserCheck size={18} />, badge: pendingAccessRequestsCount > 0 ? pendingAccessRequestsCount : undefined },
                 { name: 'Analítica', path: '/dashboard/analytics', icon: <Activity size={18} /> },
+                { name: 'Pendientes', path: '/dashboard?app=schoolTasks', icon: <ClipboardCheck size={18} /> },
                 { name: 'Certificados', path: '/dashboard/certificate/ee', icon: <Award size={18} /> }
             ]
         }] : (canAccessCertificate ? [{

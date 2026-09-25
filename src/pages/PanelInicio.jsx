@@ -4,7 +4,7 @@ import {
     Calendar, AlarmClock, BookOpen, Clock, Target, ArrowRight,
     Zap, Bot, GraduationCap, Gamepad2, Award, User, Activity, TrendingUp, 
     Flame, CheckCircle2, AlertCircle, Loader2, Trophy, Sparkles, Shield, ChevronRight, Compass, Eye, EyeOff, CheckCircle, Check, X, Lock, Gift, Wrench, Hash, FileCheck,
-    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList, Cpu, Edit3, UserCheck
+    Sun, Moon, Monitor, ExternalLink, ChevronDown, ChevronUp, Play, LogOut, Settings, Bell, Folder, Users, Radio, Link2, ClipboardList, Cpu, Edit3, UserCheck, ClipboardCheck
 } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
@@ -597,15 +597,13 @@ const PanelInicio = () => {
             desc: 'Centro de avisos, alertas y novedades académicas'
         },
         ...(isStaff ? [{
-            id: 'access-requests',
+            id: 'accessRequests',
             name: 'Solicitudes',
             badge: (pendingAccessRequestsCount || 0) > 0 ? `${pendingAccessRequestsCount} pendientes` : 'Al día',
             icon: <UserCheck size={26} />,
             gradient: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
             shadow: 'rgba(168, 85, 247, 0.35)',
-            desc: 'Gestión y aprobación de nuevos accesos a SaberLab',
-            route: '/dashboard/requests',
-            onClick: () => navigate('/dashboard/requests')
+            desc: 'Gestión y aprobación de nuevos accesos a SaberLab'
         }] : []),
     ];
 
@@ -718,7 +716,7 @@ const PanelInicio = () => {
                 shadow: 'rgba(16, 185, 129, 0.35)',
                 desc: 'Telemetría de Gemini y tutores pedagógicos en vivo',
                 onClick: () => {
-                    setActiveAppModal('platformAdmin');
+                    setActiveAppModal('aiEngineStatus');
                 }
             },
             {
@@ -729,6 +727,24 @@ const PanelInicio = () => {
                 gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
                 shadow: 'rgba(244, 63, 94, 0.35)',
                 desc: 'Evaluaciones y resultados'
+            },
+            {
+                id: 'schoolTasks',
+                name: 'Pendientes',
+                badge: `${(() => {
+                    try {
+                        const stored = localStorage.getItem('saberlab_school_tasks_v5');
+                        if (stored) {
+                            const parsed = JSON.parse(stored);
+                            if (Array.isArray(parsed)) return parsed.filter(t => !t.done).length;
+                        }
+                    } catch (e) {}
+                    return 7;
+                })()} pendientes`,
+                icon: <ClipboardCheck size={26} />,
+                gradient: 'linear-gradient(135deg, #10b981 0%, #0d9488 100%)',
+                shadow: 'rgba(16, 185, 129, 0.35)',
+                desc: 'Mis pendientes escolares, tareas docentes y agenda de aula'
             }
         ] : []),
         ...(isAdmin ? [{
